@@ -49,3 +49,17 @@ test('staging protects static assets and health API, then allows authorized revi
   const check = await app.fetch(new Request('https://example.test/api/health', { headers: { authorization: correct } }),scoped);
   assert.equal(check.status,200);
 });
+
+test('staging health safely distinguishes absent, too-short and valid activation secrets', async () => {
+  const auth = 'Basic ' + Buffer.from('reviewer:test-preview-password-987654').toString('base64');
+  const req = new Request('https://example.test/api/health', { headers: { authorization: auth } });
+  const base = { ...env, APP_ENV: 'staging', STAGING_PREVIEW_PASSWORD: 'test-preview-password-987654' };
+  const missing = await (await app.fetch(req, base)).json();
+  assert.equal(missing.activationSecretStatus, 'missing');
+  const tooShort = await (await app.fetch(req, { ...base, ACTIVATION_PEPPER: 'abc' })).json();
+  assert.equal(tooShort.activationSecretStatus, 'too_short');
+  const ready = await (await app.fetch(req, { ...base, ACTIVATION_PEPPER: '0123456789'.repeat(4) })).json();
+  assert.equal(ready.activationSecretStatus, 'ready');
+  assert.equal(ready.authConfigured, false); // No DB binding in the fixture.
+  assert.equal(JSON.stringify(ready).includes('0123456789'), false);
+});
