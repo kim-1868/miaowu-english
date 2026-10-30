@@ -164,3 +164,35 @@ test("POST requires same-origin browser request", async () => {
   assert.equal(forged.status,403);
   assert.equal(await env.DB.prepare("SELECT id FROM users WHERE username='intruder'").first(),null);
 });
+
+test("only a staging reviewer can mint an unpredictable, single-use QA voucher", async () => {
+  const env=environment();
+  env.APP_ENV="staging";
+  env.STAGING_PREVIEW_PASSWORD="correct-private-reviewer-password";
+  const endpoint=origin+"/api/staging/test-voucher";
+  const request=(authorization,category="cet4",requestOrigin=origin)=>new Request(endpoint,{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Origin":requestOrigin,...(authorization?{"Authorization":authorization}:{})},
+    body:JSON.stringify({category})
+  });
+  const without=await worker.fetch(request(null),env);
+  assert.equal(without.status,401);
+  const auth="Basic "+Buffer.from("reviewer:"+env.STAGING_PREVIEW_PASSWORD).toString("base64");
+  const foreign=await worker.fetch(request(auth,"cet4","https://evil.example"),env);
+  assert.equal(foreign.status,403);
+  const created=await worker.fetch(request(auth),env);
+  assert.equal(created.status,201);
+  const voucher=await created.json();
+  assert.equal(voucher.category,"cet4");
+  assert.equal(voucher.testOnly,true);
+  assert.match(voucher.activationCode,/^MW-CET4-(?:[0-9A-F]{8}-){4}[0-9A-F]{8}$/);
+  const count=await env.DB.prepare("SELECT COUNT(*) AS n FROM activation_codes").first();
+  assert.equal(count.n,1);
+  const first=await register({...env,APP_ENV:undefined},"reviewer1",voucher.activationCode);
+  assert.equal(first.status,201);
+  const second=await register({...env,APP_ENV:undefined},"reviewer2",voucher.activationCode);
+  assert.equal(second.status,409);
+  const production={...env,APP_ENV:"production"};
+  const denied=await worker.fetch(request(auth),production);
+  assert.equal(denied.status,404);
+});
