@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "check": "node --check src/worker.js",
-    "db:local": "wrangler d1 execute miaowu-dev --local --file=db/001_schema.sql"
+    "check": "node --check public/app.js && node --check src/worker.js",
+    "db:local": "wrangler d1 execute miaowu-dev --local --file=db/001_schema.sql",
+    "test": "node --test"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"
