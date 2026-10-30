@@ -168,6 +168,34 @@ async function chapterAccess(req, env, id, user) {
   catch { return reject("CONTENT_UNAVAILABLE", 503); }
   return json({ id: row.id, chapterNo: row.chapter_no, title: row.title, content });
 }
+async function issueStagingVoucher(req, env) {
+  // QA only. Never expose a voucher minting endpoint on live customer environments.
+  // The global stagingGate must have authenticated the reviewer before this runs.
+  if (env.APP_ENV !== "staging") return reject("NOT_FOUND", 404);
+  const body = await parseBody(req);
+  const slug = body.category;
+  if (!["cet4", "cet6"].includes(slug)) return reject("INVALID_CATEGORY", 400);
+  const cat = await dbStmt(env.DB,
+    "SELECT id FROM categories WHERE slug=? AND is_visible=1", slug).first();
+  if (!cat) return reject("CATEGORY_NOT_CONFIGURED", 409);
+  const limiter = await throttleKey(env, "staging-voucher", req);
+  if (await isBlocked(env.DB, limiter)) return reject("TOO_MANY_ATTEMPTS", 429);
+  const total = await env.DB.prepare(
+    "SELECT COUNT(*) AS n FROM activation_codes WHERE order_reference='STAGING_QA_ONLY'").first();
+  if (Number(total?.n || 0) >= 20) return reject("STAGING_VOUCHER_LIMIT_REACHED", 429);
+  // Unpredictable 160-bit one-time voucher. Never stored in plaintext.
+  const random = crypto.getRandomValues(new Uint8Array(20));
+  const plain = Array.from(random, v => v.toString(16).padStart(2,"0")).join("").toUpperCase();
+  const code = "MW-" + slug.toUpperCase() + "-" + plain.match(/.{1,8}/g).join("-");
+  const normalized = normalizeCode(code);
+  const digest = await hashCode(normalized, env);
+  const id = crypto.randomUUID();
+  await dbStmt(env.DB, `INSERT INTO activation_codes
+    (id,code_hash,category_id,status,order_reference) VALUES (?, ?, ?, 'unused', 'STAGING_QA_ONLY')`,
+    id,digest,cat.id).run();
+  return json({ activationCode: code, category: slug, testOnly: true }, 201);
+}
+
 async function api(req, env) {
   const path = new URL(req.url).pathname;
   if (path === "/api/health" && req.method === "GET") {
@@ -187,6 +215,9 @@ async function api(req, env) {
     return reject("SERVICE_NOT_CONFIGURED", 503);
   }
   if (req.method === "POST" && !checkOrigin(req)) return reject("INVALID_ORIGIN", 403);
+  if (path === "/api/staging/test-voucher" && req.method === "POST") {
+    return issueStagingVoucher(req, env);
+  }
   const user = await currentUser(req, env.DB);
   if (path === "/api/auth/register" && req.method === "POST") return register(req, env);
   if (path === "/api/auth/login" && req.method === "POST") return login(req, env);
