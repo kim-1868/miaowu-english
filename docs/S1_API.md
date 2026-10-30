@@ -35,3 +35,12 @@
 依次执行 `db/001_schema.sql`、`db/002_s1.sql`、`db/003_public_categories.sql`。
 
 为了避免误发货，本阶段没有任何在线管理端生成可售激活码；后续需加入带审计日志的运营侧批量制码与导出工具。
+
+## 运营侧独立激活码（暂不用于真实售卖）
+
+`scripts/generate-activation-codes.mjs` 是离线运营工具。在可信的本地环境设置 `ACTIVATION_PEPPER`（必须与 Worker 密钥相同）、`CATEGORY_ID=cet4`、`COUNT=10`，再运行 `node scripts/generate-activation-codes.mjs`。程序在被 Git 忽略的 `private-output/` 目录中生成：
+
+- `inventory-*.csv`：仅用于获准的小红书自动发货工具导入，含一次性明文激活码；严禁上传到代码仓库或发送到聊天。
+- `import-*.sql`：不含明文码的 D1 导入语句；在确认数据库和分类数据后由运营人员执行。
+
+**未绑定 D1 前先不要生成和发放正式激活码。** 正式操作需补充发货库存对账、退款撤销、重发审计及秘密轮换方案。此脚本不会直接访问小红书或 Cloudflare。
