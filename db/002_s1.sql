@@ -1,4 +1,5 @@
--- S1 auth rate limiting; run after db/001_schema.sql
+-- S1: replay-safe voucher redemption and auth throttling
+ALTER TABLE activation_codes ADD COLUMN redemption_nonce TEXT;
 CREATE TABLE IF NOT EXISTS request_throttle (
   key TEXT PRIMARY KEY,
   attempts INTEGER NOT NULL DEFAULT 0 CHECK(attempts >= 0),
