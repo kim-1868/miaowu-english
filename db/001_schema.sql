@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS activation_codes (
   order_reference TEXT,
   redeemed_by TEXT REFERENCES users(id),
   redeemed_at TEXT,
+  redemption_nonce TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS entitlements (
