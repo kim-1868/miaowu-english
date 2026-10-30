@@ -172,6 +172,8 @@ async function api(req, env) {
   const path = new URL(req.url).pathname;
   if (path === "/api/health" && req.method === "GET") {
     return json({ ok: true, app: "miaowu-english", stage: "s1-dev",
+      dbBound: !!env.DB,
+      activationSecretReady: typeof env.ACTIVATION_PEPPER === "string" && env.ACTIVATION_PEPPER.length >= 32,
       authConfigured: !!env.DB && typeof env.ACTIVATION_PEPPER === "string" && env.ACTIVATION_PEPPER.length >= 32,
       paymentIntegration: false });
   }
