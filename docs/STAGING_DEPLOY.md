@@ -62,3 +62,11 @@ Worker -> Settings -> Bindings，确认存在 **`DB`** 且数据库名称为 `mi
 只需要提供 **Workers 测试网址** 和 **/api/health、/api/categories 的访问结果**。不要提供密码或 Secret。
 
 **后续工作**：将 V0.3 演示注册和增购表单连接服务器；接入 D1 数据查询；做真实多设备、并发激活、授权访问、退款撤销等测试。
+
+## 7. 首次连接 Cloudflare 如果默认使用 main 分支
+
+当 Cloudflare 创建 Worker 时没有提供分支选项，会默认从仓库 main 拉取代码；因为 main 未合并 S0/S1，会出现 `Could not read package.json`。这不是 D1 故障。
+
+在 Worker -> Settings -> Builds -> Production branch 将 `main` 改为 `dev/s1-auth-and-entitlements` 并保存后，下一次推送到此分支就会触发新构建。不要把以前失败的 main 构建误认为新分支失败；应确认 Deployments 中最新一行显示 `dev/s1-auth-and-entitlements`。
+
+测试站代码在设置 STAGING_PREVIEW_PASSWORD 前会返回 503，直到设置至少 16 字符的 Secret 并部署。不要把这个状态误判为登录或数据库错误。
