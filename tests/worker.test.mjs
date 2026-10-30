@@ -4,19 +4,19 @@ import app from '../src/worker.js';
 
 const env = { ASSETS: { fetch: async () => new Response('static site', { status: 200 }) } };
 
-test('health response is no-store and auth is not ready', async () => {
+test('health reports configuration without exposing secrets', async () => {
   const r = await app.fetch(new Request('https://example.test/api/health'), env);
   assert.equal(r.status, 200);
   assert.equal(r.headers.get('cache-control'), 'no-store');
   const data = await r.json();
   assert.equal(data.ok, true);
-  assert.equal(data.authReady, false);
+  assert.equal(data.authConfigured, false);
 });
 
-test('unimplemented private APIs fail closed', async () => {
-  for (const path of ['/api/register','/api/login','/api/activate','/api/chapters/private']) {
+test('unconfigured protected APIs reject requests safely', async () => {
+  for (const path of ['/api/auth/register','/api/auth/login','/api/activate','/api/chapters/private']) {
     const r = await app.fetch(new Request('https://example.test' + path), env);
-    assert.equal(r.status, 501);
+    assert.equal(r.status, 503);
   }
 });
 
