@@ -1,3 +1,4 @@
+import { stagingGate } from "./staging-gate.js";
 import {
   normalizedUsername, validPassword, normalizeCode, hashCode, newPasswordHash,
   verifyPassword, sha256, sessionData, sessionCookie, clearSessionCookie,
@@ -208,8 +209,18 @@ async function api(req, env) {
 }
 export default {
   async fetch(request, env) {
+    // Staging gate applies to both public files and API routes.
+    // Wrangler assets.run_worker_first MUST remain true for this to work.
+    const blocked = await stagingGate(request, env);
+    if (blocked) return blocked;
     const path = new URL(request.url).pathname;
-    if (!path.startsWith("/api/")) return env.ASSETS.fetch(request);
+    if (!path.startsWith("/api/")) {
+      const response = await env.ASSETS.fetch(request);
+      if (env.APP_ENV !== "staging") return response;
+      const headers = new Headers(response.headers);
+      headers.set("cache-control", "private, no-store");
+      return new Response(response.body, { status: response.status, headers });
+    }
     try {
       const host = new URL(request.url).hostname;
       if (new URL(request.url).protocol !== "https:" && host !== "localhost" && host !== "127.0.0.1") {
