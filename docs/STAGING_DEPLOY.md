@@ -14,7 +14,7 @@
 ## 1. 初始化 D1 数据库（只在刚创建的测试数据库操作）
 Cloudflare Dashboard -> Storage & Databases -> D1 SQL Database -> `miaowu-english-test` -> Console。
 
-核对数据库名称和 ID，打开 GitHub 分支文件 `db/STAGING_CONSOLE_SETUP.sql`，点击复制文件内容，全选粘贴到 D1 Console，点 Execute。此文件包含约 13 个表和四个分类的初始化数据，支持重复执行。**切勿选中其他 D1 数据库，尤其不要在生产数据库操作。**
+核对数据库名称和 ID，打开 GitHub 分支文件 `db/STAGING_PASTE_NO_COMMENTS.sql`，点击复制文件内容，全选粘贴到 D1 Console，点 Execute。此文件移除了 SQL 注释，避免复制时换行丢失造成整个脚本被当作注释；包含 13 个表和四个分类的初始化数据，支持重复执行。执行成功后使用 `SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;` 检查表名。若出现 `No SQL statements detected.`，表示建表没有完成，先不要继续部署。**切勿选中其他 D1 数据库，尤其不要在生产数据库操作。**
 
 返回 Tables，应该至少能看到 `users`、`categories`、`activation_codes`、`entitlements`、`sessions`、`request_throttle`。
 新增时没有真实用户、没有真实激活码，这是正确状态。
