@@ -108,10 +108,10 @@ export async function isBlocked(db, key) {
 }
 export async function countFailure(db, key) {
   const reset = Math.floor(Date.now()/1000) + 900;
-  await db.prepare(\`INSERT INTO request_throttle(key, attempts, reset_at) VALUES (?,1,?)
+  await db.prepare(`INSERT INTO request_throttle(key, attempts, reset_at) VALUES (?,1,?)
     ON CONFLICT(key) DO UPDATE SET
     attempts = CASE WHEN request_throttle.reset_at <= unixepoch() THEN 1 ELSE request_throttle.attempts + 1 END,
-    reset_at = CASE WHEN request_throttle.reset_at <= unixepoch() THEN excluded.reset_at ELSE request_throttle.reset_at END\`).bind(key, reset).run();
+    reset_at = CASE WHEN request_throttle.reset_at <= unixepoch() THEN excluded.reset_at ELSE request_throttle.reset_at END`).bind(key, reset).run();
 }
 export async function resetFailures(db, key) {
   await db.prepare("DELETE FROM request_throttle WHERE key = ?").bind(key).run();
