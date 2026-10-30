@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "check": "node --check public/app.js && node --check src/worker.js",
+    "check": "node --check public/app.js && node --check src/security.js && node --check src/worker.js",
     "db:local": "wrangler d1 execute miaowu-dev --local --file=db/001_schema.sql",
-    "test": "node --test"
+    "test": "node --experimental-sqlite --test tests/*.test.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"
