@@ -54,6 +54,7 @@ async function register(req, env) {
   const key = await throttleKey(env, "register", req, username);
   if (await isBlocked(db, key)) return reject("TOO_MANY_ATTEMPTS", 429);
   const codeHash = await hashCode(code, env);
+  const redemptionNonce = crypto.randomUUID();
   const userId = crypto.randomUUID();
   const { hash, salt } = await newPasswordHash(body.password);
   const session = await sessionData(userId);
@@ -64,12 +65,12 @@ async function register(req, env) {
       dbStmt(db, `INSERT INTO users(id, username, password_hash, password_salt)
         VALUES(?,?,?,?)`, userId, username, hash, salt),
       dbStmt(db, `UPDATE activation_codes SET status='redeemed', redeemed_by=?,
-        redeemed_at=CURRENT_TIMESTAMP WHERE code_hash=? AND status='unused'
-        AND EXISTS(SELECT 1 FROM categories c WHERE c.id=activation_codes.category_id AND c.is_visible=1)`, userId, codeHash),
+        redeemed_at=CURRENT_TIMESTAMP, redemption_nonce=? WHERE code_hash=? AND status='unused'
+        AND EXISTS(SELECT 1 FROM categories c WHERE c.id=activation_codes.category_id AND c.is_visible=1)`, userId, redemptionNonce, codeHash),
       dbStmt(db, `INSERT INTO entitlements(user_id, category_id, source_code_id)
-        VALUES (?, (SELECT category_id FROM activation_codes WHERE code_hash=? AND redeemed_by=? AND status='redeemed'),
-          (SELECT id FROM activation_codes WHERE code_hash=? AND redeemed_by=? AND status='redeemed'))`,
-          userId, codeHash, userId, codeHash, userId),
+        VALUES (?, (SELECT category_id FROM activation_codes WHERE code_hash=? AND redeemed_by=? AND redemption_nonce=? AND status='redeemed'),
+          (SELECT id FROM activation_codes WHERE code_hash=? AND redeemed_by=? AND redemption_nonce=? AND status='redeemed'))`,
+          userId, codeHash, userId, redemptionNonce, codeHash, userId, redemptionNonce),
       dbStmt(db, `INSERT INTO sessions(id_hash,user_id,expires_at) VALUES(?,?,?)`,
         session.idHash, userId, session.expires)
     ]);
@@ -118,23 +119,24 @@ async function redeem(req, env, user) {
   const key = await throttleKey(env, "redeem", req, user.id);
   if (await isBlocked(db, key)) return reject("TOO_MANY_ATTEMPTS", 429);
   const codeHash = await hashCode(code, env);
+  const redemptionNonce = crypto.randomUUID();
   try {
     // Batch checks "unused" and that user does not already own this category.
     // An empty UPDATE makes the following INSERT fail (non-null FK); full rollback.
     await db.batch([
-      dbStmt(db, `UPDATE activation_codes SET status='redeemed', redeemed_by=?, redeemed_at=CURRENT_TIMESTAMP
+      dbStmt(db, `UPDATE activation_codes SET status='redeemed', redeemed_by=?, redeemed_at=CURRENT_TIMESTAMP, redemption_nonce=?
         WHERE code_hash=? AND status='unused'
         AND EXISTS(SELECT 1 FROM categories c WHERE c.id=activation_codes.category_id AND c.is_visible=1)
         AND NOT EXISTS(SELECT 1 FROM entitlements e
           WHERE e.user_id=? AND e.category_id=activation_codes.category_id AND e.revoked_at IS NULL)`,
-        user.id, codeHash, user.id),
+        user.id, redemptionNonce, codeHash, user.id),
       dbStmt(db, `INSERT INTO entitlements(user_id,category_id,source_code_id)
-        VALUES(?, (SELECT category_id FROM activation_codes WHERE code_hash=? AND redeemed_by=? AND status='redeemed'),
-          (SELECT id FROM activation_codes WHERE code_hash=? AND redeemed_by=? AND status='redeemed'))
+        VALUES(?, (SELECT category_id FROM activation_codes WHERE code_hash=? AND redeemed_by=? AND redemption_nonce=? AND status='redeemed'),
+          (SELECT id FROM activation_codes WHERE code_hash=? AND redeemed_by=? AND redemption_nonce=? AND status='redeemed'))
         ON CONFLICT(user_id,category_id) DO UPDATE SET
           source_code_id=excluded.source_code_id,
           scope_version='launch', revoked_at=NULL, granted_at=CURRENT_TIMESTAMP`,
-        user.id, codeHash, user.id, codeHash, user.id)
+        user.id, codeHash, user.id, redemptionNonce, codeHash, user.id, redemptionNonce)
     ]);
   } catch {
     await countFailure(db, key);
