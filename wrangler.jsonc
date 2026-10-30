@@ -19,5 +19,11 @@
       "migrations_pattern": "db/0*.sql"
     }
   ],
-  "keep_vars": true
+  "keep_vars": true,
+  "secrets": {
+    "required": [
+      "STAGING_PREVIEW_PASSWORD",
+      "ACTIVATION_PEPPER"
+    ]
+  }
 }
