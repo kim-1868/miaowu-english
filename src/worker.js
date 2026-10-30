@@ -51,7 +51,7 @@ async function register(req, env) {
   const code = normalizeCode(body.activationCode);
   if (!code) return reject("INVALID_ACTIVATION", 400);
   const db = env.DB;
-  const key = await throttleKey(env, "register", req, username);
+  const key = await throttleKey(env, "register", req); // Global per-source-IP limit across usernames.
   if (await isBlocked(db, key)) return reject("TOO_MANY_ATTEMPTS", 429);
   const codeHash = await hashCode(code, env);
   const redemptionNonce = crypto.randomUUID();
@@ -90,12 +90,14 @@ async function login(req, env) {
   }
   const db = env.DB;
   const key = await throttleKey(env, "login", req, username);
-  if (await isBlocked(db, key)) return reject("TOO_MANY_ATTEMPTS", 429);
+  const sourceKey = await throttleKey(env, "login-source", req);
+  if (await isBlocked(db, key) || await isBlocked(db, sourceKey)) return reject("TOO_MANY_ATTEMPTS", 429);
   const user = await dbStmt(db, `SELECT id,username,password_hash,password_salt FROM users WHERE username=?`, username).first();
   let matched = false;
   if (user) matched = await verifyPassword(body.password, user.password_salt, user.password_hash);
   else await newPasswordHash(body.password); // Avoid fast account-enumeration timing.
   if (!matched) {
+    await countFailure(db, sourceKey);
     await countFailure(db, key);
     return reject("INVALID_CREDENTIALS", 401);
   }
