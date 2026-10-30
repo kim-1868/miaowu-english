@@ -174,6 +174,12 @@ async function api(req, env) {
     return json({ ok: true, app: "miaowu-english", stage: "s1-dev",
       dbBound: !!env.DB,
       activationSecretReady: typeof env.ACTIVATION_PEPPER === "string" && env.ACTIVATION_PEPPER.length >= 32,
+      // Only disclose a coarse status in password-protected staging. Never return the secret or its length.
+      activationSecretStatus: env.APP_ENV === "staging"
+        ? (env.ACTIVATION_PEPPER == null ? "missing"
+          : typeof env.ACTIVATION_PEPPER !== "string" ? "invalid_type"
+          : env.ACTIVATION_PEPPER.length < 32 ? "too_short" : "ready")
+        : "hidden",
       authConfigured: !!env.DB && typeof env.ACTIVATION_PEPPER === "string" && env.ACTIVATION_PEPPER.length >= 32,
       paymentIntegration: false });
   }
