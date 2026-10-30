@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>妙屋英语 · 真实账号联调（测试专用）</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,"PingFang SC",sans-serif;color:#46313d;background:#f7f0ea}
+    *{box-sizing:border-box}body{margin:0;padding:18px 16px 60px}main{max-width:790px;margin:35px auto}
+    h1{font:normal 2.1rem "Songti SC",serif;color:#6b3044;margin:12px 0}
+    .sub{letter-spacing:.17em;font:11px Georgia,serif;color:#a07875}.lead{line-height:1.8;color:#73656a}
+    .card{margin:16px 0;background:#fffaf5;border:1px solid #e9d9d3;border-radius:19px;padding:22px}
+    .warning{background:#f9e9e5;border:1px solid #dab8b0;color:#772e3a;border-radius:13px;padding:13px 15px;line-height:1.7}
+    .status{background:#eee4dd;padding:14px;border-radius:12px;word-break:break-word;min-height:49px;white-space:pre-wrap}
+    label{display:block;font-weight:600;font-size:13px;margin:10px 0 5px}
+    input,select{width:100%;border:1px solid #d4c0b9;border-radius:9px;padding:12px;background:#fff;color:#352936;font:inherit}
+    input:focus-visible,button:focus-visible{outline:3px solid #b97c89;outline-offset:2px}
+    button{border:0;border-radius:9px;padding:12px 16px;font:inherit;font-weight:600;cursor:pointer;background:#74384b;color:#fff}
+    button:disabled{opacity:.5;cursor:wait}.ghost{background:#f0e2dc;color:#653b48}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.row{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0 3px}
+    small{color:#806d72;line-height:1.6}.output{font-family:ui-monospace,monospace;word-break:break-all;background:#efe5de;padding:13px;border-radius:9px;min-height:45px}
+    a{color:#74384b}details{margin-top:15px}summary{cursor:pointer}
+    @media(max-width:650px){main{margin-top:14px}.grid{grid-template-columns:1fr}.card{padding:18px}}
+    @media(prefers-color-scheme:dark){:root{color:#f1dfe7;background:#241f27}.card{background:#322b33;border-color:#574650}h1{color:#e8bacd}.lead,small{color:#d3b8c5}.warning{background:#4f303a;color:#ffd9e0;border-color:#7b515f}.status,.output{background:#463742;color:#f8e8ee}input,select{background:#2e2931;border-color:#705565;color:#fff}.ghost{background:#57414f;color:#fff}a{color:#e8aebf}}
+  </style>
+</head>
+<body><main>
+  <div class="sub">MIAOWU · THE STORY & WORD LIBRARY</div>
+  <h1>账号功能 · 联调实验室</h1>
+  <p class="lead">这是妙屋英语的真实后端测试页面。页面请求 Cloudflare Worker 和 D1 测试数据库，不使用浏览器本地模拟注册。</p>
+  <div class="warning"><strong>仅供开发测试，不能用于正式购买。</strong> 下面生成的激活码只在当前测试数据库有效，不代表订单、付款、终身授权或正式小说内容。请使用独立的测试用户名和测试密码，不要填写常用账号密码。</div>
+  <section class="card">
+    <h2>① 检查当前登录状态</h2>
+    <div id="state" class="status" role="status">正在检查…</div>
+    <div class="row"><button id="refresh" class="ghost">刷新账号状态</button><button id="logout" class="ghost">退出真实测试账号</button></div>
+  </section>
+  <section class="card">
+    <h2>② 生成一次性测试激活码</h2>
+    <p><small>仅在设有访问密码的 Cloudflare staging 环境中允许操作，最多生成20枚测试码；不会自动创建订单。</small></p>
+    <label for="category">测试分类</label>
+    <select id="category"><option value="cet4">四级 CET-4</option><option value="cet6">六级 CET-6</option></select>
+    <div class="row"><button id="createCode">生成一枚测试码</button><button id="copyCode" class="ghost" disabled>复制测试码</button></div>
+    <div id="codeOutput" class="output" aria-live="polite">尚未生成</div>
+  </section>
+  <section class="card">
+    <h2>③ 首次注册并激活</h2>
+    <p><small>先生成四级测试码，再在这里注册。用户名3–24位、密码10–128位，激活码只能使用一次。</small></p>
+    <form id="registerForm">
+      <div class="grid">
+        <div><label for="registerName">测试用户名</label><input id="registerName" autocomplete="off" minlength="3" maxlength="24" placeholder="例如 reader_test01" required></div>
+        <div><label for="registerPass">自设测试密码</label><input id="registerPass" type="password" autocomplete="new-password" minlength="10" placeholder="不少于10位，请勿使用常用密码" required></div>
+      </div>
+      <label for="registerCode">首次激活码</label><input id="registerCode" autocomplete="off" placeholder="粘贴上面刚生成的四级测试码" required>
+      <div class="row"><button type="submit">注册并兑换测试分类</button></div>
+    </form>
+  </section>
+  <section class="card">
+    <h2>④ 已有测试账号登录</h2>
+    <form id="loginForm">
+      <div class="grid">
+        <div><label for="loginName">用户名</label><input id="loginName" autocomplete="username" required></div>
+        <div><label for="loginPass">密码</label><input id="loginPass" type="password" autocomplete="current-password" required></div>
+      </div><div class="row"><button type="submit">登录真实测试账号</button></div>
+    </form>
+  </section>
+  <section class="card">
+    <h2>⑤ 增购分类测试（无需重新注册）</h2>
+    <p><small>登录四级账号后，再生成一枚六级测试码，验证同一账号可以拥有两个分类。</small></p>
+    <form id="redeemForm"><label for="redeemCode">新的测试激活码</label><input id="redeemCode" required autocomplete="off"><div class="row"><button type="submit">兑换新的测试分类</button></div></form>
+  </section>
+  <section class="card"><h2>操作提示</h2>
+    <div id="feedback" role="status" class="status" aria-live="polite">等待操作…</div>
+    <details><summary>这和 V0.3 首页有什么区别？</summary><p class="lead">这个页面的注册、登录、激活真正访问服务器和 D1；V0.3 首页中的小说、词卡、剧情回声仍是公开演示素材，阅读记录仍只存储在当前浏览器。通过账号联调后，再逐步将 V0.3 的真实登录与付费正文接进来。</p></details>
+    <div class="row"><a href="/">← 返回 V0.3 视觉原型</a></div>
+  </section>
+</main><script src="/account-test.js"></script></body></html>
