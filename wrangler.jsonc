@@ -15,7 +15,8 @@
       "binding": "DB",
       "database_name": "miaowu-english-test",
       "database_id": "88a817cb-23bb-4ae4-bcb8-92286c4165d4",
-      "migrations_dir": "db"
+      "migrations_dir": "db",
+      "migrations_pattern": "db/0*.sql"
     }
   ]
 }
