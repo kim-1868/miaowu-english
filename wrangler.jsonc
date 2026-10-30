@@ -18,5 +18,6 @@
       "migrations_dir": "db",
       "migrations_pattern": "db/0*.sql"
     }
-  ]
+  ],
+  "keep_vars": true
 }
