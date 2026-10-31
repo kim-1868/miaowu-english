@@ -24,7 +24,11 @@
     if(payload!==undefined){init.headers["content-type"]="application/json";init.body=JSON.stringify(payload)}
     const response=await fetch(path,init);
     let data;try{data=await response.json()}catch{throw new Error("接口没有返回 JSON（HTTP "+response.status+"）")}
-    if(!response.ok) throw new Error(errorLabels[data.error] || data.message || ("接口返回 HTTP "+response.status));
+    if(!response.ok) {
+      const label = errorLabels[data.error] || data.message || ("接口返回 HTTP " + response.status);
+      const stage = typeof data.diagnosticStage === "string" ? "（诊断阶段：" + data.diagnosticStage + "）" : "";
+      throw new Error(label + stage);
+    }
     return data;
   }
   async function busy(button, job){
