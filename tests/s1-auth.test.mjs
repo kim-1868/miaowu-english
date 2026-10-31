@@ -274,3 +274,41 @@ test("S2 real D1 chapter catalog keeps paid content server-side and enforces eac
   assert.equal(unlock.status,200);
   assert.equal((await staging("/api/chapters/qa-cet6-paid","GET",cookie)).status,200);
 });
+
+test("reviewer cookie and real account cookie coexist without repeated HTTP Basic challenge", async () => {
+  const env=environment();
+  env.APP_ENV="staging";
+  env.STAGING_PREVIEW_PASSWORD="correct-private-reviewer-password";
+  const basic="Basic "+Buffer.from("reviewer:"+env.STAGING_PREVIEW_PASSWORD).toString("base64");
+  const activation="MW-CET4-AAAABBBBCCCCDDDD";
+  await seedCode(env,activation);
+  // First valid Basic-authorized request can set both reviewer and app session cookies.
+  const registration=await worker.fetch(new Request(origin+"/api/auth/register",{
+    method:"POST",
+    headers:{Origin:origin,Authorization:basic,"Content-Type":"application/json"},
+    body:JSON.stringify({username:"bothcookies",password:"UniqueTestPassword2026!",activationCode:activation})
+  }),env);
+  assert.equal(registration.status,201,await registration.clone().text());
+  const setCookies=registration.headers.getSetCookie();
+  assert.equal(setCookies.length,2);
+  const preview=setCookies.find(s=>s.startsWith("__Host-mw_preview="));
+  const userCookie=setCookies.find(s=>s.startsWith("mw_session="));
+  assert.ok(preview);
+  assert.ok(userCookie);
+  const cookieHeader=[preview,userCookie].map(s=>s.split(";")[0]).join("; ");
+  const status=await worker.fetch(new Request(origin+"/api/auth/me",{headers:{Cookie:cookieHeader}}),env);
+  assert.equal(status.status,200);
+  assert.deepEqual((await status.json()).categories.map(x=>x.slug),["cet4"]);
+  const logout=await worker.fetch(new Request(origin+"/api/auth/logout",{
+    method:"POST",headers:{Origin:origin,Cookie:cookieHeader,"Content-Type":"application/json"},
+    body:"{}"
+  }),env);
+  assert.equal(logout.status,200);
+  assert.match(logout.headers.get("set-cookie"),/mw_session=.*Max-Age=0/);
+  const onlyReviewer=preview.split(";")[0];
+  const health=await worker.fetch(new Request(origin+"/api/health",{headers:{Cookie:onlyReviewer}}),env);
+  assert.equal(health.status,200);
+  const signedOut=await worker.fetch(new Request(origin+"/api/auth/me",{headers:{Cookie:onlyReviewer}}),env);
+  assert.equal(signedOut.status,401);
+  assert.equal(signedOut.headers.get("www-authenticate"),null);
+});
