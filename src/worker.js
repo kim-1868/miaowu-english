@@ -1,6 +1,7 @@
 import { stagingGate, stagingCookieAfterBasic } from "./staging-gate.js";
 import { handleEditor } from "./editorial-admin.js";
 import { handleLearningState } from "./reading-library.js";
+import {handleEcho} from "./echo-cloud.js";
 import {
   normalizedUsername, validPassword, normalizeCode, hashCode, newPasswordHash,
   verifyPassword, sha256, sessionData, sessionCookie, clearSessionCookie,
@@ -404,6 +405,9 @@ async function api(req, env) {
     return issueStagingVoucher(req, env);
   }
   const user = await atStage("api.session_lookup", () => currentUser(req, env.DB));
+  if(path==="/api/me/echo/available" || path==="/api/me/echo/answer"){
+    return handleEcho(req,env,path,user);
+  }
   if (path === "/api/me/progress" || path === "/api/me/words" || /^\/api\/me\/words\//.test(path)) {
     return handleLearningState(req,env,path,user);
   }
