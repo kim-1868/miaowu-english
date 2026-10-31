@@ -1,6 +1,7 @@
 import { validatePackage } from "./editorial-content.js";
 import { reviewDraft } from "./editorial-review.js";
 import {handleReviewSignoff} from "./editorial-signoff.js";
+import {publicationReadiness} from "./editorial-publication.js";
 import {handleRevision,revisionReady,snapshotVersion,chapterSnapshot,wordSnapshot} from "./editorial-revisions.js";
 
 const NO_STORE = {"content-type":"application/json; charset=utf-8","cache-control":"no-store",
@@ -181,6 +182,12 @@ export async function handleEditor(req,env,path) {
     try{return await handleReviewSignoff(req,env,signoff[1])}
     catch{console.error("S3_EDITOR_FAILED","drafts.signoff");
       return resp({error:"EDITOR_BACKEND_ERROR",diagnosticStage:"drafts.signoff"},500);}
+  }
+  const preflight=path.match(/^\/api\/staging\/editor\/drafts\/([a-z0-9_-]+)\/publication-readiness$/);
+  if(preflight && req.method==="GET"){
+    try{return await publicationReadiness(env,preflight[1])}
+    catch{console.error("S3_EDITOR_FAILED","drafts.publication_readiness");
+      return resp({error:"EDITOR_BACKEND_ERROR",diagnosticStage:"drafts.publication_readiness"},500);}
   }
   if(path==="/api/staging/editor/drafts" && req.method==="GET")return safeListing(env);
   const id=path.match(/^\/api\/staging\/editor\/drafts\/([a-z0-9_-]+)$/);
