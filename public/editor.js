@@ -17,7 +17,12 @@ const mapErrors={
  EDITOR_SCHEMA_CHECK_FAILED:"后台数据库检查未通过，请检查 D1 绑定与最新部署。",
  EDITOR_BACKEND_ERROR:"后台读取草稿时发生异常。",
  STAGING_ACCESS_REQUIRED:"测试站 reviewer 访问已过期。请返回首页重新验证。"
- 
+ ,
+ EDITOR_REVISION_SCHEMA_REQUIRED:"章节编辑历史表尚未升级，请先完成 005 增量迁移",
+ EDIT_CONFLICT:"该内容已经被另一处修改。请刷新书目后重新编辑，避免覆盖新版本",
+ SHARED_WORD_LOCKED:"该词汇被别的书或已发布章节共用，暂时不能直接修改",
+ INVALID_EDITOR_PAYLOAD:"章节或词汇填写不完整，请检查段落内容和词汇 ID",
+ EDITOR_SAVE_FAILED:"保存时服务器出现异常，请检查 Cloudflare 日志"
 };
 function setVerified(value){verified=value;$("import").disabled=!value;$("refresh").disabled=!value}
 async function api(path,method="GET",body){
@@ -105,6 +110,7 @@ function renderPreview(data){
     }
     root.append(section);
   }
+  window.dispatchEvent(new CustomEvent("miaowu:draft-preview",{detail:data}));
 }
 $("verify").onclick=()=>busy($("verify"),async()=>{
   setVerified(false);
@@ -145,6 +151,16 @@ $("import").onclick=()=>busy($("import"),async()=>{
   const result=await api("/api/staging/editor/drafts","POST",{package:parsed});
   status("importMessage","已保存未发布草稿："+result.bookId+"；"+result.chapters+"章、"+result.words+"词。");
   await drafts();status("status","导入成功：未公开、未发布、不影响真实购买权限。");
+});
+window.MiaowuDraftEditor=Object.freeze({
+  request:(path,method="GET",payload)=>api(path,method,payload),
+  canEdit:()=>allowed(),
+  load:async bookId=>{
+    const detail=await api("/api/staging/editor/drafts/"+encodeURIComponent(bookId));
+    renderPreview(detail);
+    return detail;
+  },
+  notice:text=>status("status",text)
 });
 setVerified(false);
 })();
