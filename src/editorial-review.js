@@ -101,6 +101,6 @@ export async function reviewDraft(env,bookId){
     technicalCheckPassed:blockers.length===0,
     blockers:blockers.slice(0,150),blockerCount:blockers.length,
     warnings:warnings.slice(0,150),warningCount:warnings.length,
-    humanChecks,publicationEnabled:false,
+    manualChecks:humanChecks,publicationEnabled:false,
     note:"自动检查不等于人工审核；此页面不会修改草稿或发布内容。"});
 }
