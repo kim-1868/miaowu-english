@@ -35,7 +35,28 @@
     function saveReview(){try{localStorage.setItem('miaowu_v02_reviews',JSON.stringify(reviewData));localStorage.setItem('miaowu_v02_visited',JSON.stringify([...VISITED]))}catch(e){}}
     function touchWord(w){if(!WORDS[w])return;if(!reviewData[w])reviewData[w]={attempts:0,correct:0,streak:0,nextDue:Date.now()};saveReview()}
     function recordAnswer(w,ok,helped=false){touchWord(w);const r=reviewData[w];r.attempts++;if(ok)r.correct++;r.streak=ok&&!helped?r.streak+1:0;const intervals=[1,3,7,14,30];const days=ok?(helped?1:intervals[Math.min(r.streak-1,intervals.length-1)]):1;r.nextDue=Date.now()+days*DAY;if(r.streak>=4)mastered.add(w);else mastered.delete(w);saveReview();saveWords();renderReminder()}
-    function renderReminder(){let el=$('reviewReminder');if(!el)return;const due=dueList().length;const touched=touchedWords().length;el.innerHTML=`<div class="reminder-cat" aria-hidden="true"><svg viewBox="0 0 48 48" width="30" height="30" fill="currentColor"><ellipse cx="12" cy="15" rx="4.1" ry="5.6" transform="rotate(-24 12 15)"/><ellipse cx="23" cy="10" rx="4.1" ry="5.6"/><ellipse cx="34" cy="15" rx="4.1" ry="5.6" transform="rotate(24 34 15)"/><ellipse cx="41" cy="25" rx="3.4" ry="4.6" transform="rotate(30 41 25)"/><path d="M23 23c-6.2 0-9.6 5-13 9.4-2.2 3-1 8.6 3.7 9.1 3.9.5 6.2-2.2 9.3-2.2 3.2 0 5.5 2.7 9.4 2.2 4.7-.5 5.9-6.1 3.7-9.1C32.6 28 29.2 23 23 23Z"/></svg></div><div class="reminder-content"><strong>${due?`喵呜，今天有 ${due} 个单词等你复习`:(touched?`今天的复习已经完成啦，继续读点新故事？`:'喵呜，欢迎来到你的故事书房')}</strong><small>${due?'用故事找回学过的词，还记得多少？':(touched?'已接触 '+touched+' 个目标词，复习任务会在这里提醒。':'读完试读章节后，你的待复习词汇会出现在这里。')}</small></div><button class="primary reminder-btn" id="reviewReminderBtn">${due?'开始今日复习 →': '打开剧情回声 →'}</button>`;$('reviewReminderBtn').onclick=()=>{echoScope=due?'due':'recent';echoPhase='setup';navigate('echo')};}
+    function renderReminder(){
+      const area=$('reviewReminder');
+      if(!area)return;
+      const due=user?cloudDue():0,seen=cloudSaved.size;
+      const title=!user?'喵呜，欢迎来到你的故事书房':
+        due?'喵呜，今天有 '+due+' 个单词等你复习':
+        seen?'喵呜，你已收藏 '+seen+' 张云端词卡':'喵呜，读一段故事，收藏第一张词卡';
+      const hint=!user?'登录后，你的章节进度和藏书票就能跨设备保存。':
+        due?'这些词已到复习时间，记忆练习将在云端剧情回声上线后同步。':
+        '进入记忆藏书票查看保存的单词。剧情回声目前仍为演示玩法。';
+      area.innerHTML='<div class="reminder-cat" aria-hidden="true">'+
+        '<svg viewBox="0 0 48 48" width="30" height="30" fill="currentColor">'+
+        '<ellipse cx="12" cy="15" rx="4.1" ry="5.6" transform="rotate(-24 12 15)"/>'+
+        '<ellipse cx="23" cy="10" rx="4.1" ry="5.6"/>'+
+        '<ellipse cx="34" cy="15" rx="4.1" ry="5.6" transform="rotate(24 34 15)"/>'+
+        '<ellipse cx="41" cy="25" rx="3.4" ry="4.6" transform="rotate(30 41 25)"/>'+
+        '<path d="M23 23c-6.2 0-9.6 5-13 9.4-2.2 3-1 8.6 3.7 9.1 3.9.5 6.2-2.2 9.3-2.2 3.2 0 5.5 2.7 9.4 2.2 4.7-.5 5.9-6.1 3.7-9.1C32.6 28 29.2 23 23 23Z"/></svg></div>'+
+        '<div class="reminder-content"><strong>'+safe(title)+'</strong><small>'+safe(hint)+'</small></div>'+
+        '<button class="primary reminder-btn" id="reviewReminderBtn">'+
+        (user?'查看云端藏书票 →':'登录后同步 →')+'</button>';
+      $('reviewReminderBtn').onclick=()=>user?navigate('words'):showLogin();
+    }
     const ECHO_TYPES=[{id:'fill',title:'剧情填词',desc:'在故事原句中选择恰当的英文词',symbol:'▤'},{id:'situation',title:'情境选择',desc:'根据人物行为和事件判断词义',symbol:'✧'},{id:'spell',title:'单词找回',desc:'键盘或平板系统手写拼出单词',symbol:'✎'}];
     const ECHO_BANK=[
       {type:'fill',ch:0,word:'contract',q:'她将那份 ______（合同）轻轻推到桌面中央。',choices:['contract','evidence','identity','promise']},
@@ -243,7 +264,7 @@
         savedProgress?.completed_at?'✓ 已读完 · 云端同步':savedProgress?'阅读中 · 云端同步':'尚未记录本章进度';
       $('progressBar').style.width=Math.round(finished/Math.max(1,activeCloud.chapters.length)*100)+'%';
       $('savedCount').textContent=cloudSaved.size;
-      $('readerUnseen').textContent=String([...activeCloud.words?.keys()||[]].filter(id=>!cloudSaved.has(id)).length);
+      $('readerUnseen').textContent=String(Array.from(activeCloud.words?.keys()||[]).filter(id=>!cloudSaved.has(id)).length);
       $('readerDue').textContent=String(cloudDue());
       const finish=$('cloudFinishReading');
       if(finish){finish.hidden=false;finish.disabled=!user;finish.textContent=savedProgress?.completed_at?'✓ 本章已读完（已同步）':'✓ 标记本章读完并同步';}
