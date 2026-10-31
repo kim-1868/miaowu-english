@@ -63,3 +63,49 @@ test('staging health safely distinguishes absent, too-short and valid activation
   assert.equal(ready.authConfigured, false); // No DB binding in the fixture.
   assert.equal(JSON.stringify(ready).includes('0123456789'), false);
 });
+
+test('staging Basic sign-in establishes a secure preview cookie for all later background API requests', async () => {
+  const scoped={ ...env, APP_ENV:'staging', STAGING_PREVIEW_PASSWORD:'test-preview-password-987654' };
+  const url='https://example.test';
+  const basic='Basic '+Buffer.from('reviewer:'+scoped.STAGING_PREVIEW_PASSWORD).toString('base64');
+  // Direct site visit continues to challenge for the private reviewer password.
+  const challenge=await app.fetch(new Request(url+'/'),scoped);
+  assert.equal(challenge.status,401);
+  assert.match(challenge.headers.get('www-authenticate'),/Basic/);
+  // Background API requests without reviewer auth must never trigger native browser dialogs.
+  const apiChallenge=await app.fetch(new Request(url+'/api/health'),scoped);
+  assert.equal(apiChallenge.status,401);
+  assert.equal(apiChallenge.headers.get('www-authenticate'),null);
+  assert.equal((await apiChallenge.json()).error,'STAGING_ACCESS_REQUIRED');
+
+  // The single successful interactive Basic challenge creates a browser cookie.
+  const page=await app.fetch(new Request(url+'/',{
+    headers:{Authorization:basic}
+  }),scoped);
+  assert.equal(page.status,200);
+  const setCookie=page.headers.get('set-cookie');
+  assert.match(setCookie,/__Host-mw_preview=\d{10}\.[0-9a-f]{64}/);
+  assert.match(setCookie,/HttpOnly/);
+  assert.match(setCookie,/Secure/);
+  assert.match(setCookie,/SameSite=Lax/);
+  const preview=setCookie.split(';')[0];
+  // Same-origin fetch with cookie alone succeeds without Authorization.
+  const check=await app.fetch(new Request(url+'/api/health',{headers:{Cookie:preview}}),scoped);
+  assert.equal(check.status,200);
+  assert.equal((await check.json()).ok,true);
+  assert.equal(check.headers.get('set-cookie'),null);
+  const asset=await app.fetch(new Request(url+'/styles.css',{headers:{Cookie:preview}}),scoped);
+  assert.equal(asset.status,200);
+  const register=await app.fetch(new Request(url+'/api/auth/login',{
+    method:'POST',
+    headers:{Cookie:preview,'Content-Type':'application/json',Origin:url},
+    body:JSON.stringify({username:'valid_reader',password:'some-password'})
+  }),scoped);
+  assert.equal(register.status,503); // D1 omitted in fixture; staging auth itself passed.
+
+  // Tampering and rotation revoke the preview grant.
+  const tampered=preview.slice(0,-1)+(preview.endsWith('a')?'b':'a');
+  assert.equal((await app.fetch(new Request(url+'/api/health',{headers:{Cookie:tampered}}),scoped)).status,401);
+  const rotated={...scoped,STAGING_PREVIEW_PASSWORD:'another-valid-preview-password-012345'};
+  assert.equal((await app.fetch(new Request(url+'/api/health',{headers:{Cookie:preview}}),rotated)).status,401);
+});
