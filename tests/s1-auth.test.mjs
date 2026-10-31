@@ -72,12 +72,15 @@ const login = (env, username, password = "MyGoodPassword2026!") =>
 const cookieOf = response => response.headers.get("set-cookie")?.split(";")[0];
 
 test("password hashing is salted, valid and non-plaintext", async () => {
-  const a = await newPasswordHash("secure password 123");
-  const b = await newPasswordHash("secure password 123");
+  const a = await newPasswordHash("secure password 123", { ACTIVATION_PEPPER: pepper });
+  const b = await newPasswordHash("secure password 123", { ACTIVATION_PEPPER: pepper });
   assert.notEqual(a.salt, b.salt);
   assert.notEqual(a.hash, b.hash);
-  assert.equal(await verifyPassword("secure password 123",a.salt,a.hash),true);
-  assert.equal(await verifyPassword("bad password",a.salt,a.hash),false);
+  assert.equal(await verifyPassword("secure password 123",a.salt,a.hash,{ ACTIVATION_PEPPER: pepper }),true);
+  assert.equal(await verifyPassword("bad password",a.salt,a.hash,{ ACTIVATION_PEPPER: pepper }),false);
+  assert.match(a.hash,/^pbkdf2_sha256_100000_peppered_v1\$/);
+  assert.equal(await verifyPassword("secure password 123",a.salt,a.hash,{ ACTIVATION_PEPPER: "a totally different secret longer than 32 chars" }),false);
+  assert.equal(await verifyPassword("secure password 123",a.salt,"pbkdf2_sha256_310000$legacy",{ ACTIVATION_PEPPER: pepper }),false);
   assert.equal(normalizedUsername("  小猫_01 "), "小猫_01");
 });
 
