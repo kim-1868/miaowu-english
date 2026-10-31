@@ -295,6 +295,42 @@ async function seedStagingWordbookFixture(env) {
   return json({ok:true,testOnly:true,chapterId:id,wordId});
 }
 
+async function seedStagingEchoFixture(env) {
+  // Safe, fixed staging-only Chapter 4 of an existing QA book.
+  if(env.APP_ENV!=="staging")return reject("NOT_FOUND",404);
+  const ready=await dbStmt(env.DB,"SELECT id FROM books WHERE id='qa-cet4' AND status='published'").first();
+  if(!ready)return reject("QA_BOOK_NOT_READY",409);
+  const words=[
+    ["qa-echo-contract","contract","合同；契约","/ˈkɒntrækt/","她把 contract 放到桌上，等待最后的决定。"],
+    ["qa-echo-evidence","evidence","证据","/ˈevɪdəns/","这封旧信将成为最关键的 evidence。"],
+    ["qa-echo-identity","identity","身份","/aɪˈdentəti/","照片揭开了她隐藏多年的 identity。"],
+    ["qa-echo-confirm","confirm","确认","/kənˈfɜːm/","她决定先 confirm 信件的来源。"]
+  ];
+  const paragraphs=[{segments:[{text:"这是为测试真实剧情回声三种玩法准备的原创无害练习片段，并非付费小说。"}]},
+    ...words.map(w=>({segments:[
+      {text:w[4].split(w[1])[0]}, {wordId:w[0],surface:w[1],gloss:w[2]},
+      {text:w[4].split(w[1]).slice(1).join(w[1])}
+    ]}))];
+  const statements=[];
+  for(const w of words){
+    statements.push(dbStmt(env.DB,
+      "INSERT OR IGNORE INTO words(id,headword,meaning_zh,phonetic_uk,phonetic_us,"+
+      "part_of_speech,example_en,example_zh,collocations_json) "+
+      "VALUES(?,?,?,?,?,?,?,?,?)",w[0],w[1],w[2],w[3],w[3],"n./v.",
+      "The reader remembered the "+w[1]+".","读者记住了这个单词。",
+      JSON.stringify([{en:w[1]+" in context",zh:"在语境中使用单词"},{en:"remember "+w[1],zh:"记住单词"}])));
+  }
+  statements.push(dbStmt(env.DB,
+    "INSERT OR IGNORE INTO chapters(id,book_id,chapter_no,title,content_json,is_preview,published_at) "+
+    "VALUES('qa-cet4-echo','qa-cet4',4,?,?,1,CURRENT_TIMESTAMP)",
+    "【测试】真实剧情回声 · 四词练习",JSON.stringify({version:1,testOnly:true,paragraphs})));
+  words.forEach((w,i)=>statements.push(dbStmt(env.DB,
+    "INSERT OR IGNORE INTO chapter_words(chapter_id,word_id,context_sentence,context_anchor) "+
+    "VALUES('qa-cet4-echo',?,?,?)",w[0],w[4],"p"+(i+1)+":s1")));
+  await env.DB.batch(statements);
+  return json({ok:true,testOnly:true,chapterId:"qa-cet4-echo",wordCount:4});
+}
+
 async function issueStagingVoucher(req, env) {
   // QA only. Never expose a voucher minting endpoint on live customer environments.
   // The global stagingGate must have authenticated the reviewer before this runs.
@@ -400,6 +436,9 @@ async function api(req, env) {
   }
   if (path === "/api/staging/seed-wordbook-fixture" && req.method === "POST") {
     return seedStagingWordbookFixture(env);
+  }
+  if(path==="/api/staging/seed-echo-fixture" && req.method==="POST"){
+    return seedStagingEchoFixture(env);
   }
   if (path === "/api/staging/test-voucher" && req.method === "POST") {
     return issueStagingVoucher(req, env);
