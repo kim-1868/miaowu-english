@@ -62,7 +62,16 @@ async function setProgress(req,env,userId){
 async function wordList(env,userId){
   const result=await sql(env,"SELECT uw.word_id,uw.status,uw.bookmarked,uw.last_seen_at,uw.due_at,"+
     "w.headword,w.phonetic_uk,w.phonetic_us,w.part_of_speech,w.meaning_zh,"+
-    "w.example_en,w.example_zh,w.collocations_json FROM user_words uw "+
+    "w.example_en,w.example_zh,w.collocations_json, "+
+    "(SELECT cw2.context_sentence FROM chapter_words cw2 "+
+    "JOIN chapters ch2 ON ch2.id=cw2.chapter_id JOIN books b2 ON b2.id=ch2.book_id "+
+    "JOIN categories c2 ON c2.id=b2.category_id "+
+    "WHERE cw2.word_id=uw.word_id AND b2.status='published' AND c2.is_visible=1 "+
+    "AND ch2.published_at IS NOT NULL AND ch2.published_at<=CURRENT_TIMESTAMP "+
+    "AND (ch2.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e2 "+
+    "WHERE e2.user_id=uw.user_id AND e2.category_id=b2.category_id AND e2.revoked_at IS NULL)) "+
+    "ORDER BY ch2.chapter_no ASC LIMIT 1) AS context_sentence "+
+    "FROM user_words uw "+
     "JOIN words w ON w.id=uw.word_id WHERE uw.user_id=? AND uw.bookmarked=1 "+
     "AND EXISTS(SELECT 1 FROM chapter_words cw JOIN chapters ch ON ch.id=cw.chapter_id "+
     "JOIN books b ON b.id=ch.book_id JOIN categories c ON c.id=b.category_id "+
