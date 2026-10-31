@@ -383,3 +383,73 @@ test("S3 C2 signoff stays private, missing new D1 table is fail-closed; prior QA
   assert.equal(old.status,200);
   assert.equal((await old.json()).blockerCount,0);
 });
+
+test("S3 D0 readiness blocks demo manuscript even when human signoff exists, with no publish actions",async()=>{
+  const env=fixture(),key={"X-Mw-Editor-Key":EDITOR_KEY};
+  const prefix="/api/staging/editor/drafts/sample-cet4-letter";
+  assert.equal((await call(env,"/api/staging/editor/drafts","POST",{package:sample},{headers:key})).status,201);
+  const before=await call(env,prefix+"/publication-readiness","GET",undefined,{headers:key});
+  assert.equal(before.status,200);
+  const first=await before.json();
+  assert.equal(first.canPublish,false);
+  assert.equal(first.publicationAvailable,false);
+  assert.equal(first.environment,"staging");
+  assert.equal(first.humanReview.status,"missing");
+  const blockers=new Set(first.blockers.map(x=>x.code));
+  assert.ok(blockers.has("TEST_MANUSCRIPT"));
+  assert.ok(blockers.has("MANUAL_REVIEW_REQUIRED"));
+  assert.ok(blockers.has("PUBLICATION_DISABLED"));
+  const qa=(await (await call(env,prefix+"/review","GET",undefined,{headers:key})).json());
+  const signed=await call(env,prefix+"/review-signoffs","POST",{
+    expectedFingerprint:qa.contentFingerprint,checks:qa.manualChecks.map(x=>x.code),
+    note:"仅限测试内容的人工审核流程演示，不作为商业上架批准。"
+  },{headers:key});
+  assert.equal(signed.status,201);
+  const after=await call(env,prefix+"/publication-readiness","GET",undefined,{headers:key});
+  assert.equal(after.status,200);
+  const saved=await after.json();
+  assert.equal(saved.humanReview.status,"current");
+  assert.equal(saved.canPublish,false);
+  assert.ok(saved.blockers.some(x=>x.code==="TEST_MANUSCRIPT"));
+  assert.ok(saved.blockers.some(x=>x.code==="PUBLICATION_DISABLED"));
+  assert.equal(env.sqlite.prepare("SELECT status FROM books WHERE id='sample-cet4-letter'").get().status,"draft");
+  assert.equal(env.sqlite.prepare("SELECT COUNT(*) AS n FROM chapters WHERE published_at IS NOT NULL").get().n,0);
+  assert.equal((await call(env,prefix+"/publication-readiness","POST",{publish:true},{headers:key})).status,404);
+});
+test("S3 D0 preflight is editor-only and old signatures become outdated after chapter edits",async()=>{
+  const env=fixture(),key={"X-Mw-Editor-Key":EDITOR_KEY},prefix="/api/staging/editor/drafts/sample-cet4-letter";
+  await call(env,"/api/staging/editor/drafts","POST",{package:sample},{headers:key});
+  assert.equal((await call(env,prefix+"/publication-readiness","GET")).status,403);
+  assert.equal((await call({...env,APP_ENV:"production"},prefix+"/publication-readiness","GET",undefined,{headers:key})).status,404);
+  const qa=await (await call(env,prefix+"/review","GET",undefined,{headers:key})).json();
+  await call(env,prefix+"/review-signoffs","POST",{
+    expectedFingerprint:qa.contentFingerprint,checks:qa.manualChecks.map(x=>x.code),
+    note:"两章原始测试内容的人工审核记录，用于确认后续修改失效逻辑。"
+  },{headers:key});
+  const current=(await (await call(env,prefix+"/publication-readiness","GET",undefined,{headers:key})).json());
+  assert.equal(current.humanReview.status,"current");
+  const p=(await (await call(env,prefix,"GET",undefined,{headers:key})).json()).chapters[0];
+  const paragraphs=structuredClone(p.content.paragraphs);
+  paragraphs[0].segments[0].text="重新修改了准备审核后第一章文字。";
+  const updated=await call(env,prefix+"/chapters/"+p.id,"PUT",{
+    title:p.title,preview:p.preview,paragraphs,expectedVersion:p.version
+  },{headers:key});
+  assert.equal(updated.status,200);
+  const stale=(await (await call(env,prefix+"/publication-readiness","GET",undefined,{headers:key})).json());
+  assert.equal(stale.humanReview.status,"outdated");
+  assert.equal(stale.canPublish,false);
+  assert.ok(stale.blockers.some(x=>x.code==="MANUAL_REVIEW_REQUIRED"));
+  assert.equal(env.sqlite.prepare("SELECT COUNT(*) AS n FROM entitlements").get().n,0);
+});
+test("S3 D0 read-only report still works when signoff migration is absent but never approves publishing",async()=>{
+  const env=fixture(),key={"X-Mw-Editor-Key":EDITOR_KEY};
+  await call(env,"/api/staging/editor/drafts","POST",{package:sample},{headers:key});
+  env.sqlite.exec("DROP TABLE editorial_review_signoffs");
+  const res=await call(env,"/api/staging/editor/drafts/sample-cet4-letter/publication-readiness","GET",undefined,{headers:key});
+  assert.equal(res.status,200);
+  const report=await res.json();
+  assert.equal(report.signoffsSchemaReady,false);
+  assert.equal(report.canPublish,false);
+  assert.ok(report.blockers.some(x=>x.code==="REVIEW_STORAGE_MISSING"));
+  assert.equal(env.sqlite.prepare("SELECT status FROM books WHERE id='sample-cet4-letter'").get().status,"draft");
+});
