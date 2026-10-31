@@ -444,7 +444,7 @@ async function api(req, env) {
     return issueStagingVoucher(req, env);
   }
   const user = await atStage("api.session_lookup", () => currentUser(req, env.DB));
-  if(path==="/api/me/echo/available" || path==="/api/me/echo/answer"){
+  if(path==="/api/me/echo/available" || path==="/api/me/echo/answer" || path==="/api/me/echo/stats"){
     return handleEcho(req,env,path,user);
   }
   if (path === "/api/me/progress" || path === "/api/me/words" || /^\/api\/me\/words\//.test(path)) {
