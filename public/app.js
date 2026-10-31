@@ -120,6 +120,7 @@
         cloudSaved=new Map((words.words||[]).map(w=>[w.word_id,w]));
         cloudReviewDue=Number(stats.due)||0;
         cloudProgress=progress.progress||[];
+        if(view==='library')updateCloudShelfProgress();
         renderReminder();
         if(view==='account')renderAccount();
         if(view==='words')renderWords();
@@ -145,43 +146,96 @@
       if(book)openCloudBook(book,category);
       else{navigate('library');toast('当前分类暂无已发布故事，请稍后再来')}
     }
+    function updateCloudShelfProgress(){
+      document.querySelectorAll('[data-live-progress]').forEach(node=>{
+        const id=node.dataset.liveProgress;
+        const book=cloudBooks.find(b=>b.id===id);
+        if(!book)return;
+        const completed=cloudProgress.filter(p=>p.book_id===id&&p.completed_at).length;
+        const started=cloudProgress.some(p=>p.book_id===id);
+        const total=Math.max(0,Number(book.chapter_count)||0);
+        const info=node.querySelector('.progress-text span:first-child');
+        const ratio=node.querySelector('.progress-text span:last-child');
+        const line=node.querySelector('.progress-fill');
+        if(info)info.textContent=!user?'登录后可保存阅读进度':
+          started?'已读完 '+completed+' 章 · 云端已同步':'尚未开始阅读';
+        if(ratio)ratio.textContent=total?completed+' / '+total+' 章':'尚无已发布章节';
+        if(line)line.style.width=(total?Math.min(100,Math.round(completed/total*100)):0)+'%';
+      });
+    }
     async function loadCloudBookCards(slug){
       const seq=++cloudListSequence;
       const list=$('bookGrid');
-      list.innerHTML='<div class="onboarding cloud-loading" style="grid-column:1/-1"><span class="eyebrow">LIVE STORY LIBRARY</span><h3>正在整理书架……</h3><p>从 Cloudflare D1 读取已发布故事。</p></div>';
+      list.innerHTML='<div class="onboarding cloud-loading" style="grid-column:1/-1"><span class="eyebrow">YOUR STORY SHELF</span><h3>正在整理故事书架……</h3><p>为你翻开已经发布的故事。</p></div>';
       try{
         const response=await serverRequest('/api/books?category='+encodeURIComponent(slug));
         if(seq!==cloudListSequence||category!==slug||view!=='library')return;
-        const books=Array.isArray(response.books)?response.books.filter(b=>b&&typeof b.id==='string'):[];
+        const books=Array.isArray(response.books)?
+          response.books.filter(b=>b&&typeof b.id==='string'&&typeof b.title==='string'):[];
         cloudBooks=books;
-        if(!books.length){
-          list.innerHTML='<div class="onboarding" style="grid-column:1/-1;width:100%;margin:0"><span class="eyebrow">YOUR NEXT STORY</span><h3>这层书架，还在等待第一本故事</h3><p>这里只展示已经发布的小说；后台草稿不会提前公开。你可以先体验其他分类中的已发布测试内容。</p></div>';
-          return;
-        }
         list.replaceChildren();
         books.forEach((book,i)=>{
-          const article=document.createElement('div');
-          article.className='book-item cloud-book-item';
+          const item=document.createElement('div');
+          item.className='book-item cloud-book-item';
           const kind=['one','two','three'][i%3];
-          const badge=/测试|示例|qa-|demo|sample/i.test(book.title+' '+book.id)?'功能测试 · 非正式商品':'已发布故事';
-          article.innerHTML='<div class="book-cover '+kind+'"><span class="book-tag">'+safe(badge)+'</span>'+
+          const test=/测试|示例|qa-|demo|sample/i.test(book.title+' '+book.id);
+          const coverTitle=test?'故事试读册':book.title;
+          const coverLabel=test?'TEST EDITION · 功能测试':'STORY COLLECTION';
+          const badge=test?'测试内容 · 不出售':has(slug)?'已解锁':'免费试读';
+          const action=cloudProgress.some(p=>p.book_id===book.id)?'继续阅读 →':'开始试读 →';
+          item.innerHTML='<div class="book-cover '+kind+'" aria-label="'+safe(book.title)+'">'+
+            '<span class="book-tag">'+safe(badge)+'</span>'+
             '<span class="edition">THE STORY EDITION / '+String(i+1).padStart(2,'0')+'</span>'+
-            '<span class="illustration">'+['❦','♧','✥'][i%3]+'</span><h3>'+safe(book.title)+'</h3>'+
-            '<span class="edition-bottom">A STORY TO REMEMBER</span></div>'+
-            '<div class="book-info"><div class="line1"><h3>'+safe(book.title)+'</h3>'+
+            '<span class="illustration">'+['❦','♧','✥'][i%3]+'</span>'+
+            '<h3>'+safe(coverTitle)+'</h3><span class="edition-bottom">'+safe(coverLabel)+'</span></div>'+
+            '<div class="book-info"><div class="line1"><h3 title="'+safe(book.title)+'">'+safe(book.title)+'</h3>'+
             '<span class="eyebrow">'+String(i+1).padStart(2,'0')+'</span></div>'+
             '<p>'+safe(book.description||'读一本舍不得合上的故事。')+'</p>'+
             '<div class="book-meta"><span class="pill">'+safe(slug.toUpperCase())+'</span>'+
-            '<span class="pill">'+(has(slug)?'已开通分类':'免费章节可试读')+'</span></div>'+
-            '<div class="shelf-progress"><div class="progress-text"><span>云端书目 · 章节实时读取</span>'+
-            '<span>'+safe(badge)+'</span></div></div>'+
-            '<div class="book-actions"><button class="primary" type="button">打开这本故事 →</button></div></div>';
-          article.querySelector('button').onclick=()=>openCloudBook(book,slug);
-          list.append(article);
+            '<span class="pill">'+(test?'仅供联调':has(slug)?'已拥有学习权限':'免费章节开放')+'</span></div>'+
+            '<div class="shelf-progress" data-live-progress="'+safe(book.id)+'">'+
+            '<div class="progress-text"><span>正在读取阅读记录</span><span>—</span></div>'+
+            '<div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>'+
+            '<div class="book-actions"><button class="primary" type="button">'+action+'</button></div></div>';
+          item.querySelector('.book-actions button').onclick=()=>openCloudBook(book,slug);
+          list.append(item);
         });
+        // Keep the approved V0.3 three-cover rhythm for the first collection.
+        // These are disabled editorial placeholders, not published D1 books.
+        if(slug==='cet4'&&books.length<3){
+          BOOKS.filter(b=>b.status==='planned').slice(0,3-books.length).forEach((b,i)=>{
+            const item=document.createElement('div');
+            item.className='book-item planned-book-item';
+            const ix=books.length+i+1;
+            item.innerHTML='<div class="book-cover '+safe(b.kind)+'">'+
+              '<span class="book-tag">内容筹备中</span>'+
+              '<span class="edition">THE STORY EDITION / '+String(ix).padStart(2,'0')+'</span>'+
+              '<span class="illustration">'+safe(b.illustration)+'</span>'+
+              '<h3>'+safe(b.name)+'</h3><span class="edition-bottom">COMING SOON · 故事企划</span></div>'+
+              '<div class="book-info"><div class="line1"><h3>'+safe(b.name)+'</h3>'+
+              '<span class="eyebrow">'+String(ix).padStart(2,'0')+'</span></div>'+
+              '<p>'+safe(b.desc)+'</p><div class="book-meta">'+
+              '<span class="pill">'+safe(b.tag)+'</span><span class="pill">未上架 · 不可购买</span></div>'+
+              '<div class="shelf-progress"><div class="progress-text"><span>故事企划阶段</span>'+
+              '<span>敬请期待</span></div></div>'+
+              '<div class="book-actions"><button class="secondary-btn" type="button" disabled>尚未开放</button></div></div>';
+            list.append(item);
+          });
+        }
+        if(!books.length){
+          const explanation=document.createElement('div');
+          explanation.className='onboarding cloud-shelf-empty';
+          explanation.innerHTML='<span class="eyebrow">YOUR NEXT STORY</span>'+
+            '<h3>这一层书架，还在等待故事</h3>'+
+            '<p>目前没有已发布的小说。下方封面为尚未上架的设计企划，不能阅读或购买。</p>';
+          list.prepend(explanation);
+        }
+        updateCloudShelfProgress();
       }catch(error){
         if(seq===cloudListSequence&&category===slug&&view==='library'){
-          list.innerHTML='<div class="onboarding" style="grid-column:1/-1"><h3>书架暂时没有连接成功</h3><p>'+safe(error.message)+'</p><button class="secondary-btn" id="retryCloudBooks">重试加载</button></div>';
+          list.innerHTML='<div class="onboarding" style="grid-column:1/-1">'+
+            '<h3>书架暂时没有连接成功</h3><p>'+safe(error.message)+'</p>'+
+            '<button class="secondary-btn" id="retryCloudBooks">重试加载</button></div>';
           $('retryCloudBooks').onclick=()=>loadCloudBookCards(slug);
         }
       }
