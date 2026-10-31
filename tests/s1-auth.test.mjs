@@ -196,3 +196,34 @@ test("only a staging reviewer can mint an unpredictable, single-use QA voucher",
   const denied=await worker.fetch(request(auth),production);
   assert.equal(denied.status,404);
 });
+
+test("staging-only database diagnostic verifies schema and test inventory without disclosing secrets", async () => {
+  const env=environment();
+  env.APP_ENV="staging";
+  env.STAGING_PREVIEW_PASSWORD="correct-private-reviewer-password";
+  const url=origin+"/api/staging/diagnostics";
+  assert.equal((await worker.fetch(new Request(url),env)).status,401);
+  const auth="Basic "+Buffer.from("reviewer:"+env.STAGING_PREVIEW_PASSWORD).toString("base64");
+  const resp=await worker.fetch(new Request(url,{headers:{Authorization:auth}}),env);
+  assert.equal(resp.status,200);
+  const data=await resp.json();
+  assert.equal(data.databaseSchemaReady,true);
+  assert.deepEqual(data.missingColumnsByTable,{});
+  assert.equal(data.qaCounts.users,0);
+  assert.equal(JSON.stringify(data).includes("demo-test-only-activation-pepper"),false);
+  const notStaging={...env,APP_ENV:"production"};
+  assert.equal((await worker.fetch(new Request(url),notStaging)).status,404);
+});
+
+test("D1 schema drift is reported safely instead of exposing database SQL", async () => {
+  const env=environment();
+  env.APP_ENV="staging";
+  env.STAGING_PREVIEW_PASSWORD="correct-private-reviewer-password";
+  env.DB.exec("ALTER TABLE users RENAME TO renamed_users");
+  const auth="Basic "+Buffer.from("reviewer:"+env.STAGING_PREVIEW_PASSWORD).toString("base64");
+  const r=await worker.fetch(new Request(origin+"/api/staging/diagnostics",{headers:{Authorization:auth}}),env);
+  assert.equal(r.status,200);
+  const data=await r.json();
+  assert.equal(data.databaseSchemaReady,false);
+  assert.ok(data.missingColumnsByTable.users.includes("password_hash"));
+});
