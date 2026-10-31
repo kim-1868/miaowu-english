@@ -246,3 +246,31 @@ html[data-theme="dark"] .cloud-chapter-options .chapter-btn{
 html[data-theme="dark"] .cloud-chapter-options .chapter-btn:hover{
   background:var(--pink);border-color:var(--wine);
 }
+
+/* S7: Keep live content inside the exact V0.3 book-card geometry. */
+.cloud-book-item .book-cover h3,
+.planned-book-item .book-cover h3{
+  max-width:90%;overflow-wrap:anywhere;display:-webkit-box;
+  -webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;
+}
+.cloud-book-item .book-info .line1 h3,
+.planned-book-item .book-info .line1 h3{
+  min-width:0;overflow-wrap:anywhere;display:-webkit-box;
+  -webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
+}
+.cloud-book-item .book-info>p,
+.planned-book-item .book-info>p{
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+  overflow:hidden;min-height:43px;
+}
+.planned-book-item .book-cover{filter:saturate(.77);}
+.planned-book-item .book-actions button:disabled{opacity:.7;cursor:not-allowed;}
+.cloud-shelf-empty{grid-column:1/-1;width:100%;margin:0;}
+.cloud-book-item .book-actions button,.planned-book-item .book-actions button{
+  min-height:44px;
+}
+@media(max-width:680px){
+  .cloud-book-item .book-info .line1 h3,.planned-book-item .book-info .line1 h3{
+    font-size:clamp(15px,3.2vw,19px);
+  }
+}
