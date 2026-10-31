@@ -5,6 +5,11 @@ const bound=(db,sql,...p)=>db.prepare(sql).bind(...p);
 const ID=/^[a-z][a-z0-9_-]{2,79}$/;
 const nonempty=x=>typeof x==="string"?x.trim():"";
 const flag=(list,code,message,extra={})=>list.push({code,message,...extra});
+const sha256=async value=>{
+  const bytes=new TextEncoder().encode(JSON.stringify(value));
+  const digest=new Uint8Array(await crypto.subtle.digest("SHA-256",bytes));
+  return Array.from(digest,b=>b.toString(16).padStart(2,"0")).join("");
+};
 function validateChapter(chapter,allWords,membership,blockers,warnings,seen) {
   let content;try{content=JSON.parse(chapter.content_json)}
   catch{flag(blockers,"INVALID_CHAPTER_JSON","章节正文不是有效 JSON",{chapterId:chapter.id});return}
@@ -51,7 +56,18 @@ export async function reviewDraft(env,bookId){
     bound(db,"SELECT word_id FROM word_categories WHERE category_id=?",book.category_id).all()
   ]);
   const chapters=cr.results||[],words=wr.results||[],annotations=ar.results||[];
-  const membership=new Set((categoryr.results||[]).map(x=>x.word_id));
+  const memberships=categoryr.results||[];
+  // The digest covers every persisted editorial field involved in the review.
+  // Explicit sorting keeps it stable across different D1 query iteration orders.
+  const sorted=(arr,fn)=>[...arr].sort((a,b)=>fn(a).localeCompare(fn(b)));
+  const contentFingerprint=await sha256({
+    book,
+    chapters:sorted(chapters,c=>c.id),
+    words:sorted(words,w=>w.id),
+    annotations:sorted(annotations,r=>r.chapter_id+"|"+r.word_id+"|"+r.context_anchor),
+    membership:sorted(memberships,r=>r.word_id)
+  });
+  const membership=new Set(memberships.map(x=>x.word_id));
   const blockers=[],warnings=[];
   if(!chapters.length)flag(blockers,"NO_CHAPTERS","书目还没有章节");
   if(!nonempty(book.title))flag(blockers,"MISSING_BOOK_TITLE","书目没有标题");
@@ -101,6 +117,6 @@ export async function reviewDraft(env,bookId){
     technicalCheckPassed:blockers.length===0,
     blockers:blockers.slice(0,150),blockerCount:blockers.length,
     warnings:warnings.slice(0,150),warningCount:warnings.length,
-    manualChecks:humanChecks,publicationEnabled:false,
+    manualChecks:humanChecks,contentFingerprint,publicationEnabled:false,
     note:"自动检查不等于人工审核；此页面不会修改草稿或发布内容。"});
 }
