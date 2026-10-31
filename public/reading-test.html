@@ -1,0 +1,43 @@
+<!doctype html><html lang="zh-CN"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>妙屋英语 · 章节权限联调（测试专用）</title>
+<style>
+:root{font-family:system-ui,-apple-system,"PingFang SC",sans-serif;background:#f7f0ea;color:#46313d}
+*{box-sizing:border-box}body{margin:0;padding:24px 16px 70px}main{max-width:860px;margin:auto}
+h1{font:normal 34px "Songti SC",Georgia,serif;color:#6b3044}
+.card{background:#fffbf6;border:1px solid #e9d9d3;border-radius:18px;padding:22px;margin:16px 0}
+p{line-height:1.8}small{color:#876f74}button{border:0;border-radius:9px;padding:12px 16px;background:#74384b;color:white;cursor:pointer;font:inherit}
+button:disabled{opacity:.55}button.secondary{background:#e9dbd4;color:#573344}
+.row{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+pre{white-space:pre-wrap;word-break:break-word;background:#eee3dd;padding:15px;border-radius:9px;line-height:1.8}
+.chapter{border-top:1px solid #e7d9d3;padding:14px 0}
+.chapter strong{display:block;margin-bottom:8px}a{color:#74384b}
+.panel{border-left:4px solid #b58d76;padding:8px 15px;background:#f0e5df;border-radius:6px}
+h2{font:normal 24px "Songti SC",serif;color:#683b4a}
+.status{min-height:40px}
+@media(prefers-color-scheme:dark){:root{background:#241f27;color:#f0e1e8}.card{background:#312833;border-color:#574650}h1,h2{color:#edc0d0}pre,.panel{background:#463742;color:#f6e6ed}button.secondary{background:#6d5662;color:#fff}small{color:#d0b3bf}a{color:#e1acbf}}
+</style>
+</head><body><main>
+<p><a href="/">← 返回妙屋英语</a>　|　<a href="/account-test.html">账号联调实验室</a></p>
+<h1>章节权限 · 云端联调</h1>
+<p>本页面专门验证：<strong>章节目录可以公开，但付费正文必须在服务器校验分类权限之后才能返回。</strong></p>
+<div class="panel">仅用于受密码保护的 staging 测试站。测试书目和正文都不属于正式小说，不可出售。以前首页里硬编码的两章只是交互演示，暂不代表真正的付费内容。</div>
+<section class="card">
+<h2>① 当前账号权限</h2>
+<pre id="identity" class="status">检查中…</pre>
+<div class="row"><button class="secondary" id="refreshAccount">刷新账号</button><a href="/account-test.html">切换账号 / 登录 →</a></div>
+</section>
+<section class="card">
+<h2>② 初始化 D1 测试章节（只需一次）</h2>
+<p><small>会在 D1 测试库创建两本固定的测试书目和三章测试正文，重复点击不会覆盖已有内容。测试正文不会加入前端公开资源包。</small></p>
+<div class="row"><button id="seed">创建测试书目</button><button class="secondary" id="load">读取书目与章节目录</button></div>
+<pre id="feedback" class="status">尚未初始化或读取。</pre>
+</section>
+<section class="card">
+<h2>③ 测试章节访问权限</h2>
+<div id="books">先点击“创建测试书目”或“读取书目与章节目录”。</div>
+<h2>服务器返回的正文</h2>
+<pre id="content">点击章节的“请求正文”，查看是否能读取。</pre>
+</section>
+</main><script src="/reading-test.js"></script></body></html>
