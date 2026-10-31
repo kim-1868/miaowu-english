@@ -1,4 +1,4 @@
-import { stagingGate } from "./staging-gate.js";
+import { stagingGate, stagingCookieAfterBasic } from "./staging-gate.js";
 import {
   normalizedUsername, validPassword, normalizeCode, hashCode, newPasswordHash,
   verifyPassword, sha256, sessionData, sessionCookie, clearSessionCookie,
@@ -363,30 +363,38 @@ async function api(req, env) {
   if (chapterMatch && req.method === "GET") return chapterAccess(req, env, chapterMatch[1], user);
   return reject("NOT_FOUND", 404);
 }
+function attachPreviewCookie(response, previewCookie) {
+  if (!previewCookie) return response;
+  const h = new Headers(response.headers);
+  // Set-Cookie must be appended, not joined with an existing real-user session cookie.
+  h.append("Set-Cookie", previewCookie);
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers: h });
+}
 export default {
   async fetch(request, env) {
     // Staging gate applies to both public files and API routes.
     // Wrangler assets.run_worker_first MUST remain true for this to work.
     const blocked = await stagingGate(request, env);
     if (blocked) return blocked;
+    const previewCookie = await stagingCookieAfterBasic(request, env);
     const path = new URL(request.url).pathname;
     if (!path.startsWith("/api/")) {
       const response = await env.ASSETS.fetch(request);
-      if (env.APP_ENV !== "staging") return response;
+      if (env.APP_ENV !== "staging") return attachPreviewCookie(response, previewCookie);
       const headers = new Headers(response.headers);
       headers.set("cache-control", "private, no-store");
-      return new Response(response.body, { status: response.status, headers });
+      return attachPreviewCookie(new Response(response.body, { status: response.status, headers }), previewCookie);
     }
     try {
       const host = new URL(request.url).hostname;
       if (new URL(request.url).protocol !== "https:" && host !== "localhost" && host !== "127.0.0.1") {
-        return reject("HTTPS_REQUIRED", 403);
+        return attachPreviewCookie(reject("HTTPS_REQUIRED", 403), previewCookie);
       }
-      return await api(request, env);
+      return attachPreviewCookie(await api(request, env), previewCookie);
     } catch (err) {
-      if (["CONTENT_TYPE", "TOO_LARGE", "INVALID_JSON"].includes(err?.message)) return reject(err.message, 400);
+      if (["CONTENT_TYPE", "TOO_LARGE", "INVALID_JSON"].includes(err?.message)) return attachPreviewCookie(reject(err.message, 400), previewCookie);
       // The browser only receives a stable stage label in the reviewer-protected staging environment.
-      return stagingErrorResponse(env, err);
+      return attachPreviewCookie(stagingErrorResponse(env, err), previewCookie);
     }
   }
 };
