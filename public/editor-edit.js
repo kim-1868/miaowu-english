@@ -124,10 +124,8 @@ function chapterEditor(data,chapter){
   const actions=node("div","edit-actions");
   actions.append(
     button("＋ 新增段落",()=>addParagraph(paragraphs,{segments:[{text:""}]},data.words)),
-    button("查看历史版本",()=>showHistory("chapter",bookId,id,chapter.version)),
-    button("保存章节修改",btn=>{}, "secondary")
+    button("查看历史版本",()=>showHistory("chapter",bookId,id,chapter.version))
   );
-  actions.lastChild.remove();
   const save=button("保存章节修改",()=>perform(save,async()=>{
     const changes=extractChapter(form);
     const result=await service().request("/api/staging/editor/drafts/"+bookId+"/chapters/"+id,
