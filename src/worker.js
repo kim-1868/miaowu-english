@@ -1,5 +1,6 @@
 import { stagingGate, stagingCookieAfterBasic } from "./staging-gate.js";
 import { handleEditor } from "./editorial-admin.js";
+import { handleLearningState } from "./reading-library.js";
 import {
   normalizedUsername, validPassword, normalizeCode, hashCode, newPasswordHash,
   verifyPassword, sha256, sessionData, sessionCookie, clearSessionCookie,
@@ -354,7 +355,7 @@ async function api(req, env) {
   if (!env.DB || !env.ACTIVATION_PEPPER || env.ACTIVATION_PEPPER.length < 32) {
     return reject("SERVICE_NOT_CONFIGURED", 503);
   }
-  if (req.method === "POST" && !checkOrigin(req)) return reject("INVALID_ORIGIN", 403);
+  if (["POST","PUT","PATCH","DELETE"].includes(req.method) && !checkOrigin(req)) return reject("INVALID_ORIGIN", 403);
   if (path.startsWith("/api/staging/editor/")) {
     return handleEditor(req,env,path);
   }
@@ -368,6 +369,9 @@ async function api(req, env) {
     return issueStagingVoucher(req, env);
   }
   const user = await atStage("api.session_lookup", () => currentUser(req, env.DB));
+  if (path === "/api/me/progress" || path === "/api/me/words" || /^\/api\/me\/words\//.test(path)) {
+    return handleLearningState(req,env,path,user);
+  }
   if (path === "/api/auth/register" && req.method === "POST") return register(req, env);
   if (path === "/api/auth/login" && req.method === "POST") return login(req, env);
   if (path === "/api/auth/logout" && req.method === "POST") return logout(req, env);
