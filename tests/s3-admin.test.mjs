@@ -11,7 +11,7 @@ const PREVIEW_KEY="staging-test-preview-password-for-tests-2026";
 const PEPPER="staging-test-activation-pepper-with-32-plus-characters";
 function fixture(){
   const sqlite=new DatabaseSync(":memory:");
-  for(const x of ["../db/001_schema.sql","../db/002_s1.sql","../db/003_public_categories.sql","../db/004_editorial_content.sql","../db/005_editorial_revisions.sql"])sqlite.exec(read(x));
+  for(const x of ["../db/001_schema.sql","../db/002_s1.sql","../db/003_public_categories.sql","../db/004_editorial_content.sql","../db/005_editorial_revisions.sql","../db/006_editorial_review_signoffs.sql"])sqlite.exec(read(x));
   const bindable=query=>({
     bind(...params){const statement=sqlite.prepare(query);return {
       async first(){return statement.get(...params)??null},
@@ -288,4 +288,98 @@ test("S3 C1 QA never returns draft content or report to unrelated paid reader",a
   const text=await denied.text();
   assert.equal(text.includes("hesitate"),false);
   assert.equal(text.includes(sample.book.title),false);
+});
+
+test("S3 C2 stores an explicit review acknowledgement without publishing or changing reader rights",async()=>{
+  const env=fixture(),headers={"X-Mw-Editor-Key":EDITOR_KEY};
+  assert.equal((await call(env,"/api/staging/editor/drafts","POST",{package:sample},{headers})).status,201);
+  const prefix="/api/staging/editor/drafts/sample-cet4-letter";
+  const report=await (await call(env,prefix+"/review","GET",undefined,{headers})).json();
+  assert.match(report.contentFingerprint,/^[a-f0-9]{64}$/);
+  const initial=await call(env,prefix+"/review-signoffs","GET",undefined,{headers});
+  assert.equal(initial.status,200);
+  const initialStatus=await initial.json();
+  assert.equal(initialStatus.current,null);
+  assert.equal(initialStatus.publicationEnabled,false);
+  const payload={expectedFingerprint:report.contentFingerprint,
+    checks:report.manualChecks.map(x=>x.code),note:"这是独立示例内容的测试人工审核，不代表正式销售批准。"};
+  const create=await call(env,prefix+"/review-signoffs","POST",payload,{headers});
+  assert.equal(create.status,201,await create.clone().text());
+  const saved=await create.json();
+  assert.equal(saved.saved,true);
+  assert.equal(saved.publicationEnabled,false);
+  const listed=await (await call(env,prefix+"/review-signoffs","GET",undefined,{headers})).json();
+  assert.equal(listed.current.note,payload.note);
+  assert.equal(listed.current.stillMatches,true);
+  assert.equal(listed.history.length,1);
+  assert.equal(env.sqlite.prepare("SELECT status FROM books WHERE id='sample-cet4-letter'").get().status,"draft");
+  assert.equal(env.sqlite.prepare("SELECT COUNT(*) AS n FROM chapters WHERE published_at IS NOT NULL").get().n,0);
+  assert.equal(env.sqlite.prepare("SELECT COUNT(*) AS n FROM entitlements").get().n,0);
+});
+
+test("S3 C2 rejects false checklist, empty note, stale fingerprint and structural blockers",async()=>{
+  const env=fixture(),headers={"X-Mw-Editor-Key":EDITOR_KEY};
+  await call(env,"/api/staging/editor/drafts","POST",{package:sample},{headers});
+  const path="/api/staging/editor/drafts/sample-cet4-letter/review-signoffs";
+  const report=await (await call(env,"/api/staging/editor/drafts/sample-cet4-letter/review","GET",undefined,{headers})).json();
+  const body={expectedFingerprint:report.contentFingerprint,
+    checks:report.manualChecks.map(x=>x.code),note:"这段测试只验证人工审核确认流程，并非出版审批。"};
+  assert.equal((await call(env,path,"POST",{...body,checks:body.checks.slice(0,2)},{headers})).status,400);
+  assert.equal((await call(env,path,"POST",{...body,note:"太短"},{headers})).status,400);
+  assert.equal((await call(env,path,"POST",{...body,expectedFingerprint:"a".repeat(64)},{headers})).status,409);
+  env.sqlite.exec("UPDATE chapters SET is_preview=0 WHERE book_id='sample-cet4-letter'");
+  const blocked=await call(env,path,"POST",body,{headers});
+  assert.equal(blocked.status,409);
+  const result=(await blocked.json()).error;
+  assert.equal(result,"REVIEW_CONTENT_CHANGED");
+  const report2=await (await call(env,"/api/staging/editor/drafts/sample-cet4-letter/review","GET",undefined,{headers})).json();
+  const blocked2=await call(env,path,"POST",{...body,expectedFingerprint:report2.contentFingerprint},{headers});
+  assert.equal(blocked2.status,409);
+  assert.equal((await blocked2.json()).error,"REVIEW_BLOCKERS_PRESENT");
+  assert.equal(env.sqlite.prepare("SELECT COUNT(*) AS n FROM editorial_review_signoffs").get().n,0);
+});
+
+test("S3 C2 saved chapter edits and undo invalidate prior signoff permanently",async()=>{
+  const env=fixture(),headers={"X-Mw-Editor-Key":EDITOR_KEY};
+  await call(env,"/api/staging/editor/drafts","POST",{package:sample},{headers});
+  const prefix="/api/staging/editor/drafts/sample-cet4-letter";
+  const report=await (await call(env,prefix+"/review","GET",undefined,{headers})).json();
+  const body={expectedFingerprint:report.contentFingerprint,
+    checks:report.manualChecks.map(x=>x.code),note:"测试故事章节、词汇标注与权限流程均由人工核对。"};
+  assert.equal((await call(env,prefix+"/review-signoffs","POST",body,{headers})).status,201);
+  const preview=(await (await call(env,prefix,"GET",undefined,{headers})).json()).chapters[0];
+  const adjusted=structuredClone(preview.content.paragraphs);
+  adjusted[0].segments[0].text="测试写入：她看到信封。";
+  const change=await call(env,prefix+"/chapters/"+preview.id,"PUT",
+    {title:preview.title,preview:preview.preview,paragraphs:adjusted,expectedVersion:preview.version},{headers});
+  assert.equal(change.status,200);
+  const after=(await (await call(env,prefix+"/review-signoffs","GET",undefined,{headers})).json());
+  assert.equal(after.current,null);
+  assert.equal(after.requiresRecheck,true);
+  assert.equal(after.history[0].stillMatches,false);
+  const restored=await call(env,prefix+"/chapters/"+preview.id,"PUT",
+    {title:preview.title,preview:preview.preview,paragraphs:preview.content.paragraphs,
+      expectedVersion:(await change.json()).version},{headers});
+  assert.equal(restored.status,200);
+  const afterRestore=(await (await call(env,prefix+"/review-signoffs","GET",undefined,{headers})).json());
+  assert.equal(afterRestore.current,null);
+  assert.equal(afterRestore.requiresRecheck,true);
+  assert.equal(afterRestore.history.length,1);
+  assert.equal(env.sqlite.prepare("SELECT COUNT(*) AS n FROM editorial_revisions").get().n,2);
+});
+
+test("S3 C2 signoff stays private, missing new D1 table is fail-closed; prior QA still works",async()=>{
+  const env=fixture(),headers={"X-Mw-Editor-Key":EDITOR_KEY};
+  await call(env,"/api/staging/editor/drafts","POST",{package:sample},{headers});
+  const path="/api/staging/editor/drafts/sample-cet4-letter/review-signoffs";
+  assert.equal((await call(env,path)).status,403);
+  assert.equal((await worker.fetch(new Request(url+path,{headers}),env)).status,401);
+  assert.equal((await call({...env,APP_ENV:"production"},path,"GET",undefined,{headers})).status,404);
+  env.sqlite.exec("DROP TABLE editorial_review_signoffs");
+  const missing=await call(env,path,"GET",undefined,{headers});
+  assert.equal(missing.status,503);
+  assert.equal((await missing.json()).error,"REVIEW_SCHEMA_REQUIRED");
+  const old=await call(env,"/api/staging/editor/drafts/sample-cet4-letter/review","GET",undefined,{headers});
+  assert.equal(old.status,200);
+  assert.equal((await old.json()).blockerCount,0);
 });
