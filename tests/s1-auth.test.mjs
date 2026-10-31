@@ -230,3 +230,47 @@ test("D1 schema drift is reported safely instead of exposing database SQL", asyn
   assert.equal(data.databaseSchemaReady,false);
   assert.ok(data.missingColumnsByTable.users.includes("password_salt"));
 });
+
+test("S2 real D1 chapter catalog keeps paid content server-side and enforces each category",async()=>{
+  const env=environment();
+  env.APP_ENV="staging";
+  env.STAGING_PREVIEW_PASSWORD="correct-private-reviewer-password";
+  const basic="Basic "+Buffer.from("reviewer:"+env.STAGING_PREVIEW_PASSWORD).toString("base64");
+  async function staging(path,method="GET",cookie){
+    const headers={Authorization:basic,Origin:origin};
+    if(method==="POST")headers["Content-Type"]="application/json";
+    if(cookie)headers.Cookie=cookie;
+    return worker.fetch(new Request(origin+path,{method,headers,body:method==="POST"?"{}":undefined}),env);
+  }
+  assert.equal((await staging("/api/staging/seed-chapter-fixtures","GET")).status,404);
+  assert.equal((await worker.fetch(new Request(origin+"/api/staging/seed-chapter-fixtures",{method:"POST",
+    headers:{"Content-Type":"application/json",Origin:origin},body:"{}"}),env)).status,401);
+  assert.equal((await staging("/api/staging/seed-chapter-fixtures","POST")).status,200);
+  assert.equal((await staging("/api/staging/seed-chapter-fixtures","POST")).status,200); // idempotent
+  const publicCatalog=await (await staging("/api/books/qa-cet4/chapters")).json();
+  assert.equal(publicCatalog.chapters.length,2);
+  assert.deepEqual(publicCatalog.chapters.map(ch=>ch.canRead),[true,false]);
+  assert.equal(JSON.stringify(publicCatalog).includes("只保存在 Cloudflare D1"),false);
+  assert.equal((await staging("/api/chapters/qa-cet4-free")).status,200);
+  assert.equal((await staging("/api/chapters/qa-cet4-paid")).status,401);
+  assert.equal((await staging("/api/chapters/qa-cet6-paid")).status,401);
+  const production={...env,APP_ENV:"production"};
+  const seedProd=await worker.fetch(new Request(origin+"/api/staging/seed-chapter-fixtures",{
+    method:"POST",headers:{"Origin":origin,"Content-Type":"application/json"},body:"{}"}),production);
+  assert.equal(seedProd.status,404);
+  await seedCode(env,"MW-CET4-AAAABBBBCCCCDDDD");
+  const first=await register({...env,APP_ENV:undefined},"chapterreader","MW-CET4-AAAABBBBCCCCDDDD");
+  assert.equal(first.status,201);
+  const cookie=cookieOf(first);
+  const ownedCatalog=await (await staging("/api/books/qa-cet4/chapters","GET",cookie)).json();
+  assert.deepEqual(ownedCatalog.chapters.map(ch=>ch.canRead),[true,true]);
+  const four=await staging("/api/chapters/qa-cet4-paid","GET",cookie);
+  assert.equal(four.status,200);
+  assert.equal((await four.json()).content.testOnly,true);
+  assert.equal((await staging("/api/chapters/qa-cet6-paid","GET",cookie)).status,403);
+  await seedCode(env,"MW-CET6-1111222233334444","cet6");
+  const unlock=await call({...env,APP_ENV:undefined},"/api/activate",{
+    method:"POST",cookie,body:{activationCode:"MW-CET6-1111222233334444"}});
+  assert.equal(unlock.status,200);
+  assert.equal((await staging("/api/chapters/qa-cet6-paid","GET",cookie)).status,200);
+});
