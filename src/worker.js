@@ -1,4 +1,5 @@
 import { stagingGate, stagingCookieAfterBasic } from "./staging-gate.js";
+import { handleEditor } from "./editorial-admin.js";
 import {
   normalizedUsername, validPassword, normalizeCode, hashCode, newPasswordHash,
   verifyPassword, sha256, sessionData, sessionCookie, clearSessionCookie,
@@ -354,6 +355,9 @@ async function api(req, env) {
     return reject("SERVICE_NOT_CONFIGURED", 503);
   }
   if (req.method === "POST" && !checkOrigin(req)) return reject("INVALID_ORIGIN", 403);
+  if (path.startsWith("/api/staging/editor/")) {
+    return handleEditor(req,env,path);
+  }
   if (path === "/api/staging/diagnostics" && req.method === "GET" && env.APP_ENV === "staging") {
     return stagingDbDiagnostics(env);
   }
