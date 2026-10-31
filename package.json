@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "check": "node --check public/app.js && node --check src/security.js && node --check src/worker.js && node --check scripts/generate-activation-codes.mjs && node --check src/staging-gate.js && node --check public/account-test.js && node --check public/reading-test.js",
+    "check": "node --check public/app.js && node --check src/security.js && node --check src/worker.js && node --check scripts/generate-activation-codes.mjs && node --check src/staging-gate.js && node --check public/account-test.js && node --check public/reading-test.js && node --check scripts/build-content-import.mjs",
     "test": "node --experimental-sqlite --test tests/*.test.mjs",
     "db:migrate:local": "wrangler d1 migrations apply miaowu-english-test --local",
-    "db:migrate:remote": "wrangler d1 migrations apply miaowu-english-test --remote"
+    "db:migrate:remote": "wrangler d1 migrations apply miaowu-english-test --remote",
+    "content:check": "node scripts/build-content-import.mjs content/examples/cet4-sample-draft.json --check"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"
