@@ -64,7 +64,7 @@ test('S7 matches the original V0.3 design rules while showing actual progress an
   const script=app(),markup=html();
   const css=readFileSync(new URL('../public/styles.css',import.meta.url),'utf8');
   const baseline=readFileSync(new URL('../public/design-reference-v03.html',import.meta.url),'utf8');
-  const ref=baseline.match(/<style>([\\s\\S]*?)<\\/style>/);
+  const ref=baseline.match(/<style>([\s\S]*?)<\/style>/);
   assert.ok(ref,'V0.3 has an embedded original design system');
   assert.ok(css.startsWith(ref[1]),'approved V0.3 stylesheet must remain unchanged at its base');
   assert.match(script,/function updateCloudShelfProgress/);
