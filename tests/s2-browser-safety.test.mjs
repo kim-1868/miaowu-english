@@ -42,3 +42,20 @@ test('S5 uses the existing book cover, reader, bookplates, and dashboard for rea
   assert.match(script,/const ECHO_BANK=/);
   assert.match(markup,/真实云端章节的词汇练习将在下一阶段接入/);
 });
+
+test('chapter dialog selection immediately reveals reading screen and never waits for glossary',()=>{
+  const js=app();
+  const start=js.indexOf('async function openCloudChapter(id){');
+  const end=js.indexOf('function resetDemoReadingUI()',start);
+  assert.ok(start>=0&&end>start);
+  const fn=js.slice(start,end);
+  assert.ok(fn.indexOf("closeModal();")>=0);
+  assert.ok(fn.indexOf("navigate('reader');")>=0);
+  assert.ok(fn.indexOf("serverRequest('/api/chapters/'")>=0);
+  assert.ok(fn.indexOf("closeModal();")<fn.indexOf("serverRequest('/api/chapters/'"));
+  assert.ok(fn.indexOf("navigate('reader');")<fn.indexOf("serverRequest('/api/chapters/'"));
+  assert.ok(fn.indexOf("parts.map(renderD1Paragraph)")<fn.indexOf("'/words'"));
+  assert.match(fn,/cloud-reader-loading/);
+  assert.match(fn,/cloud-reader-error/);
+  assert.match(fn,/重试打开本章/);
+});
