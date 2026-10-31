@@ -32,7 +32,7 @@ async function canStudyWord(env,id,userId){
 }
 async function progressList(env,userId){
   const found=await sql(env,"SELECT p.chapter_id,p.progress,p.completed_at,p.updated_at,"+
-    "ch.book_id,ch.chapter_no,b.title AS book_title FROM reading_progress p "+
+    "ch.book_id,ch.chapter_no,b.title AS book_title,c.slug AS category_slug FROM reading_progress p "+
     "JOIN chapters ch ON ch.id=p.chapter_id JOIN books b ON b.id=ch.book_id "+
     "JOIN categories c ON c.id=b.category_id WHERE p.user_id=? "+
     "AND b.status='published' AND c.is_visible=1 "+
