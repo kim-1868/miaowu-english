@@ -1,4 +1,5 @@
 import { validatePackage } from "./editorial-content.js";
+import {handleRevision,revisionReady,snapshotVersion,chapterSnapshot,wordSnapshot} from "./editorial-revisions.js";
 
 const NO_STORE = {"content-type":"application/json; charset=utf-8","cache-control":"no-store",
   "x-content-type-options":"nosniff","referrer-policy":"no-referrer"};
@@ -44,7 +45,7 @@ async function editorCheck(env) {
     }));
     const missing=info.filter(x=>!x.ready).map(x=>x.table);
     return resp({ok:missing.length===0,editorConfigured:true,dbBound:true,
-      schemaReady:missing.length===0,missingTables:missing,testOnly:true},missing.length?503:200);
+      schemaReady:missing.length===0,missingTables:missing,revisionsSchemaReady:await revisionReady(env),testOnly:true},missing.length?503:200);
   }catch {
     return err("EDITOR_SCHEMA_CHECK_FAILED",503);
   }
@@ -80,19 +81,22 @@ async function preview(env,id){
   if(!book)return err("DRAFT_NOT_FOUND",404);
   const chapters=await bound(env.DB,`SELECT id,chapter_no AS number,title,content_json,is_preview
     FROM chapters WHERE book_id=? AND published_at IS NULL ORDER BY chapter_no LIMIT 60`,id).all();
-  const result=(chapters.results||[]).map(row=>{
-    let content=null;try{content=JSON.parse(row.content_json)}catch{}
-    return {id:row.id,number:row.number,title:row.title,preview:!!row.is_preview,content};
-  });
+  const result=await Promise.all((chapters.results||[]).map(async row=>{
+    let content=null,version=null;
+    try{content=JSON.parse(row.content_json);version=await snapshotVersion(chapterSnapshot(row))}catch{}
+    return {id:row.id,number:row.number,title:row.title,preview:!!row.is_preview,content,version};
+  }));
   const words=await bound(env.DB,`SELECT DISTINCT w.id,w.headword,w.phonetic_uk,w.phonetic_us,
       w.part_of_speech,w.meaning_zh,w.example_en,w.example_zh,w.collocations_json
     FROM words w JOIN chapter_words cw ON cw.word_id=w.id
     JOIN chapters ch ON ch.id=cw.chapter_id WHERE ch.book_id=?
     ORDER BY w.headword LIMIT 500`,id).all();
-  return resp({book,chapters:result,words:(words.results||[]).map(row=>{
-    let collocations=[];try{collocations=JSON.parse(row.collocations_json||"[]")}catch{}
-    const {collocations_json,...rest}=row;return {...rest,collocations};
-  }),testOnly:true});
+  const enriched=await Promise.all((words.results||[]).map(async row=>{
+    const snap=wordSnapshot(row);
+    const {collocations_json,...rest}=row;
+    return {...rest,collocations:snap.collocations,version:await snapshotVersion(snap)};
+  }));
+  return resp({book,chapters:result,words:enriched,testOnly:true});
 }
 async function createDraft(env,req) {
   let source,validated;
@@ -162,6 +166,8 @@ export async function handleEditor(req,env,path) {
   if(!authorized)return err("EDITOR_FORBIDDEN",403);
   if(!env.DB)return err("SERVICE_NOT_CONFIGURED",503);
   if(path==="/api/staging/editor/check" && req.method==="GET")return editorCheck(env);
+  if(path.match(/^\/api\/staging\/editor\/drafts\/[a-z0-9_-]+\/(chapters|words|revisions)\//))
+    return handleRevision(req,env,path);
   if(path==="/api/staging/editor/drafts" && req.method==="GET")return safeListing(env);
   const id=path.match(/^\/api\/staging\/editor\/drafts\/([a-z0-9_-]+)$/);
   if(id && req.method==="GET")return safePreview(env,id[1]);
