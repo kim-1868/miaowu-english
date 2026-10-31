@@ -80,7 +80,7 @@
 
     function navigate(to){if(view==='echo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='reader'&&to!=='reader')stopReading();view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words')renderWords();if(to==='echo')renderQuiz();if(to==='account')renderAccount();$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
 
-    // Separate D1-backed test books from the public, browser-only visual demo.
+    // D1 is the primary reader source. Legacy chapter sample stays unreachable from default book cards.
     // No paid chapter bodies are bundled into app.js or held in a client-side book constant.
     let cloudListSequence=0;
     let activeCloud=null;
@@ -166,10 +166,10 @@
       try{
         const catalog=await serverRequest('/api/books/'+encodeURIComponent(book.id)+'/chapters');
         const chapters=Array.isArray(catalog.chapters)?catalog.chapters:[];
-        if(!chapters.length){toast('此测试书目暂时没有发布章节');return;}
+        if(!chapters.length){toast('这本书尚无已发布章节');return;}
         activeCloud={bookId:book.id,title:book.title,slug,chapters,chapterId:null,parts:[]};
-        showModal(`<span class="eyebrow">D1 · PROTECTED CHAPTERS</span><h2 id="modalTitle">${safe(book.title)}</h2>
-          <p>目录可见。免费试读公开，付费正文由服务器检查账号分类权限后返回。本书仅为测试数据。</p>
+        showModal(`<span class="eyebrow">MIAOWU · STORY CHAPTERS</span><h2 id="modalTitle">${safe(book.title)}</h2>
+          <p>目录可见。免费试读公开，付费正文由服务器检查账号分类权限后返回。目前站点处于测试环境，不代表正式售卖。</p>
           <div class="cloud-chapter-options">${chapters.map(ch=>`<button class="chapter-btn" type="button" data-cloud-choose="${safe(ch.id)}">${String(ch.chapterNo).padStart(2,'0')} · ${safe(ch.title)} ${ch.isPreview?'· 免费试读':(ch.canRead?'· 已授权':'· 🔒 未解锁')}</button>`).join('')}</div>`);
         document.querySelectorAll('[data-cloud-choose]').forEach(btn=>{
           btn.onclick=()=>openCloudChapter(btn.dataset.cloudChoose);
@@ -194,27 +194,71 @@
       return (Array.isArray(paragraph?.segments)?paragraph.segments:[])
         .map(s=>typeof s?.text==='string'?s.text:(s?.surface||'')).join('');
     }
-    function showCloudWord(wordId) {
-      if(!activeCloud || !activeCloud.words?.has(wordId)){
-        toast('词汇资料尚未加载，请稍后重试');return;
-      }
+    function showCloudWord(wordId){
+      if(!activeCloud?.words?.has(wordId)){toast('暂时未找到这张词卡');return}
       const w=activeCloud.words.get(wordId);
-      let pairs=Array.isArray(w.collocations)?w.collocations:[];
-      $('wordPop').innerHTML=`<button class="modal-close" id="wordClose" aria-label="关闭">×</button>
-        <div class="eyebrow">MIAOWU · D1 WORD IN STORY</div>
-        <h3>${safe(w.headword)}</h3>
-        <div class="pron">${safe(w.phonetic_us||w.phonetic_uk||'')} · ${safe(w.part_of_speech||'')}</div>
-        <div class="meaning">${safe(w.meaning_zh||'')}</div>
-        <div class="context">故事原句：<br>${safe(w.context_sentence||'')}</div>
-        <div class="word-extra"><strong>额外例句</strong><br>${safe(w.example_en||'')}<br><span style="color:var(--muted)">${safe(w.example_zh||'')}</span></div>
-        <div class="word-extra"><strong>常用搭配</strong><br>${pairs.map(x=>safe(x.en||'')+' · '+safe(x.zh||'')).join('<br>')}</div>
-        <div class="word-actions"><button id="wordSpeak">♫ 听发音</button>
-          <button id="wordSave" disabled title="云端收藏与学习状态同步将在 S3 后续阶段开发">云端收藏 · 即将开放</button></div>`;
+      const current=cloudSaved.get(wordId);
+      const pairs=Array.isArray(w.collocations)?w.collocations:[];
+      $('wordPop').innerHTML='<button class="modal-close" id="wordClose" aria-label="关闭">×</button>'+
+        '<div class="eyebrow">MIAOWU · WORD IN STORY</div><h3>'+safe(w.headword)+'</h3>'+
+        '<div class="pron">'+safe(w.phonetic_us||w.phonetic_uk||'')+
+        ' <button id="wordSmallSpeak" class="word-voice-inline" aria-label="播放发音">♫</button> · '+safe(w.part_of_speech||'')+'</div>'+
+        '<div class="meaning">'+safe(w.meaning_zh||'')+'</div>'+
+        '<div class="context">故事原句：<br>'+safe(w.context_sentence||'')+'</div>'+
+        '<div class="word-extra"><strong>额外例句</strong><br>'+safe(w.example_en||'')+
+        '<br><span style="color:var(--muted)">'+safe(w.example_zh||'')+'</span></div>'+
+        '<div class="word-extra"><strong>常用搭配</strong><br>'+pairs.map(x=>safe(x.en||'')+' · '+safe(x.zh||'')).join('<br>')+'</div>'+
+        '<div class="word-actions"><button id="wordSpeak">♫ 听发音</button>'+
+        '<button id="wordSave">'+(current?'✓ 已收藏 · 移除':'♡ 收藏藏书票')+'</button>'+
+        '<button id="cloudMaster">'+(current?.status==='mastered'?'↻ 继续学习':'✓ 标记已掌握')+'</button></div>';
       $('wordPop').classList.add('on');$('wordBackdrop').classList.add('on');
       $('wordClose').onclick=closeWord;
       $('wordSpeak').onclick=()=>speakWord(w.headword);
+      $('wordSmallSpeak').onclick=()=>speakWord(w.headword);
+      $('wordSave').onclick=()=>saveCloudWord(wordId,false);
+      $('cloudMaster').onclick=()=>saveCloudWord(wordId,true);
     }
-
+    async function saveCloudWord(id,markMastered){
+      if(!user){closeWord();showLogin();return}
+      const w=activeCloud?.words?.get(id);
+      if(!w)return;
+      const old=cloudSaved.get(id);
+      const bookmarked=markMastered?true:!old;
+      const status=markMastered?(old?.status==='mastered'?'learning':'mastered'):(old?.status||'learning');
+      const action=$('wordSave');if(action)action.disabled=true;
+      try{
+        await serverRequest('/api/me/words/'+encodeURIComponent(id),'PUT',{bookmarked,status});
+        if(bookmarked)cloudSaved.set(id,{...w,word_id:id,status,bookmarked:1});
+        else cloudSaved.delete(id);
+        toast(bookmarked?'已同步到云端记忆藏书票':'已从云端藏书票移除');
+        showCloudWord(id);
+        refreshCloudLearning();
+      }catch(error){toast(error.message);if(action)action.disabled=false}
+    }
+    function showCloudProgress(chapterId){
+      if(!activeCloud)return;
+      const savedProgress=cloudProgress.find(p=>p.chapter_id===chapterId);
+      const finished=activeCloud.chapters.filter(ch=>cloudProgress.some(p=>p.chapter_id===ch.id&&p.completed_at)).length;
+      $('readingStatus').textContent=!user?'免费阅读 · 登录可存进度':
+        savedProgress?.completed_at?'✓ 已读完 · 云端同步':savedProgress?'阅读中 · 云端同步':'尚未记录本章进度';
+      $('progressBar').style.width=Math.round(finished/Math.max(1,activeCloud.chapters.length)*100)+'%';
+      $('savedCount').textContent=cloudSaved.size;
+      $('readerUnseen').textContent=String([...activeCloud.words?.keys()||[]].filter(id=>!cloudSaved.has(id)).length);
+      $('readerDue').textContent=String(cloudDue());
+      const finish=$('cloudFinishReading');
+      if(finish){finish.hidden=false;finish.disabled=!user;finish.textContent=savedProgress?.completed_at?'✓ 本章已读完（已同步）':'✓ 标记本章读完并同步';}
+    }
+    async function finishCloudChapter(){
+      if(!activeCloud?.chapterId)return;
+      if(!user){showLogin();return}
+      const id=activeCloud.chapterId,button=$('cloudFinishReading');
+      button.disabled=true;
+      try{
+        await serverRequest('/api/me/progress','POST',{chapterId:id,progress:1});
+        await refreshCloudLearning();
+        showCloudProgress(id);toast('阅读进度已保存到你的云端账号');
+      }catch(error){toast(error.message);button.disabled=false}
+    }
     async function openCloudChapter(id){
       if(!activeCloud)return;
       const book=activeCloud;
@@ -245,38 +289,35 @@
       const thisChapter=book.chapters.find(ch=>ch.id===id);
       const ix=book.chapters.findIndex(ch=>ch.id===id);
       const next=book.chapters[ix+1];
-      $('chapterNo').textContent='CHAPTER '+String(page.chapterNo).padStart(2,'0')+' · D1 TEST';
+      $('chapterNo').textContent='CHAPTER '+String(page.chapterNo).padStart(2,'0')+(thisChapter?.isPreview?' · FREE PREVIEW':' · PRIVATE READING');
       $('chapterTitle').textContent=page.title;
       $('storyText').innerHTML=parts.map(renderD1Paragraph).join('')||'<p>此测试章节暂无段落。</p>';
       $('storyText').querySelectorAll('[data-cloud-word]').forEach(btn=>btn.onclick=()=>showCloudWord(btn.dataset.cloudWord));
       $('storyText').style.fontSize=fontSize+'px';
-      $('readerCrumb').textContent=book.slug.toUpperCase()+' / 云端受保护测试章';
+      $('readerCrumb').textContent=book.slug.toUpperCase()+' / '+book.title;
       const sideHeading=$('chapterList').parentElement.querySelector('h3');
       if(sideHeading)sideHeading.textContent=book.title+' · 目录';
       const sideCaption=$('chapterList').parentElement.querySelector('.side-caption');
-      if(sideCaption)sideCaption.textContent='数据库目录；测试章节与正式小说分开。';
+      if(sideCaption)sideCaption.textContent='只显示已发布章节，未授权正文不会传到浏览器。';
       $('chapterList').innerHTML=book.chapters.map(ch=>`<button class="chapter-btn ${ch.id===id?'current':''}" data-cloud-chapter="${safe(ch.id)}" type="button">${String(ch.chapterNo).padStart(2,'0')} · ${safe(ch.title)} ${ch.isPreview?'· 免费':' · '+(ch.canRead?'已授权':'🔒')}</button>`).join('');
       $('chapterList').querySelectorAll('[data-cloud-chapter]').forEach(btn=>btn.onclick=()=>openCloudChapter(btn.dataset.cloudChapter));
-      $('readingStatus').textContent=thisChapter?.isPreview?'D1 · 免费试读':'D1 · 已通过服务器权益校验';
-      $('progressBar').style.width=((ix+1)/book.chapters.length*100)+'%';
-      $('readingChapter').textContent='第'+page.chapterNo+'章（测试）';
-      $('savedCount').textContent='—';
-      $('readerUnseen').textContent='—';
-      $('readerDue').textContent='—';
+      $('readingChapter').textContent='第'+page.chapterNo+'章';
+      showCloudProgress(id);
       $('storyText').classList.toggle('no-gloss',!gloss);
       $('toggleGloss').disabled=false;
       $('sideToggleGloss').disabled=false;
       $('doEcho').disabled=true;
-      $('doEcho').title='本云端权限测试章尚未接入词库和剧情练习';
+      $('doEcho').title='剧情回声当前仍是独立演示题库，尚未同步云端练习记录';
       $('nextChapter').textContent=next?'下一章 →':'返回书架 →';
       $('nextChapter').onclick=()=>next?openCloudChapter(next.id):navigate('library');
       const study=$('readerLayout').querySelector('#readerLearningStats');
       if(study)study.hidden=true;
       const note=$('readerLayout').querySelector('.sidebar .side-panel:nth-child(2) .side-caption');
-      if(note)note.textContent='若本章节有正文标注，可点击英文查看云端词卡与发音。收藏、进度和剧情回声暂未同步。';
+      if(note)note.textContent='点击英文标注可查看词卡并收藏到云端；阅读进度与收藏可跨设备同步。剧情回声暂为演示。';
     }
     function resetDemoReadingUI(){
       activeCloud=null;
+      $('cloudFinishReading').hidden=true;
       const heading=$('chapterList').parentElement.querySelector('h3');
       if(heading)heading.textContent='《玫瑰未落幕》 · 目录';
       const caption=$('chapterList').parentElement.querySelector('.side-caption');
