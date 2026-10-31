@@ -520,3 +520,30 @@ test("S4 real reader word collection is persistent, published-only and unavailab
     {headers:{...cookie,Origin:"https://attacker.example"}});
   assert.equal(crossOrigin.status,403);
 });
+
+test("S5 staging QA wordbook fixture enables real cloud word cards without changing any manuscript",async()=>{
+  const env=fixture();
+  const before=await call(env,"/api/staging/seed-wordbook-fixture","POST",{});
+  assert.equal(before.status,409);
+  assert.equal((await before.json()).error,"QA_BOOK_NOT_READY");
+  assert.equal((await call(env,"/api/staging/seed-chapter-fixtures","POST",{})).status,200);
+  const first=await call(env,"/api/staging/seed-wordbook-fixture","POST",{});
+  assert.equal(first.status,200,await first.clone().text());
+  const seeded=await first.json();
+  assert.equal(seeded.wordId,"qa-word-promise");
+  assert.equal(seeded.testOnly,true);
+  assert.equal((await call(env,"/api/staging/seed-wordbook-fixture","POST",{})).status,200);
+  assert.equal(env.sqlite.prepare("SELECT count(*) AS n FROM chapters WHERE id='qa-cet4-wordbook'").get().n,1);
+  assert.equal(env.sqlite.prepare("SELECT count(*) AS n FROM chapter_words WHERE word_id='qa-word-promise'").get().n,1);
+  const reader=await call(env,"/api/chapters/qa-cet4-wordbook","GET");
+  assert.equal(reader.status,200);
+  const paragraphs=(await reader.json()).content.paragraphs;
+  assert.equal(paragraphs[1].segments[1].wordId,"qa-word-promise");
+  const vocab=await call(env,"/api/chapters/qa-cet4-wordbook/words","GET");
+  assert.equal(vocab.status,200);
+  const entries=(await vocab.json()).words;
+  assert.equal(entries.length,1);
+  assert.equal(entries[0].headword,"promise");
+  assert.equal(entries[0].collocations.length,2);
+  assert.equal((await call({...env,APP_ENV:"production"},"/api/staging/seed-wordbook-fixture","POST",{})).status,404);
+});
