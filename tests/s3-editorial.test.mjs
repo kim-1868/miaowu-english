@@ -143,3 +143,19 @@ test("S3 story-word API applies exactly the same entitlement rules as paid chapt
   assert.equal(allowed.status,200);
   assert.equal((await allowed.json()).words.length,2);
 });
+
+test("S3 editorial diagnostics report the migrated schema without changing S1 checks",async()=>{
+  const db=database();
+  const adapter={prepare(q){return {async all(){return {results:db.prepare(q).all()}},async first(){return db.prepare(q).get()??null}}}};
+  const env={APP_ENV:"staging",STAGING_PREVIEW_PASSWORD:"only-a-test-preview-secret-12345",DB:adapter,
+    ACTIVATION_PEPPER:"fake-secret-just-for-automatic-tests-123456789"};
+  const reviewer="Basic "+Buffer.from("reviewer:"+env.STAGING_PREVIEW_PASSWORD).toString("base64");
+  const response=await worker.fetch(new Request("https://demo.example/api/staging/diagnostics",{
+    headers:{Authorization:reviewer}
+  }),env);
+  assert.equal(response.status,200);
+  const result=await response.json();
+  assert.equal(result.databaseSchemaReady,true);
+  assert.equal(result.s3.editorialSchemaReady,true);
+  assert.deepEqual(result.s3.missingColumnsByTable,{});
+});
