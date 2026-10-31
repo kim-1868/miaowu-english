@@ -187,6 +187,60 @@ async function chapterAccess(req, env, id, user) {
   catch { return reject("CONTENT_UNAVAILABLE", 503); }
   return json({ id: row.id, chapterNo: row.chapter_no, title: row.title, content });
 }
+async function chapterCatalog(env, bookId, user) {
+  if (!/^[a-zA-Z0-9_-]{1,80}$/.test(bookId)) return reject("NOT_FOUND", 404);
+  // Chapter titles are discoverable, but paid content stays exclusively in D1.
+  const book = await dbStmt(env.DB, `SELECT b.id,b.title,c.slug AS category
+    FROM books b JOIN categories c ON c.id=b.category_id
+    WHERE b.id=? AND b.status='published' AND c.is_visible=1`, bookId).first();
+  if (!book) return reject("NOT_FOUND", 404);
+  const data = await dbStmt(env.DB, `SELECT ch.id,ch.chapter_no,ch.title,ch.is_preview
+    FROM chapters ch WHERE ch.book_id=? AND ch.published_at IS NOT NULL
+    AND ch.published_at<=CURRENT_TIMESTAMP ORDER BY ch.chapter_no LIMIT 300`, bookId).all();
+  let allowed = false;
+  if (user) {
+    const permission = await dbStmt(env.DB, `SELECT 1 AS allowed FROM entitlements e
+      JOIN categories c ON c.id=e.category_id
+      WHERE e.user_id=? AND c.slug=? AND e.revoked_at IS NULL`, user.id, book.category).first();
+    allowed = !!permission;
+  }
+  return json({ book, chapters: (data.results || []).map(ch => ({
+    id:ch.id, chapterNo:ch.chapter_no, title:ch.title,
+    isPreview: !!ch.is_preview, canRead: !!ch.is_preview || allowed
+  })) });
+}
+async function seedStagingChapterFixture(env) {
+  // Fixed harmless QA data. Only reachable behind stagingGate and same-origin POST.
+  if (env.APP_ENV !== "staging") return reject("NOT_FOUND",404);
+  const books = [
+    ["qa-cet4", "cet4", "【测试书目】四级内容权限验证"],
+    ["qa-cet6", "cet6", "【测试书目】六级内容权限验证"]
+  ];
+  const chapters = [
+    ["qa-cet4-free", "qa-cet4", 1, "【测试】四级免费试读", 1,
+      ["这是仅用于测试的公开试读章节，不属于正式小说商品。", "访客可以阅读这一章，即使没有四级权限。"]],
+    ["qa-cet4-paid", "qa-cet4", 2, "【测试】四级会员章节", 0,
+      ["这是只保存在 Cloudflare D1 测试数据库的四级受限正文。", "如果没有四级权益，服务器必须拒绝返回这些段落。"]],
+    ["qa-cet6-paid", "qa-cet6", 1, "【测试】六级会员章节", 0,
+      ["这是只保存在 Cloudflare D1 测试数据库的六级受限正文。", "仅拥有四级分类，不应该能够阅读这一章。"]]
+  ];
+  const commands = [];
+  for (const [id, category, title] of books) {
+    commands.push(dbStmt(env.DB, `INSERT OR IGNORE INTO books
+      (id,category_id,title,description,status,sort_order)
+      VALUES(?,?,?,'仅用于测试服务器端付费章节鉴权，不代表真实商品。','published',0)`,
+      id,category,title));
+  }
+  for (const [id, bookId, chapterNo, title, preview, paragraphs] of chapters) {
+    commands.push(dbStmt(env.DB, `INSERT OR IGNORE INTO chapters
+      (id,book_id,chapter_no,title,content_json,is_preview,published_at)
+      VALUES(?,?,?,?,?,?,CURRENT_TIMESTAMP)`,id,bookId,chapterNo,title,
+      JSON.stringify({ paragraphs, testOnly:true }),preview));
+  }
+  await env.DB.batch(commands);
+  return json({ ok:true, testOnly:true, bookCount:books.length, chapterCount:chapters.length });
+}
+
 async function issueStagingVoucher(req, env) {
   // QA only. Never expose a voucher minting endpoint on live customer environments.
   // The global stagingGate must have authenticated the reviewer before this runs.
@@ -271,6 +325,9 @@ async function api(req, env) {
   if (path === "/api/staging/diagnostics" && req.method === "GET" && env.APP_ENV === "staging") {
     return stagingDbDiagnostics(env);
   }
+  if (path === "/api/staging/seed-chapter-fixtures" && req.method === "POST") {
+    return seedStagingChapterFixture(env);
+  }
   if (path === "/api/staging/test-voucher" && req.method === "POST") {
     return issueStagingVoucher(req, env);
   }
@@ -297,6 +354,10 @@ async function api(req, env) {
       FROM books b JOIN categories c ON c.id=b.category_id WHERE c.slug=?
       AND c.is_visible=1 AND b.status='published' ORDER BY b.sort_order LIMIT 100`, slug).all();
     return json({ books: data.results || [] });
+  }
+  const bookChaptersMatch = path.match(/^\/api\/books\/([^/]+)\/chapters$/);
+  if (bookChaptersMatch && req.method === "GET") {
+    return chapterCatalog(env, bookChaptersMatch[1], user);
   }
   const chapterMatch = path.match(/^\/api\/chapters\/([^/]+)$/);
   if (chapterMatch && req.method === "GET") return chapterAccess(req, env, chapterMatch[1], user);
