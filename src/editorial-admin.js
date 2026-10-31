@@ -32,6 +32,38 @@ async function parsePackage(req){
     throw new Error("INVALID_PACKAGE");
   return parsed.package;
 }
+// Only fixed diagnostic labels reach the browser. Never log user-supplied
+// editor credentials, manuscript contents, SQL statements, or raw DB errors.
+async function editorCheck(env) {
+  if(!env.DB)return err("SERVICE_NOT_CONFIGURED",503);
+  try{
+    const tables=["books","chapters","words","chapter_words","content_packages","word_categories"];
+    const info=await Promise.all(tables.map(async table=>{
+      const columns=await env.DB.prepare("PRAGMA table_info("+table+")").all();
+      return {table,ready:Array.isArray(columns.results)&&columns.results.length>0};
+    }));
+    const missing=info.filter(x=>!x.ready).map(x=>x.table);
+    return resp({ok:missing.length===0,editorConfigured:true,dbBound:true,
+      schemaReady:missing.length===0,missingTables:missing,testOnly:true},missing.length?503:200);
+  }catch {
+    return err("EDITOR_SCHEMA_CHECK_FAILED",503);
+  }
+}
+async function safeListing(env) {
+  try { return await listing(env); }
+  catch {
+    console.error("S3_EDITOR_FAILED","listing");
+    return resp({error:"EDITOR_BACKEND_ERROR",diagnosticStage:"drafts.list"},500);
+  }
+}
+async function safePreview(env,id) {
+  try { return await preview(env,id); }
+  catch {
+    console.error("S3_EDITOR_FAILED","preview");
+    return resp({error:"EDITOR_BACKEND_ERROR",diagnosticStage:"drafts.preview"},500);
+  }
+}
+
 async function listing(env) {
   const result=await env.DB.prepare(`SELECT b.id,b.title,b.description,b.category_id AS category,
     b.status,COUNT(DISTINCT ch.id) AS chapter_count,
@@ -129,9 +161,10 @@ export async function handleEditor(req,env,path) {
   if(authorized===null)return err("EDITOR_NOT_CONFIGURED",503);
   if(!authorized)return err("EDITOR_FORBIDDEN",403);
   if(!env.DB)return err("SERVICE_NOT_CONFIGURED",503);
-  if(path==="/api/staging/editor/drafts" && req.method==="GET")return listing(env);
+  if(path==="/api/staging/editor/check" && req.method==="GET")return editorCheck(env);
+  if(path==="/api/staging/editor/drafts" && req.method==="GET")return safeListing(env);
   const id=path.match(/^\/api\/staging\/editor\/drafts\/([a-z0-9_-]+)$/);
-  if(id && req.method==="GET")return preview(env,id[1]);
+  if(id && req.method==="GET")return safePreview(env,id[1]);
   if(path==="/api/staging/editor/drafts" && req.method==="POST")return createDraft(env,req);
   return err("NOT_FOUND",404);
 }
