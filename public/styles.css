@@ -213,3 +213,13 @@ html[data-theme="dark"] .book-cover{filter:none!important}
   .cloud-book-heading h3{font-size:21px}
   .cloud-book-item .book-cover{min-height:240px}
 }
+
+/* S5 cloud features are woven into the approved original visual system. */
+[hidden]{display:none!important}
+.word-voice-inline{border:0;background:transparent;color:var(--wine);cursor:pointer;
+  font:inherit;vertical-align:middle;padding:3px 8px;border-radius:8px}
+.word-voice-inline:hover,.word-voice-inline:focus-visible{background:var(--pink)}
+#cloudFinishReading{display:inline-flex;align-items:center;justify-content:center}
+#bookGrid .cloud-loading{min-height:170px}
+#bookGrid .cloud-book-item .book-meta{flex-wrap:wrap}
+[data-theme=dark] .word-voice-inline{color:var(--wine)}
