@@ -29,6 +29,13 @@ button:disabled{opacity:.5;cursor:not-allowed}button:hover:not(:disabled){filter
 .item .meta{color:#927a80;font-size:12px;margin:5px 0}.item button{margin-top:6px}
 .chapter{padding:14px 0;border-top:1px solid #eaddd7}.chapter h3{font-size:17px;margin:0 0 7px}
 .paragraph{line-height:2.05;margin:8px 0}.word{color:#963f54;font-weight:bold;border-bottom:1px dashed #a66175}
+.edit-panel{border-top:1px solid #e6d8cf;padding-top:17px}.edit-section{padding:12px;border:1px solid #eadbd3;border-radius:12px;margin:12px 0;background:rgba(150,70,83,.025)}
+.segment-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;padding:9px;margin:6px 0;border:1px solid #eadbd3;border-radius:9px}
+.segment-row>div{flex:1 1 145px;min-width:0}.segment-row textarea{min-height:70px;font:inherit}
+.edit-field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.edit-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}.history-row{margin:7px 0;border:1px solid #e7d9d3;padding:11px;border-radius:10px}
+.edit-panel input[type=checkbox]{width:auto}.edit-info{font-size:13px;color:#896d76;line-height:1.6}
+@media(max-width:680px){.edit-field-row{grid-template-columns:1fr}}
 .pill{display:inline-block;padding:3px 8px;border-radius:20px;background:#f1e6dc;color:#7b525b;font-size:11px}
 a{color:#7c3b50}a:hover{text-decoration:none}
 @media(max-width:780px){.grid{grid-template-columns:1fr}header{padding:18px 20px}main{padding:18px 14px 40px}h1{font-size:29px}.card{padding:18px}}
@@ -71,6 +78,12 @@ a{color:#7c3b50}a:hover{text-decoration:none}
 <h2>④ 原文预览与词汇检查</h2>
 <p><small>只有通过编辑管理员验证后，才能读取尚未发布的章节正文及词汇。</small></p>
 <div id="previewArea"><p>从草稿书库中点击「预览」即可查看。</p></div>
+</section>
+<section class="card" id="editingArea">
+<h2>⑤ 直接编辑草稿章节与词汇</h2>
+<p><small>从上方预览选择「编辑章节」或「编辑词汇」，在表单中保存。仅允许修改未发布内容；每次修改保留上一版，若同一数据被其他页面更改，会提示冲突并拒绝覆盖。</small></p>
+<div id="editorPanel">先在草稿书库选择一本书。</div>
+<div id="historyPanel"></div>
 </section>
 </main><script src="/editor.js"></script>
 </body></html>
