@@ -13,8 +13,11 @@ const mapErrors={
  DRAFT_ID_EXISTS:"此书目 ID 已存在，为避免覆盖，本次未导入。",
  VOCAB_ID_CONFLICT:"某个已有词汇 ID 对应的英文或中文释义与本次内容不一致。",
  IMPORT_CONFLICT:"数据库发现重复 ID 或关联冲突，整批导入已回滚。",
- STAGING_ACCESS_REQUIRED:"测试站访问已过期，请重新打开首页输入 reviewer 密码。",
- DRAFT_NOT_FOUND:"找不到这份尚未发布的草稿。"
+ DRAFT_NOT_FOUND:"找不到这份尚未发布的草稿。",
+ EDITOR_SCHEMA_CHECK_FAILED:"后台数据库检查未通过，请检查 D1 绑定与最新部署。",
+ EDITOR_BACKEND_ERROR:"后台读取草稿时发生异常。",
+ STAGING_ACCESS_REQUIRED:"测试站 reviewer 访问已过期。请返回首页重新验证。"
+ 
 };
 function setVerified(value){verified=value;$("import").disabled=!value;$("refresh").disabled=!value}
 async function api(path,method="GET",body){
@@ -22,9 +25,25 @@ async function api(path,method="GET",body){
   const options={method,credentials:"same-origin",cache:"no-store",
     headers:{"Accept":"application/json","X-Mw-Editor-Key":secret}};
   if(body!==undefined){options.headers["Content-Type"]="application/json";options.body=JSON.stringify(body)}
-  const response=await fetch(path,options);
-  const payload=await response.json().catch(()=>({}));
-  if(!response.ok)throw Error(mapErrors[payload.error] || payload.error || "HTTP "+response.status);
+  let response;
+  try{response=await fetch(path,options)}
+  catch{throw Error("网络请求失败，请检查网络连接后刷新后台。")}
+  const contentType=response.headers.get("content-type")||"";
+  let raw="";
+  try{raw=await response.text()}catch{throw Error("服务器响应中断（HTTP "+response.status+"），请检查最新 Cloudflare 部署。")}
+  let payload;
+  try{payload=raw.trim()?JSON.parse(raw):null}
+  catch{payload=null}
+  if(!payload || typeof payload!=="object" || Array.isArray(payload)){
+    // This may be an empty Cloudflare platform response, an HTML error page,
+    // or an unexpectedly cached old Worker. Do not reveal server HTML or secrets.
+    throw Error("后台返回空白或非 JSON 数据（HTTP "+response.status+"，类型 "+(contentType||"未注明")+
+      "，长度 "+raw.length+"）。请确认最新 GitHub Build 已部署。");
+  }
+  if(!response.ok){
+    const stage=typeof payload.diagnosticStage==="string"?"；诊断阶段："+payload.diagnosticStage:"";
+    throw Error((mapErrors[payload.error]||payload.error||"请求失败")+"（HTTP "+response.status+"）"+stage);
+  }
   return payload;
 }
 async function busy(button,fn){
@@ -42,6 +61,7 @@ function summary(input){
 }
 async function drafts(){
   const data=await api("/api/staging/editor/drafts");
+  if(!Array.isArray(data.drafts))throw Error("草稿 API 返回字段异常：缺少 drafts 数组。");
   const root=$("drafts");root.replaceChildren();
   if(!data.drafts.length){root.textContent="暂无草稿。可以从左侧导入一份新内容包。";return}
   for(const draft of data.drafts){
@@ -87,9 +107,15 @@ function renderPreview(data){
   }
 }
 $("verify").onclick=()=>busy($("verify"),async()=>{
+  setVerified(false);
   secret=$("editorKey").value;
-  if(secret.length<32){setVerified(false);throw Error("请输入至少32位的独立编辑管理员密钥")}
-  await drafts();setVerified(true);status("status","权限验证通过。已连接 Cloudflare D1 草稿库。");
+  if(secret.length<32)throw Error("请输入至少32位的独立编辑管理员密钥");
+  status("status","正在验证编辑权限、Cloudflare D1 数据库及草稿目录…");
+  const check=await api("/api/staging/editor/check");
+  if(!check.ok || !check.schemaReady)throw Error("数据库表结构尚未就绪。");
+  await drafts();
+  setVerified(true);
+  status("status","编辑密钥验证成功，D1 表结构正常，草稿列表已加载。");
 });
 $("forget").onclick=()=>{
   secret="";checked=null;$("editorKey").value="";$("source").value="";
