@@ -63,7 +63,7 @@ async function saveSignoff(req,env,bookId){
       "(id,book_id,content_fingerprint,checks_json,note,reviewer_identity) "+
       "SELECT ?,b.id,?,?,?,'staging-editor-key-holder' FROM books b "+
       "WHERE b.id=? AND b.status='draft'",
-      revision,bookId,check.report.contentFingerprint,JSON.stringify(CHECKS),
+      revision,check.report.contentFingerprint,JSON.stringify(CHECKS),
       data.note.trim(),bookId).run();
     const inserted=await q(env.DB,"SELECT id FROM editorial_review_signoffs WHERE id=?",revision).first();
     if(!inserted)return error("REVIEW_CONTENT_CHANGED",409);
