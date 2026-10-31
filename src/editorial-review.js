@@ -49,11 +49,12 @@ export async function reviewDraft(env,bookId){
   const db=env.DB;
   const book=await bound(db,"SELECT id,title,description,cover_key,category_id,status FROM books WHERE id=? AND status='draft'",bookId).first();
   if(!book)return response({error:"DRAFT_NOT_FOUND"},404);
-  const [cr,wr,ar,categoryr]=await Promise.all([
+  const [cr,wr,ar,categoryr,revisionr]=await Promise.all([
     bound(db,"SELECT id,chapter_no,title,is_preview,content_json,published_at FROM chapters WHERE book_id=? ORDER BY chapter_no",bookId).all(),
     bound(db,"SELECT DISTINCT w.id,w.headword,w.phonetic_uk,w.phonetic_us,w.part_of_speech,w.meaning_zh,w.example_en,w.example_zh,w.collocations_json FROM words w JOIN chapter_words cw ON cw.word_id=w.id JOIN chapters ch ON ch.id=cw.chapter_id WHERE ch.book_id=?",bookId).all(),
     bound(db,"SELECT cw.chapter_id,cw.word_id,cw.context_anchor,cw.context_sentence FROM chapter_words cw JOIN chapters ch ON ch.id=cw.chapter_id WHERE ch.book_id=?",bookId).all(),
-    bound(db,"SELECT word_id FROM word_categories WHERE category_id=?",book.category_id).all()
+    bound(db,"SELECT word_id FROM word_categories WHERE category_id=?",book.category_id).all(),
+    bound(db,"SELECT id FROM editorial_revisions WHERE book_id=? ORDER BY rowid",bookId).all()
   ]);
   const chapters=cr.results||[],words=wr.results||[],annotations=ar.results||[];
   const memberships=categoryr.results||[];
@@ -65,7 +66,10 @@ export async function reviewDraft(env,bookId){
     chapters:sorted(chapters,c=>c.id),
     words:sorted(words,w=>w.id),
     annotations:sorted(annotations,r=>r.chapter_id+"|"+r.word_id+"|"+r.context_anchor),
-    membership:sorted(memberships,r=>r.word_id)
+    membership:sorted(memberships,r=>r.word_id),
+    // Any saved revision permanently invalidates older manual acknowledgements,
+    // even if an editor later restores exactly the previous text.
+    editRevisionIds:(revisionr.results||[]).map(r=>r.id)
   });
   const membership=new Set(memberships.map(x=>x.word_id));
   const blockers=[],warnings=[];
