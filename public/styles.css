@@ -199,3 +199,17 @@ html[data-theme="dark"] .book-cover{filter:none!important}
 
 @media(max-width:600px){.topbar{gap:8px}.account-button{max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:8px!important;padding-right:8px!important}}
 
+
+
+/* S2: D1-only QA story cards inserted into the existing responsive bookshelf. */
+.cloud-book-heading{grid-column:1/-1;max-width:100%;border-top:1px solid var(--line);padding:25px 0 8px}
+.cloud-book-heading h3{font:normal 25px 'Songti SC','STSong',serif;color:var(--wine);margin:7px 0}
+.cloud-book-heading p{color:var(--muted);font-size:13px;line-height:1.75;margin:0}
+.cloud-book-item .book-cover{min-height:275px}
+.cloud-chapter-options{display:grid;gap:7px;padding:8px 0 0}
+.cloud-chapter-options .chapter-btn{width:100%;text-align:left}
+@media(max-width:640px){
+  .cloud-book-heading{padding-top:16px}
+  .cloud-book-heading h3{font-size:21px}
+  .cloud-book-item .book-cover{min-height:240px}
+}
