@@ -453,3 +453,70 @@ test("S3 D0 read-only report still works when signoff migration is absent but ne
   assert.ok(report.blockers.some(x=>x.code==="REVIEW_STORAGE_MISSING"));
   assert.equal(env.sqlite.prepare("SELECT status FROM books WHERE id='sample-cet4-letter'").get().status,"draft");
 });
+
+test("S4 real reader persists cloud progress, requires login, and checks category grants",async()=>{
+  const env=fixture();
+  // The S2 QA books are published, unlike newly imported S3 drafts.
+  assert.equal((await call(env,"/api/staging/seed-chapter-fixtures","POST",{})).status,200);
+  const userId="s4-user",token="a".repeat(64);
+  env.sqlite.prepare("INSERT INTO users(id,username,password_hash,password_salt) VALUES(?,?,?,?)")
+    .run(userId,"s4-reader","test-hash-not-used","test-salt");
+  const digest=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(token))),
+    x=>x.toString(16).padStart(2,"0")).join("");
+  env.sqlite.prepare("INSERT INTO sessions(id_hash,user_id,expires_at) VALUES(?,?,datetime('now','+1 day'))")
+    .run(digest,userId);
+  const cookie={Cookie:"mw_session="+token};
+  assert.equal((await call(env,"/api/me/progress","GET")).status,401);
+  assert.equal((await call(env,"/api/me/progress","POST",{chapterId:"qa-cet4-free",progress:1})).status,401);
+  assert.equal((await call(env,"/api/me/progress","POST",{chapterId:"qa-cet4-paid",progress:1},{headers:cookie})).status,403);
+  assert.equal((await call(env,"/api/me/progress","POST",{chapterId:"qa-cet6-paid",progress:1},{headers:cookie})).status,403);
+  const preview=await call(env,"/api/me/progress","POST",{chapterId:"qa-cet4-free",progress:0.4},{headers:cookie});
+  assert.equal(preview.status,200,await preview.clone().text());
+  assert.equal((await call(env,"/api/me/progress","POST",{chapterId:"qa-cet4-free",progress:1},{headers:cookie})).status,200);
+  const list=await (await call(env,"/api/me/progress","GET",undefined,{headers:cookie})).json();
+  assert.equal(list.progress.length,1);
+  assert.equal(list.progress[0].progress,1);
+  assert.ok(list.progress[0].completed_at);
+  assert.equal((await call(env,"/api/me/progress","POST",{chapterId:"sample-letter-ch1",progress:1},{headers:cookie})).status,403);
+  env.sqlite.prepare("INSERT INTO entitlements(user_id,category_id,source_code_id) VALUES(?,?,NULL)")
+    .run(userId,"cet4");
+  assert.equal((await call(env,"/api/me/progress","POST",{chapterId:"qa-cet4-paid",progress:1},{headers:cookie})).status,200);
+  assert.equal((await call(env,"/api/me/progress","POST",{chapterId:"qa-cet6-paid",progress:1},{headers:cookie})).status,403);
+  assert.equal(env.sqlite.prepare("SELECT count(*) n FROM reading_progress WHERE user_id=?").get(userId).n,2);
+  env.sqlite.prepare("UPDATE entitlements SET revoked_at=CURRENT_TIMESTAMP WHERE user_id=?").run(userId);
+  const after=(await (await call(env,"/api/me/progress","GET",undefined,{headers:cookie})).json());
+  assert.equal(after.progress.some(p=>p.chapter_id==="qa-cet4-paid"),false);
+  assert.equal((await call(env,"/api/me/progress","POST",{chapterId:"qa-cet4-paid",progress:1},{headers:cookie})).status,403);
+});
+test("S4 real reader word collection is persistent, published-only and unavailable across revoked rights",async()=>{
+  const env=fixture();
+  const key={"X-Mw-Editor-Key":EDITOR_KEY};
+  await call(env,"/api/staging/editor/drafts","POST",{package:sample},{headers:key});
+  await call(env,"/api/staging/seed-chapter-fixtures","POST",{});
+  env.sqlite.prepare("INSERT INTO chapter_words(chapter_id,word_id,context_sentence,context_anchor) VALUES(?,?,?,?)")
+    .run("qa-cet4-free","cet4-hesitate","公开试看章节的 hesitant 词汇联动","p10:s1");
+  const userId="s4-words",token="b".repeat(64);
+  env.sqlite.prepare("INSERT INTO users(id,username,password_hash,password_salt) VALUES(?,?,?,?)")
+    .run(userId,"s4-wordreader","unused","unused");
+  const digest=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(token))),
+    x=>x.toString(16).padStart(2,"0")).join("");
+  env.sqlite.prepare("INSERT INTO sessions(id_hash,user_id,expires_at) VALUES(?,?,datetime('now','+1 day'))")
+    .run(digest,userId);
+  const cookie={Cookie:"mw_session="+token};
+  assert.equal((await call(env,"/api/me/words/cet4-hesitate","PUT",{bookmarked:true,status:"learning"})).status,401);
+  assert.equal((await call(env,"/api/me/words/cet4-promise","PUT",{bookmarked:true,status:"mastered"},{headers:cookie})).status,403);
+  const add=await call(env,"/api/me/words/cet4-hesitate","PUT",{bookmarked:true,status:"learning"},{headers:cookie});
+  assert.equal(add.status,200,await add.clone().text());
+  const saved=await (await call(env,"/api/me/words","GET",undefined,{headers:cookie})).json();
+  assert.equal(saved.words.length,1);
+  assert.equal(saved.words[0].headword,"hesitate");
+  assert.equal(saved.words[0].status,"learning");
+  assert.equal((await call(env,"/api/me/words/cet4-hesitate","PUT",{bookmarked:true,status:"mastered"},{headers:cookie})).status,200);
+  assert.equal(env.sqlite.prepare("SELECT status,due_at FROM user_words WHERE user_id=?").get(userId).status,"mastered");
+  assert.equal(env.sqlite.prepare("SELECT due_at FROM user_words WHERE user_id=?").get(userId).due_at,null);
+  assert.equal((await call(env,"/api/me/words/cet4-hesitate","PUT",{bookmarked:false,status:"learning"},{headers:cookie})).status,200);
+  assert.equal((await (await call(env,"/api/me/words","GET",undefined,{headers:cookie})).json()).words.length,0);
+  const crossOrigin=await call(env,"/api/me/words/cet4-hesitate","PUT",{bookmarked:true,status:"learning"},
+    {headers:{...cookie,Origin:"https://attacker.example"}});
+  assert.equal(crossOrigin.status,403);
+});
