@@ -16,7 +16,8 @@ test('public reader fetches paid cloud chapters from server, and does not bundle
   assert.match(app,/serverRequest\('\/api\/books\?/);
   assert.match(app,/serverRequest\('\/api\/chapters\//);
   assert.match(app,/function openCloudChapter\(/);
-  assert.match(app,/escape|safe\(p\)/);
+  assert.match(app,/safe\(segment\.text\)/);
+  assert.match(app,/safe\(segment\.surface\)/);
 });
 
 test('browser demo remains explicitly separated from real D1-backed protected reader',()=>{
