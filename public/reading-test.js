@@ -62,6 +62,11 @@ $("seed").onclick=()=>busy($("seed"),async()=>{
   say("feedback","D1 测试书目准备完成："+out.bookCount+"本，"+out.chapterCount+"章。");
   await books();
 });
+$("seedWordbook").onclick=()=>busy($("seedWordbook"),async()=>{
+  const result=await api("/api/staging/seed-wordbook-fixture","POST",{});
+  say("feedback","云端点词测试章已就绪："+result.chapterId+"，词汇："+result.wordId+"。现在可以返回主站打开四级 QA 书籍，第3章点词并收藏。");
+  await books();
+});
 $("load").onclick=()=>busy($("load"),books);
 account();books().catch(e=>say("feedback",e.message));
 })();
