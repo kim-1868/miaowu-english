@@ -254,6 +254,7 @@
       TOO_MANY_ATTEMPTS:'尝试过于频繁，请稍后重试',
       LOGIN_REQUIRED:'登录状态已失效，请重新登录',
       SERVICE_NOT_CONFIGURED:'网站账号服务暂时不可用',
+      STAGING_ACCESS_REQUIRED:'测试站访问授权已过期。请刷新页面并输入 reviewer 测试站密码（不是妙屋用户密码）',
       INVALID_ORIGIN:'安全验证失败，请刷新页面重试',
       INTERNAL_ERROR:'服务暂时出错，请稍后重试'
     };
@@ -287,7 +288,10 @@
     }
     async function loadServerSession(){
       try { applyServerAccount(await serverRequest('/api/auth/me')); }
-      catch { applyServerAccount(null); }
+      catch(error){
+        applyServerAccount(null);
+        if(error.code==='STAGING_ACCESS_REQUIRED')toast('测试站访问已过期，刷新网页后用 reviewer 密码重新验证');
+      }
     }
     async function submitServerForm(form, task, onSuccess) {
       const btn=form.querySelector('button[type=submit]');
