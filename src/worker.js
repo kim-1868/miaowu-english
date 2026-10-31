@@ -74,7 +74,7 @@ async function register(req, env) {
   const codeHash = await atStage("register.code_digest", () => hashCode(code, env));
   const redemptionNonce = crypto.randomUUID();
   const userId = crypto.randomUUID();
-  const { hash, salt } = await atStage("register.password_hash", () => newPasswordHash(body.password));
+  const { hash, salt } = await atStage("register.password_hash", () => newPasswordHash(body.password, env));
   const session = await atStage("register.session_token", () => sessionData(userId));
   try {
     // D1.batch is transactional: an invalid or used code causes the NOT NULL
@@ -114,8 +114,8 @@ async function login(req, env) {
   if (await isBlocked(db, key) || await isBlocked(db, sourceKey)) return reject("TOO_MANY_ATTEMPTS", 429);
   const user = await dbStmt(db, `SELECT id,username,password_hash,password_salt FROM users WHERE username=?`, username).first();
   let matched = false;
-  if (user) matched = await verifyPassword(body.password, user.password_salt, user.password_hash);
-  else await newPasswordHash(body.password); // Avoid fast account-enumeration timing.
+  if (user) matched = await verifyPassword(body.password, user.password_salt, user.password_hash, env);
+  else await newPasswordHash(body.password, env); // Avoid fast account-enumeration timing.
   if (!matched) {
     await countFailure(db, sourceKey);
     await countFailure(db, key);
