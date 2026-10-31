@@ -223,3 +223,26 @@ html[data-theme="dark"] .book-cover{filter:none!important}
 #bookGrid .cloud-loading{min-height:170px}
 #bookGrid .cloud-book-item .book-meta{flex-wrap:wrap}
 [data-theme=dark] .word-voice-inline{color:var(--wine)}
+
+/* Chapters are explicit actions, not plain gray directory text. */
+.cloud-chapter-options .chapter-btn{
+  display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+  padding:14px 15px;border:1px solid var(--line);border-radius:11px;
+  background:var(--paper);color:var(--ink);font-size:13px;line-height:1.6;
+  cursor:pointer;transition:background-color .16s,border-color .16s,transform .16s;
+}
+.cloud-chapter-options .chapter-btn::after{
+  content:"→";font-size:18px;color:var(--wine);margin-left:auto;flex-shrink:0;
+}
+.cloud-chapter-options .chapter-btn:hover,
+.cloud-chapter-options .chapter-btn:focus-visible{
+  background:var(--pink);border-color:var(--wine);transform:translateY(-1px);
+}
+.cloud-reader-loading{color:var(--muted);font-size:16px;min-height:90px;padding:24px 4px;}
+.cloud-reader-error{max-width:550px;margin:28px auto!important;}
+html[data-theme="dark"] .cloud-chapter-options .chapter-btn{
+  background:var(--paper);color:var(--ink);border-color:var(--line);
+}
+html[data-theme="dark"] .cloud-chapter-options .chapter-btn:hover{
+  background:var(--pink);border-color:var(--wine);
+}
