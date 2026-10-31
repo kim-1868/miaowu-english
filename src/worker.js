@@ -317,9 +317,22 @@ async function stagingDbDiagnostics(env) {
       () => env.DB.prepare(query).first());
     counts[name] = Number(row?.n || 0);
   }
+  const editorialMissing = {};
+  for (const [table, fields] of Object.entries({
+    content_packages: ["id","book_id","source_digest","source_label","imported_at"],
+    word_categories: ["word_id","category_id","proficiency_note"]
+  })) {
+    const info = await atStage("diagnostics.editorial_" + table,
+      () => env.DB.prepare("PRAGMA table_info(" + table + ")").all());
+    const names = new Set((info.results || []).map(row=>row.name));
+    const absent = fields.filter(field=>!names.has(field));
+    if(absent.length) editorialMissing[table]=absent;
+  }
   return json({ databaseSchemaReady: Object.keys(missing).length === 0,
     missingColumnsByTable: missing, qaCounts: counts,
-    note: "Only test schema and aggregate counts; no personal data or secrets." });
+    s3: { editorialSchemaReady: Object.keys(editorialMissing).length===0,
+      missingColumnsByTable: editorialMissing },
+    note: "Only schema information and test aggregate counts; no personal data or secrets." });
 }
 
 async function api(req, env) {
