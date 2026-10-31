@@ -58,3 +58,18 @@
 - 已建立的 `content_packages` 与 `word_categories` 两张表无需再次执行 SQL。
 - D1 导入会在一个 batch 中完成，但仍应定期使用 Cloudflare D1 Time Travel/备份机制保存关键恢复点。
 - 今后实现正式发布前需加独立管理员会话、访问限流、草稿历史版本、发布二次确认、撤回管理及完整审计日志。
+
+## 修复记录：编辑权限验证出现 `Unexpected end of JSON input`
+
+用户截图表明 `/editor.html` 页面正常加载，但点击「验证编辑权限/读取书库」出现 `Unexpected end of JSON input`，草稿列表未显示。该截图本身无法判定是密钥错误、D1 读取失败、HTTP 响应为空或 CDN/部署层响应异常。
+
+本次补充：
+- `GET /api/staging/editor/check`：必须已有 `reviewer` 测试站授权，且正确提供 `X-Mw-Editor-Key`。验证独立管理员 Secret 与 D1 关键表是否存在，只返回状态/缺表名，不返回密钥或草稿正文。
+- 草稿列表、预览中的未预期数据库错误统一返回 JSON：`{"error":"EDITOR_BACKEND_ERROR","diagnosticStage":"drafts.list"}` 或 `drafts.preview`；Cloudflare 日志只记录静态阶段标签。
+- 浏览器后台改为先判断 HTTP 状态、Content-Type 和响应是否为空，再尝试解析 JSON；只显示错误码、响应类型、字节长度与固定阶段标签，不在页面展示可能含敏感信息的 HTML 或密钥。
+- 新的验证流程：`/api/staging/editor/check` 成功之后再请求 `/api/staging/editor/drafts`；避免把数据读取异常误报为管理员密码不正确。
+- CI 增加表结构缺失、密钥错误、数据库查询失败返回 JSON 的回归测试。
+
+**用户验收**：先在 Cloudflare Deployments 确认 GitHub 最新提交 Ready，刷新 `/editor.html`（必要时强制刷新缓存），重新输入独立编辑密钥并点击验证。成功时应显示「编辑密钥验证成功，D1 表结构正常，草稿列表已加载。」及「暂无草稿」。如果失败只反馈后台页面显示的错误提示、HTTP 状态与诊断阶段，**不要发送 Secret、密码或任何未发表正文**。
+
+现阶段 Cloudflare 生产环境中的 staging 部署是否运行最新构建，必须由 Cloudflare 控制台确认；GitHub CI 成功不等于 Worker 实际上线已完成。
