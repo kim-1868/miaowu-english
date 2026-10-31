@@ -11,7 +11,7 @@ const PREVIEW_KEY="staging-test-preview-password-for-tests-2026";
 const PEPPER="staging-test-activation-pepper-with-32-plus-characters";
 function fixture(){
   const sqlite=new DatabaseSync(":memory:");
-  for(const x of ["../db/001_schema.sql","../db/002_s1.sql","../db/003_public_categories.sql","../db/004_editorial_content.sql"])sqlite.exec(read(x));
+  for(const x of ["../db/001_schema.sql","../db/002_s1.sql","../db/003_public_categories.sql","../db/004_editorial_content.sql","../db/005_editorial_revisions.sql"])sqlite.exec(read(x));
   const bindable=query=>({
     bind(...params){const statement=sqlite.prepare(query);return {
       async first(){return statement.get(...params)??null},
@@ -131,4 +131,103 @@ test("S3 editor reports consistent JSON when D1 table missing or query fails",as
   const result=await failed.json();
   assert.deepEqual(result,{error:"EDITOR_BACKEND_ERROR",diagnosticStage:"drafts.list"});
   assert.equal(JSON.stringify(result).includes(EDITOR_KEY),false);
+});
+
+test("S3 B2 chapter edits rebuild word anchors, keep old snapshot, and support non-destructive restoration",async()=>{
+  const env=fixture(),headers={"X-Mw-Editor-Key":EDITOR_KEY};
+  assert.equal((await call(env,"/api/staging/editor/drafts","POST",{package:sample},{headers})).status,201);
+  const preview=await call(env,"/api/staging/editor/drafts/sample-cet4-letter","GET",undefined,{headers});
+  const first=(await preview.json()).chapters[0];
+  assert.match(first.version,/^[a-f0-9]{64}$/);
+  const para=structuredClone(first.content.paragraphs);
+  para[0].segments[0].text="她盯着窗台上的信封，";
+  const body={title:"修改后的第一章",preview:true,paragraphs:para,expectedVersion:first.version};
+  const route="/api/staging/editor/drafts/sample-cet4-letter/chapters/sample-letter-ch1";
+  const save=await call(env,route,"PUT",body,{headers});
+  assert.equal(save.status,200,await save.clone().text());
+  const result=await save.json();
+  assert.equal(result.saved,true);
+  assert.notEqual(result.version,first.version);
+  const state=env.sqlite.prepare("SELECT title,content_json,published_at FROM chapters WHERE id='sample-letter-ch1'").get();
+  assert.equal(state.title,"修改后的第一章");
+  assert.equal(state.published_at,null);
+  assert.equal(JSON.parse(state.content_json).paragraphs[0].segments[0].text,"她盯着窗台上的信封，");
+  const contexts=env.sqlite.prepare("SELECT context_sentence FROM chapter_words WHERE chapter_id='sample-letter-ch1' ORDER BY context_anchor").all();
+  assert.equal(contexts.length,2);
+  assert.match(contexts[0].context_sentence,/窗台上的信封/);
+  assert.equal(env.sqlite.prepare("SELECT COUNT(*) AS n FROM editorial_revisions").get().n,1);
+  const stale=await call(env,route,"PUT",body,{headers});
+  assert.equal(stale.status,409);
+  assert.equal((await stale.json()).error,"EDIT_CONFLICT");
+  assert.equal(env.sqlite.prepare("SELECT COUNT(*) AS n FROM editorial_revisions").get().n,1);
+  const history=await call(env,"/api/staging/editor/drafts/sample-cet4-letter/revisions/chapter/sample-letter-ch1","GET",undefined,{headers});
+  assert.equal(history.status,200);
+  const records=(await history.json()).revisions;
+  assert.equal(records.length,1);
+  assert.equal(records[0].snapshot.title,first.title);
+  assert.equal(records[0].version,first.version);
+  const restore=await call(env,route,"PUT",{...records[0].snapshot,expectedVersion:result.version},{headers});
+  assert.equal(restore.status,200);
+  assert.equal(env.sqlite.prepare("SELECT title FROM chapters WHERE id='sample-letter-ch1'").get().title,first.title);
+  assert.equal(env.sqlite.prepare("SELECT COUNT(*) AS n FROM editorial_revisions").get().n,2);
+  assert.equal((await call(env,route,"PUT",body)).status,403);
+  env.sqlite.exec("UPDATE books SET status='published' WHERE id='sample-cet4-letter'");
+  const locked=await call(env,route,"PUT",{...body,expectedVersion:(await restore.json()).version},{headers});
+  assert.equal(locked.status,404);
+});
+
+test("S3 B2 word edits are revisioned; shared, invalid, and published words stay protected",async()=>{
+  const env=fixture(),headers={"X-Mw-Editor-Key":EDITOR_KEY};
+  await call(env,"/api/staging/editor/drafts","POST",{package:sample},{headers});
+  const data=await (await call(env,"/api/staging/editor/drafts/sample-cet4-letter","GET",undefined,{headers})).json();
+  const old=data.words.find(x=>x.id==="cet4-hesitate");
+  assert.match(old.version,/^[a-f0-9]{64}$/);
+  const urlWord="/api/staging/editor/drafts/sample-cet4-letter/words/cet4-hesitate";
+  const payload={
+    expectedVersion:old.version,
+    headword:old.headword,meaningZh:"犹豫；迟疑；还没有决定",
+    phoneticUk:old.phonetic_uk||"",phoneticUs:old.phonetic_us||"",
+    partOfSpeech:old.part_of_speech||"",exampleEn:old.example_en||"",
+    exampleZh:old.example_zh||"",collocations:old.collocations
+  };
+  const saved=await call(env,urlWord,"PUT",payload,{headers});
+  assert.equal(saved.status,200,await saved.clone().text());
+  const newData=await saved.json();
+  assert.equal(env.sqlite.prepare("SELECT meaning_zh FROM words WHERE id='cet4-hesitate'").get().meaning_zh,
+    "犹豫；迟疑；还没有决定");
+  assert.equal(env.sqlite.prepare("SELECT COUNT(*) AS n FROM editorial_revisions").get().n,1);
+  assert.equal((await call(env,urlWord,"PUT",payload,{headers})).status,409);
+  const history=await (await call(env,
+    "/api/staging/editor/drafts/sample-cet4-letter/revisions/word/cet4-hesitate","GET",undefined,{headers})).json();
+  assert.equal(history.revisions[0].snapshot.meaningZh,"犹豫；迟疑");
+  const bad=await call(env,urlWord,"PUT",{...payload,expectedVersion:newData.version,headword:""},{headers});
+  assert.equal(bad.status,400);
+  const published=structuredClone(sample);
+  published.book.id="another-cet4-draft";
+  published.chapters.forEach((x,i)=>x.id="another-chapter-"+(i+1));
+  // Existing definitions must match before they can be linked by a second draft.
+  published.words[0].meaningZh="犹豫；迟疑；还没有决定";
+  assert.equal((await call(env,"/api/staging/editor/drafts","POST",{package:published},{headers})).status,201);
+  const shared=await call(env,urlWord,"PUT",{...payload,expectedVersion:newData.version,meaningZh:"编辑受保护"},{headers});
+  assert.equal(shared.status,409);
+  assert.equal((await shared.json()).error,"SHARED_WORD_LOCKED");
+  assert.equal(env.sqlite.prepare("SELECT meaning_zh FROM words WHERE id='cet4-hesitate'").get().meaning_zh,
+    "犹豫；迟疑；还没有决定");
+});
+
+test("S3 B2 edit routes fail closed before additive 005 migration, while older preview stays usable",async()=>{
+  const env=fixture(),headers={"X-Mw-Editor-Key":EDITOR_KEY};
+  await call(env,"/api/staging/editor/drafts","POST",{package:sample},{headers});
+  env.sqlite.exec("DROP TABLE editorial_revisions");
+  const page=await call(env,"/api/staging/editor/drafts/sample-cet4-letter","GET",undefined,{headers});
+  assert.equal(page.status,200);
+  const details=await page.json();
+  const blocked=await call(env,"/api/staging/editor/drafts/sample-cet4-letter/chapters/sample-letter-ch1",
+    "PUT",{title:"new",preview:true,paragraphs:details.chapters[0].content.paragraphs,
+      expectedVersion:details.chapters[0].version},{headers});
+  assert.equal(blocked.status,503);
+  assert.equal((await blocked.json()).error,"EDITOR_REVISION_SCHEMA_REQUIRED");
+  const health=await (await call(env,"/api/staging/editor/check","GET",undefined,{headers})).json();
+  assert.equal(health.ok,true);
+  assert.equal(health.revisionsSchemaReady,false);
 });
