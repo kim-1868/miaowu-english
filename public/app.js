@@ -106,16 +106,19 @@
     let cloudListSequence=0;
     let activeCloud=null;
     let cloudBooks=[],cloudSaved=new Map(),cloudProgress=[],cloudSessionKey=null,cloudLearningSequence=0;
-    const cloudDue=()=>[...cloudSaved.values()].filter(w=>w.status!=='mastered' && w.due_at && Date.parse(String(w.due_at).replace(' ','T')+'Z')<=Date.now()).length;
+    let cloudReviewDue=0;
+    const cloudDue=()=>cloudReviewDue;
     async function refreshCloudLearning(){
       const requested=user?.name||null,seq=++cloudLearningSequence;
-      if(!requested){cloudSaved=new Map();cloudProgress=[];return}
+      if(!requested){cloudSaved=new Map();cloudProgress=[];cloudReviewDue=0;return}
       try{
-        const [words,progress]=await Promise.all([
-          serverRequest('/api/me/words'),serverRequest('/api/me/progress')
+        const [words,progress,stats]=await Promise.all([
+          serverRequest('/api/me/words'),serverRequest('/api/me/progress'),
+          serverRequest('/api/me/echo/stats')
         ]);
         if(seq!==cloudLearningSequence||user?.name!==requested)return;
         cloudSaved=new Map((words.words||[]).map(w=>[w.word_id,w]));
+        cloudReviewDue=Number(stats.due)||0;
         cloudProgress=progress.progress||[];
         renderReminder();
         if(view==='account')renderAccount();
