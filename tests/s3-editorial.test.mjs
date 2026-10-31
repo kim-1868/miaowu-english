@@ -2,6 +2,7 @@ import {test} from "node:test";
 import assert from "node:assert/strict";
 import {DatabaseSync} from "node:sqlite";
 import {readFileSync} from "node:fs";
+import {createHash} from "node:crypto";
 import {generateSql,validatePackage} from "../scripts/build-content-import.mjs";
 import worker from "../src/worker.js";
 
@@ -97,4 +98,48 @@ test("S3 import doesn't publish drafts; paid chapter API must not return any bod
   const list=await shelf.json();
   assert.equal(list.books.some(b=>b.id==="sample-cet4-letter"),false);
   // Future publish workflow must still require category-specific user entitlements.
+});
+
+test("S3 story-word API applies exactly the same entitlement rules as paid chapter body",async()=>{
+  const db=database();
+  db.exec(generateSql(input).sql);
+  db.exec("UPDATE books SET status='published' WHERE id='sample-cet4-letter'");
+  db.exec("UPDATE chapters SET published_at=CURRENT_TIMESTAMP WHERE book_id='sample-cet4-letter'");
+  const binding={
+    prepare(query){return {
+      bind(...args){const sql=db.prepare(query);return {
+        async first(){return sql.get(...args)??null},
+        async all(){return {results:sql.all(...args)}},
+        async run(){return {success:true,meta:sql.run(...args)}}
+      }},
+      async all(){return {results:db.prepare(query).all()}},
+      async first(){return db.prepare(query).get()??null}
+    }}
+  };
+  const env={DB:binding,ACTIVATION_PEPPER:"test-only-secret-longer-than-thirty-two-characters"};
+  const url="https://demo.example/api/chapters/";
+  const preview=await worker.fetch(new Request(url+"sample-letter-ch1/words"),env);
+  assert.equal(preview.status,200);
+  const data=await preview.json();
+  assert.equal(data.words.length,2);
+  assert.equal(data.words[0].word_id,"cet4-hesitate");
+  assert.equal(data.words[0].meaning_zh,"犹豫；迟疑");
+  assert.equal(data.words[0].collocations[0].en,"hesitate to speak");
+  // Paid contexts cannot leak through the vocabulary endpoint.
+  const blocked=await worker.fetch(new Request(url+"sample-letter-ch2/words"),env);
+  assert.equal(blocked.status,401);
+  assert.equal(JSON.stringify(await blocked.json()).includes("犹豫"),false);
+  // Give a single test user category rights and a hashed server session.
+  const token="a".repeat(64);
+  const hashed=createHash("sha256").update(token).digest("hex");
+  db.prepare("INSERT INTO users(id,username,password_hash,password_salt) VALUES (?,?,?,?)")
+    .run("user-s3","test_reader","not-a-real-hash","salt");
+  db.prepare("INSERT INTO entitlements(user_id,category_id) VALUES (?,?)").run("user-s3","cet4");
+  db.prepare("INSERT INTO sessions(id_hash,user_id,expires_at) VALUES (?,?,'2099-12-31 23:59:59')")
+    .run(hashed,"user-s3");
+  const allowed=await worker.fetch(new Request(url+"sample-letter-ch2/words",{
+    headers:{Cookie:"mw_session="+token}
+  }),env);
+  assert.equal(allowed.status,200);
+  assert.equal((await allowed.json()).words.length,2);
 });
