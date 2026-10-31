@@ -1,7 +1,11 @@
 // Shared security helpers for Cloudflare Workers (WebCrypto; no Node-only runtime).
 export const COOKIE = "mw_session";
 const encoder = new TextEncoder();
-const ITERATIONS = 310000;
+// Cloudflare Workers Web Crypto currently rejects PBKDF2 requests above 100000 iterations.
+// Prehash with a separate HMAC domain so a DB-only leak cannot brute-force passwords without the Worker secret.
+// This remains staging auth; review hashing policy again before accepting paying users.
+const ITERATIONS = 100000;
+const PASSWORD_HASH_ID = "pbkdf2_sha256_100000_peppered_v1$";
 const SESSION_DAYS = 14;
 
 export function asText(value) {
@@ -53,21 +57,23 @@ export function requireSecret(env) {
 export async function hashCode(code, env) {
   return hmacHex(requireSecret(env), "code:" + code);
 }
-export async function newPasswordHash(password) {
+export async function newPasswordHash(password, env) {
   const salt = hex(crypto.getRandomValues(new Uint8Array(16)));
-  return { hash: await derive(password, salt), salt };
+  const prehash = await hmacHex(requireSecret(env), "password:v1:" + password);
+  return { hash: await derive(prehash, salt), salt };
 }
 async function derive(password, salt) {
   const key = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveBits"]);
   const bits = await crypto.subtle.deriveBits({
     name: "PBKDF2", hash: "SHA-256", salt: unhex(salt), iterations: ITERATIONS
   }, key, 256);
-  return "pbkdf2_sha256_" + ITERATIONS + "$" + hex(bits);
+  return PASSWORD_HASH_ID + hex(bits);
 }
-export async function verifyPassword(password, salt, expected) {
-  if (typeof expected !== "string" || !expected.startsWith("pbkdf2_sha256_" + ITERATIONS + "$")) return false;
-  const generated = await derive(password, salt);
-  return safeCompare(generated.split("$")[1], expected.split("$")[1]);
+export async function verifyPassword(password, salt, expected, env) {
+  if (typeof expected !== "string" || !expected.startsWith(PASSWORD_HASH_ID)) return false;
+  const prehash = await hmacHex(requireSecret(env), "password:v1:" + password);
+  const generated = await derive(prehash, salt);
+  return safeCompare(generated.slice(PASSWORD_HASH_ID.length), expected.slice(PASSWORD_HASH_ID.length));
 }
 export async function sessionData(userId) {
   const token = randomToken();
