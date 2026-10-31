@@ -23,8 +23,8 @@ test('original designed reader fetches paid cloud chapters from D1 without bundl
 
 test('S5 uses the existing book cover, reader, bookplates, and dashboard for real D1-backed content',()=>{
   const script=app(),markup=html();
-  assert.match(markup,/主站书架、正文阅读与记忆藏书票已接入 Cloudflare D1/);
-  assert.match(markup,/剧情回声目前仍为演示题库/);
+  assert.match(markup,/书架、阅读、单词收藏与剧情回声已接入 Cloudflare D1/);
+  assert.match(markup,/题目从云端生成，答题记录会保存在账号中/);
   assert.match(markup,/id="view-library"/);
   assert.match(markup,/id="view-reader"/);
   assert.match(markup,/id="view-words"/);
@@ -38,9 +38,9 @@ test('S5 uses the existing book cover, reader, bookplates, and dashboard for rea
   assert.match(script,/\/api\/me\/words/);
   assert.match(script,/refreshCloudLearning/);
   assert.match(script,/function renderReminder/);
-  // The demo quiz survives as an explicitly separate learning preview, not a real cloud result.
-  assert.match(script,/const ECHO_BANK=/);
-  assert.match(markup,/真实云端章节的词汇练习将在下一阶段接入/);
+  // The old internal demo array is inert: the real Story Echo adapter is active.
+  assert.match(script,/window\.MiaowuCloudEcho\.render\(\)/);
+  assert.match(markup,/script src="\/echo-cloud\.js"/);
 });
 
 test('chapter dialog selection immediately reveals reading screen and never waits for glossary',()=>{
@@ -58,4 +58,26 @@ test('chapter dialog selection immediately reveals reading screen and never wait
   assert.match(fn,/cloud-reader-loading/);
   assert.match(fn,/cloud-reader-error/);
   assert.match(fn,/重试打开本章/);
+});
+
+test('S7 matches the original V0.3 design rules while showing actual progress and explicit planned books',()=>{
+  const script=app(),markup=html();
+  const css=readFileSync(new URL('../public/styles.css',import.meta.url),'utf8');
+  const baseline=readFileSync(new URL('../public/design-reference-v03.html',import.meta.url),'utf8');
+  const ref=baseline.match(/<style>([\\s\\S]*?)<\\/style>/);
+  assert.ok(ref,'V0.3 has an embedded original design system');
+  assert.ok(css.startsWith(ref[1]),'approved V0.3 stylesheet must remain unchanged at its base');
+  assert.match(script,/function updateCloudShelfProgress/);
+  assert.match(script,/book\.chapter_count/);
+  assert.match(script,/p\.completed_at/);
+  assert.match(script,/data-live-progress/);
+  assert.match(script,/BOOKS\.filter\(b=>b\.status==='planned'\)/);
+  assert.match(script,/未上架 · 不可购买/);
+  assert.match(script,/测试内容 · 不出售/);
+  assert.match(script,/book\.cover_key|story\W+edition|故事试读册/);
+  assert.match(script,/function openFirstCloudBook/);
+  assert.match(script,/closeModal\(\);openFirstCloudBook\(\)/);
+  assert.match(script,/activeCloud\.rawParagraphs/);
+  assert.match(script,/token\.surface/);
+  assert.match(markup,/剧情回声已接入 Cloudflare D1/);
 });
