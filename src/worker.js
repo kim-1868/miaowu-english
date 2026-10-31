@@ -468,7 +468,9 @@ async function api(req, env) {
   if (path === "/api/books" && req.method === "GET") {
     const slug = new URL(req.url).searchParams.get("category");
     if (!slug || !/^[a-z0-9-]{2,36}$/.test(slug)) return reject("INVALID_CATEGORY", 400);
-    const data = await dbStmt(env.DB, `SELECT b.id,b.title,b.description,b.cover_key,b.sort_order
+    const data = await dbStmt(env.DB, `SELECT b.id,b.title,b.description,b.cover_key,b.sort_order,
+      (SELECT COUNT(*) FROM chapters ch WHERE ch.book_id=b.id
+        AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP) AS chapter_count
       FROM books b JOIN categories c ON c.id=b.category_id WHERE c.slug=?
       AND c.is_visible=1 AND b.status='published' ORDER BY b.sort_order LIMIT 100`, slug).all();
     return json({ books: data.results || [] });
