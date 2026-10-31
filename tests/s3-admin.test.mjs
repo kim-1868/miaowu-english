@@ -231,3 +231,61 @@ test("S3 B2 edit routes fail closed before additive 005 migration, while older p
   assert.equal(health.ok,true);
   assert.equal(health.revisionsSchemaReady,false);
 });
+
+test("S3 C1 QA report stays private, read-only and never publishes",async()=>{
+  const env=fixture(),headers={"X-Mw-Editor-Key":EDITOR_KEY};
+  const created=await call(env,"/api/staging/editor/drafts","POST",{package:sample},{headers});
+  assert.equal(created.status,201);
+  const path="/api/staging/editor/drafts/sample-cet4-letter/review";
+  const noEditor=await call(env,path,"GET");
+  assert.equal(noEditor.status,403);
+  assert.equal((await noEditor.json()).error,"EDITOR_FORBIDDEN");
+  const before=env.sqlite.prepare("SELECT status FROM books WHERE id=?").get("sample-cet4-letter").status;
+  const chaptersBefore=env.sqlite.prepare("SELECT count(*) AS n FROM chapters WHERE published_at IS NOT NULL").get().n;
+  const revisionsBefore=env.sqlite.prepare("SELECT count(*) AS n FROM editorial_revisions").get().n;
+  const response=await call(env,path,"GET",undefined,{headers});
+  assert.equal(response.status,200,await response.clone().text());
+  const review=await response.json();
+  assert.equal(review.book.title,sample.book.title);
+  assert.deepEqual(review.metrics,{chapters:2,previewChapters:1,paidChapters:1,
+    distinctWords:2,wordOccurrences:4});
+  assert.equal(review.technicalCheckPassed,true);
+  assert.equal(review.blockerCount,0);
+  assert.equal(review.publicationEnabled,false);
+  assert.equal(review.manualChecks.length,3);
+  assert.ok(review.warningCount>0);
+  assert.equal(env.sqlite.prepare("SELECT status FROM books WHERE id=?").get("sample-cet4-letter").status,before);
+  assert.equal(env.sqlite.prepare("SELECT count(*) AS n FROM chapters WHERE published_at IS NOT NULL").get().n,chaptersBefore);
+  assert.equal(env.sqlite.prepare("SELECT count(*) AS n FROM editorial_revisions").get().n,revisionsBefore);
+  assert.equal((await call({...env,APP_ENV:"production"},path,"GET",undefined,{headers})).status,404);
+  assert.equal((await worker.fetch(new Request(url+path,{headers}),env)).status,401);
+});
+
+test("S3 C1 catches missing free previews, broken word anchors and nonsequential chapters",async()=>{
+  const env=fixture(),headers={"X-Mw-Editor-Key":EDITOR_KEY};
+  assert.equal((await call(env,"/api/staging/editor/drafts","POST",{package:sample},{headers})).status,201);
+  env.sqlite.exec("UPDATE chapters SET is_preview=0 WHERE book_id='sample-cet4-letter'");
+  env.sqlite.exec("UPDATE chapters SET chapter_no=4 WHERE id='sample-letter-ch2'");
+  env.sqlite.exec("DELETE FROM chapter_words WHERE word_id='cet4-promise' AND chapter_id='sample-letter-ch1'");
+  const res=await call(env,"/api/staging/editor/drafts/sample-cet4-letter/review","GET",undefined,{headers});
+  assert.equal(res.status,200);
+  const report=await res.json();
+  assert.equal(report.technicalCheckPassed,false);
+  const codes=new Set(report.blockers.map(x=>x.code));
+  assert.ok(codes.has("NO_FREE_PREVIEW"));
+  assert.ok(codes.has("CHAPTER_GAP"));
+  assert.ok(codes.has("MISSING_WORD_ANCHOR"));
+  assert.equal(report.publicationEnabled,false);
+});
+
+test("S3 C1 QA never returns draft content or report to unrelated paid reader",async()=>{
+  const env=fixture();
+  await call(env,"/api/staging/editor/drafts","POST",{package:sample},
+    {headers:{"X-Mw-Editor-Key":EDITOR_KEY}});
+  const path="/api/staging/editor/drafts/sample-cet4-letter/review";
+  const denied=await call(env,path,"GET",undefined,{headers:{"X-Mw-Editor-Key":"a".repeat(40)}});
+  assert.equal(denied.status,403);
+  const text=await denied.text();
+  assert.equal(text.includes("hesitate"),false);
+  assert.equal(text.includes(sample.book.title),false);
+});
