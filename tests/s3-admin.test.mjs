@@ -586,12 +586,17 @@ test("S6 cloud Echo derives only completed published chapter words and logs grad
   assert.equal(result.correct,true);
   assert.equal(result.saved,true);
   assert.equal(result.nextReviewDays,3);
+  assert.equal((await (await call(env,"/api/me/echo/stats","GET",undefined,{headers})).json()).due,0);
   assert.equal(env.sqlite.prepare("SELECT game_type,result FROM review_events WHERE user_id=?").get(userId).result,"correct");
   const reviewed=env.sqlite.prepare("SELECT status,due_at FROM user_words WHERE user_id=?").get(userId);
   assert.equal(reviewed.status,"learning");
   assert.ok(reviewed.due_at);
+  env.sqlite.prepare("UPDATE user_words SET due_at=datetime('now','-1 day') WHERE user_id=? AND word_id=?")
+    .run(userId,"qa-echo-contract");
+  assert.equal((await (await call(env,"/api/me/echo/stats","GET",undefined,{headers})).json()).due,1);
   const due=await (await call(env,route+"?scope=due","GET",undefined,{headers})).json();
-  assert.equal(due.distinctWords,0);
+  assert.equal(due.distinctWords,1);
+  assert.equal(due.words[0].word_id,"qa-echo-contract");
   const incorrect=await call(env,"/api/me/echo/answer","POST",
     {wordId:"qa-echo-evidence",chapterId:"qa-cet4-echo",gameType:"fill",
       answer:"identity",hinted:false},{headers});
