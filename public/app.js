@@ -1,16 +1,15 @@
 
   (()=>{
     'use strict';
-    // 只有本地演示状态，无服务端、付款、身份验证、真实用户数据或真实卡密库存。
-    const DEMO_CODES = { 'DEMO-CET4-2026':'cet4','DEMO-CET6-2026':'cet6','DEMO-KY-2026':'kaoyan' };
-    const CATS=[{id:'cet4',en:'CET-4',name:'大学英语四级',sub:'核心词 · 故事精选',icon:'✦',available:true},{id:'cet6',en:'CET-6',name:'大学英语六级',sub:'更进一步 · 待推出',icon:'✧',available:false},{id:'kaoyan',en:'POSTGRAD',name:'考研英语',sub:'学术与表达 · 待推出',icon:'❦',available:false},{id:'ielts',en:'IELTS',name:'雅思英语',sub:'世界阅读 · 待推出',icon:'✳',available:false}];
+    // Cloudflare D1 powers real test accounts; story content and learning state remain demo-only.
+    const CATS=[{id:'cet4',en:'CET-4',name:'大学英语四级',sub:'核心词 · 故事精选',icon:'✦',available:true},{id:'cet6',en:'CET-6',name:'大学英语六级',sub:'更进一步 · 待推出',icon:'✧',available:false},{id:'postgrad',en:'POSTGRAD',name:'考研英语',sub:'学术与表达 · 待推出',icon:'❦',available:false},{id:'ielts',en:'IELTS',name:'雅思英语',sub:'世界阅读 · 待推出',icon:'✳',available:false}];
     const BOOKS=[{id:'rose',name:'玫瑰未落幕',desc:'一场错开的约定，一段尚未结束的故事。',kind:'one',tag:'离婚逆袭',illustration:'❦',status:'demo'},{id:'promise',name:'契约婚姻第七条',desc:'约定之外，有些心动从不遵守条款。',kind:'two',tag:'先婚后爱',illustration:'♧',status:'planned'},{id:'secret',name:'她的第二重身份',desc:'每一个名字的背后，都藏着未说出的故事。',kind:'three',tag:'身份反转',illustration:'✥',status:'planned'}];
     const WORDS={contract:{meaning:'合同；契约',phonetic:'/ˈkɒntrækt/',part:'n.',context:'她将那份 contract 轻轻推到桌面中央。'},indifferent:{meaning:'冷淡的；漠不关心的',phonetic:'/ɪnˈdɪfrənt/',part:'adj.',context:'他的神色看上去依旧 indifferent。'},confirm:{meaning:'确认；证实',phonetic:'/kənˈfɜːrm/',part:'v.',context:'她问他是否愿意 confirm 这个决定。'},hesitate:{meaning:'犹豫；迟疑',phonetic:'/ˈhezɪteɪt/',part:'v.',context:'她没有 hesitate，直接拿起了笔。'},signature:{meaning:'签名；署名',phonetic:'/ˈsɪɡnətʃər/',part:'n.',context:'协议上留下了她的 signature。'},evidence:{meaning:'证据；根据',phonetic:'/ˈevɪdəns/',part:'n.',context:'桌上还有一张可能成为 evidence 的照片。'},identity:{meaning:'身份；特征',phonetic:'/aɪˈdentəti/',part:'n.',context:'照片揭开了她的另一个 identity。'},transfer:{meaning:'转移；转让',phonetic:'/trænsˈfɜːr/',part:'v.',context:'新的文件涉及股份 transfer。'},reveal:{meaning:'揭示；透露',phonetic:'/rɪˈviːl/',part:'v.',context:'这封信也许会 reveal 更多线索。'},promise:{meaning:'承诺；答应',phonetic:'/ˈprɒmɪs/',part:'n./v.',context:'她想起曾经听到的 promise。'},approach:{meaning:'接近；方法',phonetic:'/əˈprəʊtʃ/',part:'v./n.',context:'脚步声从走廊另一端 approach。'},consequence:{meaning:'结果；后果',phonetic:'/ˈkɒnsɪkwəns/',part:'n.',context:'她知道，每个选择都有 consequence。'}};
     const WORD_EXTRAS={"contract": {"example": "The two companies signed a new contract.", "translation": "两家公司签署了一份新合同。", "collocations": [["sign a contract", "签订合同"], ["break a contract", "违反合同"]]}, "indifferent": {"example": "He seemed indifferent to her apology.", "translation": "他似乎对她的道歉无动于衷。", "collocations": [["be indifferent to", "对……漠不关心"], ["remain indifferent", "保持冷淡"]]}, "confirm": {"example": "Please confirm the meeting time.", "translation": "请确认会议时间。", "collocations": [["confirm a decision", "确认决定"], ["confirm details", "核实细节"]]}, "hesitate": {"example": "Do not hesitate to ask questions.", "translation": "请尽管提问，不必犹豫。", "collocations": [["hesitate to do", "犹豫是否做……"], ["without hesitation", "毫不犹豫地"]]}, "signature": {"example": "Please put your signature here.", "translation": "请在这里签名。", "collocations": [["put a signature", "签署姓名"], ["signature on a document", "文件上的签名"]]}, "evidence": {"example": "The police found new evidence.", "translation": "警方找到了新的证据。", "collocations": [["strong evidence", "有力证据"], ["provide evidence", "提供证据"]]}, "identity": {"example": "She kept her identity a secret.", "translation": "她对自己的身份保密。", "collocations": [["prove identity", "证明身份"], ["hidden identity", "隐藏身份"]]}, "transfer": {"example": "They plan to transfer the shares.", "translation": "他们计划转让股份。", "collocations": [["transfer ownership", "转让所有权"], ["transfer money", "转账"]]}, "reveal": {"example": "The letter may reveal the truth.", "translation": "这封信或许会揭示真相。", "collocations": [["reveal a secret", "透露秘密"], ["reveal the truth", "揭示真相"]]}, "promise": {"example": "She made a promise to her sister.", "translation": "她向妹妹许下了承诺。", "collocations": [["keep a promise", "遵守诺言"], ["break a promise", "违背诺言"]]}, "approach": {"example": "A stranger began to approach the door.", "translation": "一个陌生人开始靠近门口。", "collocations": [["approach a problem", "处理问题"], ["take an approach", "采用一种方法"]]}, "consequence": {"example": "Every choice has a consequence.", "translation": "每个选择都有后果。", "collocations": [["face the consequences", "面对后果"], ["serious consequences", "严重后果"]]}};
     Object.keys(WORD_EXTRAS).forEach(k=>Object.assign(WORDS[k],WORD_EXTRAS[k]));
     const CHAPTERS=[{title:'一纸协议',parts:['这只是一个用于测试阅读功能的场景片段，并非正式小说正文。窗外的雨敲打玻璃，客厅里只亮着一盏灯。','她将那份 [[contract]]（合同）轻轻推到桌面中央。对面的男人看上去依旧 [[indifferent]]（冷淡的），仿佛这不过是一次寻常的会面。','“我只想 [[confirm]]（确认）一件事。”她望着他，“这真的是你的决定吗？”','他没有回答。她也没有 [[hesitate]]（犹豫），拿起笔，在最后一页留下自己的 [[signature]]（签名）。','离开前，她发现文件下压着一张旧照片。也许，那会是一份重要的 [[evidence]]（证据）。']},{title:'藏在照片里的名字',parts:['这一章同样是临时交互文案，仅用于体验付费章节解锁与词汇功能。','照片背面的名字让她重新思考自己的 [[identity]]（身份）。那是一段不曾向任何人提起的往事。','律师寄来的邮件提到了股份 [[transfer]]（转让）。事情比她想象的复杂。','她将信纸折好，决定先不 [[reveal]]（透露）真相。某个遥远的 [[promise]]（承诺），仍然留在她的记忆里。','门外的脚步声逐渐 [[approach]]（接近）。她突然明白，每个决定都可能带来新的 [[consequence]]（后果）。']}];
     const QUIZ=[{q:'她把哪一种文件推到桌面中央？',hint:'提示：一份正式的书面约定。',choices:['contract','evidence','identity','promise'],correct:'contract',detail:'contract = 合同；契约。想起桌上的那份协议。'},{q:'她在文件最后一页留下了什么？',hint:'提示：这是签署协议时的一个动作。',choices:['approach','signature','transfer','reveal'],correct:'signature',detail:'signature = 签名。把词义和“落笔签字”的画面连在一起。'},{q:'他看上去冷淡的，哪个英文词更贴近？',hint:'提示：描述人物的态度。',choices:['indifferent','hesitate','confirm','consequence'],correct:'indifferent',detail:'indifferent = 冷淡的；漠不关心的。再次想起故事人物的神情。'}];
-    const $=id=>document.getElementById(id);let view='library',category='cet4',chapter=0,gloss=true,night=(function(){try{return localStorage.getItem('miaowu_theme')==='dark'}catch(e){return false}})(),fontSize=18,wordFilter='all',popWord=null,user=null,account=null,grants=new Set(),redeemed=new Set(),quizIndex=0,quizScore=0,quizAnswer=null,utterances=[],speakIndex=0,speaking=false,paused=false;
+    const $=id=>document.getElementById(id);let view='library',category='cet4',chapter=0,gloss=true,night=(function(){try{return localStorage.getItem('miaowu_theme')==='dark'}catch(e){return false}})(),fontSize=18,wordFilter='all',popWord=null,user=null,grants=new Set(),quizIndex=0,quizScore=0,quizAnswer=null,utterances=[],speakIndex=0,speaking=false,paused=false;
     const stored=(key)=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch(e){return []}};const saved=new Set(stored('miaowu_demo_words').filter(w=>WORDS[w]));const mastered=new Set(stored('miaowu_demo_mastered').filter(w=>WORDS[w]));
     const safe=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     function applyTheme(){
@@ -133,22 +132,164 @@
       if(submit){const inp=$('spellingInput');submit.onclick=()=>{const ans=inp.value.trim();if(!ans){toast('请输入你回忆出的单词');return}reportExamResult(q,ans,quizHint)};inp.onkeydown=e=>{if(e.key==='Enter'&&!answered)submit.click()};$('spellHint').onclick=()=>{quizHint=true;$('spellHint').textContent='首字母：'+q.word[0]}}
       $('quizNext').onclick=()=>{quizIndex++;quizAnswer=null;quizHint=false;renderQuiz()};
     }
-    function renderAccount(){if(!user){$('accountPanel').innerHTML=`<div class="onboarding" style="margin:0"><span class="eyebrow">YOUR ACCOUNT</span><h3>还没有打开你的私人书房</h3><p>首次购买后，输入自定义账号、自己设置的密码与一次性激活码。以后使用「用户名 + 自设密码」登录。<br><b>本地演示：刷新后模拟账号会清空，切勿使用真实常用密码。</b></p><button class="primary" id="accountRegister">模拟注册与激活</button><button class="secondary-btn" id="accountLogin" style="margin-left:8px">已有演示账号？登录</button></div>`;$('accountRegister').onclick=showRegister;$('accountLogin').onclick=showLogin;return}const ent=CATS.filter(c=>has(c.id)),done=VISITED.size,words=touchedWords().length,due=dueList().length;const stats=[{n:done?'1本':'0本',t:'已开始阅读'},{n:done+'章',t:'累计已读演示章节'},{n:words+'个',t:'已接触词汇'},{n:mastered.size+'个',t:'标记已掌握'}];$('accountPanel').innerHTML=`<div class="account-box"><div class="account-row"><div class="avatar">${safe(user.name[0].toUpperCase())}</div><div><span class="eyebrow">YOUR PRIVATE SHELF</span><h2 style="font:normal 25px 'Songti SC',serif;color:var(--wine);margin:6px 0">${safe(user.name)} 的书房</h2><span style="font-size:12px;color:var(--muted)">妙屋英语 · 本地演示，不是真实账号</span></div></div><div class="account-stats">${stats.map(s=>`<div class="account-stat"><strong>${s.n}</strong><small>${s.t}</small></div>`).join('')}</div><div class="account-reminder"><div><strong>♧ 今日复习</strong><div class="echo-tip">待复习 ${due} 词 · 当前藏书票 ${saved.size} 张 · 已浏览 ${done}/${CHAPTERS.length} 演示章</div></div><button class="primary" id="accountStartReview">${due?'开始复习':'查看剧情回声'} →</button></div><div class="account-content"><div class="account-block"><h3>已解锁学习分类</h3>${ent.map(c=>`<span class="account-tag">✓ ${c.name}</span>`).join('')||'<p>暂无已解锁分类</p>'}<p>购买四级后，可查看当前四级下已开放内容；未来新增作品权益另行决定。</p></div><div class="account-block"><h3>兑换新商品</h3><p>购买六级、考研等商品后，使用新激活码在原账号内增加权限。</p><button class="primary" id="doRedeem">＋ 兑换新商品</button></div></div><div style="margin-top:20px"><button class="secondary-btn" id="logout">退出当前演示账号</button></div></div>`;
+
+    const apiErrors = {
+      INVALID_ACTIVATION:'激活码格式不正确',
+      INVALID_ACTIVATION_OR_USERNAME:'激活码无效、已经兑换，或用户名已被占用',
+      INVALID_CREDENTIALS:'用户名或密码不正确',
+      INVALID_USERNAME_OR_PASSWORD:'用户名或密码不符合要求',
+      INVALID_OR_ALREADY_OWNED:'激活码已经兑换，或分类已开通',
+      TOO_MANY_ATTEMPTS:'尝试过于频繁，请稍后重试',
+      LOGIN_REQUIRED:'登录状态已失效，请重新登录',
+      SERVICE_NOT_CONFIGURED:'网站账号服务暂时不可用',
+      INVALID_ORIGIN:'安全验证失败，请刷新页面重试',
+      INTERNAL_ERROR:'服务暂时出错，请稍后重试'
+    };
+    async function serverRequest(path, method='GET', payload) {
+      const options={method,credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}};
+      if(payload!==undefined){
+        options.headers['Content-Type']='application/json';
+        options.body=JSON.stringify(payload);
+      }
+      let response;
+      try { response=await fetch(path,options); }
+      catch { throw new Error('网络连接失败，请检查网络后重试'); }
+      let data;
+      try { data=await response.json(); }
+      catch { throw new Error('后台响应异常，请稍后重试'); }
+      if(!response.ok) throw new Error(apiErrors[data.error] || '请求失败（HTTP '+response.status+'）');
+      return data;
+    }
+    function applyServerAccount(data, move=false) {
+      const name=data && data.user && data.user.username;
+      user=name?{name}:null;
+      grants=new Set(Array.isArray(data && data.categories)?data.categories.map(c=>c.slug):[]);
+      renderLibrary();renderAccount();renderReminder();
+      $('topAccount').textContent=user?'你好，'+user.name:'登录 / 激活';
+      if(move)navigate('account');
+    }
+    async function loadServerSession(){
+      try { applyServerAccount(await serverRequest('/api/auth/me')); }
+      catch { applyServerAccount(null); }
+    }
+    async function submitServerForm(form, task, onSuccess) {
+      const btn=form.querySelector('button[type=submit]');
+      if(btn){btn.disabled=true;btn.textContent='正在验证…';}
+      try{
+        const result=await task();
+        onSuccess(result);
+      }catch(error){
+        formError(error.message||'操作失败，请重试');
+        if(btn){btn.disabled=false;btn.textContent=btn.dataset.original||'重新提交';}
+      }
+    }
+    function renderAccount(){if(!user){$('accountPanel').innerHTML=`<div class="onboarding" style="margin:0"><span class="eyebrow">YOUR ACCOUNT</span><h3>还没有打开你的私人书房</h3><p>首次购买后，输入自定义账号、自己设置的密码与一次性激活码。以后使用「用户名 + 自设密码」登录。<br><b>测试环境账号已保存至 D1；请勿使用常用密码，正式支付功能尚未开放。</b></p><button class="primary" id="accountRegister">注册并激活测试账号</button><button class="secondary-btn" id="accountLogin" style="margin-left:8px">已有账号？登录</button></div>`;$('accountRegister').onclick=showRegister;$('accountLogin').onclick=showLogin;return}const ent=CATS.filter(c=>has(c.id)),done=VISITED.size,words=touchedWords().length,due=dueList().length;const stats=[{n:done?'1本':'0本',t:'已开始阅读'},{n:done+'章',t:'当前设备已读演示章节'},{n:words+'个',t:'已接触词汇'},{n:mastered.size+'个',t:'标记已掌握'}];$('accountPanel').innerHTML=`<div class="account-box"><div class="account-row"><div class="avatar">${safe(user.name[0].toUpperCase())}</div><div><span class="eyebrow">YOUR PRIVATE SHELF</span><h2 style="font:normal 25px 'Songti SC',serif;color:var(--wine);margin:6px 0">${safe(user.name)} 的书房</h2><span style="font-size:12px;color:var(--muted)">妙屋英语 · 测试环境真实账号（阅读记录仍为本地演示）</span></div></div><div class="account-stats">${stats.map(s=>`<div class="account-stat"><strong>${s.n}</strong><small>${s.t}</small></div>`).join('')}</div><div class="account-reminder"><div><strong>♧ 今日复习</strong><div class="echo-tip">待复习 ${due} 词 · 当前藏书票 ${saved.size} 张 · 已浏览 ${done}/${CHAPTERS.length} 演示章</div></div><button class="primary" id="accountStartReview">${due?'开始复习':'查看剧情回声'} →</button></div><div class="account-content"><div class="account-block"><h3>已解锁学习分类</h3>${ent.map(c=>`<span class="account-tag">✓ ${c.name}</span>`).join('')||'<p>暂无已解锁分类</p>'}<p>此处展示真实 D1 分类权限；现有小说正文仅供功能演示，并非正式付费内容。</p></div><div class="account-block"><h3>兑换新商品</h3><p>使用新的测试激活码为原账号增加分类权限；正式商品尚未销售。</p><button class="primary" id="doRedeem">＋ 兑换新商品</button></div></div><div style="margin-top:20px"><button class="secondary-btn" id="logout">退出账号</button></div></div>`;
       $('accountPanel').querySelector('.account-content').insertAdjacentHTML('afterend',`<div class="account-expanded"><div class="account-feature account-reading-feature"><span class="eyebrow">CURRENTLY READING · 继续阅读</span><h3>《玫瑰未落幕》</h3><p>你已经读到第 ${VISITED.size?Math.max(...VISITED)+1:1} 章 · 演示共 ${CHAPTERS.length} 章</p><div class="progress-track"><div class="progress-fill" style="width:${Math.min(100,VISITED.size/CHAPTERS.length*100)}%"></div></div><button id="accountResumeRead" class="secondary-btn">继续阅读 →</button></div><div class="account-feature account-word-feature"><span class="eyebrow">MY MEMORY NOTES · 学习记录</span><h3>你的词汇足迹</h3><div class="account-mini-rows"><span>待复习词汇 <strong>${due}</strong></span><span>已收藏藏书票 <strong>${saved.size}</strong></span><span>学习中词汇 <strong>${Object.keys(reviewData).filter(w=>WORDS[w]&&!mastered.has(w)).length}</strong></span></div></div></div>`);
       $('accountResumeRead').onclick=()=>openChapter(VISITED.size?Math.max(...VISITED):0);
-      $('doRedeem').onclick=showRedeem;$('accountStartReview').onclick=()=>{echoScope=due?'due':'recent';echoPhase='setup';navigate('echo')};$('logout').onclick=()=>{user=null;renderAccount();renderLibrary();toast('已退出模拟登录，可使用原账号和密码再次登录')}}
+      $('doRedeem').onclick=showRedeem;$('accountStartReview').onclick=()=>{echoScope=due?'due':'recent';echoPhase='setup';navigate('echo')};$('logout').onclick=async()=>{try{await serverRequest('/api/auth/logout','POST',{});applyServerAccount(null,true);toast('已经退出真实测试账号')}catch(e){toast(e.message)}}}
     function showModal(html){$('modalContent').innerHTML=html;$('modalOverlay').classList.add('open');document.body.style.overflow='hidden'}function closeModal(){$('modalOverlay').classList.remove('open');document.body.style.overflow=''}
-    function demoCode(){return '<div class="demo-code">四级体验码：DEMO-CET4-2026 <button type="button" id="fillCode">填入</button></div>'}
-    function showRegister(opts={}){if(user){showRedeem();return}if(account){showLogin();return}showModal(`<span class="eyebrow">OPEN YOUR LIBRARY</span><h2 id="modalTitle">注册并激活</h2><p>首次购买用户：自己取一个用户名、设置登录密码，再输入小红书订单获得的一次性激活码。</p>${demoCode()}<form id="registerForm"><div class="form-field"><label for="rName">自定义用户名</label><input id="rName" autocomplete="off" minlength="3" maxlength="16" placeholder="3–16位英文、数字或下划线" required></div><div class="form-field"><label for="rPass">自设登录密码</label><input id="rPass" type="password" autocomplete="new-password" minlength="6" placeholder="演示密码至少6位，请勿用真实密码" required></div><div class="form-field"><label for="rCode">购买激活码</label><input id="rCode" autocomplete="off" placeholder="输入四级体验码" required></div><div class="helper">本地原型不会把你的密码上传、存储到服务器或硬盘；刷新页面即丢失模拟账号。本页不可用于真实售卖。</div><div class="form-actions"><button type="submit" class="primary">创建书房并激活 →</button></div><div id="formMessage"></div></form><div style="margin-top:15px"><button class="tiny-action" id="switchLogin">已有演示账号？去登录</button></div>`);$('fillCode').onclick=()=>{$('rCode').value='DEMO-CET4-2026'};$('switchLogin').onclick=showLogin;$('registerForm').onsubmit=e=>{e.preventDefault();let name=$('rName').value.trim(),pass=$('rPass').value,code=$('rCode').value.trim().toUpperCase();if(!/^[a-zA-Z0-9_]{3,16}$/.test(name)){formError('用户名请使用3–16位英文字母、数字或下划线');return}if(pass.length<6){formError('演示密码至少6位');return}if(!DEMO_CODES[code]){formError('测试激活码不正确，使用上方示例码即可');return}user={name,password:pass};account=user;grants.add(DEMO_CODES[code]);redeemed.add(code);closeModal();renderLibrary();navigate('account');toast('模拟激活成功，已开通四级演示权限');if(opts.intent==='locked')toast('已解锁，现在可返回阅读第02章')}}
-    function showLogin(){showModal(`<span class="eyebrow">WELCOME BACK</span><h2 id="modalTitle">登录我的书房</h2><p>使用注册时设置的用户名和密码登录。这里仅模拟当前页面内的账号，不连接服务器。</p><form id="loginForm"><div class="form-field"><label for="lName">用户名</label><input id="lName" autocomplete="off" placeholder="你创建的演示用户名" required></div><div class="form-field"><label for="lPass">登录密码</label><input id="lPass" type="password" autocomplete="off" placeholder="演示密码" required></div><div class="form-actions"><button class="primary" type="submit">登录书房 →</button></div><div id="formMessage"></div></form><div style="margin-top:16px"><button class="tiny-action" id="switchRegister">还没有账号？去注册激活</button></div>`);$('switchRegister').onclick=()=>showRegister();$('loginForm').onsubmit=e=>{e.preventDefault();if(!account){formError('当前浏览器页面没有演示账号，请先注册。刷新页面会清空临时账号。');return}if($('lName').value.trim()!==account.name||$('lPass').value!==account.password){formError('账号或密码不正确');return}user=account;closeModal();navigate('account');toast('欢迎回来')}}
-    function showRedeem(){if(!user){account?showLogin():showRegister();return}showModal(`<span class="eyebrow">EXPAND YOUR LIBRARY</span><h2 id="modalTitle">兑换新学习分类</h2><p>账号已存在，后续增购不需要再次设置用户名和登录密码。每一枚新激活码只能兑换一次。</p><div class="demo-code">扩展功能体验码：DEMO-CET6-2026 <button type="button" id="fillCode">填入</button></div><form id="redeemForm"><div class="form-field"><label for="redeemCode">新的商品激活码</label><input id="redeemCode" autocomplete="off" placeholder="输入新购买的激活码" required></div><div class="form-actions"><button class="primary" type="submit">验证并解锁 →</button></div><div id="formMessage"></div></form><p class="helper">六级目前仅有分类展示和模拟权益，不包含正式小说。正式版必须在服务端完成库存、一次性兑换和权限校验。</p>`);$('fillCode').onclick=()=>{$('redeemCode').value='DEMO-CET6-2026'};$('redeemForm').onsubmit=e=>{e.preventDefault();let code=$('redeemCode').value.trim().toUpperCase(),cat=DEMO_CODES[code];if(!cat){formError('没有找到这个测试激活码');return}if(redeemed.has(code)){formError('此测试码已被使用');return}if(has(cat)){formError('这个分类已经开通');return}redeemed.add(code);grants.add(cat);closeModal();renderAccount();renderLibrary();toast('兑换成功，已加入新的分类权益')}}
+
+    function showRegister(opts={}){
+      if(user){showRedeem();return;}
+      showModal([
+        '<span class="eyebrow">OPEN YOUR LIBRARY</span>',
+        '<h2 id="modalTitle">注册并激活</h2>',
+        '<p>使用全新的测试用户名、密码和未兑换的测试激活码开通分类。账号真实保存在 D1 测试数据库中。</p>',
+        '<form id="registerForm">',
+          '<div class="form-field"><label for="rName">自定义用户名</label>',
+          '<input id="rName" autocomplete="username" minlength="3" maxlength="24" placeholder="3–24位字母、数字或下划线等" required></div>',
+          '<div class="form-field"><label for="rPass">测试账号密码</label>',
+          '<input id="rPass" type="password" autocomplete="new-password" minlength="10" maxlength="128" placeholder="至少10位，请勿使用常用密码" required></div>',
+          '<div class="form-field"><label for="rCode">一次性测试激活码</label>',
+          '<input id="rCode" autocomplete="off" placeholder="输入联调页生成的测试码" required></div>',
+          '<p class="helper">当前只提供测试账号，不能支付或购买正式小说。若需要测试码，可在账号联调实验室生成。</p>',
+          '<div class="form-actions"><button type="submit" class="primary">创建书房并激活 →</button></div>',
+          '<div id="formMessage"></div>',
+        '</form>',
+        '<p class="helper"><a href="/account-test.html">打开账号联调实验室（测试专用）</a></p>',
+        '<div style="margin-top:15px"><button class="tiny-action" id="switchLogin">已有账号？去登录</button></div>'
+      ].join(''));
+      $('switchLogin').onclick=showLogin;
+      $('registerForm').onsubmit=e=>{
+        e.preventDefault();
+        const form=e.currentTarget;
+        const btn=form.querySelector('button[type=submit]');
+        btn.dataset.original=btn.textContent;
+        submitServerForm(form,
+          ()=>serverRequest('/api/auth/register','POST',{
+            username:$('rName').value.trim(),password:$('rPass').value,
+            activationCode:$('rCode').value.trim()
+          }),
+          result=>{
+            $('rPass').value='';
+            closeModal();
+            applyServerAccount(result,true);
+            toast('测试账号创建成功，分类已开通');
+          });
+      };
+    }
+    function showLogin(){
+      showModal([
+        '<span class="eyebrow">WELCOME BACK</span>',
+        '<h2 id="modalTitle">登录我的书房</h2>',
+        '<p>使用之前创建的真实测试用户名和密码登录。测试站访问密码 reviewer 与这里的账号不同。</p>',
+        '<form id="loginForm">',
+          '<div class="form-field"><label for="lName">用户名</label>',
+          '<input id="lName" autocomplete="username" placeholder="你注册的测试用户名" required></div>',
+          '<div class="form-field"><label for="lPass">登录密码</label>',
+          '<input id="lPass" type="password" autocomplete="current-password" placeholder="你设置的测试密码" required></div>',
+          '<div class="form-actions"><button class="primary" type="submit">登录书房 →</button></div>',
+          '<div id="formMessage"></div>',
+        '</form>',
+        '<div style="margin-top:16px"><button class="tiny-action" id="switchRegister">还没有账号？去注册激活</button></div>'
+      ].join(''));
+      $('switchRegister').onclick=()=>showRegister();
+      $('loginForm').onsubmit=e=>{
+        e.preventDefault();const form=e.currentTarget;
+        const btn=form.querySelector('button[type=submit]');
+        btn.dataset.original=btn.textContent;
+        submitServerForm(form,
+          ()=>serverRequest('/api/auth/login','POST',{
+            username:$('lName').value.trim(),password:$('lPass').value
+          }),
+          result=>{
+            $('lPass').value='';
+            closeModal();applyServerAccount(result,true);toast('欢迎回到你的书房');
+          });
+      };
+    }
+    function showRedeem(){
+      if(!user){showLogin();return;}
+      showModal([
+        '<span class="eyebrow">EXPAND YOUR LIBRARY</span>',
+        '<h2 id="modalTitle">兑换新学习分类</h2>',
+        '<p>当前账号：',safe(user.name),'。输入另一枚尚未使用的测试码，增加购买分类权限。</p>',
+        '<form id="redeemForm"><div class="form-field"><label for="redeemCode">新的测试激活码</label>',
+        '<input id="redeemCode" autocomplete="off" placeholder="输入另一枚测试激活码" required></div>',
+        '<div class="form-actions"><button class="primary" type="submit">验证并解锁 →</button></div>',
+        '<div id="formMessage"></div></form>',
+        '<p class="helper">测试码来自 <a href="/account-test.html">账号联调实验室</a>。正式销售及内容授权尚未开放。</p>'
+      ].join(''));
+      $('redeemForm').onsubmit=e=>{
+        e.preventDefault();const form=e.currentTarget;
+        const btn=form.querySelector('button[type=submit]');
+        btn.dataset.original=btn.textContent;
+        submitServerForm(form,
+          ()=>serverRequest('/api/activate','POST',{activationCode:$('redeemCode').value.trim()}),
+          result=>{
+            closeModal();
+            applyServerAccount({user:{username:user.name},categories:result.categories},true);
+            toast('测试分类已成功添加');
+          });
+      };
+    }
     function formError(s){$('formMessage').innerHTML=`<div class="form-message">${safe(s)}</div>`}
-    function explain(){showModal(`<span class="eyebrow">HOW IT WORKS</span><h2 id="modalTitle">一部小说，一段词汇记忆</h2><p>这是一款将阅读、听书、词汇收藏与情节回忆组合在一起的互动阅读器。</p><div class="onboarding" style="padding:15px;margin:12px 0"><h3>01 · 先读故事</h3><p>第一章开放试读，点击酒红色英文词查义、听发音。</p><h3>02 · 收下藏书票</h3><p>收藏之后，你可以在「记忆藏书票」里复习。</p><h3>03 · 听见剧情回声</h3><p>可选不同玩法、章节范围，通过选择与拼写练习回忆词汇。</p><h3>04 · 解锁完整书架</h3><p>演示码模拟「首次注册开通四级、后续可增购六级」的流程。</p></div><button class="primary" id="explainRead" style="width:100%">开始试读 →</button>`);$('explainRead').onclick=()=>{closeModal();openChapter(0)}}
+    function explain(){showModal(`<span class="eyebrow">HOW IT WORKS</span><h2 id="modalTitle">一部小说，一段词汇记忆</h2><p>这是一款将阅读、听书、词汇收藏与情节回忆组合在一起的互动阅读器。</p><div class="onboarding" style="padding:15px;margin:12px 0"><h3>01 · 先读故事</h3><p>第一章开放试读，点击酒红色英文词查义、听发音。</p><h3>02 · 收下藏书票</h3><p>收藏之后，你可以在「记忆藏书票」里复习。</p><h3>03 · 听见剧情回声</h3><p>可选不同玩法、章节范围，通过选择与拼写练习回忆词汇。</p><h3>04 · 解锁完整书架</h3><p>注册测试账号后用真实一次性测试码开通分类，正式购买功能仍未上线。</p></div><button class="primary" id="explainRead" style="width:100%">开始试读 →</button>`);$('explainRead').onclick=()=>{closeModal();openChapter(0)}}
     function speakWord(w){if(!('speechSynthesis' in window)){toast('此浏览器暂不支持语音朗读');return}window.speechSynthesis.cancel();speaking=false;$('player').classList.remove('show');let u=new SpeechSynthesisUtterance(w);u.lang='en-US';u.rate=.82;window.speechSynthesis.speak(u)}
     function stopReading(){if('speechSynthesis' in window)window.speechSynthesis.cancel();speaking=false;paused=false;utterances=[];$('player').classList.remove('show')}
     function startReading(){if(!('speechSynthesis' in window)){toast('此浏览器暂不支持朗读');return}stopReading();let lines=CHAPTERS[chapter].parts,segments=[];for(const text of lines){let pieces=text.split(/(\[\[[a-z]+\]\]（[^）]+）)/g).filter(Boolean);for(let piece of pieces){let m=piece.match(/^\[\[([a-z]+)\]\]（[^）]+）$/);segments.push({text:m?m[1]:piece,lang:m?'en-US':'zh-CN'})}}utterances=segments;speakIndex=0;speaking=true;paused=false;$('player').classList.add('show');$('playerState').textContent='中文 / 英语分段合成朗读';$('playerPause').textContent='Ⅱ';speakNext()}
     function speakNext(){if(!speaking)return;if(speakIndex>=utterances.length){stopReading();toast('演示朗读结束');return}const seg=utterances[speakIndex++],u=new SpeechSynthesisUtterance(seg.text);u.lang=seg.lang;u.rate=seg.lang==='en-US'?.86:.94;u.onend=()=>{if(speaking)speakNext()};u.onerror=(e)=>{if(speaking&&e.error!=='interrupted')speakNext()};window.speechSynthesis.speak(u)}
-    document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=()=>openChapter(0);$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');$('openActivation').onclick=()=>user?showRedeem():(account?showLogin():showRegister());$('topAccount').onclick=()=>user?navigate('account'):(account?showLogin():showRegister());$('wordbookRead').onclick=()=>openChapter(0);$('doEcho').onclick=()=>{echoScope='chapter';echoPhase='setup';echoChapterSet=new Set([chapter]);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);$('storyText').style.fontSize=fontSize+'px'};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);$('storyText').style.fontSize=fontSize+'px'};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=stopReading;$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
-    applyTheme();renderLibrary();renderReminder();renderWords();renderQuiz();renderAccount();
+    document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=()=>openChapter(0);$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>openChapter(0);$('doEcho').onclick=()=>{echoScope='chapter';echoPhase='setup';echoChapterSet=new Set([chapter]);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);$('storyText').style.fontSize=fontSize+'px'};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);$('storyText').style.fontSize=fontSize+'px'};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=stopReading;$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
+    applyTheme();renderLibrary();renderReminder();renderWords();renderQuiz();renderAccount();loadServerSession();
   })();
   
