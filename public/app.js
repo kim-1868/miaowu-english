@@ -99,7 +99,7 @@
     function asMeaning(c){return WORDS[c]?`${safe(c)}：${safe(WORDS[c].meaning)}`:safe(c)}
     function reportExamResult(q,ans,hint=false){if(quizAnswer!==null)return;quizAnswer=ans;const ok=ans.toLowerCase().trim()===q.word; if(ok)quizScore++;recordAnswer(q.word,ok,hint);renderQuiz()}
 
-    function navigate(to){if(view==='echo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='reader'&&to!=='reader')stopReading();view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words')renderWords();if(to==='echo')renderQuiz();if(to==='account')renderAccount();$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
+    function navigate(to){if(view==='echo'&&window.MiaowuCloudEcho?.running()){window.MiaowuCloudEcho.leave(to);return}if(view==='echo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='reader'&&to!=='reader')stopReading();view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words')renderWords();if(to==='echo')renderQuiz();if(to==='account')renderAccount();$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
 
     // D1 is the primary reader source. Legacy chapter sample stays unreachable from default book cards.
     // No paid chapter bodies are bundled into app.js or held in a client-side book constant.
@@ -327,8 +327,8 @@
       $('storyText').classList.toggle('no-gloss',!gloss);
       $('toggleGloss').disabled=false;
       $('sideToggleGloss').disabled=false;
-      $('doEcho').disabled=true;
-      $('doEcho').title='剧情回声当前仍是独立演示题库，尚未同步云端练习记录';
+      $('doEcho').disabled=false;
+      $('doEcho').title='练习本章已读单词并同步云端复习记录';
       $('nextChapter').textContent=next?'下一章 →':'返回书架 →';
       $('nextChapter').onclick=()=>next?openCloudChapter(next.id):navigate('library');
       const study=$('readerLayout').querySelector('#readerLearningStats');
@@ -441,6 +441,15 @@
     }
     function renderQuiz(){
       const c=$('quizContainer');
+      if(window.MiaowuCloudEcho){
+        if(!user){
+          c.innerHTML='<div class="echo-panel"><span class="eyebrow">STORY ECHO · YOUR REAL MEMORY</span><h3>登录后，从读过的故事里练习</h3><p class="echo-tip">云端剧情回声仅使用已读完、仍有权限阅读的章节词汇，练习结果同步到你的账号。</p><button class="primary" id="cloudEchoLogin">登录我的书房 →</button></div>';
+          $('cloudEchoLogin').onclick=showLogin;
+          return;
+        }
+        window.MiaowuCloudEcho.render();
+        return;
+      }
       if(echoPhase==='setup'){
         let chapters=echoAvailableChapters();
         const selection=echoScope==='custom'?`<div class="echo-batch-filter"><div class="echo-filter-caption"><strong>按书籍与章节范围快速筛选</strong><small>无需逐章勾选，支持未来多书目</small></div><div class="echo-filter-row"><label>小说<select id="echoBookSelect"><option value="all">全部已读书籍</option>${availablePublishedBooks().map(b=>`<option value="${b.id}" ${echoCustomBook===b.id?'selected':''}>《${safe(b.name)}》</option>`).join('')}</select></label><label>章节范围<select id="echoRangeSelect">${[{id:'all',name:'全部已读章节'},{id:'recent3',name:'最近3章'},{id:'recent10',name:'最近10章'},{id:'range',name:'指定起止章节'}].map(x=>`<option value="${x.id}" ${echoCustomRange===x.id?'selected':''}>${x.name}</option>`).join('')}</select></label></div>${echoCustomRange==='range'?`<div class="echo-range-row"><label>从第 <input type="number" id="echoFrom" min="1" max="${CHAPTERS.length}" value="${echoRangeStart}" aria-label="起始章节"> 章</label><label>至第 <input type="number" id="echoTo" min="1" max="${CHAPTERS.length}" value="${echoRangeEnd}" aria-label="结束章节"> 章</label></div>`:''}<p class="echo-tip">当前可复习 ${echoCustomChapters().length} 个已读演示章节 · 未阅读及未解锁章节不会纳入练习。</p></div>`:'';
@@ -517,6 +526,7 @@
       cloudSaved=new Map();cloudProgress=[];cloudSessionKey=user?.name||null;
       renderLibrary();renderAccount();renderReminder();
       refreshCloudLearning();
+      if(view==='echo')renderQuiz();
       $('topAccount').textContent=user?'你好，'+user.name:'登录 / 激活';
       if(move)navigate('account');
     }
@@ -700,8 +710,12 @@
     function stopReading(){if('speechSynthesis' in window)window.speechSynthesis.cancel();speaking=false;paused=false;utterances=[];$('player').classList.remove('show')}
     function startReading(){if(!('speechSynthesis' in window)){toast('此浏览器暂不支持朗读');return}stopReading();let lines=activeCloud?.chapterId?activeCloud.parts:CHAPTERS[chapter].parts,segments=[];for(const text of lines){let pieces=text.split(/(\[\[[a-z]+\]\]（[^）]+）)/g).filter(Boolean);for(let piece of pieces){let m=piece.match(/^\[\[([a-z]+)\]\]（[^）]+）$/);segments.push({text:m?m[1]:piece,lang:m?'en-US':'zh-CN'})}}utterances=segments;speakIndex=0;speaking=true;paused=false;$('player').classList.add('show');$('playerState').textContent='中文 / 英语分段合成朗读';$('playerPause').textContent='Ⅱ';speakNext()}
     function speakNext(){if(!speaking)return;if(speakIndex>=utterances.length){stopReading();toast('演示朗读结束');return}const seg=utterances[speakIndex++],u=new SpeechSynthesisUtterance(seg.text);u.lang=seg.lang;u.rate=seg.lang==='en-US'?.86:.94;u.onend=()=>{if(speaking)speakNext()};u.onerror=(e)=>{if(speaking&&e.error!=='interrupted')speakNext()};window.speechSynthesis.speak(u)}
-    document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=openFirstCloudBook;$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{echoScope='chapter';echoPhase='setup';echoChapterSet=new Set([chapter]);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);$('storyText').style.fontSize=fontSize+'px'};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);$('storyText').style.fontSize=fontSize+'px'};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=stopReading;$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
+    document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=openFirstCloudBook;$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{if(activeCloud?.chapterId)window.MiaowuCloudEcho?.useChapter(activeCloud.chapterId);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);$('storyText').style.fontSize=fontSize+'px'};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);$('storyText').style.fontSize=fontSize+'px'};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=stopReading;$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
     $('cloudFinishReading').onclick=finishCloudChapter;
+    window.MiaowuCloudEcho?.configure({
+      request:serverRequest,refresh:refreshCloudLearning,progress:()=>cloudProgress,
+      showModal,closeModal,navigate,toast,speak:speakWord
+    });
     applyTheme();renderLibrary();renderReminder();renderWords();renderQuiz();renderAccount();loadServerSession();refreshCloudCategories();
   })();
   
