@@ -215,6 +215,40 @@ async function issueStagingVoucher(req, env) {
   return json({ activationCode: code, category: slug, testOnly: true }, 201);
 }
 
+async function stagingDbDiagnostics(env) {
+  // Reviewer-only health check: no user identities, password hashes, voucher digests or raw codes.
+  const expected = {
+    users: ["id","username","password_hash","password_salt"],
+    activation_codes: ["id","code_hash","category_id","status","redeemed_by","redemption_nonce","order_reference"],
+    entitlements: ["user_id","category_id","source_code_id","revoked_at"],
+    sessions: ["id_hash","user_id","expires_at","revoked_at"],
+    request_throttle: ["key","attempts","reset_at"],
+    categories: ["id","slug","title","is_visible"]
+  };
+  const missing = {};
+  for (const [table, fields] of Object.entries(expected)) {
+    const result = await atStage("diagnostics.schema_" + table,
+      () => env.DB.prepare("PRAGMA table_info(" + table + ")").all());
+    const names = new Set((result.results || []).map(x => x.name));
+    const absent = fields.filter(field => !names.has(field));
+    if (absent.length) missing[table] = absent;
+  }
+  const counts = {};
+  for (const [name, query] of Object.entries({
+    users: "SELECT COUNT(*) AS n FROM users",
+    vouchersUnused: "SELECT COUNT(*) AS n FROM activation_codes WHERE order_reference='STAGING_QA_ONLY' AND status='unused'",
+    vouchersRedeemed: "SELECT COUNT(*) AS n FROM activation_codes WHERE order_reference='STAGING_QA_ONLY' AND status='redeemed'",
+    entitlements: "SELECT COUNT(*) AS n FROM entitlements"
+  })) {
+    const row = await atStage("diagnostics.count_" + name,
+      () => env.DB.prepare(query).first());
+    counts[name] = Number(row?.n || 0);
+  }
+  return json({ databaseSchemaReady: Object.keys(missing).length === 0,
+    missingColumnsByTable: missing, qaCounts: counts,
+    note: "Only test schema and aggregate counts; no personal data or secrets." });
+}
+
 async function api(req, env) {
   const path = new URL(req.url).pathname;
   if (path === "/api/health" && req.method === "GET") {
@@ -234,6 +268,9 @@ async function api(req, env) {
     return reject("SERVICE_NOT_CONFIGURED", 503);
   }
   if (req.method === "POST" && !checkOrigin(req)) return reject("INVALID_ORIGIN", 403);
+  if (path === "/api/staging/diagnostics" && req.method === "GET" && env.APP_ENV === "staging") {
+    return stagingDbDiagnostics(env);
+  }
   if (path === "/api/staging/test-voucher" && req.method === "POST") {
     return issueStagingVoucher(req, env);
   }
