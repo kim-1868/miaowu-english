@@ -1,8 +1,8 @@
 
   (()=>{
     'use strict';
-    // Cloudflare D1 powers real test accounts; story content and learning state remain demo-only.
-    const CATS=[{id:'cet4',en:'CET-4',name:'大学英语四级',sub:'核心词 · 故事精选',icon:'✦',available:true},{id:'cet6',en:'CET-6',name:'大学英语六级',sub:'更进一步 · 待推出',icon:'✧',available:false},{id:'postgrad',en:'POSTGRAD',name:'考研英语',sub:'学术与表达 · 待推出',icon:'❦',available:false},{id:'ielts',en:'IELTS',name:'雅思英语',sub:'世界阅读 · 待推出',icon:'✳',available:false}];
+    // Original approved design; D1 now powers the primary book, reader, saved words and progress views.
+    let CATS=[{id:'cet4',en:'CET-4',name:'大学英语四级',sub:'核心词 · 故事精选',icon:'✦',available:true},{id:'cet6',en:'CET-6',name:'大学英语六级',sub:'更进一步 · 待推出',icon:'✧',available:false},{id:'postgrad',en:'POSTGRAD',name:'考研英语',sub:'学术与表达 · 待推出',icon:'❦',available:false},{id:'ielts',en:'IELTS',name:'雅思英语',sub:'世界阅读 · 待推出',icon:'✳',available:false}];
     const BOOKS=[{id:'rose',name:'玫瑰未落幕',desc:'一场错开的约定，一段尚未结束的故事。',kind:'one',tag:'离婚逆袭',illustration:'❦',status:'demo'},{id:'promise',name:'契约婚姻第七条',desc:'约定之外，有些心动从不遵守条款。',kind:'two',tag:'先婚后爱',illustration:'♧',status:'planned'},{id:'secret',name:'她的第二重身份',desc:'每一个名字的背后，都藏着未说出的故事。',kind:'three',tag:'身份反转',illustration:'✥',status:'planned'}];
     const WORDS={contract:{meaning:'合同；契约',phonetic:'/ˈkɒntrækt/',part:'n.',context:'她将那份 contract 轻轻推到桌面中央。'},indifferent:{meaning:'冷淡的；漠不关心的',phonetic:'/ɪnˈdɪfrənt/',part:'adj.',context:'他的神色看上去依旧 indifferent。'},confirm:{meaning:'确认；证实',phonetic:'/kənˈfɜːrm/',part:'v.',context:'她问他是否愿意 confirm 这个决定。'},hesitate:{meaning:'犹豫；迟疑',phonetic:'/ˈhezɪteɪt/',part:'v.',context:'她没有 hesitate，直接拿起了笔。'},signature:{meaning:'签名；署名',phonetic:'/ˈsɪɡnətʃər/',part:'n.',context:'协议上留下了她的 signature。'},evidence:{meaning:'证据；根据',phonetic:'/ˈevɪdəns/',part:'n.',context:'桌上还有一张可能成为 evidence 的照片。'},identity:{meaning:'身份；特征',phonetic:'/aɪˈdentəti/',part:'n.',context:'照片揭开了她的另一个 identity。'},transfer:{meaning:'转移；转让',phonetic:'/trænsˈfɜːr/',part:'v.',context:'新的文件涉及股份 transfer。'},reveal:{meaning:'揭示；透露',phonetic:'/rɪˈviːl/',part:'v.',context:'这封信也许会 reveal 更多线索。'},promise:{meaning:'承诺；答应',phonetic:'/ˈprɒmɪs/',part:'n./v.',context:'她想起曾经听到的 promise。'},approach:{meaning:'接近；方法',phonetic:'/əˈprəʊtʃ/',part:'v./n.',context:'脚步声从走廊另一端 approach。'},consequence:{meaning:'结果；后果',phonetic:'/ˈkɒnsɪkwəns/',part:'n.',context:'她知道，每个选择都有 consequence。'}};
     const WORD_EXTRAS={"contract": {"example": "The two companies signed a new contract.", "translation": "两家公司签署了一份新合同。", "collocations": [["sign a contract", "签订合同"], ["break a contract", "违反合同"]]}, "indifferent": {"example": "He seemed indifferent to her apology.", "translation": "他似乎对她的道歉无动于衷。", "collocations": [["be indifferent to", "对……漠不关心"], ["remain indifferent", "保持冷淡"]]}, "confirm": {"example": "Please confirm the meeting time.", "translation": "请确认会议时间。", "collocations": [["confirm a decision", "确认决定"], ["confirm details", "核实细节"]]}, "hesitate": {"example": "Do not hesitate to ask questions.", "translation": "请尽管提问，不必犹豫。", "collocations": [["hesitate to do", "犹豫是否做……"], ["without hesitation", "毫不犹豫地"]]}, "signature": {"example": "Please put your signature here.", "translation": "请在这里签名。", "collocations": [["put a signature", "签署姓名"], ["signature on a document", "文件上的签名"]]}, "evidence": {"example": "The police found new evidence.", "translation": "警方找到了新的证据。", "collocations": [["strong evidence", "有力证据"], ["provide evidence", "提供证据"]]}, "identity": {"example": "She kept her identity a secret.", "translation": "她对自己的身份保密。", "collocations": [["prove identity", "证明身份"], ["hidden identity", "隐藏身份"]]}, "transfer": {"example": "They plan to transfer the shares.", "translation": "他们计划转让股份。", "collocations": [["transfer ownership", "转让所有权"], ["transfer money", "转账"]]}, "reveal": {"example": "The letter may reveal the truth.", "translation": "这封信或许会揭示真相。", "collocations": [["reveal a secret", "透露秘密"], ["reveal the truth", "揭示真相"]]}, "promise": {"example": "She made a promise to her sister.", "translation": "她向妹妹许下了承诺。", "collocations": [["keep a promise", "遵守诺言"], ["break a promise", "违背诺言"]]}, "approach": {"example": "A stranger began to approach the door.", "translation": "一个陌生人开始靠近门口。", "collocations": [["approach a problem", "处理问题"], ["take an approach", "采用一种方法"]]}, "consequence": {"example": "Every choice has a consequence.", "translation": "每个选择都有后果。", "collocations": [["face the consequences", "面对后果"], ["serious consequences", "严重后果"]]}};
@@ -84,29 +84,82 @@
     // No paid chapter bodies are bundled into app.js or held in a client-side book constant.
     let cloudListSequence=0;
     let activeCloud=null;
+    let cloudBooks=[],cloudSaved=new Map(),cloudProgress=[],cloudSessionKey=null,cloudLearningSequence=0;
+    const cloudDue=()=>[...cloudSaved.values()].filter(w=>w.status!=='mastered' && w.due_at && Date.parse(String(w.due_at).replace(' ','T')+'Z')<=Date.now()).length;
+    async function refreshCloudLearning(){
+      const requested=user?.name||null,seq=++cloudLearningSequence;
+      if(!requested){cloudSaved=new Map();cloudProgress=[];return}
+      try{
+        const [words,progress]=await Promise.all([
+          serverRequest('/api/me/words'),serverRequest('/api/me/progress')
+        ]);
+        if(seq!==cloudLearningSequence||user?.name!==requested)return;
+        cloudSaved=new Map((words.words||[]).map(w=>[w.word_id,w]));
+        cloudProgress=progress.progress||[];
+        renderReminder();
+        if(view==='account')renderAccount();
+        if(view==='words')renderWords();
+        if(activeCloud?.chapterId)showCloudProgress(activeCloud.chapterId);
+      }catch(error){if(seq===cloudLearningSequence)toast('云端学习记录暂未加载：'+error.message)}
+    }
+    async function refreshCloudCategories(){
+      try{
+        const d=await serverRequest('/api/categories');
+        if(!Array.isArray(d.categories)||!d.categories.length)return;
+        const info=new Map(CATS.map(c=>[c.id,c]));
+        CATS=d.categories.map(c=>{
+          const old=info.get(c.slug)||{};
+          return {id:c.slug,en:old.en||String(c.slug).toUpperCase(),name:c.title,
+            sub:old.sub||'云端内容书架',icon:old.icon||'✦',available:true};
+        });
+        if(!CATS.some(c=>c.id===category))category=CATS[0].id;
+        if(view==='library')renderLibrary();
+      }catch{ /* Existing category labels are a harmless offline fallback. */ }
+    }
+    function openFirstCloudBook(){
+      const book=cloudBooks[0];
+      if(book)openCloudBook(book,category);
+      else{navigate('library');toast('当前分类暂无已发布故事，请稍后再来')}
+    }
     async function loadCloudBookCards(slug){
       const seq=++cloudListSequence;
-      let response;
-      try{response=await serverRequest('/api/books?category='+encodeURIComponent(slug));}
-      catch{return;}
-      if(seq!==cloudListSequence || category!==slug || view!=='library')return;
-      const items=Array.isArray(response.books)?response.books.filter(b=>b && typeof b.id==='string'):[];
-      if(!items.length)return;
       const list=$('bookGrid');
-      const title=document.createElement('div');
-      title.className='cloud-book-heading';
-      title.innerHTML='<span class="eyebrow">SECURED BY CLOUDFLARE D1 · TEST ONLY</span><h3>云端章节权限测试</h3><p>以下测试书目由数据库提供。目录可查看，但受限正文必须经过服务器校验后才能读取。</p>';
-      list.appendChild(title);
-      for(const book of items){
-        const item=document.createElement('div');
-        item.className='book-item cloud-book-item';
-        item.innerHTML=`<div class="book-cover one"><span class="book-tag">D1 · 权限测试</span><span class="edition">SERVER-SECURED STORY</span><span class="illustration">✦</span><h3>${safe(book.title)}</h3><span class="edition-bottom">TEST CONTENT ONLY</span></div>
-          <div class="book-info"><div class="line1"><h3>${safe(book.title)}</h3><span class="eyebrow">D1</span></div>
-          <p>${safe(book.description||'测试云端章节访问权限')}</p>
-          <div class="book-meta"><span class="pill">${slug.toUpperCase()}</span><span class="pill">测试书目 · 非正式商品</span></div>
-          <div class="book-actions"><button class="primary" type="button">查看云端章节 →</button></div></div>`;
-        item.querySelector('button').onclick=()=>openCloudBook(book,slug);
-        list.appendChild(item);
+      list.innerHTML='<div class="onboarding cloud-loading" style="grid-column:1/-1"><span class="eyebrow">LIVE STORY LIBRARY</span><h3>正在整理书架……</h3><p>从 Cloudflare D1 读取已发布故事。</p></div>';
+      try{
+        const response=await serverRequest('/api/books?category='+encodeURIComponent(slug));
+        if(seq!==cloudListSequence||category!==slug||view!=='library')return;
+        const books=Array.isArray(response.books)?response.books.filter(b=>b&&typeof b.id==='string'):[];
+        cloudBooks=books;
+        if(!books.length){
+          list.innerHTML='<div class="onboarding" style="grid-column:1/-1;width:100%;margin:0"><span class="eyebrow">YOUR NEXT STORY</span><h3>这层书架，还在等待第一本故事</h3><p>这里只展示已经发布的小说；后台草稿不会提前公开。你可以先体验其他分类中的已发布测试内容。</p></div>';
+          return;
+        }
+        list.replaceChildren();
+        books.forEach((book,i)=>{
+          const article=document.createElement('div');
+          article.className='book-item cloud-book-item';
+          const kind=['one','two','three'][i%3];
+          const badge=/测试|示例|qa-|demo|sample/i.test(book.title+' '+book.id)?'功能测试 · 非正式商品':'已发布故事';
+          article.innerHTML='<div class="book-cover '+kind+'"><span class="book-tag">'+safe(badge)+'</span>'+
+            '<span class="edition">THE STORY EDITION / '+String(i+1).padStart(2,'0')+'</span>'+
+            '<span class="illustration">'+['❦','♧','✥'][i%3]+'</span><h3>'+safe(book.title)+'</h3>'+
+            '<span class="edition-bottom">A STORY TO REMEMBER</span></div>'+
+            '<div class="book-info"><div class="line1"><h3>'+safe(book.title)+'</h3>'+
+            '<span class="eyebrow">'+String(i+1).padStart(2,'0')+'</span></div>'+
+            '<p>'+safe(book.description||'读一本舍不得合上的故事。')+'</p>'+
+            '<div class="book-meta"><span class="pill">'+safe(slug.toUpperCase())+'</span>'+
+            '<span class="pill">'+(has(slug)?'已开通分类':'免费章节可试读')+'</span></div>'+
+            '<div class="shelf-progress"><div class="progress-text"><span>云端书目 · 章节实时读取</span>'+
+            '<span>'+safe(badge)+'</span></div></div>'+
+            '<div class="book-actions"><button class="primary" type="button">打开这本故事 →</button></div></div>';
+          article.querySelector('button').onclick=()=>openCloudBook(book,slug);
+          list.append(article);
+        });
+      }catch(error){
+        if(seq===cloudListSequence&&category===slug&&view==='library'){
+          list.innerHTML='<div class="onboarding" style="grid-column:1/-1"><h3>书架暂时没有连接成功</h3><p>'+safe(error.message)+'</p><button class="secondary-btn" id="retryCloudBooks">重试加载</button></div>';
+          $('retryCloudBooks').onclick=()=>loadCloudBookCards(slug);
+        }
       }
     }
     async function openCloudBook(book,slug){
@@ -237,7 +290,21 @@
       if(note)note.textContent='点击正文中的酒红色英文词汇，打开释义、发音与收藏。';
     }
 
-    function renderLibrary(){const cat=$('categories');cat.innerHTML=CATS.map(c=>`<button class="category ${c.id===category?'selected':''} ${c.available?'available':''}" data-category="${c.id}"><span class="category-en">${c.en}</span><span class="category-icon">${c.icon}</span><strong>${c.name}</strong><small>${c.sub}</small><span class="category-tag">${has(c.id)?'✓ 已解锁':c.available?'● 可试读':'即将上线'}</span></button>`).join('');document.querySelectorAll('[data-category]').forEach(el=>el.onclick=()=>{category=el.dataset.category;renderLibrary()});const picked=CATS.find(x=>x.id===category);$('selectedCategoryEn').textContent=picked.en+' · STORY COLLECTION';$('selectedCategoryTitle').textContent=picked.name+' · '+(category==='cet4'?'故事精选':'敬请期待');const list=$('bookGrid');if(category!=='cet4'){list.innerHTML=`<div class="onboarding" style="grid-column:1/-1;width:100%;margin:0"><span class="eyebrow">COMING SOON</span><h3>${picked.name} · 故事书架筹备中</h3><p>所有学习分类可见，但只有购买的分类能够阅读付费内容。当前原型只含四级的两章临时测试正文。</p><button class="secondary-btn" id="categoryReturn">返回四级体验 →</button></div>`;$('categoryReturn').onclick=()=>{category='cet4';renderLibrary()};loadCloudBookCards(category);return}list.innerHTML=BOOKS.map((b,i)=>{const published=CHAPTERS.length;const done=VISITED.size;const touched=touchedWords().length;const coverage=Object.keys(WORDS).length;const bar=b.status==='demo'?`<div class="shelf-progress"><div class="progress-text"><span>已读 ${done}/${published} 演示章</span><span>已接触 ${touched}/${coverage} 词</span></div><div class="progress-track"><div class="progress-fill" style="width:${Math.round(done/published*100)}%"></div></div></div>`:'<div class="shelf-progress"><div class="progress-text"><span>尚未开始 · 暂无内容</span><span>—</span></div></div>';return `<div class="book-item"><div class="book-cover ${b.kind}"><span class="book-tag">${b.status==='planned'?'筹备中':has('cet4')?'已解锁':'免费试读'}</span><span class="edition">THE STORY EDITION / 0${i+1}</span><span class="illustration">${b.illustration}</span><h3>${safe(b.name)}</h3><span class="edition-bottom">A STORY TO REMEMBER</span></div><div class="book-info"><div class="line1"><h3>${safe(b.name)}</h3><span class="eyebrow">0${i+1}</span></div><p>${safe(b.desc)}</p><div class="book-meta"><span class="pill">${safe(b.tag)}</span><span class="pill">${b.status==='planned'?'尚未制作':'2章演示'}</span></div>${bar}<div class="book-actions"><button ${b.status==='planned'?'disabled':''} class="${i===0?'primary':'secondary-btn'}" data-book="${b.id}">${b.status==='planned'?'尚未开放':done?'继续阅读 →':'开始试读 →'}</button></div></div></div>`}).join('');document.querySelectorAll('[data-book]').forEach(el=>el.onclick=()=>openChapter(Math.min(CHAPTERS.length-1,Math.max(0,...VISITED))));loadCloudBookCards(category)}
+    function renderLibrary(){
+      const cat=$('categories');
+      cat.innerHTML=CATS.map(c=>'<button class="category '+(c.id===category?'selected':'')+
+        ' available" data-category="'+safe(c.id)+'"><span class="category-en">'+safe(c.en)+
+        '</span><span class="category-icon">'+safe(c.icon)+'</span><strong>'+safe(c.name)+
+        '</strong><small>'+safe(c.sub)+'</small><span class="category-tag">'+
+        (has(c.id)?'✓ 已解锁':'● 可查看书架')+'</span></button>').join('');
+      cat.querySelectorAll('[data-category]').forEach(el=>el.onclick=()=>{
+        category=el.dataset.category;cloudBooks=[];renderLibrary();
+      });
+      const picked=CATS.find(x=>x.id===category)||CATS[0];
+      $('selectedCategoryEn').textContent=picked.en+' · STORY COLLECTION';
+      $('selectedCategoryTitle').textContent=picked.name+' · 故事书架';
+      loadCloudBookCards(category);
+    }
     function splitPart(txt){const rg=/\[\[([a-z]+)\]\]（([^）]+)）/g;let last=0,html='',m;while((m=rg.exec(txt))){html+=safe(txt.slice(last,m.index));html+=`<button class="word" data-word="${m[1]}">${m[1]}</button><span class="gloss">（${safe(m[2])}）</span>`;last=rg.lastIndex}return html+safe(txt.slice(last))}
     function openChapter(num){resetDemoReadingUI();if(num>0&&!has('cet4')){showRegister({intent:'locked'});return}if(num<0||num>=CHAPTERS.length)return;chapter=num;VISITED.add(num);CHAPTER_WORDS[num].forEach(touchWord);saveReview();navigate('reader');$('chapterNo').textContent=`CHAPTER ${String(num+1).padStart(2,'0')} · ${num===0?'FREE PREVIEW':'MEMBER PREVIEW'}`;$('chapterTitle').textContent=CHAPTERS[num].title;$('storyText').innerHTML=CHAPTERS[num].parts.map(p=>`<p>${splitPart(p)}</p>`).join('');$('storyText').style.fontSize=fontSize+'px';$('readerCrumb').textContent='四级故事馆 / '+(num===0?'免费试读':'已购演示');$('chapterList').innerHTML=CHAPTERS.map((ch,i)=>`<button class="chapter-btn ${i===num?'current':''}" data-chapter="${i}">${String(i+1).padStart(2,'0')} · ${ch.title} ${i===1&&!has('cet4')?'🔒':''}</button>`).join('')+'<button class="chapter-btn" disabled>03–30 · 内容筹备中</button>';document.querySelectorAll('[data-chapter]').forEach(b=>b.onclick=()=>openChapter(Number(b.dataset.chapter)));document.querySelectorAll('.word').forEach(b=>b.onclick=()=>openWord(b.dataset.word));$('readingStatus').textContent=has('cet4')?'四级已解锁 · 演示内容':'免费试读 · 章节02需激活';$('progressBar').style.width=(VISITED.size/CHAPTERS.length*100)+'%';$('readingChapter').textContent=`第${String(num+1).padStart(2,'0')}章`;$('savedCount').textContent=saved.size;$('nextChapter').textContent=num===0?'下一章 →':'返回书架 →';$('readerLayout').classList.toggle('night',night);$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);$('toggleNight').classList.toggle('pressed',night);$('toggleNight').textContent=night?'☀ 日间':'☾ 夜间';$('nextChapter').onclick=()=>num===0?openChapter(1):navigate('library');let side=$('readingStatus').closest('.side-panel');let extra=side.querySelector('#readerLearningStats');if(!extra){extra=document.createElement('div');extra.id='readerLearningStats';side.appendChild(extra)}extra.innerHTML=`<div class="metric"><span>待学习词汇（演示）</span><strong>${Object.keys(WORDS).length-touchedWords().length}</strong></div><div class="metric"><span>今天待复习</span><strong>${dueList().length}</strong></div>`;try{localStorage.setItem('miaowu_demo_lastchapter',String(num))}catch(e){} }
     function openWord(w){if(!WORDS[w])return;popWord=w;touchWord(w);const info=WORDS[w];$('wordPop').innerHTML=`<button class="modal-close" id="wordClose" aria-label="关闭">×</button><div class="eyebrow">MIAOWU · WORD IN STORY</div><h3>${safe(w)}</h3><div class="pron">${safe(info.phonetic)} · ${safe(info.part)}</div><div class="meaning">${safe(info.meaning)}</div><div class="context">故事原句：<br>${safe(info.context)}</div><div class="word-extra"><strong>额外例句</strong><br>${safe(info.example)}<br><span style="color:var(--muted)">${safe(info.translation)}</span></div><div class="word-extra"><strong>常用搭配</strong><br>${info.collocations.map(x=>safe(x[0])+' · '+safe(x[1])).join('<br>')}</div><div class="word-actions"><button id="wordSpeak">♫ 听发音</button><button id="wordSave">${saved.has(w)?'✓ 已收藏':'♡ 收藏藏书票'}</button></div>`;$('wordPop').classList.add('on');$('wordBackdrop').classList.add('on');$('wordClose').onclick=closeWord;$('wordSpeak').onclick=()=>speakWord(w);$('wordSave').onclick=()=>toggleWord(w)}
