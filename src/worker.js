@@ -187,6 +187,25 @@ async function chapterAccess(req, env, id, user) {
   catch { return reject("CONTENT_UNAVAILABLE", 503); }
   return json({ id: row.id, chapterNo: row.chapter_no, title: row.title, content });
 }
+async function chapterVocabulary(req, env, id, user) {
+  // Authorize by the same D1 check used for paid body. Word contexts are paid
+  // content too; unauthorized requests must not reveal narrative sentences.
+  const access = await chapterAccess(req, env, id, user);
+  if (!access.ok) return access;
+  const result = await dbStmt(env.DB, `SELECT cw.word_id,cw.context_sentence,cw.context_anchor,
+    w.headword,w.phonetic_uk,w.phonetic_us,w.part_of_speech,w.meaning_zh,
+    w.example_en,w.example_zh,w.collocations_json
+    FROM chapter_words cw JOIN words w ON w.id=cw.word_id
+    WHERE cw.chapter_id=? ORDER BY cw.context_anchor LIMIT 2000`, id).all();
+  return json({chapterId:id, words:(result.results || []).map(row=>{
+    let collocations=[];
+    try { const value=JSON.parse(row.collocations_json || "[]");
+      if(Array.isArray(value)) collocations=value.slice(0,8); } catch {}
+    const {collocations_json,...fields}=row;
+    return {...fields,collocations};
+  })});
+}
+
 async function chapterCatalog(env, bookId, user) {
   if (!/^[a-zA-Z0-9_-]{1,80}$/.test(bookId)) return reject("NOT_FOUND", 404);
   // Chapter titles are discoverable, but paid content stays exclusively in D1.
@@ -358,6 +377,10 @@ async function api(req, env) {
   const bookChaptersMatch = path.match(/^\/api\/books\/([^/]+)\/chapters$/);
   if (bookChaptersMatch && req.method === "GET") {
     return chapterCatalog(env, bookChaptersMatch[1], user);
+  }
+  const chapterWordsMatch = path.match(/^\/api\/chapters\/([^/]+)\/words$/);
+  if (chapterWordsMatch && req.method === "GET") {
+    return chapterVocabulary(req, env, chapterWordsMatch[1], user);
   }
   const chapterMatch = path.match(/^\/api\/chapters\/([^/]+)$/);
   if (chapterMatch && req.method === "GET") return chapterAccess(req, env, chapterMatch[1], user);
