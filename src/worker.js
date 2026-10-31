@@ -18,6 +18,23 @@ function json(data, status = 200, additional = {}) {
 }
 const reject = (message, status = 400) => json({ error: message }, status);
 const dbStmt = (db, sql, ...params) => db.prepare(sql).bind(...params);
+// QA-safe failure stages: never expose database errors, SQL, credentials, or raw vouchers.
+async function atStage(label, operation) {
+  try { return await operation(); }
+  catch (error) {
+    const wrapped = new Error("STAGE_FAILURE");
+    wrapped.stage = label;
+    wrapped.cause = error;
+    throw wrapped;
+  }
+}
+function stagingErrorResponse(env, error) {
+  const stage = env.APP_ENV === "staging" ? (error?.stage || "unclassified") : undefined;
+  // Logs are tagged with fixed labels only, not error messages or private data.
+  console.error("S1_API_FAILURE", stage || "internal");
+  return json(stage ? { error: "INTERNAL_ERROR", diagnosticStage: stage }
+    : { error: "INTERNAL_ERROR" }, 500);
+}
 async function parseBody(req) {
   if (!/^application\/json(?:;|$)/i.test(req.headers.get("content-type") || "")) throw new Error("CONTENT_TYPE");
   const length = +(req.headers.get("content-length") || 0);
@@ -52,13 +69,13 @@ async function register(req, env) {
   const code = normalizeCode(body.activationCode);
   if (!code) return reject("INVALID_ACTIVATION", 400);
   const db = env.DB;
-  const key = await throttleKey(env, "register", req); // Global per-source-IP limit across usernames.
-  if (await isBlocked(db, key)) return reject("TOO_MANY_ATTEMPTS", 429);
-  const codeHash = await hashCode(code, env);
+  const key = await atStage("register.throttle_key", () => throttleKey(env, "register", req));
+  if (await atStage("register.throttle_check", () => isBlocked(db, key))) return reject("TOO_MANY_ATTEMPTS", 429);
+  const codeHash = await atStage("register.code_digest", () => hashCode(code, env));
   const redemptionNonce = crypto.randomUUID();
   const userId = crypto.randomUUID();
-  const { hash, salt } = await newPasswordHash(body.password);
-  const session = await sessionData(userId);
+  const { hash, salt } = await atStage("register.password_hash", () => newPasswordHash(body.password));
+  const session = await atStage("register.session_token", () => sessionData(userId));
   try {
     // D1.batch is transactional: an invalid or used code causes the NOT NULL
     // entitlement insert to fail, rolling back user and session creation.
@@ -76,11 +93,13 @@ async function register(req, env) {
         session.idHash, userId, session.expires)
     ]);
   } catch {
-    await countFailure(db, key);
-    return reject("INVALID_ACTIVATION_OR_USERNAME", 409);
+    await atStage("register.failed_attempt", () => countFailure(db, key));
+    return json({ error: "INVALID_ACTIVATION_OR_USERNAME",
+      ...(env.APP_ENV === "staging" ? { diagnosticStage: "register.transaction_rejected" } : {})
+    }, 409);
   }
-  await resetFailures(db, key);
-  const categories = await userEntitlements(db, userId);
+  await atStage("register.reset_attempts", () => resetFailures(db, key));
+  const categories = await atStage("register.list_entitlements", () => userEntitlements(db, userId));
   return json({ user: { username }, categories }, 201, { "set-cookie": sessionCookie(session.token, req) });
 }
 async function login(req, env) {
@@ -218,7 +237,7 @@ async function api(req, env) {
   if (path === "/api/staging/test-voucher" && req.method === "POST") {
     return issueStagingVoucher(req, env);
   }
-  const user = await currentUser(req, env.DB);
+  const user = await atStage("api.session_lookup", () => currentUser(req, env.DB));
   if (path === "/api/auth/register" && req.method === "POST") return register(req, env);
   if (path === "/api/auth/login" && req.method === "POST") return login(req, env);
   if (path === "/api/auth/logout" && req.method === "POST") return logout(req, env);
@@ -268,8 +287,8 @@ export default {
       return await api(request, env);
     } catch (err) {
       if (["CONTENT_TYPE", "TOO_LARGE", "INVALID_JSON"].includes(err?.message)) return reject(err.message, 400);
-      // Do not reveal SQL errors, credentials or activation information to clients.
-      return reject("INTERNAL_ERROR", 500);
+      // The browser only receives a stable stage label in the reviewer-protected staging environment.
+      return stagingErrorResponse(env, err);
     }
   }
 };
