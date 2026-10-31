@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "check": "node --check public/app.js && node --check src/security.js && node --check src/worker.js && node --check scripts/generate-activation-codes.mjs && node --check src/staging-gate.js && node --check public/account-test.js && node --check public/reading-test.js && node --check scripts/build-content-import.mjs",
+    "check": "node --check public/app.js && node --check src/security.js && node --check src/worker.js && node --check scripts/generate-activation-codes.mjs && node --check src/staging-gate.js && node --check public/account-test.js && node --check public/reading-test.js && node --check scripts/build-content-import.mjs && node --check src/editorial-content.js && node --check src/editorial-admin.js && node --check public/editor.js",
     "test": "node --experimental-sqlite --test tests/*.test.mjs",
     "db:migrate:local": "wrangler d1 migrations apply miaowu-english-test --local",
     "db:migrate:remote": "wrangler d1 migrations apply miaowu-english-test --remote",
