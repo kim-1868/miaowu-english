@@ -283,33 +283,53 @@
         showCloudProgress(id);toast('阅读进度已保存到你的云端账号');
       }catch(error){toast(error.message);button.disabled=false}
     }
+    let cloudChapterSequence=0;
     async function openCloudChapter(id){
       if(!activeCloud)return;
       const book=activeCloud;
-      // Always fetch D1 on chapter selection, including previously opened chapters.
-      // Never decide paid chapter access based only on client-side entitlement flags.
+      // A chapter-list click must visibly respond before any network request.
+      const selected=book.chapters.find(ch=>ch.id===id);
+      if(!selected)return;
+      const chosen=++cloudChapterSequence;
+      closeModal();
+      navigate('reader');
+      $('chapterNo').textContent='CHAPTER '+String(selected.chapterNo).padStart(2,'0');
+      $('chapterTitle').textContent=selected.title;
+      $('readerCrumb').textContent=(book.slug||'STORY').toUpperCase()+' / '+book.title;
+      $('storyText').innerHTML='<p class="cloud-reader-loading" role="status">正在打开章节，读取云端正文……</p>';
+      $('cloudFinishReading').hidden=true;
+      $('nextChapter').disabled=true;
+      $('doEcho').disabled=true;
+      book.chapterId=null;
+      // Always fetch D1, even for previously visited chapters. Never trust
+      // local entitlement flags when deciding access to protected text.
       let page;
       try{page=await serverRequest('/api/chapters/'+encodeURIComponent(id));}
       catch(error){
-        if(error.code==='LOGIN_REQUIRED'){showLogin();toast('登录后才能阅读该章节');return;}
-        if(error.code==='PURCHASE_REQUIRED'){
-          showModal('<span class="eyebrow">MEMBERS ONLY</span><h2 id="modalTitle">该分类尚未解锁</h2><p>服务器已拒绝返回这章的付费正文。请使用对应分类的测试激活码开通权限。</p><button type="button" class="primary" id="cloudGoRedeem">前往兑换 / 登录</button>');
-          $('cloudGoRedeem').onclick=()=>user?showRedeem():showLogin();
-          return;
-        }
-        toast(error.message||'无法读取章节');return;
+        if(activeCloud!==book||chosen!==cloudChapterSequence||view!=='reader')return;
+        const needsLogin=error.code==='LOGIN_REQUIRED';
+        const needsUnlock=error.code==='PURCHASE_REQUIRED';
+        const reason=needsLogin?'登录后才能阅读这章的付费内容。':
+          needsUnlock?'这章还没有对应分类的阅读权限。付费正文不会返回到浏览器。':
+          '云端章节暂时没有加载成功：'+(error.message||'未知错误');
+        $('storyText').replaceChildren();
+        const panel=document.createElement('div');panel.className='onboarding cloud-reader-error';
+        const title=document.createElement('h3');title.textContent='这一章暂时无法打开';
+        const description=document.createElement('p');description.textContent=reason;
+        const retry=document.createElement('button');retry.className='primary';retry.type='button';
+        retry.textContent=needsLogin?'登录账号':needsUnlock?'解锁分类':'重试打开本章';
+        retry.onclick=needsLogin?showLogin:needsUnlock?()=>user?showRedeem():showLogin():()=>openCloudChapter(id);
+        panel.append(title,description,retry);$('storyText').append(panel);
+        $('readingStatus').textContent='加载未成功';
+        return;
       }
-      if(activeCloud!==book)return;
+      if(activeCloud!==book||chosen!==cloudChapterSequence||view!=='reader')return;
       const rawParts=Array.isArray(page.content?.paragraphs)?page.content.paragraphs:[];
       const parts=rawParts.filter(x=>typeof x==='string' || (x && Array.isArray(x.segments))).slice(0,300);
       book.chapterId=id;book.parts=parts.map(cloudPlainText);
       book.words=new Map();
-      try{
-        const glossary=await serverRequest('/api/chapters/'+encodeURIComponent(id)+'/words');
-        for(const row of (glossary.words||[]))if(row?.word_id && !book.words.has(row.word_id))book.words.set(row.word_id,row);
-      }catch{ /* Chapter remains readable when optional glossary endpoint is unavailable. */ }
-      closeModal();
-      navigate('reader');
+      // The paid/free chapter is displayed first. Optional vocabulary loads
+      // after rendering and is never allowed to keep the dialog open.
       const thisChapter=book.chapters.find(ch=>ch.id===id);
       const ix=book.chapters.findIndex(ch=>ch.id===id);
       const next=book.chapters[ix+1];
@@ -333,11 +353,24 @@
       $('doEcho').disabled=false;
       $('doEcho').title='练习本章已读单词并同步云端复习记录';
       $('nextChapter').textContent=next?'下一章 →':'返回书架 →';
+      $('nextChapter').disabled=false;
       $('nextChapter').onclick=()=>next?openCloudChapter(next.id):navigate('library');
       const study=$('readerLayout').querySelector('#readerLearningStats');
       if(study)study.hidden=true;
       const note=$('readerLayout').querySelector('.sidebar .side-panel:nth-child(2) .side-caption');
-      if(note)note.textContent='点击英文标注可查看词卡并收藏到云端；阅读进度与收藏可跨设备同步。剧情回声暂为演示。';
+      if(note)note.textContent='点击正文英文标注查看词卡；阅读进度与收藏保存在云端。';
+      try{
+        const glossary=await serverRequest('/api/chapters/'+encodeURIComponent(id)+'/words');
+        if(activeCloud!==book||chosen!==cloudChapterSequence||book.chapterId!==id)return;
+        for(const row of (glossary.words||[])){
+          if(row?.word_id&&!book.words.has(row.word_id))book.words.set(row.word_id,row);
+        }
+        showCloudProgress(id);
+      }catch{
+        if(activeCloud===book&&chosen===cloudChapterSequence&&book.chapterId===id){
+          toast('正文已打开，但词汇详情暂未加载；稍后切换章节可重试');
+        }
+      }
     }
     function resetDemoReadingUI(){
       activeCloud=null;
