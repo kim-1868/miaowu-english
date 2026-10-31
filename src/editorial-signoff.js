@@ -9,7 +9,7 @@ const response=(x,status=200)=>new Response(JSON.stringify(x),{status,headers:HE
 const error=(code,status=400)=>response({error:code},status);
 const q=(db,sql,...args)=>db.prepare(sql).bind(...args);
 const cleanNote=value=>typeof value==="string"&&value.trim().length>=12&&
-  value.length<=800&&!/[\u0000-\u001f]/.test(value);
+  value.length<=800&&!/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value);
 async function hasTable(db){
   const result=await db.prepare("PRAGMA table_info(editorial_review_signoffs)").all();
   return (result.results||[]).some(x=>x.name==="content_fingerprint");
