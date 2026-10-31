@@ -67,6 +67,11 @@ $("seedWordbook").onclick=()=>busy($("seedWordbook"),async()=>{
   say("feedback","云端点词测试章已就绪："+result.chapterId+"，词汇："+result.wordId+"。现在可以返回主站打开四级 QA 书籍，第3章点词并收藏。");
   await books();
 });
+$("seedEcho").onclick=()=>busy($("seedEcho"),async()=>{
+  const r=await api("/api/staging/seed-echo-fixture","POST",{});
+  say("feedback","剧情回声测试章已准备："+r.chapterId+"（"+r.wordCount+"个目标词）。请回主站登录，读完四级测试书第4章并标记已读完，再进入剧情回声。");
+  await books();
+});
 $("load").onclick=()=>busy($("load"),books);
 account();books().catch(e=>say("feedback",e.message));
 })();
