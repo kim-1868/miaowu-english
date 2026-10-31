@@ -262,6 +262,38 @@ async function seedStagingChapterFixture(env) {
   return json({ ok:true, testOnly:true, bookCount:books.length, chapterCount:chapters.length });
 }
 
+async function seedStagingWordbookFixture(env) {
+  // Idempotent, harmless test chapter. Only reviewer-protected staging.
+  if(env.APP_ENV!=="staging")return reject("NOT_FOUND",404);
+  const book=await dbStmt(env.DB,"SELECT id,status FROM books WHERE id='qa-cet4'").first();
+  if(!book||book.status!=="published")return reject("QA_BOOK_NOT_READY",409);
+  const id="qa-cet4-wordbook",wordId="qa-word-promise";
+  const sentence="她答应遵守这个 promise，却仍把真正的心愿藏进信里。";
+  const content={version:1,testOnly:true,paragraphs:[
+    {segments:[{text:"这是一章仅用于测试云端点词和收藏功能的内容，不是真正的小说作品。"}]},
+    {segments:[{text:"她答应遵守这个 "},{wordId,surface:"promise",gloss:"承诺"},
+      {text:"，却仍把真正的心愿藏进信里。"}]}
+  ]};
+  await env.DB.batch([
+    dbStmt(env.DB,
+      "INSERT OR IGNORE INTO words "+
+      "(id,headword,phonetic_uk,phonetic_us,part_of_speech,meaning_zh,example_en,example_zh,collocations_json) "+
+      "VALUES(?,?,?,?,?,?,?,?,?)",
+      wordId,"promise","/ˈprɒmɪs/","/ˈprɑːmɪs/","n./v.","承诺；答应",
+      "She made a promise to her sister.","她向妹妹许下了承诺。",
+      JSON.stringify([{en:"keep a promise",zh:"遵守诺言"},{en:"make a promise",zh:"许下承诺"}])),
+    dbStmt(env.DB,
+      "INSERT OR IGNORE INTO chapters "+
+      "(id,book_id,chapter_no,title,content_json,is_preview,published_at) "+
+      "VALUES(?,'qa-cet4',3,?,?,1,CURRENT_TIMESTAMP)",
+      id,"【测试】点词与云端收藏",JSON.stringify(content)),
+    dbStmt(env.DB,
+      "INSERT OR IGNORE INTO chapter_words(chapter_id,word_id,context_sentence,context_anchor) "+
+      "VALUES(?,?,?,?)",id,wordId,sentence,"p1:s1")
+  ]);
+  return json({ok:true,testOnly:true,chapterId:id,wordId});
+}
+
 async function issueStagingVoucher(req, env) {
   // QA only. Never expose a voucher minting endpoint on live customer environments.
   // The global stagingGate must have authenticated the reviewer before this runs.
@@ -364,6 +396,9 @@ async function api(req, env) {
   }
   if (path === "/api/staging/seed-chapter-fixtures" && req.method === "POST") {
     return seedStagingChapterFixture(env);
+  }
+  if (path === "/api/staging/seed-wordbook-fixture" && req.method === "POST") {
+    return seedStagingWordbookFixture(env);
   }
   if (path === "/api/staging/test-voucher" && req.method === "POST") {
     return issueStagingVoucher(req, env);
