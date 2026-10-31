@@ -219,11 +219,11 @@ test("D1 schema drift is reported safely instead of exposing database SQL", asyn
   const env=environment();
   env.APP_ENV="staging";
   env.STAGING_PREVIEW_PASSWORD="correct-private-reviewer-password";
-  env.DB.exec("ALTER TABLE users RENAME TO renamed_users");
+  env.DB.exec("ALTER TABLE users DROP COLUMN password_salt");
   const auth="Basic "+Buffer.from("reviewer:"+env.STAGING_PREVIEW_PASSWORD).toString("base64");
   const r=await worker.fetch(new Request(origin+"/api/staging/diagnostics",{headers:{Authorization:auth}}),env);
   assert.equal(r.status,200);
   const data=await r.json();
   assert.equal(data.databaseSchemaReady,false);
-  assert.ok(data.missingColumnsByTable.users.includes("password_hash"));
+  assert.ok(data.missingColumnsByTable.users.includes("password_salt"));
 });
