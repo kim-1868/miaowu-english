@@ -1,4 +1,5 @@
 import { validatePackage } from "./editorial-content.js";
+import { reviewDraft } from "./editorial-review.js";
 import {handleRevision,revisionReady,snapshotVersion,chapterSnapshot,wordSnapshot} from "./editorial-revisions.js";
 
 const NO_STORE = {"content-type":"application/json; charset=utf-8","cache-control":"no-store",
@@ -168,6 +169,12 @@ export async function handleEditor(req,env,path) {
   if(path==="/api/staging/editor/check" && req.method==="GET")return editorCheck(env);
   if(path.match(/^\/api\/staging\/editor\/drafts\/[a-z0-9_-]+\/(chapters|words|revisions)\//))
     return handleRevision(req,env,path);
+  const review=path.match(/^\/api\/staging\/editor\/drafts\/([a-z0-9_-]+)\/review$/);
+  if(review && req.method==="GET") {
+    try{return await reviewDraft(env,review[1])}
+    catch{console.error("S3_EDITOR_FAILED","drafts.review");
+      return resp({error:"EDITOR_BACKEND_ERROR",diagnosticStage:"drafts.review"},500);}
+  }
   if(path==="/api/staging/editor/drafts" && req.method==="GET")return safeListing(env);
   const id=path.match(/^\/api\/staging\/editor\/drafts\/([a-z0-9_-]+)$/);
   if(id && req.method==="GET")return safePreview(env,id[1]);
