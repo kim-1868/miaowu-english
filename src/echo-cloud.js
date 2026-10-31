@@ -61,6 +61,21 @@ async function available(env,user,url){
     distinctWords:data.length,manualOnly:false,
     note:"仅展示当前账号已读完且有权读取的章节目标词。"});
 }
+async function stats(env,user){
+  const count=await exec(env,"SELECT COUNT(*) n FROM user_words uw WHERE uw.user_id=? "+
+    "AND uw.status!='mastered' AND uw.due_at IS NOT NULL "+
+    "AND uw.due_at<=CURRENT_TIMESTAMP AND EXISTS("+
+    "SELECT 1 FROM reading_progress p JOIN chapters ch ON ch.id=p.chapter_id "+
+    "JOIN books b ON b.id=ch.book_id JOIN categories c ON c.id=b.category_id "+
+    "JOIN chapter_words cw ON cw.chapter_id=ch.id "+
+    "WHERE p.user_id=uw.user_id AND p.completed_at IS NOT NULL AND cw.word_id=uw.word_id "+
+    "AND b.status='published' AND c.is_visible=1 "+
+    "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
+    "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
+    "WHERE e.user_id=p.user_id AND e.category_id=b.category_id AND e.revoked_at IS NULL)))",
+    user.id).first();
+  return reply({due:count?.n||0});
+}
 async function answer(req,env,user){
   if(!/^application\/json(?:;|$)/i.test(req.headers.get("content-type")||""))
     return fail("CONTENT_TYPE");
@@ -103,6 +118,7 @@ async function answer(req,env,user){
 }
 export async function handleEcho(req,env,path,user){
   if(!user)return fail("LOGIN_REQUIRED",401);
+  if(path==="/api/me/echo/stats"&&req.method==="GET")return stats(env,user);
   if(path==="/api/me/echo/available"&&req.method==="GET")
     return available(env,user,new URL(req.url));
   if(path==="/api/me/echo/answer"&&req.method==="POST")
