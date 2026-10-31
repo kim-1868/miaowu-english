@@ -553,6 +553,16 @@ test("S6 cloud Echo derives only completed published chapter words and logs grad
   assert.equal((await call(env,"/api/staging/seed-chapter-fixtures","POST",{})).status,200);
   assert.equal((await call(env,"/api/staging/seed-echo-fixture","POST",{})).status,200);
   assert.equal((await call(env,"/api/staging/seed-echo-fixture","POST",{})).status,200);
+  // A real chapter-list click must be able to fetch chapter 4, not just list it.
+  const fourth=await call(env,"/api/chapters/qa-cet4-echo","GET");
+  assert.equal(fourth.status,200,await fourth.clone().text());
+  const fourthData=await fourth.json();
+  assert.equal(fourthData.chapterNo,4);
+  assert.equal(fourthData.content.paragraphs.length,5);
+  assert.equal(fourthData.content.paragraphs[1].segments[1].surface,"contract");
+  const fourthWords=await call(env,"/api/chapters/qa-cet4-echo/words","GET");
+  assert.equal(fourthWords.status,200,await fourthWords.clone().text());
+  assert.equal((await fourthWords.json()).words.length,4);
   const userId="echo-test-reader",token="c".repeat(64);
   env.sqlite.prepare("INSERT INTO users(id,username,password_hash,password_salt) VALUES(?,?,?,?)")
     .run(userId,"s6-qa-reader","fakehash","salt");
