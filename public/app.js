@@ -79,9 +79,121 @@
     function reportExamResult(q,ans,hint=false){if(quizAnswer!==null)return;quizAnswer=ans;const ok=ans.toLowerCase().trim()===q.word; if(ok)quizScore++;recordAnswer(q.word,ok,hint);renderQuiz()}
 
     function navigate(to){if(view==='echo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='reader'&&to!=='reader')stopReading();view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words')renderWords();if(to==='echo')renderQuiz();if(to==='account')renderAccount();$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
-    function renderLibrary(){const cat=$('categories');cat.innerHTML=CATS.map(c=>`<button class="category ${c.id===category?'selected':''} ${c.available?'available':''}" data-category="${c.id}"><span class="category-en">${c.en}</span><span class="category-icon">${c.icon}</span><strong>${c.name}</strong><small>${c.sub}</small><span class="category-tag">${has(c.id)?'✓ 已解锁':c.available?'● 可试读':'即将上线'}</span></button>`).join('');document.querySelectorAll('[data-category]').forEach(el=>el.onclick=()=>{category=el.dataset.category;renderLibrary()});const picked=CATS.find(x=>x.id===category);$('selectedCategoryEn').textContent=picked.en+' · STORY COLLECTION';$('selectedCategoryTitle').textContent=picked.name+' · '+(category==='cet4'?'故事精选':'敬请期待');const list=$('bookGrid');if(category!=='cet4'){list.innerHTML=`<div class="onboarding" style="grid-column:1/-1;width:100%;margin:0"><span class="eyebrow">COMING SOON</span><h3>${picked.name} · 故事书架筹备中</h3><p>所有学习分类可见，但只有购买的分类能够阅读付费内容。当前原型只含四级的两章临时测试正文。</p><button class="secondary-btn" id="categoryReturn">返回四级体验 →</button></div>`;$('categoryReturn').onclick=()=>{category='cet4';renderLibrary()};return}list.innerHTML=BOOKS.map((b,i)=>{const published=CHAPTERS.length;const done=VISITED.size;const touched=touchedWords().length;const coverage=Object.keys(WORDS).length;const bar=b.status==='demo'?`<div class="shelf-progress"><div class="progress-text"><span>已读 ${done}/${published} 演示章</span><span>已接触 ${touched}/${coverage} 词</span></div><div class="progress-track"><div class="progress-fill" style="width:${Math.round(done/published*100)}%"></div></div></div>`:'<div class="shelf-progress"><div class="progress-text"><span>尚未开始 · 暂无内容</span><span>—</span></div></div>';return `<div class="book-item"><div class="book-cover ${b.kind}"><span class="book-tag">${b.status==='planned'?'筹备中':has('cet4')?'已解锁':'免费试读'}</span><span class="edition">THE STORY EDITION / 0${i+1}</span><span class="illustration">${b.illustration}</span><h3>${safe(b.name)}</h3><span class="edition-bottom">A STORY TO REMEMBER</span></div><div class="book-info"><div class="line1"><h3>${safe(b.name)}</h3><span class="eyebrow">0${i+1}</span></div><p>${safe(b.desc)}</p><div class="book-meta"><span class="pill">${safe(b.tag)}</span><span class="pill">${b.status==='planned'?'尚未制作':'2章演示'}</span></div>${bar}<div class="book-actions"><button ${b.status==='planned'?'disabled':''} class="${i===0?'primary':'secondary-btn'}" data-book="${b.id}">${b.status==='planned'?'尚未开放':done?'继续阅读 →':'开始试读 →'}</button></div></div></div>`}).join('');document.querySelectorAll('[data-book]').forEach(el=>el.onclick=()=>openChapter(Math.min(CHAPTERS.length-1,Math.max(0,...VISITED))))}
+
+    // Separate D1-backed test books from the public, browser-only visual demo.
+    // No paid chapter bodies are bundled into app.js or held in a client-side book constant.
+    let cloudListSequence=0;
+    let activeCloud=null;
+    async function loadCloudBookCards(slug){
+      const seq=++cloudListSequence;
+      let response;
+      try{response=await serverRequest('/api/books?category='+encodeURIComponent(slug));}
+      catch{return;}
+      if(seq!==cloudListSequence || category!==slug || view!=='library')return;
+      const items=Array.isArray(response.books)?response.books.filter(b=>b && typeof b.id==='string'):[];
+      if(!items.length)return;
+      const list=$('bookGrid');
+      const title=document.createElement('div');
+      title.className='cloud-book-heading';
+      title.innerHTML='<span class="eyebrow">SECURED BY CLOUDFLARE D1 · TEST ONLY</span><h3>云端章节权限测试</h3><p>以下测试书目由数据库提供。目录可查看，但受限正文必须经过服务器校验后才能读取。</p>';
+      list.appendChild(title);
+      for(const book of items){
+        const item=document.createElement('div');
+        item.className='book-item cloud-book-item';
+        item.innerHTML=`<div class="book-cover one"><span class="book-tag">D1 · 权限测试</span><span class="edition">SERVER-SECURED STORY</span><span class="illustration">✦</span><h3>${safe(book.title)}</h3><span class="edition-bottom">TEST CONTENT ONLY</span></div>
+          <div class="book-info"><div class="line1"><h3>${safe(book.title)}</h3><span class="eyebrow">D1</span></div>
+          <p>${safe(book.description||'测试云端章节访问权限')}</p>
+          <div class="book-meta"><span class="pill">${slug.toUpperCase()}</span><span class="pill">测试书目 · 非正式商品</span></div>
+          <div class="book-actions"><button class="primary" type="button">查看云端章节 →</button></div></div>`;
+        item.querySelector('button').onclick=()=>openCloudBook(book,slug);
+        list.appendChild(item);
+      }
+    }
+    async function openCloudBook(book,slug){
+      try{
+        const catalog=await serverRequest('/api/books/'+encodeURIComponent(book.id)+'/chapters');
+        const chapters=Array.isArray(catalog.chapters)?catalog.chapters:[];
+        if(!chapters.length){toast('此测试书目暂时没有发布章节');return;}
+        activeCloud={bookId:book.id,title:book.title,slug,chapters,chapterId:null,parts:[]};
+        showModal(`<span class="eyebrow">D1 · PROTECTED CHAPTERS</span><h2 id="modalTitle">${safe(book.title)}</h2>
+          <p>目录可见。免费试读公开，付费正文由服务器检查账号分类权限后返回。本书仅为测试数据。</p>
+          <div class="cloud-chapter-options">${chapters.map(ch=>`<button class="chapter-btn" type="button" data-cloud-choose="${safe(ch.id)}">${String(ch.chapterNo).padStart(2,'0')} · ${safe(ch.title)} ${ch.isPreview?'· 免费试读':(ch.canRead?'· 已授权':'· 🔒 未解锁')}</button>`).join('')}</div>`);
+        document.querySelectorAll('[data-cloud-choose]').forEach(btn=>{
+          btn.onclick=()=>openCloudChapter(btn.dataset.cloudChoose);
+        });
+      }catch(error){toast(error.message||'章节目录加载失败');}
+    }
+    async function openCloudChapter(id){
+      if(!activeCloud)return;
+      const book=activeCloud;
+      // Always fetch D1 on chapter selection, including previously opened chapters.
+      // Never decide paid chapter access based only on client-side entitlement flags.
+      let page;
+      try{page=await serverRequest('/api/chapters/'+encodeURIComponent(id));}
+      catch(error){
+        if(error.code==='LOGIN_REQUIRED'){showLogin();toast('登录后才能阅读该章节');return;}
+        if(error.code==='PURCHASE_REQUIRED'){
+          showModal('<span class="eyebrow">MEMBERS ONLY</span><h2 id="modalTitle">该分类尚未解锁</h2><p>服务器已拒绝返回这章的付费正文。请使用对应分类的测试激活码开通权限。</p><button type="button" class="primary" id="cloudGoRedeem">前往兑换 / 登录</button>');
+          $('cloudGoRedeem').onclick=()=>user?showRedeem():showLogin();
+          return;
+        }
+        toast(error.message||'无法读取章节');return;
+      }
+      if(activeCloud!==book)return;
+      const rawParts=Array.isArray(page.content?.paragraphs)?page.content.paragraphs:[];
+      const parts=rawParts.filter(x=>typeof x==='string').slice(0,300);
+      book.chapterId=id;book.parts=parts;
+      closeModal();
+      navigate('reader');
+      const thisChapter=book.chapters.find(ch=>ch.id===id);
+      const ix=book.chapters.findIndex(ch=>ch.id===id);
+      const next=book.chapters[ix+1];
+      $('chapterNo').textContent='CHAPTER '+String(page.chapterNo).padStart(2,'0')+' · D1 TEST';
+      $('chapterTitle').textContent=page.title;
+      $('storyText').innerHTML=parts.map(p=>'<p>'+safe(p)+'</p>').join('')||'<p>此测试章节暂无段落。</p>';
+      $('storyText').style.fontSize=fontSize+'px';
+      $('readerCrumb').textContent=book.slug.toUpperCase()+' / 云端受保护测试章';
+      const sideHeading=$('chapterList').parentElement.querySelector('h3');
+      if(sideHeading)sideHeading.textContent=book.title+' · 目录';
+      const sideCaption=$('chapterList').parentElement.querySelector('.side-caption');
+      if(sideCaption)sideCaption.textContent='数据库目录；测试章节与正式小说分开。';
+      $('chapterList').innerHTML=book.chapters.map(ch=>`<button class="chapter-btn ${ch.id===id?'current':''}" data-cloud-chapter="${safe(ch.id)}" type="button">${String(ch.chapterNo).padStart(2,'0')} · ${safe(ch.title)} ${ch.isPreview?'· 免费':' · '+(ch.canRead?'已授权':'🔒')}</button>`).join('');
+      $('chapterList').querySelectorAll('[data-cloud-chapter]').forEach(btn=>btn.onclick=()=>openCloudChapter(btn.dataset.cloudChapter));
+      $('readingStatus').textContent=thisChapter?.isPreview?'D1 · 免费试读':'D1 · 已通过服务器权益校验';
+      $('progressBar').style.width=((ix+1)/book.chapters.length*100)+'%';
+      $('readingChapter').textContent='第'+page.chapterNo+'章（测试）';
+      $('savedCount').textContent='—';
+      $('readerUnseen').textContent='—';
+      $('readerDue').textContent='—';
+      $('toggleGloss').disabled=true;
+      $('sideToggleGloss').disabled=true;
+      $('doEcho').disabled=true;
+      $('doEcho').title='本云端权限测试章尚未接入词库和剧情练习';
+      $('nextChapter').textContent=next?'下一章 →':'返回书架 →';
+      $('nextChapter').onclick=()=>next?openCloudChapter(next.id):navigate('library');
+      const study=$('readerLayout').querySelector('#readerLearningStats');
+      if(study)study.hidden=true;
+      const note=$('readerLayout').querySelector('.sidebar .side-panel:nth-child(2) .side-caption');
+      if(note)note.textContent='这是云端访问权限测试。正式词卡、音标和剧情回声将在内容入库后接入。';
+    }
+    function resetDemoReadingUI(){
+      activeCloud=null;
+      const heading=$('chapterList').parentElement.querySelector('h3');
+      if(heading)heading.textContent='《玫瑰未落幕》 · 目录';
+      const caption=$('chapterList').parentElement.querySelector('.side-caption');
+      if(caption)caption.textContent='仅有2章临时测试内容。正式版本计划每部25–35章。';
+      $('toggleGloss').disabled=false;
+      $('sideToggleGloss').disabled=false;
+      $('doEcho').disabled=false;$('doEcho').title='';
+      const study=$('readerLayout').querySelector('#readerLearningStats');
+      if(study)study.hidden=false;
+      const note=$('readerLayout').querySelector('.sidebar .side-panel:nth-child(2) .side-caption');
+      if(note)note.textContent='点击正文中的酒红色英文词汇，打开释义、发音与收藏。';
+    }
+
+    function renderLibrary(){const cat=$('categories');cat.innerHTML=CATS.map(c=>`<button class="category ${c.id===category?'selected':''} ${c.available?'available':''}" data-category="${c.id}"><span class="category-en">${c.en}</span><span class="category-icon">${c.icon}</span><strong>${c.name}</strong><small>${c.sub}</small><span class="category-tag">${has(c.id)?'✓ 已解锁':c.available?'● 可试读':'即将上线'}</span></button>`).join('');document.querySelectorAll('[data-category]').forEach(el=>el.onclick=()=>{category=el.dataset.category;renderLibrary()});const picked=CATS.find(x=>x.id===category);$('selectedCategoryEn').textContent=picked.en+' · STORY COLLECTION';$('selectedCategoryTitle').textContent=picked.name+' · '+(category==='cet4'?'故事精选':'敬请期待');const list=$('bookGrid');if(category!=='cet4'){list.innerHTML=`<div class="onboarding" style="grid-column:1/-1;width:100%;margin:0"><span class="eyebrow">COMING SOON</span><h3>${picked.name} · 故事书架筹备中</h3><p>所有学习分类可见，但只有购买的分类能够阅读付费内容。当前原型只含四级的两章临时测试正文。</p><button class="secondary-btn" id="categoryReturn">返回四级体验 →</button></div>`;$('categoryReturn').onclick=()=>{category='cet4';renderLibrary()};loadCloudBookCards(category);return}list.innerHTML=BOOKS.map((b,i)=>{const published=CHAPTERS.length;const done=VISITED.size;const touched=touchedWords().length;const coverage=Object.keys(WORDS).length;const bar=b.status==='demo'?`<div class="shelf-progress"><div class="progress-text"><span>已读 ${done}/${published} 演示章</span><span>已接触 ${touched}/${coverage} 词</span></div><div class="progress-track"><div class="progress-fill" style="width:${Math.round(done/published*100)}%"></div></div></div>`:'<div class="shelf-progress"><div class="progress-text"><span>尚未开始 · 暂无内容</span><span>—</span></div></div>';return `<div class="book-item"><div class="book-cover ${b.kind}"><span class="book-tag">${b.status==='planned'?'筹备中':has('cet4')?'已解锁':'免费试读'}</span><span class="edition">THE STORY EDITION / 0${i+1}</span><span class="illustration">${b.illustration}</span><h3>${safe(b.name)}</h3><span class="edition-bottom">A STORY TO REMEMBER</span></div><div class="book-info"><div class="line1"><h3>${safe(b.name)}</h3><span class="eyebrow">0${i+1}</span></div><p>${safe(b.desc)}</p><div class="book-meta"><span class="pill">${safe(b.tag)}</span><span class="pill">${b.status==='planned'?'尚未制作':'2章演示'}</span></div>${bar}<div class="book-actions"><button ${b.status==='planned'?'disabled':''} class="${i===0?'primary':'secondary-btn'}" data-book="${b.id}">${b.status==='planned'?'尚未开放':done?'继续阅读 →':'开始试读 →'}</button></div></div></div>`}).join('');document.querySelectorAll('[data-book]').forEach(el=>el.onclick=()=>openChapter(Math.min(CHAPTERS.length-1,Math.max(0,...VISITED))));loadCloudBookCards(category)}
     function splitPart(txt){const rg=/\[\[([a-z]+)\]\]（([^）]+)）/g;let last=0,html='',m;while((m=rg.exec(txt))){html+=safe(txt.slice(last,m.index));html+=`<button class="word" data-word="${m[1]}">${m[1]}</button><span class="gloss">（${safe(m[2])}）</span>`;last=rg.lastIndex}return html+safe(txt.slice(last))}
-    function openChapter(num){if(num>0&&!has('cet4')){showRegister({intent:'locked'});return}if(num<0||num>=CHAPTERS.length)return;chapter=num;VISITED.add(num);CHAPTER_WORDS[num].forEach(touchWord);saveReview();navigate('reader');$('chapterNo').textContent=`CHAPTER ${String(num+1).padStart(2,'0')} · ${num===0?'FREE PREVIEW':'MEMBER PREVIEW'}`;$('chapterTitle').textContent=CHAPTERS[num].title;$('storyText').innerHTML=CHAPTERS[num].parts.map(p=>`<p>${splitPart(p)}</p>`).join('');$('storyText').style.fontSize=fontSize+'px';$('readerCrumb').textContent='四级故事馆 / '+(num===0?'免费试读':'已购演示');$('chapterList').innerHTML=CHAPTERS.map((ch,i)=>`<button class="chapter-btn ${i===num?'current':''}" data-chapter="${i}">${String(i+1).padStart(2,'0')} · ${ch.title} ${i===1&&!has('cet4')?'🔒':''}</button>`).join('')+'<button class="chapter-btn" disabled>03–30 · 内容筹备中</button>';document.querySelectorAll('[data-chapter]').forEach(b=>b.onclick=()=>openChapter(Number(b.dataset.chapter)));document.querySelectorAll('.word').forEach(b=>b.onclick=()=>openWord(b.dataset.word));$('readingStatus').textContent=has('cet4')?'四级已解锁 · 演示内容':'免费试读 · 章节02需激活';$('progressBar').style.width=(VISITED.size/CHAPTERS.length*100)+'%';$('readingChapter').textContent=`第${String(num+1).padStart(2,'0')}章`;$('savedCount').textContent=saved.size;$('nextChapter').textContent=num===0?'下一章 →':'返回书架 →';$('readerLayout').classList.toggle('night',night);$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);$('toggleNight').classList.toggle('pressed',night);$('toggleNight').textContent=night?'☀ 日间':'☾ 夜间';$('nextChapter').onclick=()=>num===0?openChapter(1):navigate('library');let side=$('readingStatus').closest('.side-panel');let extra=side.querySelector('#readerLearningStats');if(!extra){extra=document.createElement('div');extra.id='readerLearningStats';side.appendChild(extra)}extra.innerHTML=`<div class="metric"><span>待学习词汇（演示）</span><strong>${Object.keys(WORDS).length-touchedWords().length}</strong></div><div class="metric"><span>今天待复习</span><strong>${dueList().length}</strong></div>`;try{localStorage.setItem('miaowu_demo_lastchapter',String(num))}catch(e){} }
+    function openChapter(num){resetDemoReadingUI();if(num>0&&!has('cet4')){showRegister({intent:'locked'});return}if(num<0||num>=CHAPTERS.length)return;chapter=num;VISITED.add(num);CHAPTER_WORDS[num].forEach(touchWord);saveReview();navigate('reader');$('chapterNo').textContent=`CHAPTER ${String(num+1).padStart(2,'0')} · ${num===0?'FREE PREVIEW':'MEMBER PREVIEW'}`;$('chapterTitle').textContent=CHAPTERS[num].title;$('storyText').innerHTML=CHAPTERS[num].parts.map(p=>`<p>${splitPart(p)}</p>`).join('');$('storyText').style.fontSize=fontSize+'px';$('readerCrumb').textContent='四级故事馆 / '+(num===0?'免费试读':'已购演示');$('chapterList').innerHTML=CHAPTERS.map((ch,i)=>`<button class="chapter-btn ${i===num?'current':''}" data-chapter="${i}">${String(i+1).padStart(2,'0')} · ${ch.title} ${i===1&&!has('cet4')?'🔒':''}</button>`).join('')+'<button class="chapter-btn" disabled>03–30 · 内容筹备中</button>';document.querySelectorAll('[data-chapter]').forEach(b=>b.onclick=()=>openChapter(Number(b.dataset.chapter)));document.querySelectorAll('.word').forEach(b=>b.onclick=()=>openWord(b.dataset.word));$('readingStatus').textContent=has('cet4')?'四级已解锁 · 演示内容':'免费试读 · 章节02需激活';$('progressBar').style.width=(VISITED.size/CHAPTERS.length*100)+'%';$('readingChapter').textContent=`第${String(num+1).padStart(2,'0')}章`;$('savedCount').textContent=saved.size;$('nextChapter').textContent=num===0?'下一章 →':'返回书架 →';$('readerLayout').classList.toggle('night',night);$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);$('toggleNight').classList.toggle('pressed',night);$('toggleNight').textContent=night?'☀ 日间':'☾ 夜间';$('nextChapter').onclick=()=>num===0?openChapter(1):navigate('library');let side=$('readingStatus').closest('.side-panel');let extra=side.querySelector('#readerLearningStats');if(!extra){extra=document.createElement('div');extra.id='readerLearningStats';side.appendChild(extra)}extra.innerHTML=`<div class="metric"><span>待学习词汇（演示）</span><strong>${Object.keys(WORDS).length-touchedWords().length}</strong></div><div class="metric"><span>今天待复习</span><strong>${dueList().length}</strong></div>`;try{localStorage.setItem('miaowu_demo_lastchapter',String(num))}catch(e){} }
     function openWord(w){if(!WORDS[w])return;popWord=w;touchWord(w);const info=WORDS[w];$('wordPop').innerHTML=`<button class="modal-close" id="wordClose" aria-label="关闭">×</button><div class="eyebrow">MIAOWU · WORD IN STORY</div><h3>${safe(w)}</h3><div class="pron">${safe(info.phonetic)} · ${safe(info.part)}</div><div class="meaning">${safe(info.meaning)}</div><div class="context">故事原句：<br>${safe(info.context)}</div><div class="word-extra"><strong>额外例句</strong><br>${safe(info.example)}<br><span style="color:var(--muted)">${safe(info.translation)}</span></div><div class="word-extra"><strong>常用搭配</strong><br>${info.collocations.map(x=>safe(x[0])+' · '+safe(x[1])).join('<br>')}</div><div class="word-actions"><button id="wordSpeak">♫ 听发音</button><button id="wordSave">${saved.has(w)?'✓ 已收藏':'♡ 收藏藏书票'}</button></div>`;$('wordPop').classList.add('on');$('wordBackdrop').classList.add('on');$('wordClose').onclick=closeWord;$('wordSpeak').onclick=()=>speakWord(w);$('wordSave').onclick=()=>toggleWord(w)}
     function closeWord(){$('wordPop').classList.remove('on');$('wordBackdrop').classList.remove('on');popWord=null}
     function toggleWord(w){if(saved.has(w)){saved.delete(w);toast('已从藏书票移除，学习记录继续保留')}else{saved.add(w);toast('已收藏到记忆藏书票')}saveWords();if(popWord===w)openWord(w);$('savedCount').textContent=saved.size}
@@ -157,15 +269,20 @@
       let data;
       try { data=await response.json(); }
       catch { throw new Error('后台响应异常，请稍后重试'); }
-      if(!response.ok) throw new Error(apiErrors[data.error] || '请求失败（HTTP '+response.status+'）');
+      if(!response.ok){const issue=new Error(apiErrors[data.error] || '请求失败（HTTP '+response.status+'）');issue.code=data.error;throw issue;}
       return data;
     }
     function applyServerAccount(data, move=false) {
       const name=data && data.user && data.user.username;
       user=name?{name}:null;
       grants=new Set(Array.isArray(data && data.categories)?data.categories.map(c=>c.slug):[]);
+      if(activeCloud){
+        // Discard a previously fetched protected test chapter on session changes.
+        activeCloud=null;
+        if(view==='reader'){navigate('library');$('storyText').textContent='';}
+      }
       renderLibrary();renderAccount();renderReminder();
-      $('topAccount').textContent=user?'你好，'+user.name:'登录 / 激活';
+      $('topAccount'.textContent=user?'你好，'+user.name:'登录 / 激活';
       if(move)navigate('account');
     }
     async function loadServerSession(){
@@ -287,7 +404,7 @@
     function explain(){showModal(`<span class="eyebrow">HOW IT WORKS</span><h2 id="modalTitle">一部小说，一段词汇记忆</h2><p>这是一款将阅读、听书、词汇收藏与情节回忆组合在一起的互动阅读器。</p><div class="onboarding" style="padding:15px;margin:12px 0"><h3>01 · 先读故事</h3><p>第一章开放试读，点击酒红色英文词查义、听发音。</p><h3>02 · 收下藏书票</h3><p>收藏之后，你可以在「记忆藏书票」里复习。</p><h3>03 · 听见剧情回声</h3><p>可选不同玩法、章节范围，通过选择与拼写练习回忆词汇。</p><h3>04 · 解锁完整书架</h3><p>注册测试账号后用真实一次性测试码开通分类，正式购买功能仍未上线。</p></div><button class="primary" id="explainRead" style="width:100%">开始试读 →</button>`);$('explainRead').onclick=()=>{closeModal();openChapter(0)}}
     function speakWord(w){if(!('speechSynthesis' in window)){toast('此浏览器暂不支持语音朗读');return}window.speechSynthesis.cancel();speaking=false;$('player').classList.remove('show');let u=new SpeechSynthesisUtterance(w);u.lang='en-US';u.rate=.82;window.speechSynthesis.speak(u)}
     function stopReading(){if('speechSynthesis' in window)window.speechSynthesis.cancel();speaking=false;paused=false;utterances=[];$('player').classList.remove('show')}
-    function startReading(){if(!('speechSynthesis' in window)){toast('此浏览器暂不支持朗读');return}stopReading();let lines=CHAPTERS[chapter].parts,segments=[];for(const text of lines){let pieces=text.split(/(\[\[[a-z]+\]\]（[^）]+）)/g).filter(Boolean);for(let piece of pieces){let m=piece.match(/^\[\[([a-z]+)\]\]（[^）]+）$/);segments.push({text:m?m[1]:piece,lang:m?'en-US':'zh-CN'})}}utterances=segments;speakIndex=0;speaking=true;paused=false;$('player').classList.add('show');$('playerState').textContent='中文 / 英语分段合成朗读';$('playerPause').textContent='Ⅱ';speakNext()}
+    function startReading(){if(!('speechSynthesis' in window)){toast('此浏览器暂不支持朗读');return}stopReading();let lines=activeCloud?.chapterId?activeCloud.parts:CHAPTERS[chapter].parts,segments=[];for(const text of lines){let pieces=text.split(/(\[\[[a-z]+\]\]（[^）]+）)/g).filter(Boolean);for(let piece of pieces){let m=piece.match(/^\[\[([a-z]+)\]\]（[^）]+）$/);segments.push({text:m?m[1]:piece,lang:m?'en-US':'zh-CN'})}}utterances=segments;speakIndex=0;speaking=true;paused=false;$('player').classList.add('show');$('playerState').textContent='中文 / 英语分段合成朗读';$('playerPause').textContent='Ⅱ';speakNext()}
     function speakNext(){if(!speaking)return;if(speakIndex>=utterances.length){stopReading();toast('演示朗读结束');return}const seg=utterances[speakIndex++],u=new SpeechSynthesisUtterance(seg.text);u.lang=seg.lang;u.rate=seg.lang==='en-US'?.86:.94;u.onend=()=>{if(speaking)speakNext()};u.onerror=(e)=>{if(speaking&&e.error!=='interrupted')speakNext()};window.speechSynthesis.speak(u)}
     document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=()=>openChapter(0);$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>openChapter(0);$('doEcho').onclick=()=>{echoScope='chapter';echoPhase='setup';echoChapterSet=new Set([chapter]);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);$('storyText').style.fontSize=fontSize+'px'};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);$('storyText').style.fontSize=fontSize+'px'};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=stopReading;$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
     applyTheme();renderLibrary();renderReminder();renderWords();renderQuiz();renderAccount();loadServerSession();
