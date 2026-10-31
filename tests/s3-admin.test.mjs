@@ -547,3 +547,61 @@ test("S5 staging QA wordbook fixture enables real cloud word cards without chang
   assert.equal(entries[0].collocations.length,2);
   assert.equal((await call({...env,APP_ENV:"production"},"/api/staging/seed-wordbook-fixture","POST",{})).status,404);
 });
+
+test("S6 cloud Echo derives only completed published chapter words and logs graded review",async()=>{
+  const env=fixture();
+  assert.equal((await call(env,"/api/staging/seed-chapter-fixtures","POST",{})).status,200);
+  assert.equal((await call(env,"/api/staging/seed-echo-fixture","POST",{})).status,200);
+  assert.equal((await call(env,"/api/staging/seed-echo-fixture","POST",{})).status,200);
+  const userId="echo-test-reader",token="c".repeat(64);
+  env.sqlite.prepare("INSERT INTO users(id,username,password_hash,password_salt) VALUES(?,?,?,?)")
+    .run(userId,"s6-qa-reader","fakehash","salt");
+  const digest=Array.from(new Uint8Array(await crypto.subtle.digest(
+    "SHA-256",new TextEncoder().encode(token))),x=>x.toString(16).padStart(2,"0")).join("");
+  env.sqlite.prepare("INSERT INTO sessions(id_hash,user_id,expires_at) VALUES(?,?,datetime('now','+1 day'))")
+    .run(digest,userId);
+  const headers={Cookie:"mw_session="+token};
+  const route="/api/me/echo/available";
+  assert.equal((await call(env,route)).status,401);
+  assert.equal((await call(env,"/api/me/echo/answer","POST",{wordId:"qa-echo-confirm",
+    chapterId:"qa-cet4-echo",gameType:"spell",answer:"confirm",hinted:false},{headers})).status,403);
+  const empty=await (await call(env,route,"GET",undefined,{headers})).json();
+  assert.equal(empty.distinctWords,0);
+  assert.equal((await call(env,"/api/me/progress","POST",
+    {chapterId:"qa-cet4-echo",progress:1},{headers})).status,200);
+  const available=await call(env,route+"?scope=chapter&chapterId=qa-cet4-echo",
+    "GET",undefined,{headers});
+  assert.equal(available.status,200);
+  const content=await available.json();
+  assert.equal(content.distinctWords,4);
+  assert.deepEqual(content.availableGames,["fill","situation","spell"]);
+  assert.ok(content.words.every(w=>w.chapter_id==="qa-cet4-echo"));
+  assert.equal((await (await call(env,route+"?scope=custom&bookId=qa-cet6",
+    "GET",undefined,{headers})).json()).words.length,0);
+  const graded=await call(env,"/api/me/echo/answer","POST",
+    {wordId:"qa-echo-contract",chapterId:"qa-cet4-echo",gameType:"spell",
+      answer:"contract",hinted:false},{headers});
+  assert.equal(graded.status,200,await graded.clone().text());
+  const result=await graded.json();
+  assert.equal(result.correct,true);
+  assert.equal(result.saved,true);
+  assert.equal(result.nextReviewDays,3);
+  assert.equal(env.sqlite.prepare("SELECT game_type,result FROM review_events WHERE user_id=?").get(userId).result,"correct");
+  const reviewed=env.sqlite.prepare("SELECT status,due_at FROM user_words WHERE user_id=?").get(userId);
+  assert.equal(reviewed.status,"learning");
+  assert.ok(reviewed.due_at);
+  const due=await (await call(env,route+"?scope=due","GET",undefined,{headers})).json();
+  assert.equal(due.distinctWords,0);
+  const incorrect=await call(env,"/api/me/echo/answer","POST",
+    {wordId:"qa-echo-evidence",chapterId:"qa-cet4-echo",gameType:"fill",
+      answer:"identity",hinted:false},{headers});
+  assert.equal(incorrect.status,200);
+  assert.equal((await incorrect.json()).correct,false);
+  assert.equal(env.sqlite.prepare("SELECT COUNT(*) n FROM review_events WHERE user_id=?").get(userId).n,2);
+  const protectedReq=await call(env,"/api/me/echo/answer","POST",
+    {wordId:"qa-echo-confirm",chapterId:"qa-cet6-paid",gameType:"spell",
+      answer:"confirm",hinted:false},{headers});
+  assert.equal(protectedReq.status,403);
+  assert.equal((await call({...env,APP_ENV:"production"},"/api/staging/seed-echo-fixture",
+    "POST",{})).status,404);
+});
