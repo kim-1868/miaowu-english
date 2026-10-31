@@ -48,3 +48,19 @@
 - 阅读器在退出/切换测试账号后丢弃已经载入的云端正文视图；不会在浏览器中持久化云端受限章节。
 - 已授权用户浏览器可以看到自己被授权获取的正文，这是阅读产品的正常行为，不能用它保证内容绝对防复制。
 - 书目、章节、词库、完成度的正式上线数据和运营后台仍未建立。本步骤是**已有界面连接服务器受保护的测试数据**，不是可售的内容库。
+
+## 2026-10-31：重复弹出 reviewer 登录框修复
+
+问题：用户已用原站密码打开首页，但 V0.3 用户登录时，浏览器反复显示原生 HTTP Basic 的白色 `reviewer` 验证框，后台返回非 JSON/401 导致前端提示「后台响应异常」。
+
+原因：旧版 staging gate 对每个请求都依赖 `Authorization: Basic`，浏览器随后的 `fetch` API 请求不保证保留交互式导航的这个请求头。旧 gate 在 `/api/*` 返回 `WWW-Authenticate`，导致浏览器再次显示原生对话框。
+
+修复：
+- 初次输入正确 `reviewer` 密码后，Worker 签发 8 小时的 `__Host-mw_preview` Cookie；使用 HMAC-SHA256 认证、`HttpOnly; Secure; SameSite=Lax; Path=/`，与用户会话 `mw_session` 分离。
+- API 请求可以使用该 Cookie 通过 staging gate；未携带时继续拒绝访问，但不返回 `WWW-Authenticate`，从而不触发后台请求的浏览器原生白框。
+- 每次更换测试站密码会令以前的预览 Cookie 自动失效；Cookie 过期后刷新网站首页即可重新验证。
+- 保持全站测试门禁，后端 D1 分类权益校验不变。所有受限测试正文仍由服务器核权后返回。
+- 自动化测试验证：首个 Basic 请求签发安全 Cookie；后续 API 不再要求 Basic；与实际用户会话 Cookie 同时存在；登出用户后测试站 Cookie 仍可访问网站；伪造 Cookie 和更换密码会被拒绝。
+- QA：确认 Cloudflare 最新构建 Ready，再用**新的无痕窗口**打开 `/`，在白色浏览器框中仅输入一次 `reviewer` 和 `STAGING_PREVIEW_PASSWORD`，随后在网站自己的弹窗输入测试用户名和测试用户密码；使用四级、六级测试章节查验请求正常。请勿发送任一密码。
+
+注意：此阶段没有更改 Cloudflare Secrets，也没有迁移 D1 数据；不需要重新创建/更换测试账号。
