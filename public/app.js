@@ -282,7 +282,7 @@
         if(view==='reader'){navigate('library');$('storyText').textContent='';}
       }
       renderLibrary();renderAccount();renderReminder();
-      $('topAccount'.textContent=user?'你好，'+user.name:'登录 / 激活';
+      $('topAccount').textContent=user?'你好，'+user.name:'登录 / 激活';
       if(move)navigate('account');
     }
     async function loadServerSession(){
