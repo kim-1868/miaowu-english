@@ -352,7 +352,64 @@
     function closeWord(){$('wordPop').classList.remove('on');$('wordBackdrop').classList.remove('on');popWord=null}
     function toggleWord(w){if(saved.has(w)){saved.delete(w);toast('已从藏书票移除，学习记录继续保留')}else{saved.add(w);toast('已收藏到记忆藏书票')}saveWords();if(popWord===w)openWord(w);$('savedCount').textContent=saved.size}
     function saveWords(){try{localStorage.setItem('miaowu_demo_words',JSON.stringify([...saved]));localStorage.setItem('miaowu_demo_mastered',JSON.stringify([...mastered]))}catch(e){}}
-    function renderWords(){document.querySelectorAll('[data-word-filter]').forEach(el=>el.classList.toggle('active',el.dataset.wordFilter===wordFilter));const arr=[...saved].filter(w=>wordFilter==='all'||(wordFilter==='mastered'?mastered.has(w):!mastered.has(w)));$('bookplateCount').textContent=saved.size;if(!arr.length){$('vocabGrid').innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="big">♧</div><h3>第一张藏书票，等你来收下</h3><p style="font-size:12px;line-height:1.8">点击小说中的英文词语，收藏后就能看到音标、例句、常用搭配。</p><button class="primary" id="emptyRead">开始阅读 →</button></div>`;$('emptyRead').onclick=()=>openChapter(0);return}$('vocabGrid').innerHTML=arr.map(w=>{const d=WORDS[w],status=mastered.has(w)?'mastered':dueList().includes(w)?'due':'learning';const label=status==='mastered'?'✓ 已掌握':status==='due'?'↻ 待复习':'◷ 学习中';return `<div class="vocab-card status-${status}"><div style="display:flex;align-items:center;justify-content:space-between;gap:6px"><span class="eyebrow">MIAOWU · BOOKPLATE</span><span class="word-status">${label}</span></div><h3>${safe(w)}</h3><p class="vocab-phonetic">${safe(d.phonetic)} <button style="border:0;background:transparent;color:var(--wine);cursor:pointer" data-pronounce="${w}" aria-label="播放${w}的发音">♫</button></p><p>${safe(d.part)} ${safe(d.meaning)}</p><div class="vocab-section"><b>故事中的原句</b><div class="vocab-example">${safe(d.context)}</div><small style="color:#987e79">《玫瑰未落幕》 · 演示第${String((WORD_CHAPTER[w]||0)+1).padStart(2,'0')}章</small></div><div class="vocab-section"><b>例句 / EXAMPLE</b><div class="vocab-example">${safe(d.example)}</div><p class="vocab-translation">${safe(d.translation)}</p></div><div class="vocab-section"><b>常用搭配 / COLLOCATIONS</b>${d.collocations.map(pair=>`<div class="vocab-collocation"><span>${safe(pair[0])}</span><span>${safe(pair[1])}</span></div>`).join('')}</div><div class="card-tools"><button data-voice="${w}" aria-label="播放${w}的发音">♫ 发音</button><button data-master="${w}">${mastered.has(w)?'↻ 改为待复习':'✓ 标记已掌握'}</button><button data-remove="${w}">移除收藏</button></div></div>`}).join('');document.querySelectorAll('[data-pronounce]').forEach(el=>el.onclick=()=>speakWord(el.dataset.pronounce));document.querySelectorAll('[data-voice]').forEach(el=>el.onclick=()=>speakWord(el.dataset.voice));document.querySelectorAll('[data-master]').forEach(el=>el.onclick=()=>{let w=el.dataset.master;if(mastered.has(w)){mastered.delete(w);touchWord(w);reviewData[w].nextDue=Date.now()}else mastered.add(w);saveWords();saveReview();renderWords();renderReminder();toast('已更新词汇状态')});document.querySelectorAll('[data-remove]').forEach(el=>el.onclick=()=>{toggleWord(el.dataset.remove);renderWords()})}
+    function renderWords(){
+      document.querySelectorAll('[data-word-filter]').forEach(x=>x.classList.toggle('active',x.dataset.wordFilter===wordFilter));
+      const words=[...cloudSaved.values()].filter(w=>wordFilter==='all'||
+        (wordFilter==='mastered'?w.status==='mastered':w.status!=='mastered'));
+      $('bookplateCount').textContent=user?cloudSaved.size:'0';
+      if(!user){
+        $('vocabGrid').innerHTML='<div class="empty" style="grid-column:1/-1">'+
+          '<div class="big">♧</div><h3>登录后，打开你的云端藏书票</h3>'+
+          '<p>登录同一账号即可在不同设备读取已收藏的单词。</p>'+
+          '<button class="primary" id="cloudWordsLogin">登录我的书房</button></div>';
+        $('cloudWordsLogin').onclick=showLogin;return;
+      }
+      if(!words.length){
+        $('vocabGrid').innerHTML='<div class="empty" style="grid-column:1/-1">'+
+          '<div class="big">♧</div><h3>第一张藏书票，等你来收下</h3>'+
+          '<p>打开已发布小说，在有英文标注的章节里点击单词并收藏。这里不会显示演示词卡。</p>'+
+          '<button class="primary" id="emptyRead">寻找故事 →</button></div>';
+        $('emptyRead').onclick=()=>navigate('library');return;
+      }
+      $('vocabGrid').innerHTML=words.map(w=>{
+        const mastered=w.status==='mastered';
+        const pairs=Array.isArray(w.collocations)?w.collocations:[];
+        return '<div class="vocab-card status-'+(mastered?'mastered':'learning')+'">'+
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px">'+
+          '<span class="eyebrow">MIAOWU · BOOKPLATE</span>'+
+          '<span class="word-status">'+(mastered?'✓ 已掌握':'◷ 学习中')+'</span></div>'+
+          '<h3>'+safe(w.headword)+'</h3><p class="vocab-phonetic">'+
+          safe(w.phonetic_us||w.phonetic_uk||'')+
+          ' <button data-cloud-voice="'+safe(w.word_id)+'" aria-label="播放发音">♫</button></p>'+
+          '<p>'+safe(w.part_of_speech||'')+' '+safe(w.meaning_zh||'')+'</p>'+
+          '<div class="vocab-section"><b>故事中的原句</b>'+
+          '<div class="vocab-example">'+safe(w.context_sentence||'请在已解锁的正文中找到这个词。')+'</div></div>'+
+          '<div class="vocab-section"><b>例句 / EXAMPLE</b><div class="vocab-example">'+
+          safe(w.example_en||'待补充')+'</div><p class="vocab-translation">'+safe(w.example_zh||'')+'</p></div>'+
+          '<div class="vocab-section"><b>常用搭配 / COLLOCATIONS</b>'+
+          pairs.map(p=>'<div class="vocab-collocation"><span>'+safe(p.en||'')+'</span><span>'+
+            safe(p.zh||'')+'</span></div>').join('')+'</div>'+
+          '<div class="card-tools"><button data-cloud-say="'+safe(w.word_id)+'">♫ 发音</button>'+
+          '<button data-cloud-master="'+safe(w.word_id)+'">'+(mastered?'↻ 改为学习中':'✓ 标记已掌握')+'</button>'+
+          '<button data-cloud-remove="'+safe(w.word_id)+'">移除收藏</button></div></div>';
+      }).join('');
+      document.querySelectorAll('[data-cloud-voice],[data-cloud-say]').forEach(x=>{
+        x.onclick=()=>{const w=cloudSaved.get(x.dataset.cloudVoice||x.dataset.cloudSay);if(w)speakWord(w.headword)};
+      });
+      async function update(id,bookmarked,status){
+        try{
+          await serverRequest('/api/me/words/'+encodeURIComponent(id),'PUT',{bookmarked,status});
+          await refreshCloudLearning();renderWords();
+          toast('词卡状态已保存到云端');
+        }catch(error){toast(error.message)}
+      }
+      document.querySelectorAll('[data-cloud-master]').forEach(x=>x.onclick=()=>{
+        const w=cloudSaved.get(x.dataset.cloudMaster);if(w)update(w.word_id,true,w.status==='mastered'?'learning':'mastered');
+      });
+      document.querySelectorAll('[data-cloud-remove]').forEach(x=>x.onclick=()=>{
+        const w=cloudSaved.get(x.dataset.cloudRemove);if(w)update(w.word_id,false,w.status==='mastered'?'mastered':'learning');
+      });
+    }
     function confirmEchoExit(destination='setup'){
       if(echoPhase!=='playing'||quizIndex>=quizQuestions.length){echoPhase='setup';if(destination==='setup')renderQuiz();else navigate(destination);return}
       const done=quizIndex+(quizAnswer!==null?1:0);
@@ -436,7 +493,9 @@
         activeCloud=null;
         if(view==='reader'){navigate('library');$('storyText').textContent='';}
       }
+      cloudSaved=new Map();cloudProgress=[];cloudSessionKey=user?.name||null;
       renderLibrary();renderAccount();renderReminder();
+      refreshCloudLearning();
       $('topAccount').textContent=user?'你好，'+user.name:'登录 / 激活';
       if(move)navigate('account');
     }
@@ -458,10 +517,66 @@
         if(btn){btn.disabled=false;btn.textContent=btn.dataset.original||'重新提交';}
       }
     }
-    function renderAccount(){if(!user){$('accountPanel').innerHTML=`<div class="onboarding" style="margin:0"><span class="eyebrow">YOUR ACCOUNT</span><h3>还没有打开你的私人书房</h3><p>首次购买后，输入自定义账号、自己设置的密码与一次性激活码。以后使用「用户名 + 自设密码」登录。<br><b>测试环境账号已保存至 D1；请勿使用常用密码，正式支付功能尚未开放。</b></p><button class="primary" id="accountRegister">注册并激活测试账号</button><button class="secondary-btn" id="accountLogin" style="margin-left:8px">已有账号？登录</button></div>`;$('accountRegister').onclick=showRegister;$('accountLogin').onclick=showLogin;return}const ent=CATS.filter(c=>has(c.id)),done=VISITED.size,words=touchedWords().length,due=dueList().length;const stats=[{n:done?'1本':'0本',t:'已开始阅读'},{n:done+'章',t:'当前设备已读演示章节'},{n:words+'个',t:'已接触词汇'},{n:mastered.size+'个',t:'标记已掌握'}];$('accountPanel').innerHTML=`<div class="account-box"><div class="account-row"><div class="avatar">${safe(user.name[0].toUpperCase())}</div><div><span class="eyebrow">YOUR PRIVATE SHELF</span><h2 style="font:normal 25px 'Songti SC',serif;color:var(--wine);margin:6px 0">${safe(user.name)} 的书房</h2><span style="font-size:12px;color:var(--muted)">妙屋英语 · 测试环境真实账号（阅读记录仍为本地演示）</span></div></div><div class="account-stats">${stats.map(s=>`<div class="account-stat"><strong>${s.n}</strong><small>${s.t}</small></div>`).join('')}</div><div class="account-reminder"><div><strong>♧ 今日复习</strong><div class="echo-tip">待复习 ${due} 词 · 当前藏书票 ${saved.size} 张 · 已浏览 ${done}/${CHAPTERS.length} 演示章</div></div><button class="primary" id="accountStartReview">${due?'开始复习':'查看剧情回声'} →</button></div><div class="account-content"><div class="account-block"><h3>已解锁学习分类</h3>${ent.map(c=>`<span class="account-tag">✓ ${c.name}</span>`).join('')||'<p>暂无已解锁分类</p>'}<p>此处展示真实 D1 分类权限；现有小说正文仅供功能演示，并非正式付费内容。</p></div><div class="account-block"><h3>兑换新商品</h3><p>使用新的测试激活码为原账号增加分类权限；正式商品尚未销售。</p><button class="primary" id="doRedeem">＋ 兑换新商品</button></div></div><div style="margin-top:20px"><button class="secondary-btn" id="logout">退出账号</button></div></div>`;
-      $('accountPanel').querySelector('.account-content').insertAdjacentHTML('afterend',`<div class="account-expanded"><div class="account-feature account-reading-feature"><span class="eyebrow">CURRENTLY READING · 继续阅读</span><h3>《玫瑰未落幕》</h3><p>你已经读到第 ${VISITED.size?Math.max(...VISITED)+1:1} 章 · 演示共 ${CHAPTERS.length} 章</p><div class="progress-track"><div class="progress-fill" style="width:${Math.min(100,VISITED.size/CHAPTERS.length*100)}%"></div></div><button id="accountResumeRead" class="secondary-btn">继续阅读 →</button></div><div class="account-feature account-word-feature"><span class="eyebrow">MY MEMORY NOTES · 学习记录</span><h3>你的词汇足迹</h3><div class="account-mini-rows"><span>待复习词汇 <strong>${due}</strong></span><span>已收藏藏书票 <strong>${saved.size}</strong></span><span>学习中词汇 <strong>${Object.keys(reviewData).filter(w=>WORDS[w]&&!mastered.has(w)).length}</strong></span></div></div></div>`);
-      $('accountResumeRead').onclick=()=>openChapter(VISITED.size?Math.max(...VISITED):0);
-      $('doRedeem').onclick=showRedeem;$('accountStartReview').onclick=()=>{echoScope=due?'due':'recent';echoPhase='setup';navigate('echo')};$('logout').onclick=async()=>{try{await serverRequest('/api/auth/logout','POST',{});applyServerAccount(null,true);toast('已经退出真实测试账号')}catch(e){toast(e.message)}}}
+    function renderAccount(){
+      if(!user){
+        $('accountPanel').innerHTML='<div class="onboarding" style="margin:0">'+
+          '<span class="eyebrow">YOUR ACCOUNT</span><h3>还没有打开你的私人书房</h3>'+
+          '<p>用之前创建的测试账号登录；新用户可以使用一次性测试激活码注册。'+
+          '云端阅读记录与收藏都将关联到你的账号。不要使用常用密码。</p>'+
+          '<button class="primary" id="accountRegister">注册并激活测试账号</button>'+
+          '<button class="secondary-btn" id="accountLogin" style="margin-left:8px">已有账号？登录</button></div>';
+        $('accountRegister').onclick=showRegister;$('accountLogin').onclick=showLogin;return;
+      }
+      const ent=CATS.filter(c=>has(c.id));
+      const completed=cloudProgress.filter(p=>p.completed_at);
+      const books=new Set(cloudProgress.map(p=>p.book_id));
+      const due=cloudDue();
+      const mastered=[...cloudSaved.values()].filter(w=>w.status==='mastered').length;
+      const recent=cloudProgress[0]||null;
+      const stats=[{n:books.size+'本',t:'已开始阅读'},{n:completed.length+'章',t:'已完成章节'},
+        {n:cloudSaved.size+'个',t:'已收藏单词'},{n:mastered+'个',t:'标记已掌握'}];
+      $('accountPanel').innerHTML='<div class="account-box">'+
+        '<div class="account-row"><div class="avatar">'+safe(user.name[0].toUpperCase())+'</div>'+
+        '<div><span class="eyebrow">YOUR PRIVATE SHELF</span>'+
+        '<h2 style="font:normal 25px Songti SC,serif;color:var(--wine);margin:6px 0">'+
+        safe(user.name)+' 的书房</h2>'+
+        '<span style="font-size:12px;color:var(--muted)">妙屋英语 · Cloudflare D1 云端学习记录</span></div></div>'+
+        '<div class="account-stats">'+stats.map(x=>'<div class="account-stat"><strong>'+x.n+'</strong><small>'+
+        x.t+'</small></div>').join('')+'</div>'+
+        '<div class="account-reminder"><div><strong>♧ 记忆藏书票</strong>'+
+        '<div class="echo-tip">到期词卡 '+due+' 张 · 已收藏 '+cloudSaved.size+
+        ' 张 · 剧情回声目前为演示玩法</div></div>'+
+        '<button class="primary" id="accountStartReview">查看藏书票 →</button></div>'+
+        '<div class="account-content"><div class="account-block"><h3>已解锁学习分类</h3>'+
+        (ent.map(c=>'<span class="account-tag">✓ '+safe(c.name)+'</span>').join('')||
+          '<p>暂无已解锁分类</p>')+
+        '<p>分类授权由服务器核对，试看章开放，付费章仅授权账号可读。</p></div>'+
+        '<div class="account-block"><h3>兑换新商品</h3>'+
+        '<p>输入新的测试激活码解锁更多分类。当前尚未接入正式支付。</p>'+
+        '<button class="primary" id="doRedeem">＋ 兑换激活码</button></div></div>'+
+        '<div class="account-expanded">'+
+        '<div class="account-feature account-reading-feature"><span class="eyebrow">CURRENTLY READING · 继续阅读</span>'+
+        '<h3>'+safe(recent?.book_title||'你的下一本故事')+'</h3>'+
+        '<p>'+(recent?'最近读到第 '+recent.chapter_no+' 章 · 云端已保存':
+          '从书架开始阅读一本故事，读完后云端会保存进度。')+'</p>'+
+        '<button class="secondary-btn" id="accountResumeRead">'+(recent?'继续阅读 →':'探索书架 →')+'</button></div>'+
+        '<div class="account-feature account-word-feature"><span class="eyebrow">MY MEMORY NOTES · 学习记录</span>'+
+        '<h3>你的词汇足迹</h3><div class="account-mini-rows">'+
+        '<span>到期词卡 <strong>'+due+'</strong></span>'+
+        '<span>收藏词汇 <strong>'+cloudSaved.size+'</strong></span>'+
+        '<span>学习中 <strong>'+(cloudSaved.size-mastered)+'</strong></span></div></div></div>'+
+        '<div style="margin-top:20px"><button class="secondary-btn" id="logout">退出账号</button></div></div>';
+      $('doRedeem').onclick=showRedeem;
+      $('accountStartReview').onclick=()=>navigate('words');
+      $('accountResumeRead').onclick=()=>{
+        if(recent)openCloudBook({id:recent.book_id,title:recent.book_title},recent.category_slug||category);
+        else navigate('library');
+      };
+      $('logout').onclick=async()=>{
+        try{await serverRequest('/api/auth/logout','POST',{});applyServerAccount(null,true);toast('已退出测试账号')}
+        catch(e){toast(e.message)}
+      };
+    }
     function showModal(html){$('modalContent').innerHTML=html;$('modalOverlay').classList.add('open');document.body.style.overflow='hidden'}function closeModal(){$('modalOverlay').classList.remove('open');document.body.style.overflow=''}
 
     function showRegister(opts={}){
@@ -564,7 +679,8 @@
     function stopReading(){if('speechSynthesis' in window)window.speechSynthesis.cancel();speaking=false;paused=false;utterances=[];$('player').classList.remove('show')}
     function startReading(){if(!('speechSynthesis' in window)){toast('此浏览器暂不支持朗读');return}stopReading();let lines=activeCloud?.chapterId?activeCloud.parts:CHAPTERS[chapter].parts,segments=[];for(const text of lines){let pieces=text.split(/(\[\[[a-z]+\]\]（[^）]+）)/g).filter(Boolean);for(let piece of pieces){let m=piece.match(/^\[\[([a-z]+)\]\]（[^）]+）$/);segments.push({text:m?m[1]:piece,lang:m?'en-US':'zh-CN'})}}utterances=segments;speakIndex=0;speaking=true;paused=false;$('player').classList.add('show');$('playerState').textContent='中文 / 英语分段合成朗读';$('playerPause').textContent='Ⅱ';speakNext()}
     function speakNext(){if(!speaking)return;if(speakIndex>=utterances.length){stopReading();toast('演示朗读结束');return}const seg=utterances[speakIndex++],u=new SpeechSynthesisUtterance(seg.text);u.lang=seg.lang;u.rate=seg.lang==='en-US'?.86:.94;u.onend=()=>{if(speaking)speakNext()};u.onerror=(e)=>{if(speaking&&e.error!=='interrupted')speakNext()};window.speechSynthesis.speak(u)}
-    document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=()=>openChapter(0);$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>openChapter(0);$('doEcho').onclick=()=>{echoScope='chapter';echoPhase='setup';echoChapterSet=new Set([chapter]);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);$('storyText').style.fontSize=fontSize+'px'};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);$('storyText').style.fontSize=fontSize+'px'};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=stopReading;$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
-    applyTheme();renderLibrary();renderReminder();renderWords();renderQuiz();renderAccount();loadServerSession();
+    document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=openFirstCloudBook;$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{echoScope='chapter';echoPhase='setup';echoChapterSet=new Set([chapter]);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);$('storyText').style.fontSize=fontSize+'px'};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);$('storyText').style.fontSize=fontSize+'px'};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=stopReading;$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
+    $('cloudFinishReading').onclick=finishCloudChapter;
+    applyTheme();renderLibrary();renderReminder();renderWords();renderQuiz();renderAccount();loadServerSession();refreshCloudCategories();
   })();
   
