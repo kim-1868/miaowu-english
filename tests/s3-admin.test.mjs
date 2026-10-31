@@ -96,3 +96,39 @@ test("S3 private editor never allows foreign-origin writes, conflicting vocab ID
   assert.equal(unauthorized.status,403);
   assert.equal(JSON.stringify(await unauthorized.json()).includes("hesitate"),false);
 });
+
+test("S3 editor checker returns JSON and verifies D1 schema, without revealing editor secret",async()=>{
+  const env=fixture(),key={"X-Mw-Editor-Key":EDITOR_KEY};
+  const checked=await call(env,"/api/staging/editor/check","GET",undefined,{headers:key});
+  assert.equal(checked.status,200);
+  assert.match(checked.headers.get("content-type"),/application\/json/);
+  const data=await checked.json();
+  assert.deepEqual({ok:data.ok,schemaReady:data.schemaReady,missingTables:data.missingTables},
+    {ok:true,schemaReady:true,missingTables:[]});
+  assert.equal(JSON.stringify(data).includes(EDITOR_KEY),false);
+  assert.equal((await call(env,"/api/staging/editor/check")).status,403);
+  const envNoEditor={...env,S3_EDITOR_SECRET:undefined};
+  const missingSecret=await call(envNoEditor,"/api/staging/editor/check","GET",undefined,{headers:key});
+  assert.equal(missingSecret.status,503);
+  assert.equal((await missingSecret.json()).error,"EDITOR_NOT_CONFIGURED");
+  assert.equal((await call({...env,APP_ENV:"production"},"/api/staging/editor/check","GET",undefined,{headers:key})).status,404);
+});
+
+test("S3 editor reports consistent JSON when D1 table missing or query fails",async()=>{
+  const env=fixture(),key={"X-Mw-Editor-Key":EDITOR_KEY};
+  env.sqlite.exec("DROP TABLE content_packages");
+  const checker=await call(env,"/api/staging/editor/check","GET",undefined,{headers:key});
+  assert.equal(checker.status,503);
+  const checked=await checker.json();
+  assert.equal(checked.schemaReady,false);
+  assert.deepEqual(checked.missingTables,["content_packages"]);
+  const listing=await call(env,"/api/staging/editor/drafts","GET",undefined,{headers:key});
+  assert.equal(listing.status,200); // Listing uses books and chapter_words, independent of content_packages.
+  env.sqlite.exec("DROP TABLE books");
+  const failed=await call(env,"/api/staging/editor/drafts","GET",undefined,{headers:key});
+  assert.equal(failed.status,500);
+  assert.match(failed.headers.get("content-type"),/application\/json/);
+  const result=await failed.json();
+  assert.deepEqual(result,{error:"EDITOR_BACKEND_ERROR",diagnosticStage:"drafts.list"});
+  assert.equal(JSON.stringify(result).includes(EDITOR_KEY),false);
+});
