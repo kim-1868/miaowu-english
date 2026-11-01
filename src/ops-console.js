@@ -75,7 +75,9 @@ async function withdraw(req,env,operator,id){
   if(!REQUEST_ID.test(d.requestId||"")||typeof d.confirmTitle!=="string"||
      d.confirmAction!=="WITHDRAW_PUBLIC_ACCESS"||
      typeof d.reason!=="string"||d.reason.trim().length<12||d.reason.length>400||
-     /[\u0000-\u001f]/.test(d.reason))return error("INVALID_WITHDRAWAL_CONFIRMATION",400);
+     /[\u0000-\u001f]/.test(d.reason)||
+     /mwops_[0-9a-f]{64}/i.test(d.reason))
+    return error("INVALID_WITHDRAWAL_CONFIRMATION",400);
   // Unique event and request id allows safe retry without altering a newer state.
   const prior=await query(env.DB,`SELECT actor_id,resource_id
     FROM ops_audit_events WHERE event_type='book.withdraw' AND request_id=?`,d.requestId).first();
