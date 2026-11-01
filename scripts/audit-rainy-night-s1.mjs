@@ -7,6 +7,8 @@ import {mkdirSync,writeFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 
 const cjkCount=s=>(s.match(/\p{Script=Han}/gu)||[]).length;
+// Editorial planning heuristic only, not a published learning-science standard.
+const MIN_CROSS_CHAPTER_REPEAT_SHARE=0.30;
 const validIpa=s=>typeof s==="string"&&s.trim().length>0;
 export function auditRainyNight(bundle){
  const wordMap=new Map(bundle.words.map(w=>[w.id,w]));
@@ -47,6 +49,8 @@ export function auditRainyNight(bundle){
  const wordsWithoutTranslations=bundle.words.filter(w=>!
   (typeof w.exampleEn==="string"&&w.exampleEn.trim()&&typeof w.exampleZh==="string"&&w.exampleZh.trim())).length;
  const wordsWithoutVerifiedLevel=bundle.words.filter(w=>w.verifiedCET4!==true).length;
+ const repeatTarget=Math.ceil(bundle.words.length*MIN_CROSS_CHAPTER_REPEAT_SHARE);
+ const repeatGap=Math.max(0,repeatTarget-repeatedAcrossChapters);
  const findings=[];
  if(wordsWithoutIpa)findings.push({code:"IPA_UNVERIFIED",count:wordsWithoutIpa,
   message:"英美音标或发音资料未全部核对"});
@@ -54,8 +58,8 @@ export function auditRainyNight(bundle){
   message:"不能仅凭书籍所属分类认定词汇已通过CET4等级审核"});
  if(wordsWithNoMentions)findings.push({code:"ORPHAN_VOCABULARY",count:wordsWithNoMentions,
   message:"存在未在正文中出现的词汇"});
- if(wordsOnlyOnce)findings.push({code:"ONE_TIME_EXPOSURE",count:wordsOnlyOnce,
-  message:"单次曝光词汇需要规划自然的跨章复现，不能直接视为完成复习设计"});
+ if(repeatGap)findings.push({code:"CROSS_CHAPTER_REUSE_TARGET_NOT_MET",count:repeatGap,
+  message:"内部暂定至少30%的候选词在后续章节自然再现；这是编辑目标，不是官方考试标准或教学成效证明"});
  if(wordsWithoutTranslations)findings.push({code:"MISSING_TRANSLATIONS",count:wordsWithoutTranslations,
   message:"仍缺少完整双语例句"});
  if(chapters.length!==12)findings.push({code:"INCOMPLETE_SEASON",count:12-chapters.length,
@@ -68,6 +72,7 @@ export function auditRainyNight(bundle){
   targetWords:bundle.words.length,
   totalMentions:allUsage.reduce((a,r)=>a+r.mentions,0),
   wordsWithNoMentions,wordsOnlyOnce,repeatedAcrossChapters,
+  crossChapterReusePlanningTarget:repeatTarget,crossChapterReuseGap:repeatGap,
   wordsWithoutIpa,wordsWithoutVerifiedLevel,wordsWithoutTranslations,
   findings
  };
