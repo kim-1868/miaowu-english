@@ -125,7 +125,7 @@ export const wordRows=[
 ["decision","n.","决定","She made a careful decision.","她作出了慎重的决定。","make a decision","作出决定"],
 ["privacy","n.","隐私","They respected the witness's privacy.","他们尊重证人的隐私。","protect privacy","保护隐私"],
 ["disclose","v.","披露；公开","Do not disclose private information.","不要披露私人信息。","disclose information","披露信息"],
-["threaten","v.","威胁","Someone threatened the family.","有人威胁了那家人。","threaten to leave","威胁要离开"],
+["threaten","v.","威胁","Someone threatened to expose the witnesses' names.","有人威胁要公开证人的姓名。","threaten to expose a witness","威胁要曝光证人的身份"],
 ["promise","n.","承诺","She kept her promise to her sister.","她信守了对姐姐的承诺。","make a promise","许下承诺"],
 ["trust","v./n.","信任","It was difficult to trust him again.","再次信任他很困难。","earn trust","赢得信任"],
 ["apology","n.","道歉","The letter contained an apology.","那封信里有一段道歉。","offer an apology","表示道歉"],
