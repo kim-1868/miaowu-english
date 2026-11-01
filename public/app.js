@@ -589,6 +589,10 @@
       SERVICE_NOT_CONFIGURED:'网站账号服务暂时不可用',
       STAGING_ACCESS_REQUIRED:'测试站访问授权已过期。请刷新页面并输入 reviewer 测试站密码（不是妙屋用户密码）',
       INVALID_ORIGIN:'安全验证失败，请刷新页面重试',
+      INVALID_PASSWORD_INPUT:'密码格式不正确。新密码至少10位、最长128位',
+      PASSWORD_REUSE_NOT_ALLOWED:'新密码不能与原密码相同',
+      INVALID_CURRENT_PASSWORD:'原密码不正确',
+      PASSWORD_CHANGE_RETRY:'密码更新遇到并发变更，请重新登录后重试',
       INTERNAL_ERROR:'服务暂时出错，请稍后重试'
     };
     async function serverRequest(path, method='GET', payload) {
@@ -688,8 +692,11 @@
         '<span>到期词卡 <strong>'+due+'</strong></span>'+
         '<span>收藏词汇 <strong>'+cloudSaved.size+'</strong></span>'+
         '<span>学习中 <strong>'+(cloudSaved.size-mastered)+'</strong></span></div></div></div>'+
-        '<div style="margin-top:20px"><button class="secondary-btn" id="logout">退出账号</button></div></div>';
+        '<div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">'+
+        '<button class="secondary-btn" id="changePassword">修改登录密码</button>'+
+        '<button class="secondary-btn" id="logout">退出账号</button></div></div>';
       $('doRedeem').onclick=showRedeem;
+      $('changePassword').onclick=showChangePassword;
       $('accountStartReview').onclick=()=>navigate('words');
       $('accountResumeRead').onclick=()=>{
         if(recent)openCloudBook({id:recent.book_id,title:recent.book_title},recent.category_slug||category);
@@ -768,6 +775,42 @@
           result=>{
             $('lPass').value='';
             closeModal();applyServerAccount(result,true);toast('欢迎回到你的书房');
+          });
+      };
+    }
+    function showChangePassword(){
+      if(!user){showLogin();return;}
+      showModal([
+        '<span class="eyebrow">ACCOUNT SECURITY</span>',
+        '<h2 id="modalTitle">修改登录密码</h2>',
+        '<p>需要验证当前密码。修改成功后，其余设备上的登录会失效，当前书房和学习记录不受影响。</p>',
+        '<form id="passwordChangeForm">',
+          '<div class="form-field"><label for="passwordCurrent">原密码</label>',
+          '<input id="passwordCurrent" type="password" autocomplete="current-password" maxlength="128" required></div>',
+          '<div class="form-field"><label for="passwordNext">新密码</label>',
+          '<input id="passwordNext" type="password" autocomplete="new-password" minlength="10" maxlength="128" required></div>',
+          '<div class="form-field"><label for="passwordConfirm">确认新密码</label>',
+          '<input id="passwordConfirm" type="password" autocomplete="new-password" minlength="10" maxlength="128" required></div>',
+          '<div class="form-actions"><button class="primary" type="submit">更新密码并注销旧设备</button></div>',
+          '<div id="formMessage" role="alert"></div>',
+        '</form>',
+        '<p class="helper">忘记原密码暂不支持自助重置；为保护购买权益，不会用未经验证的激活码直接恢复账号。</p>'
+      ].join(''));
+      $('passwordChangeForm').onsubmit=e=>{
+        e.preventDefault();const form=e.currentTarget;
+        const current=$('passwordCurrent').value;
+        const next=$('passwordNext').value;
+        if(next!==$('passwordConfirm').value){formError('两次输入的新密码不一致');return;}
+        const btn=form.querySelector('button[type=submit]');
+        btn.dataset.original=btn.textContent;
+        submitServerForm(form,
+          ()=>serverRequest('/api/auth/change-password','POST',{
+            currentPassword:current,newPassword:next
+          }),
+          ()=>{
+            for(const id of ['passwordCurrent','passwordNext','passwordConfirm'])$(id).value='';
+            closeModal();
+            toast('密码已更新，其他设备需要重新登录');
           });
       };
     }
