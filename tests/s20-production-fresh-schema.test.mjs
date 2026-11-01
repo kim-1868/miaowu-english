@@ -106,3 +106,15 @@ test("S20 comment-free D1 Console paste SQL matches audited bootstrap and surviv
   }finally{db.close()}
  }
 });
+
+test("S21 Cloudflare D1 built-in _cf_KV alone is not a business migration",()=>{
+ const db=new DatabaseSync(":memory:");
+ try{
+  db.exec('CREATE TABLE _cf_KV (key TEXT PRIMARY KEY, value BLOB) WITHOUT ROWID;');
+  assert.doesNotThrow(()=>assertCleanDatabase(db));
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").get().n,1);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name <> '_cf_KV'").get().n,0);
+  db.exec("CREATE TABLE users(id TEXT PRIMARY KEY)");
+  assert.throws(()=>assertCleanDatabase(db),/NOT_A_FRESH_EMPTY_DATABASE/);
+ }finally{db.close()}
+});
