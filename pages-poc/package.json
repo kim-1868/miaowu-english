@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "node ./build.mjs",
-    "check": "node --check ./build.mjs && node --check ./entry.mjs",
-    "test": "node --test ./entry.test.mjs"
+    "check": "node --check ./build.mjs && node --check ./entry.mjs && node --check ./smoke-public.mjs",
+    "test": "node --test ./entry.test.mjs",
+    "smoke:public": "node ./smoke-public.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.25.0"
