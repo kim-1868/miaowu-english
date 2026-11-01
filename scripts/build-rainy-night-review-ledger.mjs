@@ -9,6 +9,9 @@ import {createVocabularyReviewQueue} from "./prepare-rainy-night-vocabulary-revi
 import {buildRainyNightOccurrenceReview} from "./review-rainy-night-word-contexts.mjs";
 import {buildEchoReviewPack} from "./build-rainy-night-echo-review-pack.mjs";
 import {buildRainyNightTeachingTrackPlan} from "./plan-rainy-night-teaching-tracks.mjs";
+import {verifyOfficial2016FormAudit} from "./check-rainy-night-official-2016-form-audit.mjs";
+const OFFICIAL_CET4_FORMS=JSON.parse(readFileSync(new URL(
+  "../content/editorial/rainy-night-s1-official-2016-pdf-form-audit.json",import.meta.url),"utf8"));
 
 const VERSION="RAINY_NIGHT_OFFLINE_REVIEW_LEDGER_V1";
 const KINDS=["word","context","echo"];
@@ -28,9 +31,12 @@ export function buildRainyNightReviewLedger(bundle){
  const occurrenceReview=buildRainyNightOccurrenceReview(bundle);
  const echo=buildEchoReviewPack(bundle);
  const tracks=buildRainyNightTeachingTrackPlan(bundle);
+ const official=verifyOfficial2016FormAudit(bundle);
+ const formByWord=new Map(OFFICIAL_CET4_FORMS.words.map(row=>[row.headword,row]));
  if(bundle.chapters.length!==12||bundle.words.length!==188||
     occurrenceReview.rows.length!==733||echo.questions.length!==36||
-    wordReview.rows.length!==188||tracks.rows.length!==188)
+    wordReview.rows.length!==188||tracks.rows.length!==188||
+    official.words!==188||formByWord.size!==188)
    throw Error("LEDGER_REQUIRES_FIXED_PRIVATE_DRAFT_INVENTORY");
  const byWord=new Map(bundle.words.map(w=>[w.id,w]));
  const trackById=new Map(tracks.rows.map(w=>[w.wordId,w]));
@@ -44,14 +50,19 @@ export function buildRainyNightReviewLedger(bundle){
  };
  for(const w of bundle.words){
   const candidate=candidateById.get(w.id),track=trackById.get(w.id);
-  if(!candidate||!track)throw Error("LEDGER_MISSING_WORD_SOURCE");
+  const sourceForm=formByWord.get(w.headword);
+  if(!candidate||!track||!sourceForm)throw Error("LEDGER_MISSING_WORD_OR_FORM_SOURCE");
   put("word:"+w.id,"word",null,w.headword,
     [w.headword,w.partOfSpeech,w.meaningZh,w.exampleEn,w.exampleZh].join(" | "),
-    {word:w,track,candidates:{
-      uk:candidate.sourceUkCandidates,us:candidate.sourceUsIpaCandidates,
-      ukGap:candidate.sourceUkGapReference,
-      usIpaProvenance:candidate.sourceUsIpaProvenance,
-      ukIpaProvenance:candidate.sourceUkProvenance}});
+    {word:w,track,candidateReview:candidate,
+     formReview:sourceForm,
+     sourceMetadata:{
+      ukCandidateLicense:wordReview.overview.ukCandidateLicence,
+      ukCandidateSha:wordReview.overview.ukCandidateSourceSha,
+      usIpaCandidateSha:wordReview.overview.usIpaCandidateSourceSha,
+      usArpaSourceHash:wordReview.overview.usArpaSourceHash,
+      officialCET4SourceSha:official.sourceSha256,
+      officialCET4ReviewStatus:official.status}});
  }
  for(const c of occurrenceReview.rows){
   put("context:"+c.ref,"context",c.chapter,c.word,
