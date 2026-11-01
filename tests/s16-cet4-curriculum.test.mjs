@@ -18,6 +18,9 @@ test("S16 candidate master plan derives real manuscript words and 12 Rose demo w
  assert.equal(plan.books[0].acrossChaptersRepeatedWords,22);
  assert.equal(plan.chapters.length,12);
  assert.equal(plan.books[1].uniqueHeadwords,12);
+ assert.equal(plan.books[1].reusedFromPreviousBooks,10);
+ assert.equal(plan.books[1].newCandidateHeadwords,2);
+ assert.equal(plan.candidateUniqueHeadwords,190);
  assert.equal(plan.books[1].wordMentions,null);
  assert.equal(plan.books[1].newCandidateHeadwords+
     plan.books[1].reusedFromPreviousBooks,12);
