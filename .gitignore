@@ -10,3 +10,6 @@ node_modules/
 
 # Never commit plaintext voucher inventories, CSV exports or generated SQL.
 private-output/
+
+# Offline manually-confirmed orders: never upload order identifiers or user details.
+private-input/
