@@ -747,6 +747,37 @@
         if(btn){btn.disabled=false;btn.textContent=btn.dataset.original||'重新提交';}
       }
     }
+    function demoAccountSummary(){
+      // Browser-local prototype state must never be mixed into cloud account statistics.
+      const opened=[...VISITED].filter(i=>Number.isInteger(i)&&i>=0&&i<CHAPTERS.length);
+      const records=Object.entries(reviewData||{}).filter(([word,item])=>
+        !!WORDS[word]&&item&&typeof item==='object');
+      const attempts=records.reduce((n,[,item])=>n+Math.max(0,Number(item.attempts)||0),0);
+      const correct=records.reduce((n,[,item])=>n+Math.max(0,Number(item.correct)||0),0);
+      const localSaved=[...saved].filter(w=>!!WORDS[w]).length;
+      const localMastered=[...mastered].filter(w=>!!WORDS[w]).length;
+      const cards=[
+        {label:'体验过的章节',value:opened.length+'章'},
+        {label:'本机收藏词卡',value:localSaved+'张'},
+        {label:'演示已掌握词',value:localMastered+'个'},
+        {label:'剧情回声已作答',value:attempts+'题'},
+        {label:'本机待复习词',value:dueList().length+'个'}
+      ];
+      const names=opened.map(i=>'第'+(i+1)+'章 · '+CHAPTERS[i].title).join('、');
+      return '<section class="account-demo-section" aria-label="本机演示学习记录">'+
+        '<div class="account-demo-heading"><span class="eyebrow">LOCAL STORY PROGRESS · 体验记录</span>'+
+        '<h3>《玫瑰未落幕》 · 本机学习记录</h3>'+
+        '<p>这是当前浏览器的演示数据，不会同步到账号；同一浏览器切换账号仍可能看到这些记录。</p></div>'+
+        '<div class="account-demo-stats">'+cards.map(x=>
+          '<div class="account-demo-stat"><strong>'+safe(x.value)+'</strong>'+
+          '<small>'+safe(x.label)+'</small></div>').join('')+'</div>'+
+        '<p class="account-demo-recent">'+(opened.length?'已经打开：'+safe(names):
+          '还未打开演示章节，可以从四级书架体验《玫瑰未落幕》。')+
+        ' · 剧情回声答对 '+correct+' / '+attempts+' 题</p>'+
+        '<p class="account-demo-note">上方是正式云端数据；演示章节只统计曾打开过，不等于正式“已读完”。清除浏览器网站数据会删除这些演示记录。</p>'+
+        '<button class="secondary-btn" id="accountDemoRead">继续演示阅读 →</button>'+
+        '</section>';
+    }
     function renderAccount(){
       if(!user){
         $('accountPanel').innerHTML='<div class="onboarding" style="margin:0">'+
@@ -770,7 +801,7 @@
         '<div><span class="eyebrow">YOUR PRIVATE SHELF</span>'+
         '<h2 style="font:normal 25px Songti SC,serif;color:var(--wine);margin:6px 0">'+
         safe(user.name)+' 的书房</h2>'+
-        '<span style="font-size:12px;color:var(--muted)">妙屋英语 · Cloudflare D1 云端学习记录</span></div></div>'+
+        '<span style="font-size:12px;color:var(--muted)">妙屋英语 · Cloudflare D1 云端正式学习记录（不包括本机演示）</span></div></div>'+
         '<div class="account-stats">'+stats.map(x=>'<div class="account-stat"><strong>'+x.n+'</strong><small>'+
         x.t+'</small></div>').join('')+'</div>'+
         '<div class="account-reminder"><div><strong>♧ 记忆藏书票</strong>'+
@@ -795,12 +826,14 @@
         '<span>到期词卡 <strong>'+due+'</strong></span>'+
         '<span>收藏词汇 <strong>'+cloudSaved.size+'</strong></span>'+
         '<span>学习中 <strong>'+(cloudSaved.size-mastered)+'</strong></span></div></div></div>'+
+        demoAccountSummary()+
         '<div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">'+
         '<button class="secondary-btn" id="changePassword">修改登录密码</button>'+
         '<button class="secondary-btn" id="logout">退出账号</button></div></div>';
       $('doRedeem').onclick=showRedeem;
       $('changePassword').onclick=showChangePassword;
       $('accountStartReview').onclick=()=>navigate('words');
+      $('accountDemoRead').onclick=()=>{category='cet4';navigate('library')};
       $('accountResumeRead').onclick=()=>{
         if(recent)openCloudBook({id:recent.book_id,title:recent.book_title},recent.category_slug||category);
         else navigate('library');
