@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "sourceLabel": "fictional-example-do-not-sell",
+  "book": {
+    "id": "sample-cet4-letter",
+    "category": "cet4",
+    "title": "【示例草稿】未寄出的信",
+    "description": "仅用于测试内容导入结构的虚构片段，不是正式商品。",
+    "coverKey": "qa-example-cover"
+  },
+  "words": [
+    {
+      "id": "cet4-hesitate",
+      "headword": "hesitate",
+      "phoneticUk": "/ˈhezɪteɪt/",
+      "phoneticUs": "/ˈhezɪteɪt/",
+      "partOfSpeech": "v.",
+      "meaningZh": "犹豫；迟疑",
+      "exampleEn": "Do not hesitate to ask for help.",
+      "exampleZh": "需要帮助时请不要犹豫。",
+      "collocations": [
+        {
+          "en": "hesitate to speak",
+          "zh": "犹豫要不要开口"
+        },
+        {
+          "en": "without hesitation",
+          "zh": "毫不犹豫地"
+        }
+      ]
+    },
+    {
+      "id": "cet4-promise",
+      "headword": "promise",
+      "phoneticUk": "/ˈprɒmɪs/",
+      "phoneticUs": "/ˈprɑːmɪs/",
+      "partOfSpeech": "n./v.",
+      "meaningZh": "承诺；答应",
+      "exampleEn": "She kept her promise.",
+      "exampleZh": "她遵守了诺言。",
+      "collocations": [
+        {
+          "en": "keep a promise",
+          "zh": "信守承诺"
+        }
+      ]
+    }
+  ],
+  "chapters": [
+    {
+      "id": "sample-letter-ch1",
+      "number": 1,
+      "title": "一封没有署名的信",
+      "preview": true,
+      "paragraphs": [
+        {
+          "segments": [
+            {
+              "text": "夜色里，她对那封信 "
+            },
+            {
+              "wordId": "cet4-hesitate",
+              "surface": "hesitate",
+              "gloss": "犹豫"
+            },
+            {
+              "text": " 了很久，却始终没有拆开。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "纸上的最后一句话写着：I made a "
+            },
+            {
+              "wordId": "cet4-promise",
+              "surface": "promise",
+              "gloss": "承诺"
+            },
+            {
+              "text": " to return. 那并不是她期待的答案。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sample-letter-ch2",
+      "number": 2,
+      "title": "抽屉里的旧钥匙",
+      "preview": false,
+      "paragraphs": [
+        {
+          "segments": [
+            {
+              "text": "她终于鼓起勇气，没有再 "
+            },
+            {
+              "wordId": "cet4-hesitate",
+              "surface": "hesitate",
+              "gloss": "犹豫"
+            },
+            {
+              "text": "。他说过的 "
+            },
+            {
+              "wordId": "cet4-promise",
+              "surface": "promise",
+              "gloss": "承诺"
+            },
+            {
+              "text": "，也许需要一个解释。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

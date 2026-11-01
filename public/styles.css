@@ -199,3 +199,127 @@ html[data-theme="dark"] .book-cover{filter:none!important}
 
 @media(max-width:600px){.topbar{gap:8px}.account-button{max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:8px!important;padding-right:8px!important}}
 
+
+
+/* S2: D1-only QA story cards inserted into the existing responsive bookshelf. */
+.cloud-book-heading{grid-column:1/-1;max-width:100%;border-top:1px solid var(--line);padding:25px 0 8px}
+.cloud-book-heading h3{font:normal 25px 'Songti SC','STSong',serif;color:var(--wine);margin:7px 0}
+.cloud-book-heading p{color:var(--muted);font-size:13px;line-height:1.75;margin:0}
+.cloud-book-item .book-cover{min-height:275px}
+.cloud-chapter-options{display:grid;gap:7px;padding:8px 0 0}
+.cloud-chapter-options .chapter-btn{width:100%;text-align:left}
+@media(max-width:640px){
+  .cloud-book-heading{padding-top:16px}
+  .cloud-book-heading h3{font-size:21px}
+  .cloud-book-item .book-cover{min-height:240px}
+}
+
+/* S5 cloud features are woven into the approved original visual system. */
+[hidden]{display:none!important}
+.word-voice-inline{border:0;background:transparent;color:var(--wine);cursor:pointer;
+  font:inherit;vertical-align:middle;padding:3px 8px;border-radius:8px}
+.word-voice-inline:hover,.word-voice-inline:focus-visible{background:var(--pink)}
+#cloudFinishReading{display:inline-flex;align-items:center;justify-content:center}
+#bookGrid .cloud-loading{min-height:170px}
+#bookGrid .cloud-book-item .book-meta{flex-wrap:wrap}
+[data-theme=dark] .word-voice-inline{color:var(--wine)}
+
+/* Chapters are explicit actions, not plain gray directory text. */
+.cloud-chapter-options .chapter-btn{
+  display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+  padding:14px 15px;border:1px solid var(--line);border-radius:11px;
+  background:var(--paper);color:var(--ink);font-size:13px;line-height:1.6;
+  cursor:pointer;transition:background-color .16s,border-color .16s,transform .16s;
+}
+.cloud-chapter-options .chapter-btn::after{
+  content:"→";font-size:18px;color:var(--wine);margin-left:auto;flex-shrink:0;
+}
+.cloud-chapter-options .chapter-btn:hover,
+.cloud-chapter-options .chapter-btn:focus-visible{
+  background:var(--pink);border-color:var(--wine);transform:translateY(-1px);
+}
+.cloud-reader-loading{color:var(--muted);font-size:16px;min-height:90px;padding:24px 4px;}
+.cloud-reader-error{max-width:550px;margin:28px auto!important;}
+html[data-theme="dark"] .cloud-chapter-options .chapter-btn{
+  background:var(--paper);color:var(--ink);border-color:var(--line);
+}
+html[data-theme="dark"] .cloud-chapter-options .chapter-btn:hover{
+  background:var(--pink);border-color:var(--wine);
+}
+
+/* S7: Keep live content inside the exact V0.3 book-card geometry. */
+.cloud-book-item .book-cover h3,
+.planned-book-item .book-cover h3{
+  max-width:90%;overflow-wrap:anywhere;display:-webkit-box;
+  -webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;
+}
+.cloud-book-item .book-info .line1 h3,
+.planned-book-item .book-info .line1 h3{
+  min-width:0;overflow-wrap:anywhere;display:-webkit-box;
+  -webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
+}
+.cloud-book-item .book-info>p,
+.planned-book-item .book-info>p{
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+  overflow:hidden;min-height:43px;
+}
+.planned-book-item .book-cover{filter:saturate(.77);}
+.planned-book-item .book-actions button:disabled{opacity:.7;cursor:not-allowed;}
+.cloud-shelf-empty{grid-column:1/-1;width:100%;margin:0;}
+.cloud-book-item .book-actions button,.planned-book-item .book-actions button{
+  min-height:44px;
+}
+@media(max-width:680px){
+  .cloud-book-item .book-info .line1 h3,.planned-book-item .book-info .line1 h3{
+    font-size:clamp(15px,3.2vw,19px);
+  }
+}
+
+/* S8: V0.3 in-reader vocabulary and quick cards, no new visual theme. */
+.chapter-vocab-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.chapter-vocab-header h3{margin:0}
+.chapter-vocab-panel{max-height:min(68vh,670px);overflow-y:auto;overscroll-behavior:contain}
+.chapter-vocab-actions{margin:15px 0}
+.chapter-vocab-actions button{width:100%}
+.chapter-vocab-list{display:flex;flex-direction:column;gap:7px}
+.chapter-vocab-item{display:flex;align-items:center;gap:4px;background:var(--paper);
+  border:1px solid var(--line);border-radius:10px;padding:5px 6px}
+.chapter-vocab-select{border:0;background:transparent;cursor:pointer;text-align:left;
+  color:var(--ink);min-width:0;flex:1;padding:5px 6px}
+.chapter-vocab-select strong{font:600 15px Georgia,serif;display:block;color:var(--wine)}
+.chapter-vocab-select small{font-size:11px;display:block;line-height:1.5;color:var(--muted)}
+.chapter-vocab-voice{border:0;background:transparent;color:var(--wine);cursor:pointer;padding:8px}
+.quick-review-card{padding-top:13px}
+.quick-counter{font:11px Georgia,serif;letter-spacing:.16em;color:var(--gold,#a8836d)}
+.quick-word{font:600 26px Georgia,serif;color:var(--wine);margin:13px 0 6px;overflow-wrap:anywhere}
+.quick-pron,.quick-context{color:var(--muted);font-size:12px;line-height:1.8}
+.quick-meaning{font-size:15px;font-weight:600;margin:11px 0;color:var(--ink)}
+.quick-context{background:var(--bg);padding:10px;border-radius:8px}
+.quick-review-navigation,.quick-review-vote{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}
+.quick-review-navigation button,.quick-review-vote button{
+  background:var(--paper);border:1px solid var(--line);border-radius:8px;
+  color:var(--ink);padding:10px 5px;cursor:pointer;font-size:12px}
+.quick-review-vote button:first-child{background:#f7e3e4;border-color:#d6a8ac;color:#8c3850}
+.quick-review-vote button:last-child{background:#e6eee3;border-color:#a3bba2;color:#476a49}
+.quick-review-navigation button:disabled,.quick-review-vote button:disabled{opacity:.55;cursor:not-allowed}
+.quick-decision{font-size:12px;color:var(--wine);margin-top:8px}
+.quick-back{background:none;border:0;color:var(--wine);font-size:12px;margin-top:14px;cursor:pointer}
+@media(max-width:950px){
+  .chapter-vocab-panel{max-height:350px}
+}
+
+/* Responsive wordbook drawer on narrow reading layouts; desktop retains sidebar. */
+.mobile-vocab-open,.mobile-vocab-close{display:none!important}
+@media(max-width:980px){
+  .mobile-vocab-open{display:inline-flex!important;white-space:nowrap}
+  .reader-layout.vocab-drawer-open>.sidebar:last-child{display:block!important;
+    position:fixed;top:9vh;bottom:6vh;right:12px;left:auto;width:min(370px,calc(100vw - 24px));
+    background:var(--paper);border:1px solid var(--line);border-radius:16px;
+    z-index:40;padding:14px;overflow:auto;box-shadow:0 20px 70px #24141d66}
+  .reader-layout.vocab-drawer-open>.sidebar:last-child>.side-panel:not(.chapter-vocab-panel),
+  .reader-layout.vocab-drawer-open>.sidebar:last-child>.mini-note{display:none!important}
+  .mobile-vocab-close{display:block!important;float:right;background:transparent;
+    border:0;color:var(--wine);font-size:24px;cursor:pointer;margin:-10px -7px 0 4px}
+  .reader-layout.vocab-drawer-open .chapter-vocab-panel{
+    display:block!important;max-height:none;overflow:visible}
+}

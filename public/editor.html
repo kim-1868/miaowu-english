@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>妙屋英语 · 私有内容工作台（测试）</title>
+<style>
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;background:#faf5ef;color:#3e3035}
+*{box-sizing:border-box}body{margin:0}button,input,textarea,select{font:inherit}
+header{padding:22px max(24px,calc((100% - 1140px)/2));border-bottom:1px solid #e6d8cf;background:#fffaf6}
+header .logo{font-size:21px;font-family:"Songti SC","STSong",serif;font-weight:700;color:#73394d}
+header .kicker{font-size:11px;color:#a17878;letter-spacing:.16em;margin-top:4px}
+main{max-width:1140px;padding:25px 20px 70px;margin:auto}
+h1{font:normal 34px "Songti SC","STSong",serif;margin:10px 0;color:#713d4c}
+h2{font:normal 24px "Songti SC","STSong",serif;margin:0 0 12px;color:#74394c}
+p{line-height:1.7;color:#74676a}small{line-height:1.6;color:#8b787c}
+.grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:17px;align-items:start}
+.card{background:#fffdfa;border:1px solid #e8d9d0;border-radius:17px;padding:23px;margin-bottom:17px;box-shadow:0 3px 24px rgba(70,40,45,.025)}
+label{font-weight:600;display:block;font-size:13px;margin:13px 0 7px}
+input,textarea,select{border:1px solid #d8c5bb;border-radius:9px;background:white;color:#342b30;padding:12px;width:100%}
+textarea{min-height:270px;resize:vertical;font:12px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace}
+button{border:0;padding:11px 15px;border-radius:9px;background:#73394d;color:#fff;font-weight:600;cursor:pointer}
+button.secondary{background:#f0e2da;color:#663949}
+button:disabled{opacity:.5;cursor:not-allowed}button:hover:not(:disabled){filter:brightness(.95)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:15px 0}
+.note{border:1px solid #e2bdb0;background:#f8eae4;border-radius:12px;padding:14px;color:#874b57;line-height:1.7}
+.status{white-space:pre-wrap;overflow-wrap:anywhere;background:#eee6e1;border-radius:9px;padding:13px;min-height:44px;font-size:13px}
+.draft-list{display:grid;gap:10px}.item{border:1px solid #e5d9d3;border-radius:10px;padding:13px}
+.item .meta{color:#927a80;font-size:12px;margin:5px 0}.item button{margin-top:6px}
+.chapter{padding:14px 0;border-top:1px solid #eaddd7}.chapter h3{font-size:17px;margin:0 0 7px}
+.paragraph{line-height:2.05;margin:8px 0}.word{color:#963f54;font-weight:bold;border-bottom:1px dashed #a66175}
+.edit-panel{border-top:1px solid #e6d8cf;padding-top:17px}.edit-section{padding:12px;border:1px solid #eadbd3;border-radius:12px;margin:12px 0;background:rgba(150,70,83,.025)}
+.segment-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;padding:9px;margin:6px 0;border:1px solid #eadbd3;border-radius:9px}
+.segment-row>div{flex:1 1 145px;min-width:0}.segment-row textarea{min-height:70px;font:inherit}
+.edit-field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.edit-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}.history-row{margin:7px 0;border:1px solid #e7d9d3;padding:11px;border-radius:10px}
+.edit-panel input[type=checkbox]{width:auto}.edit-info{font-size:13px;color:#896d76;line-height:1.6}
+@media(max-width:680px){.edit-field-row{grid-template-columns:1fr}}
+.pill{display:inline-block;padding:3px 8px;border-radius:20px;background:#f1e6dc;color:#7b525b;font-size:11px}
+a{color:#7c3b50}a:hover{text-decoration:none}
+@media(max-width:780px){.grid{grid-template-columns:1fr}header{padding:18px 20px}main{padding:18px 14px 40px}h1{font-size:29px}.card{padding:18px}}
+@media(prefers-color-scheme:dark){:root{background:#231e25;color:#ebdfe5}header,.card{background:#2f2831;border-color:#594752}h1,h2,header .logo{color:#e9b7c8}p,small{color:#d5bac4}.note{background:#4d313b;border-color:#805361;color:#ffdae4}.status{background:#443641;color:#f8eaf0}.item{border-color:#65505c}input,textarea,select{background:#2a2630;color:white;border-color:#6d5661}button.secondary{background:#594550;color:white}.item .meta{color:#c9aab7}.pill{background:#55414a;color:#f4d3df}a{color:#edb8c8}}
+</style>
+</head>
+<body>
+<header><div class="logo">妙屋英语 · 内容工作台</div><div class="kicker">THE STORY & WORD LIBRARY · S3-B PRIVATE EDITOR</div></header>
+<main>
+<p><a href="/">← 返回测试首页</a>　/　<a href="/reading-test.html">章节权限测试</a></p>
+<h1>让每个故事，都有自己的书架。</h1>
+<p>管理小说草稿、英文词汇与章节预览。当前是独立的、受双层保护的测试后台，不是正式商品发布系统。</p>
+<div class="note"><strong>仅限测试环境。</strong> 此页需要 reviewer 站点验证以及单独的 S3 编辑管理员密钥。不要填写用户密码、支付信息或未授权的第三方小说。导入只保存<strong>草稿</strong>，不会公开章节或改变现有账号权益。</div>
+<section class="card">
+<h2>① 编辑权限</h2>
+<label for="editorKey">S3 编辑管理员密钥（Cloudflare Secret：S3_EDITOR_SECRET）</label>
+<input id="editorKey" type="password" autocomplete="off" spellcheck="false" placeholder="输入独立编辑密钥；仅保留在本页面内存中">
+<div class="row"><button id="verify">验证编辑权限 / 读取书库</button><button id="forget" class="secondary">清除页面内的密钥</button></div>
+<div id="status" class="status" role="status" aria-live="polite">尚未验证。此密钥不会写入 localStorage 或上传到 GitHub。</div>
+</section>
+<div class="grid">
+<section class="card">
+<h2>② 草稿导入</h2>
+<p><small>先准备符合 S3 JSON 规范的小说内容包。可以粘贴 JSON，也可以选择本地 JSON 文件。导入前检查章节与词汇数量、单词引用关系；不会覆盖已有书目。</small></p>
+<label for="importFile">选择 JSON 内容包（本机文件，不自动上传）</label>
+<input id="importFile" type="file" accept=".json,application/json">
+<label for="source">内容包 JSON</label>
+<textarea id="source" spellcheck="false" placeholder='{"version":1,"book":{...},"words":[...],"chapters":[...]}'></textarea>
+<div class="row"><button class="secondary" id="previewJson">检查 JSON / 查看摘要</button><button id="import" disabled>导入为新草稿</button></div>
+<div id="importMessage" class="status" role="status">尚未加载内容包。</div>
+<p><small>暂不支持在本页覆盖已导入章节，避免误修改已有内容。下一阶段增加草稿修订记录及审批发布。</small></p>
+</section>
+<section class="card">
+<h2>③ 草稿书库</h2>
+<div class="row"><button class="secondary" id="refresh">刷新草稿</button><span class="pill">最多展示50本</span></div>
+<div id="drafts" class="draft-list">验证编辑权限后加载。</div>
+</section>
+</div>
+<section class="card">
+<h2>④ 原文预览与词汇检查</h2>
+<p><small>只有通过编辑管理员验证后，才能读取尚未发布的章节正文及词汇。</small></p>
+<div id="previewArea"><p>从草稿书库中点击「预览」即可查看。</p></div>
+</section>
+<section class="card" id="editingArea">
+<h2>⑤ 直接编辑草稿章节与词汇</h2>
+<p><small>从上方预览选择「编辑章节」或「编辑词汇」，在表单中保存。仅允许修改未发布内容；每次修改保留上一版，若同一数据被其他页面更改，会提示冲突并拒绝覆盖。</small></p>
+<div id="editorPanel">先在草稿书库选择一本书。</div>
+<div id="historyPanel"></div>
+</section>
+<section class="card" id="reviewArea">
+<h2>⑥ 发布前内容审核</h2>
+<p>自动检查章节连续性、免费试读设置、正文英文词汇标注、词库字段和引用关系。此功能只生成审核报告，不会将草稿发布。</p>
+<div id="reviewPanel"><p>请先从草稿书库打开一本草稿，再运行内容检查。</p></div>
+</section>
+<section class="card" id="publicationReadiness">
+<h2>⑦ 上架准备检查 · 尚未开放发布</h2>
+<p>评估草稿是否符合未来的发布前置条件，核对最新人工审核状态、测试内容标识、试看与分类付费权益。此处只生成预演结果，<strong>没有上架/下架按钮</strong>。</p>
+<div id="publicationReadinessPanel"><p>先预览一本草稿，才能查看发布准备情况。</p></div>
+</section>
+</main><script src="/editor.js"></script><script src="/editor-edit.js"></script><script src="/editor-review.js"></script><script src="/editor-publication.js"></script>
+</body></html>

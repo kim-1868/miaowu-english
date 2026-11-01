@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f8f3ec">
+<meta name="robots" content="noindex,nofollow">
+<title>妙屋英语 · 云端故事书房</title>
+<link rel="stylesheet" href="/live-reader.css">
+</head>
+<body>
+<div class="test-banner">✦ 妙屋英语 · Cloudflare D1 真实功能测试区 · 目前只提供测试内容，不可用于正式购买</div>
+<header class="nav-header">
+  <a class="logo" href="/"><span class="cat">♧</span><span><b>妙屋英语</b><small>THE STORY & WORD LIBRARY</small></span></a>
+  <nav><button class="nav-item active" id="navBooks">探索故事</button><button class="nav-item" id="navWords">记忆藏书票</button></nav>
+  <div class="nav-right"><button class="light" id="themeBtn" aria-label="切换日夜模式">☾ 夜间</button><button id="accountBtn" class="secondary">登录</button></div>
+</header>
+<main class="container">
+  <section id="libraryView">
+    <div class="hero"><span class="eyebrow">THE REAL STORY LIBRARY · LIVE READER</span>
+    <h1>让故事与单词，<em>真的留在书房。</em></h1>
+    <p>这里直接读取 Cloudflare D1 中的书籍、章节与词汇。登录后，章节进度和收藏单词同步保存在你的测试账号里。</p>
+    <div class="hero-note">读者入口已接入真实 API · 免费试读无需账号 · 付费章节仍需有效分类授权</div></div>
+    <div class="section-title"><div><span class="eyebrow">YOUR SHELF</span><h2>探索书架</h2></div><button id="refreshBooks" class="light">↻ 刷新书架</button></div>
+    <div class="cat-row" id="categories"></div>
+    <div id="bookGrid" class="book-grid" aria-live="polite"><div class="muted">正在读取书库……</div></div>
+  </section>
+  <section id="readerView" hidden>
+    <div class="reader-bar"><button id="backToLibrary" class="light">← 返回书架</button><span id="readerCrumb" class="muted"></span><button id="glossBtn" class="light">译 释义：开</button><button id="speakBtn" class="light">▶ 朗读本章</button></div>
+    <div class="reader-columns"><aside class="toc card"><h3 id="tocBook">章节目录</h3><div id="chapterList"></div></aside>
+      <article class="chapter-card card"><div class="eyebrow" id="chapterNumber"></div><h1 id="chapterHeading"></h1><div id="chapterStory" class="story"></div><div id="chapterLock" class="lock" hidden></div>
+      <div class="chapter-bottom"><button id="finishBtn" class="primary">✓ 标记本章已读完</button><button id="nextBtn" class="secondary">阅读下一章 →</button></div></article>
+      <aside class="details"><div class="card"><h3>阅读记录</h3><p id="readingProgress" class="muted">登录后可同步阅读进度。</p><div id="readingUser"></div></div><div class="card"><h3>单词小贴士</h3><p class="muted">点击正文里的英文单词，可以查看音标、释义、例句、听发音并收藏到记忆藏书票。</p></div></aside>
+    </div>
+  </section>
+  <section id="wordView" hidden>
+    <div class="section-title"><div><span class="eyebrow">YOUR BOOKPLATES</span><h2>记忆藏书票</h2></div><button id="wordRefresh" class="light">↻ 刷新</button></div>
+    <p class="muted">这一页显示当前测试账号已收藏的云端单词。与原型里的本地演示单词互不混用。</p>
+    <div id="savedWords" class="word-grid"></div>
+  </section>
+</main>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<dialog id="wordDialog"><div id="wordInfo"></div><div class="dialog-actions"><button id="wordSpeak" class="secondary">▶ 发音</button><button id="wordSave" class="primary">收藏单词</button><button id="wordMastered" class="light">标记已掌握</button><button class="light" id="wordClose">关闭</button></div></dialog>
+<dialog id="loginDialog"><form id="loginForm" method="dialog"><h2>登录我的书房</h2><p class="muted">使用之前创建的妙屋英语测试账号。不要输入常用密码。</p>
+<label>用户名<input name="username" required autocomplete="username" maxlength="48"></label>
+<label>密码<input name="password" type="password" required autocomplete="current-password" maxlength="128"></label>
+<p id="loginError" class="error" aria-live="polite"></p>
+<div class="dialog-actions"><button class="primary" id="submitLogin" type="submit">登录</button><button class="light" type="button" id="loginCancel">取消</button></div>
+<p class="muted">没有账号？请先在 <a href="/">原测试首页</a> 注册并使用测试激活码。</p>
+</form></dialog>
+<footer>妙屋英语 · S4 云端阅读测试功能 · 付费内容由服务器端校验分类权限 · 不代表正式售卖</footer>
+<script src="/live-reader.js"></script>
+</body></html>
