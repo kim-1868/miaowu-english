@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "scope": "EDITORIAL_PLANNING_ONLY_NOT_A_DATABASE_MIGRATION",
+  "works": [
+    {
+      "id": "rose-demo",
+      "title": "玫瑰未落幕",
+      "primaryCategory": "cet4",
+      "source": "public/app.js",
+      "existingChapters": 2,
+      "currentTargetWordCount": 12,
+      "sourceType": "browser-local-demo",
+      "releaseStatus": "retain-demo-not-for-sale",
+      "preserve": true,
+      "releaseBlockers": [
+        "not a complete polished novel",
+        "temporary test text and browser-only demo progress",
+        "no audited final CET4 vocabulary/IPA",
+        "not a D1 entitlement-protected commercial package"
+      ],
+      "decision": "Keep original demo copy and visitor entry available in the V0.3 staging reader; do not overwrite it with the Rainy Night manuscript. A future fully edited release must be a separately audited D1 book.",
+      "auditNotes": "Demo prose is already in client bundle, so it cannot serve as paid/protected novel body. Free/local learning state is separate from cloud D1."
+    },
+    {
+      "id": "rainy-night-s1-draft",
+      "title": "雨夜档案",
+      "primaryCategory": "cet4",
+      "source": "content/drafts/rainy-night-archives-two-chapter-pilot.json + content/drafts/rainy-night-s1-ch03-ch12.mjs",
+      "existingChapters": 12,
+      "currentTargetWordCount": 188,
+      "sourceType": "private-editorial-draft",
+      "releaseStatus": "candidate-needs-review-not-for-sale",
+      "preserve": true,
+      "releaseBlockers": [
+        "CET4 target-word suitability unverified",
+        "IPA not audited",
+        "reading length/narrative naturalness awaiting manual editorial review",
+        "content not released to D1"
+      ]
+    }
+  ],
+  "policy": {
+    "rights": "V1 category-based authorization, not per-book",
+    "demo": "Rose demo remains free/test-only, must not be described as a sold novel",
+    "commercial": "Only reviewed D1 published chapters may be paid; never place paid novel body in public/app.js",
+    "future": "After both works pass editorial QA, they may coexist under CET4 without requiring separate book-level purchase."
+  }
+}
