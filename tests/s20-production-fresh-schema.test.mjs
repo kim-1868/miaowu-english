@@ -81,3 +81,28 @@ test("S20 copyable production SQL bundle exactly matches the 10 audited source m
   assert.throws(()=>db.exec(sql),/duplicate column name/, "not an idempotent migration; must be run ONCE on empty DB");
  }finally{db.close()}
 });
+
+test("S20 comment-free D1 Console paste SQL matches audited bootstrap and survives lost line breaks",()=>{
+ const original=readFileSync(new URL("../db/production/BOOTSTRAP_NEW_EMPTY_D1.sql",import.meta.url),"utf8");
+ const consoleSql=readFileSync(new URL("../db/production/BOOTSTRAP_CONSOLE_PASTE.sql",import.meta.url),"utf8");
+ const sanitized=original.split(/\r?\n/).filter(line=>!line.trimStart().startsWith("--")).join("\n").trim()+"\n";
+ assert.equal(consoleSql,sanitized,"console SQL must match exact vetted source after removing comments");
+ assert.ok(!consoleSql.includes("--"),"SQL comments must not swallow statements if browser flattens line breaks");
+ assert.match(consoleSql,/CREATE TABLE IF NOT EXISTS users/);
+ assert.match(consoleSql,/CREATE TABLE IF NOT EXISTS account_recovery/);
+ assert.match(consoleSql,/CREATE UNIQUE INDEX IF NOT EXISTS uq_activation_codes_one_paid_order/);
+ for(const [label,sql] of [["normal",consoleSql],["flattened",consoleSql.replaceAll("\n"," ")]]){
+  const db=new DatabaseSync(":memory:");
+  try{
+   assertCleanDatabase(db);
+   db.exec(sql);
+   const tables=db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").get().n;
+   assert.equal(tables,22,label);
+   assert.deepEqual(db.prepare("SELECT slug FROM categories ORDER BY slug").all().map(x=>x.slug),
+    ["cet4","cet6","ielts","postgrad"]);
+   for(const name of ["users","activation_codes","entitlements","account_recovery","books"]){
+    assert.equal(db.prepare("SELECT COUNT(*) AS n FROM "+name).get().n,0);
+   }
+  }finally{db.close()}
+ }
+});
