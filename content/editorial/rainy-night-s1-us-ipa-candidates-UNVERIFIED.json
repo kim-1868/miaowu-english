@@ -1,0 +1,1760 @@
+{
+  "status": "PROVISIONAL_US_IPA_SOURCED_NOT_APPROVED",
+  "source": "open-dict-data/ipa-dict en_US.txt (General American)",
+  "sourceUrl": "https://github.com/open-dict-data/ipa-dict/blob/master/data/en_US.txt",
+  "sourceBlobSha": "f7cdfe30714777ad3f928977586e7425881687b4",
+  "license": "MIT for the en_US dataset; dictionary upstream cmudict-ipa/CMU",
+  "derivedFrom": "US IPA data from cmudict-ipa (lingz), based on CMU Pronouncing Dictionary; multiple pronunciations may differ by noun/verb or accent",
+  "sourceReadme": "https://github.com/open-dict-data/ipa-dict",
+  "sourceHasRawSpaces": false,
+  "wordCount": 188,
+  "distinctWordsWithCandidates": 188,
+  "singleVariantWords": 141,
+  "multiVariantWords": 47,
+  "releaseApprovedWords": 0,
+  "words": [
+    {
+      "headword": "accept",
+      "usIpaCandidates": [
+        "/ækˈsɛpt/",
+        "/əkˈsɛpt/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "access",
+      "usIpaCandidates": [
+        "/ˈækˌsɛs/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "account",
+      "usIpaCandidates": [
+        "/əˈkaʊnt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "accountability",
+      "usIpaCandidates": [
+        "/əˈkaʊnəbɪɫɪti/",
+        "/əˈkaʊntəˌbɪɫɪti/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "accurate",
+      "usIpaCandidates": [
+        "/ˈækjɝət/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "address",
+      "usIpaCandidates": [
+        "/ˈæˌdɹɛs/",
+        "/əˈdɹɛs/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "admit",
+      "usIpaCandidates": [
+        "/ədˈmɪt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "allocation",
+      "usIpaCandidates": [
+        "/ˌæɫəˈkeɪʃən/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "anonymous",
+      "usIpaCandidates": [
+        "/əˈnɑnəməs/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "apology",
+      "usIpaCandidates": [
+        "/əˈpɑɫəˌdʒi/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "appointment",
+      "usIpaCandidates": [
+        "/əˈpɔɪntmənt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "approach",
+      "usIpaCandidates": [
+        "/əˈpɹoʊtʃ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "approve",
+      "usIpaCandidates": [
+        "/əˈpɹuv/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "archive",
+      "usIpaCandidates": [
+        "/ˈɑɹˌkaɪv/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "assistance",
+      "usIpaCandidates": [
+        "/əˈsɪstəns/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "assistant",
+      "usIpaCandidates": [
+        "/əˈsɪstənt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "attempt",
+      "usIpaCandidates": [
+        "/əˈtɛmpt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "automatic",
+      "usIpaCandidates": [
+        "/ˌɔtəˈmætɪk/",
+        "/ˌɔtoʊˈmætɪk/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "backup",
+      "usIpaCandidates": [
+        "/ˈbæˌkəp/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "blurred",
+      "usIpaCandidates": [
+        "/ˈbɫɝd/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "borrow",
+      "usIpaCandidates": [
+        "/ˈbɑˌɹoʊ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "calculate",
+      "usIpaCandidates": [
+        "/ˈkæɫkjəˌɫeɪt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "childhood",
+      "usIpaCandidates": [
+        "/ˈtʃaɪɫdˌhʊd/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "choice",
+      "usIpaCandidates": [
+        "/ˈtʃɔɪs/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "choose",
+      "usIpaCandidates": [
+        "/ˈtʃuz/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "circumstance",
+      "usIpaCandidates": [
+        "/ˈsɝkəmˌstæns/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "classify",
+      "usIpaCandidates": [
+        "/ˈkɫæsəˌfaɪ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "clue",
+      "usIpaCandidates": [
+        "/ˈkɫu/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "collect",
+      "usIpaCandidates": [
+        "/kəˈɫɛkt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "community",
+      "usIpaCandidates": [
+        "/kəmˈjunəti/",
+        "/kəmˈjunɪti/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "compare",
+      "usIpaCandidates": [
+        "/kəmˈpɛɹ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "conclusion",
+      "usIpaCandidates": [
+        "/kənˈkɫuʒən/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "confidential",
+      "usIpaCandidates": [
+        "/ˌkɑnfəˈdɛnʃəɫ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "confirm",
+      "usIpaCandidates": [
+        "/kənˈfɝm/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "conflict",
+      "usIpaCandidates": [
+        "/ˈkɑnfɫɪkt/",
+        "/kənˈfɫɪkt/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "confuse",
+      "usIpaCandidates": [
+        "/kənˈfjuz/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "connect",
+      "usIpaCandidates": [
+        "/kəˈnɛkt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "connection",
+      "usIpaCandidates": [
+        "/kəˈnɛkʃən/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "consent",
+      "usIpaCandidates": [
+        "/kənˈsɛnt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "consequence",
+      "usIpaCandidates": [
+        "/ˈkɑnsəkwəns/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "contact",
+      "usIpaCandidates": [
+        "/ˈkɑnˌtækt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "continue",
+      "usIpaCandidates": [
+        "/kənˈtɪnju/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "contrast",
+      "usIpaCandidates": [
+        "/ˈkɑntɹæst/",
+        "/kənˈtɹæst/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "cooperate",
+      "usIpaCandidates": [
+        "/ˈkwɑpɝˌeɪt/",
+        "/koʊˈɑpɝˌeɪt/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "correction",
+      "usIpaCandidates": [
+        "/kɝˈɛkʃən/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "cycle",
+      "usIpaCandidates": [
+        "/ˈsaɪkəɫ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "damage",
+      "usIpaCandidates": [
+        "/ˈdæmədʒ/",
+        "/ˈdæmɪdʒ/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "date",
+      "usIpaCandidates": [
+        "/ˈdeɪt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "decision",
+      "usIpaCandidates": [
+        "/dɪˈsɪʒən/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "delay",
+      "usIpaCandidates": [
+        "/dɪˈɫeɪ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "delivery",
+      "usIpaCandidates": [
+        "/dɪˈɫɪvɝi/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "deny",
+      "usIpaCandidates": [
+        "/dɪˈnaɪ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "deserve",
+      "usIpaCandidates": [
+        "/dɪˈzɝv/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "detail",
+      "usIpaCandidates": [
+        "/ˈditeɪɫ/",
+        "/dɪˈteɪɫ/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "device",
+      "usIpaCandidates": [
+        "/dɪˈvaɪs/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "digital",
+      "usIpaCandidates": [
+        "/ˈdɪdʒətəɫ/",
+        "/ˈdɪdʒɪtəɫ/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "direct",
+      "usIpaCandidates": [
+        "/daɪˈɹɛkt/",
+        "/dɝˈɛkt/",
+        "/dɪˈɹɛkt/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "disappear",
+      "usIpaCandidates": [
+        "/ˌdɪsəˈpiɹ/",
+        "/ˌdɪsəˈpɪɹ/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "disclose",
+      "usIpaCandidates": [
+        "/dɪˈskɫoʊz/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "discrepancy",
+      "usIpaCandidates": [
+        "/dɪsˈkɹɛpənsi/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "distribute",
+      "usIpaCandidates": [
+        "/dɪˈstɹɪbjut/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "document",
+      "usIpaCandidates": [
+        "/ˈdɑkjəmɛnt/",
+        "/ˈdɑkjumɛnt/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "duplicate",
+      "usIpaCandidates": [
+        "/ˈdupɫəˌkeɪt/",
+        "/ˈdupɫəkət/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "duration",
+      "usIpaCandidates": [
+        "/ˈdʊˈɹeɪʃən/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "emergency",
+      "usIpaCandidates": [
+        "/ˈimɝdʒənsi/",
+        "/ɪˈmɝdʒənsi/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "enlarge",
+      "usIpaCandidates": [
+        "/ˌɛnˈɫɑɹdʒ/",
+        "/ɪnˈɫɑɹdʒ/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "envelope",
+      "usIpaCandidates": [
+        "/ˈɛnvəˌɫoʊp/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "evidence",
+      "usIpaCandidates": [
+        "/ˈɛvədəns/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "explain",
+      "usIpaCandidates": [
+        "/ɪksˈpɫeɪn/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "expose",
+      "usIpaCandidates": [
+        "/ɪkˈspoʊz/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "falsify",
+      "usIpaCandidates": [
+        "/ˈfɔɫsəˌfaɪ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "familiar",
+      "usIpaCandidates": [
+        "/fəˈmɪɫjɝ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "fiber",
+      "usIpaCandidates": [
+        "/ˈfaɪbɝ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "forgive",
+      "usIpaCandidates": [
+        "/fɝˈɡɪv/",
+        "/fɔɹˈɡɪv/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "former",
+      "usIpaCandidates": [
+        "/ˈfɔɹmɝ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "future",
+      "usIpaCandidates": [
+        "/ˈfjutʃɝ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "gather",
+      "usIpaCandidates": [
+        "/ˈɡæðɝ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "guilt",
+      "usIpaCandidates": [
+        "/ˈɡɪɫt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "handwriting",
+      "usIpaCandidates": [
+        "/ˈhænˌdɹaɪtɪŋ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "hesitate",
+      "usIpaCandidates": [
+        "/ˈhɛzəˌteɪt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "hidden",
+      "usIpaCandidates": [
+        "/ˈhɪdən/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "identify",
+      "usIpaCandidates": [
+        "/aɪˈdɛntəˌfaɪ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "identity",
+      "usIpaCandidates": [
+        "/aɪˈdɛntɪˌti/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "incorrect",
+      "usIpaCandidates": [
+        "/ˌɪnkɝˈɛkt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "independent",
+      "usIpaCandidates": [
+        "/ˌɪndɪˈpɛndənt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "indicate",
+      "usIpaCandidates": [
+        "/ˈɪndəˌkeɪt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "insert",
+      "usIpaCandidates": [
+        "/ˈɪnˌsɝt/",
+        "/ˌɪnˈsɝt/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "interrupt",
+      "usIpaCandidates": [
+        "/ˌɪntɝˈəpt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "interview",
+      "usIpaCandidates": [
+        "/ˈɪntɝvˌju/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "inventory",
+      "usIpaCandidates": [
+        "/ˌɪnvənˈtɔɹi/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "investigate",
+      "usIpaCandidates": [
+        "/ˌɪnˈvɛstəˌɡeɪt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "journey",
+      "usIpaCandidates": [
+        "/ˈdʒɝni/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "justice",
+      "usIpaCandidates": [
+        "/ˈdʒəstəs/",
+        "/ˈdʒəstɪs/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "label",
+      "usIpaCandidates": [
+        "/ˈɫeɪbəɫ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "legal",
+      "usIpaCandidates": [
+        "/ˈɫiɡəɫ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "librarian",
+      "usIpaCandidates": [
+        "/ɫaɪˈbɹɛˌɹiən/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "locate",
+      "usIpaCandidates": [
+        "/ˈɫoʊˌkeɪt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "maintain",
+      "usIpaCandidates": [
+        "/meɪnˈteɪn/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "mechanism",
+      "usIpaCandidates": [
+        "/ˈmɛkəˌnɪzəm/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "memory",
+      "usIpaCandidates": [
+        "/ˈmɛmɝi/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "missing",
+      "usIpaCandidates": [
+        "/ˈmɪsɪŋ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "mistake",
+      "usIpaCandidates": [
+        "/mɪˈsteɪk/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "negative",
+      "usIpaCandidates": [
+        "/ˈnɛɡətɪv/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "notice",
+      "usIpaCandidates": [
+        "/ˈnoʊtəs/",
+        "/ˈnoʊtɪs/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "occur",
+      "usIpaCandidates": [
+        "/əˈkɝ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "official",
+      "usIpaCandidates": [
+        "/əˈfɪʃəɫ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "operate",
+      "usIpaCandidates": [
+        "/ˈɑpɝˌeɪt/",
+        "/ˈɔpɝˌeɪt/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "option",
+      "usIpaCandidates": [
+        "/ˈɑpʃən/",
+        "/ˈɔpʃən/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "original",
+      "usIpaCandidates": [
+        "/ɝˈɪdʒənəɫ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "outage",
+      "usIpaCandidates": [
+        "/ˈaʊtədʒ/",
+        "/ˈaʊtɪdʒ/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "outline",
+      "usIpaCandidates": [
+        "/ˈaʊtˌɫaɪn/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "pattern",
+      "usIpaCandidates": [
+        "/ˈpætɝn/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "permission",
+      "usIpaCandidates": [
+        "/pɝˈmɪʃən/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "photograph",
+      "usIpaCandidates": [
+        "/ˈfoʊtəˌɡɹæf/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "position",
+      "usIpaCandidates": [
+        "/pəˈzɪʃən/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "predict",
+      "usIpaCandidates": [
+        "/pɹiˈdɪkt/",
+        "/pɹɪˈdɪkt/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "prepare",
+      "usIpaCandidates": [
+        "/pɹiˈpɛɹ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "preserve",
+      "usIpaCandidates": [
+        "/pɹəˈzɝv/",
+        "/pɹiˈzɝv/",
+        "/pɹɪˈzɝv/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "privacy",
+      "usIpaCandidates": [
+        "/ˈpɹaɪvəsi/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "promise",
+      "usIpaCandidates": [
+        "/ˈpɹɑməs/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "proof",
+      "usIpaCandidates": [
+        "/ˈpɹuf/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "propose",
+      "usIpaCandidates": [
+        "/pɹəˈpoʊz/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "protect",
+      "usIpaCandidates": [
+        "/pɹəˈtɛkt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "puzzle",
+      "usIpaCandidates": [
+        "/ˈpəzəɫ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "receipt",
+      "usIpaCandidates": [
+        "/ɹiˈsit/",
+        "/ɹɪˈsit/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "recent",
+      "usIpaCandidates": [
+        "/ˈɹisənt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "recognize",
+      "usIpaCandidates": [
+        "/ˈɹɛkəɡˌnaɪz/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "record",
+      "usIpaCandidates": [
+        "/ˈɹɛkɝd/",
+        "/ɹəˈkɔɹd/",
+        "/ɹɪˈkɔɹd/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "recording",
+      "usIpaCandidates": [
+        "/ɹəˈkɔɹdɪŋ/",
+        "/ɹɪˈkɔɹdɪŋ/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "recover",
+      "usIpaCandidates": [
+        "/ɹɪˈkəvɝ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "reflect",
+      "usIpaCandidates": [
+        "/ɹɪˈfɫɛkt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "register",
+      "usIpaCandidates": [
+        "/ˈɹɛdʒɪstɝ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "regret",
+      "usIpaCandidates": [
+        "/ɹəˈɡɹɛt/",
+        "/ɹɪˈɡɹɛt/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "release",
+      "usIpaCandidates": [
+        "/ɹiˈɫis/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "relief",
+      "usIpaCandidates": [
+        "/ɹiˈɫif/",
+        "/ɹɪˈɫif/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "reluctance",
+      "usIpaCandidates": [
+        "/ɹiˈɫəktəns/",
+        "/ɹɪˈɫəktəns/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "remove",
+      "usIpaCandidates": [
+        "/ɹiˈmuv/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "repair",
+      "usIpaCandidates": [
+        "/ɹɪˈpɛɹ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "replace",
+      "usIpaCandidates": [
+        "/ˌɹiˈpɫeɪs/",
+        "/ɝˈpɫeɪs/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "request",
+      "usIpaCandidates": [
+        "/ɹiˈkwɛst/",
+        "/ɹɪˈkwɛst/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "resemble",
+      "usIpaCandidates": [
+        "/ɹiˈzɛmbəɫ/",
+        "/ɹɪˈzɛmbəɫ/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "resident",
+      "usIpaCandidates": [
+        "/ˈɹɛzɪdənt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "respond",
+      "usIpaCandidates": [
+        "/ɹiˈspɑnd/",
+        "/ɹɪˈspɑnd/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "responsibility",
+      "usIpaCandidates": [
+        "/ɹiˌspɑnsəˈbɪɫəti/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "responsible",
+      "usIpaCandidates": [
+        "/ɹiˈspɑnsəbəɫ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "restore",
+      "usIpaCandidates": [
+        "/ɹɪˈstɔɹ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "retain",
+      "usIpaCandidates": [
+        "/ɹiˈteɪn/",
+        "/ɹɪˈteɪn/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "return",
+      "usIpaCandidates": [
+        "/ɹiˈtɝn/",
+        "/ɹɪˈtɝn/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "reunite",
+      "usIpaCandidates": [
+        "/ˌɹiuˈnaɪt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "reveal",
+      "usIpaCandidates": [
+        "/ɹiˈviɫ/",
+        "/ɹɪˈviɫ/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "reverse",
+      "usIpaCandidates": [
+        "/ɹiˈvɝs/",
+        "/ɹɪˈvɝs/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "risk",
+      "usIpaCandidates": [
+        "/ˈɹɪsk/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "routine",
+      "usIpaCandidates": [
+        "/ɹuˈtin/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "schedule",
+      "usIpaCandidates": [
+        "/ˈskɛdʒuɫ/",
+        "/ˈskɛdʒʊɫ/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "seal",
+      "usIpaCandidates": [
+        "/ˈsiɫ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "secret",
+      "usIpaCandidates": [
+        "/ˈsikɹət/",
+        "/ˈsikɹɪt/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "secure",
+      "usIpaCandidates": [
+        "/sɪkˈjʊɹ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "separate",
+      "usIpaCandidates": [
+        "/ˈsɛpɝˌeɪt/",
+        "/ˈsɛpɝɪt/",
+        "/ˈsɛpɹət/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "sequence",
+      "usIpaCandidates": [
+        "/ˈsikwəns/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "shelter",
+      "usIpaCandidates": [
+        "/ˈʃɛɫtɝ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "shortage",
+      "usIpaCandidates": [
+        "/ˈʃɔɹtədʒ/",
+        "/ˈʃɔɹtɪdʒ/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "signature",
+      "usIpaCandidates": [
+        "/ˈsɪɡnətʃɝ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "solution",
+      "usIpaCandidates": [
+        "/səˈɫuʃən/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "source",
+      "usIpaCandidates": [
+        "/ˈsɔɹs/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "spine",
+      "usIpaCandidates": [
+        "/ˈspaɪn/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "stamp",
+      "usIpaCandidates": [
+        "/ˈstæmp/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "statement",
+      "usIpaCandidates": [
+        "/ˈsteɪtmənt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "storage",
+      "usIpaCandidates": [
+        "/ˈstɔɹədʒ/",
+        "/ˈstɔɹɪdʒ/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "supply",
+      "usIpaCandidates": [
+        "/səˈpɫaɪ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "survive",
+      "usIpaCandidates": [
+        "/sɝˈvaɪv/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "suspect",
+      "usIpaCandidates": [
+        "/ˈsəsˌpɛkt/",
+        "/səˈspɛkt/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "suspicious",
+      "usIpaCandidates": [
+        "/səˈspɪʃəs/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "switch",
+      "usIpaCandidates": [
+        "/ˈswɪtʃ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "testimony",
+      "usIpaCandidates": [
+        "/ˈtɛstəˌmoʊni/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "threaten",
+      "usIpaCandidates": [
+        "/ˈθɹɛtən/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "timing",
+      "usIpaCandidates": [
+        "/ˈtaɪmɪŋ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "trace",
+      "usIpaCandidates": [
+        "/ˈtɹeɪs/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "transcript",
+      "usIpaCandidates": [
+        "/ˈtɹænsˌkɹɪpt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "transfer",
+      "usIpaCandidates": [
+        "/ˈtɹænsfɝ/",
+        "/tɹænsˈfɝ/"
+      ],
+      "sourceStatus": "SENSE_OR_VARIANT_REVIEW_REQUIRED",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "transparent",
+      "usIpaCandidates": [
+        "/tɹænˈspɛɹənt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "trust",
+      "usIpaCandidates": [
+        "/ˈtɹəst/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "uncertain",
+      "usIpaCandidates": [
+        "/ənˈsɝtən/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "urgent",
+      "usIpaCandidates": [
+        "/ˈɝdʒənt/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "verify",
+      "usIpaCandidates": [
+        "/ˈvɛɹəˌfaɪ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "voice",
+      "usIpaCandidates": [
+        "/ˈvɔɪs/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "warning",
+      "usIpaCandidates": [
+        "/ˈwɔɹnɪŋ/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "watermark",
+      "usIpaCandidates": [
+        "/ˈwɔtɝˌmɑɹk/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    },
+    {
+      "headword": "witness",
+      "usIpaCandidates": [
+        "/ˈwɪtnəs/"
+      ],
+      "sourceStatus": "SINGLE_SOURCE_FORM_CANDIDATE",
+      "selectedForPublication": null,
+      "meaningAndStressReviewed": false
+    }
+  ]
+}
