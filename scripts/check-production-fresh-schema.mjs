@@ -86,7 +86,7 @@ export function inspectProductionWrangler(){
     item?.binding!=="DB"||item?.database_name!=="miaowu-english-prod"||
     item?.database_id!==EXPECTED_NEW_PRODUCTION_D1||
     cf.d1_databases.length!==1||
-    !cf.assets?.run_worker_first||cf.assets.binding!=="ASSETS"||
+    !cf.assets?.run_worker_first||cf.assets.binding!=="ASSETS"||cf.assets.directory!=="../dist-production/public"||
     Object.prototype.hasOwnProperty.call(cf,"secrets"))
   throw Error("PRODUCTION_CONFIG_TARGET_MISMATCH_OR_UNSAFE");
  return {worker:cf.name,database:item.database_name,databaseId:item.database_id};
