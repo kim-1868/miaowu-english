@@ -20,6 +20,8 @@ test("S42 unreviewed full-length story always fails closed with accurately count
  assert.equal(gate.syllabus.notStandalone,7);
  assert.equal(gate.pronunciation.ukCandidates,181);
  assert.equal(gate.pronunciation.usArpabetCandidates,188);
+ assert.equal(gate.pronunciation.usIpaCandidates,188);
+ assert.equal(gate.pronunciation.usIpaAmbiguousWords,47);
  assert.equal(gate.pronunciation.fullyApprovedWords,0);
  assert.equal(gate.review.pendingWordSense,188);
  assert.equal(gate.review.pendingOccurrences,733);
