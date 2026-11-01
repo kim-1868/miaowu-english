@@ -32,6 +32,9 @@ export function buildEchoReviewPack(bundle){
     candidates.push({chapterId:chapter.id,chapterNo:chapter.number,
       chapterTitle:chapter.title,wordId:w.id,headword:w.headword,
       correctAnswer:w.headword,meaningZh:w.meaningZh,partOfSpeech:w.partOfSpeech||"",
+      hintZh:w.meaningZh.split(/[；;]/)[0].trim(),firstLetter:w.headword[0],
+      answerLetterCount:w.headword.length,answerFormat:"LOWERCASE_ENGLISH_HEADWORD",
+      uniqueAnswerConfirmed:false,
       paragraphNo:pIndex+1,segmentNo:sIndex+1,
       prompt:"在原故事句中，根据语境与中文词义填写空缺英文词。",
       originalContext:combined,blankContext:surrounding,
@@ -54,7 +57,11 @@ export function buildEchoReviewPack(bundle){
   const seg=paragraph.segments[q.segmentNo-1];
   if(!seg||seg.wordId!==q.wordId||seg.surface!==q.correctAnswer)
    throw Error("ECHO_REVIEW_ANSWER_DRIFT_CH"+q.chapterNo);
-  if(q.blankContext.includes(q.correctAnswer))throw Error("ECHO_REVIEW_ANSWER_LEAK");
+  if(q.blankContext.toLowerCase().includes(q.correctAnswer.toLowerCase()))
+   throw Error("ECHO_REVIEW_ANSWER_LEAK");
+  if(!q.hintZh||/[a-z]/i.test(q.hintZh)||q.firstLetter!==q.correctAnswer[0]||
+    q.answerLetterCount!==q.correctAnswer.length||q.uniqueAnswerConfirmed!==false)
+   throw Error("ECHO_REVIEW_HINT_INVARIANT_FAILED");
  }
  return {status:"PRIVATE_EDITORIAL_REVIEW_ONLY",
   questions,chapterCount:bundle.chapters.length,
