@@ -1,15 +1,11 @@
 {
-  "name": "miaowu-english-pages-poc",
+  "name": "miaowu-english-access-check",
   "pages_build_output_dir": "./dist",
   "compatibility_date": "2026-10-30",
-  "vars": {
-    "APP_ENV": "staging"
-  },
-  "d1_databases": [
+  "services": [
     {
-      "binding": "DB",
-      "database_name": "miaowu-english-test",
-      "database_id": "88a817cb-23bb-4ae4-bcb8-92286c4165d4"
+      "binding": "STAGING_ORIGIN",
+      "service": "miaowu-english-staging"
     }
   ]
 }
