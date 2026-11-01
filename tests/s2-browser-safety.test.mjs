@@ -26,7 +26,9 @@ test('S5 uses the existing book cover, reader, bookplates, and dashboard for rea
   assert.match(markup,/网站上线准备中/);
   assert.match(markup,/正式小说和付费购买尚未开放/);
   assert.doesNotMatch(markup,/私有测试环境/);
-  assert.match(markup,/题目从云端生成，答题记录会保存在账号中/);
+  assert.match(markup,/演示玩法/);
+  assert.match(markup,/id="echoModeSwitch"/);
+  assert.match(script,/function renderEchoModeSwitch/);
   assert.match(markup,/id="view-library"/);
   assert.match(markup,/id="view-reader"/);
   assert.match(markup,/id="view-words"/);
