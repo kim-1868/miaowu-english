@@ -58,6 +58,9 @@ export function evaluateRainyNightPublicationGate(bundle){
   syllabus:{fourBandCandidateForms:form.formMatchesCET4,starredCET6:form.starredCET6,
    notStandalone:form.notStandalone},pronunciation:{
    ukCandidates:wordReview.ukCandidatesFound,
+   ukSupplementalReferences:wordReview.ukGapReferenceCandidatesFound,
+   ukSourceReferenceCoverage:wordReview.ukCombinedReferenceCoverage,
+   ukSupplementalCommercialApproved:wordReview.ukGapCommercialApprovedCount,
    usArpabetCandidates:wordReview.usArpaCandidatesFound,
    usIpaCandidates:wordReview.usIpaCandidatesFound,
    usIpaAmbiguousWords:wordReview.usIpaVariantsNeedingReview,
