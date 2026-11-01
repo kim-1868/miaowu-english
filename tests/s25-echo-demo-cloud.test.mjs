@@ -18,7 +18,7 @@ function fakeElement(){
   return {innerHTML:"",value:"",textContent:"",disabled:false,onclick:null,
     querySelectorAll(selector){
       const names=[...selector.matchAll(/data-([a-z-]+)/g)].map(m=>m[1]);
-      return [...this.innerHTML.matchAll(/<button\\b([^>]*)>/g)].map(match=>{
+      return [...this.innerHTML.matchAll(/<button\b([^>]*)>/g)].map(match=>{
         const dataset={};
         for(const a of match[1].matchAll(/data-([a-z-]+)="([^"]*)"/g)){
           const key=a[1].replace(/-([a-z])/g,(_,letter)=>letter.toUpperCase());
