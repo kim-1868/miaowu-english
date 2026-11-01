@@ -620,3 +620,45 @@ test("S6 cloud Echo derives only completed published chapter words and logs grad
   assert.equal((await call({...env,APP_ENV:"production"},"/api/staging/seed-echo-fixture",
     "POST",{})).status,404);
 });
+
+test("S8 chapter quick review: remembered not mastered; forgot saved to bookplates; no unauthorised paid records",async()=>{
+ const env=fixture();
+ await call(env,"/api/staging/seed-chapter-fixtures","POST",{});
+ await call(env,"/api/staging/seed-echo-fixture","POST",{});
+ const userId="quick-reader",token="d".repeat(64);
+ env.sqlite.prepare("INSERT INTO users(id,username,password_hash,password_salt) VALUES(?,?,?,?)")
+   .run(userId,"s8-quick","hash","salt");
+ const digest=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(token))),
+   x=>x.toString(16).padStart(2,"0")).join("");
+ env.sqlite.prepare("INSERT INTO sessions(id_hash,user_id,expires_at) VALUES(?,?,datetime('now','+1 day'))")
+   .run(digest,userId);
+ const headers={Cookie:"mw_session="+token};
+ const route="/api/me/quick-review";
+ const known={wordId:"qa-echo-contract",chapterId:"qa-cet4-echo",remembered:true};
+ assert.equal((await call(env,route,"POST",known)).status,401);
+ const correct=await call(env,route,"POST",known,{headers});
+ assert.equal(correct.status,200,await correct.clone().text());
+ assert.equal((await correct.json()).nextReviewDays,3);
+ let row=env.sqlite.prepare("SELECT status,bookmarked,due_at FROM user_words WHERE user_id=? AND word_id=?")
+   .get(userId,known.wordId);
+ assert.equal(row.status,"learning");
+ assert.equal(row.bookmarked,0);
+ assert.ok(row.due_at);
+ const forgotten=await call(env,route,"POST",
+   {wordId:"qa-echo-evidence",chapterId:"qa-cet4-echo",remembered:false},{headers});
+ assert.equal(forgotten.status,200,await forgotten.clone().text());
+ row=env.sqlite.prepare("SELECT status,bookmarked,due_at FROM user_words WHERE user_id=? AND word_id=?")
+   .get(userId,"qa-echo-evidence");
+ assert.equal(row.status,"learning");
+ assert.equal(row.bookmarked,1);
+ const words=await (await call(env,"/api/me/words","GET",undefined,{headers})).json();
+ assert.ok(words.words.some(w=>w.word_id==="qa-echo-evidence"));
+ assert.equal(env.sqlite.prepare("SELECT COUNT(*) n FROM review_events WHERE user_id=? AND game_type='chapter-quick-review'")
+   .get(userId).n,2);
+ const unsafe=await call(env,route,"POST",
+   {wordId:"qa-echo-contract",chapterId:"qa-cet4-paid",remembered:false},{headers});
+ assert.equal(unsafe.status,403);
+ assert.equal((await call(env,route,"POST",{wordId:"qa-echo-contract",chapterId:"qa-cet4-echo",remembered:"yes"},{headers})).status,400);
+ const forged=await call(env,route,"POST",known,{headers:{...headers,Origin:"https://attacker.invalid"}});
+ assert.equal(forged.status,403);
+});
