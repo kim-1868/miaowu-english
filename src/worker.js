@@ -2,6 +2,7 @@ import { stagingGate, stagingCookieAfterBasic } from "./staging-gate.js";
 import { handleEditor } from "./editorial-admin.js";
 import { handleOps } from "./ops-access.js";
 import { handleOpsPublication } from "./ops-publication.js";
+import { handleOpsConsole } from "./ops-console.js";
 import { handleLearningState } from "./reading-library.js";
 import {handleEcho} from "./echo-cloud.js";
 import {
@@ -427,7 +428,10 @@ async function api(req, env) {
   // Only /api/ops/me GET exists; mutations remain disabled until S9-B review.
   if (path.startsWith("/api/ops/")) {
     if (["POST","PUT","PATCH","DELETE"].includes(req.method) && !checkOrigin(req)) return reject("INVALID_ORIGIN",403);
-    return path==="/api/ops/me" ? handleOps(req,env,path) : handleOpsPublication(req,env,path);
+    if(path==="/api/ops/me")return handleOps(req,env,path);
+    if(path==="/api/ops/books"||/\/\/(withdraw-readiness|withdraw|audit)$/.test(path))
+      return handleOpsConsole(req,env,path);
+    return handleOpsPublication(req,env,path);
   }
   if (!env.DB || !env.ACTIVATION_PEPPER || env.ACTIVATION_PEPPER.length < 32) {
     return reject("SERVICE_NOT_CONFIGURED", 503);
@@ -511,7 +515,23 @@ export default {
     const previewCookie = await stagingCookieAfterBasic(request, env);
     const path = new URL(request.url).pathname;
     if (!path.startsWith("/api/")) {
+      const opsAsset=["/ops.html","/ops-console.js","/ops-console.css"].includes(path);
+      if(opsAsset&&env.OPS_CONSOLE_ENABLED!=="true")
+        return attachPreviewCookie(new Response("Not found",{status:404}),previewCookie);
       const response = await env.ASSETS.fetch(request);
+      if(opsAsset){
+        const h=new Headers(response.headers);
+        h.set("cache-control","private, no-store");
+        h.set("x-content-type-options","nosniff");
+        h.set("referrer-policy","no-referrer");
+        h.set("x-frame-options","DENY");
+        h.set("content-security-policy",
+          "default-src 'none'; script-src 'self'; style-src 'self'; "+
+          "connect-src 'self'; img-src 'self'; form-action 'none'; "+
+          "base-uri 'none'; frame-ancestors 'none'");
+        return attachPreviewCookie(
+          new Response(response.body,{status:response.status,headers:h}),previewCookie);
+      }
       if (env.APP_ENV !== "staging") return attachPreviewCookie(response, previewCookie);
       const headers = new Headers(response.headers);
       headers.set("cache-control", "private, no-store");
