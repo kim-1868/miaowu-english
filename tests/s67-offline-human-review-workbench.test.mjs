@@ -22,9 +22,9 @@ test("S67 private HTML embeds full 957-source ledger and source-aligned review c
  assert.equal(summary.totalReviewUnits,957);
  assert.equal(summary.reviewDecisionsSaved,0);
  assert.equal(summary.publicationAllowed,false);
- assert.equal((html.match(/data-kind="word"/g)||[]).length,188);
- assert.equal((html.match(/data-kind="context"/g)||[]).length,733);
- assert.equal((html.match(/data-kind="echo"/g)||[]).length,36);
+ assert.equal((html.match(/<article class="item" data-entry data-kind="word"/g)||[]).length,188);
+ assert.equal((html.match(/<article class="item" data-entry data-kind="context"/g)||[]).length,733);
+ assert.equal((html.match(/<article class="item" data-entry data-kind="echo"/g)||[]).length,36);
  assert.ok(html.includes('id="human-review-export"'));
  assert.ok(html.includes('id="human-review-import"'));
  assert.ok(html.includes('id="human-review-save"'));
