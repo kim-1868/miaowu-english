@@ -344,3 +344,15 @@ html[data-theme="dark"] .reader-layout .read-top #readerBack:focus-visible,
   outline-offset:4px;
   border-radius:5px;
 }
+
+
+/* Bookplate source labels: keep local demo cards visibly distinct from real D1 cards. */
+.bookplate-source-summary,.bookplate-source-heading{grid-column:1/-1;min-width:0}
+.bookplate-source-summary{border:1px solid var(--line);border-radius:13px;padding:13px 16px;
+  background:var(--paper);font-size:13px;color:var(--wine);font-weight:700;line-height:1.65}
+.bookplate-source-summary small{display:block;margin-top:3px;color:var(--muted);font-weight:400;font-size:11px}
+.bookplate-source-heading{margin:13px 0 0;font-size:13px;font-weight:700;color:var(--wine)}
+.bookplate-card-top{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.demo-vocab-card{border-top-style:dashed!important}
+html[data-theme="dark"] .bookplate-source-summary{background:var(--paper);color:var(--ink)}
+html[data-theme="dark"] .bookplate-source-heading{color:#eed3bc}

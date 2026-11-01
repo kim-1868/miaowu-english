@@ -39,12 +39,12 @@
       const area=$('reviewReminder');
       if(!area)return;
       const due=user?cloudDue():0,seen=cloudSaved.size;
-      const title=!user?'喵呜，欢迎来到你的故事书房':
+      const title=!user?(saved.size?'喵呜，你在本机演示收藏了 '+saved.size+' 张词卡':'喵呜，欢迎来到你的故事书房'):
         due?'喵呜，今天有 '+due+' 个单词等你复习':
-        seen?'喵呜，你已收藏 '+seen+' 张云端词卡':'喵呜，读一段故事，收藏第一张词卡';
-      const hint=!user?'登录后，你的章节进度和藏书票就能跨设备保存。':
+        seen?'喵呜，你已收藏 '+seen+' 张云端词卡':saved.size?'喵呜，你在本机演示收藏了 '+saved.size+' 张词卡':'喵呜，读一段故事，收藏第一张词卡';
+      const hint=!user?(saved.size?'演示收藏仅保存在当前浏览器；登录后正式小说收藏可跨设备同步。':'登录后，正式小说的章节进度与词卡可以跨设备保存。'):
         due?'这些词已经到复习时间。进入剧情回声，完成练习后会更新云端学习记录。':
-        '进入记忆藏书票复习已收藏的单词，也可以到剧情回声回顾已读章节。';
+        saved.size&&!seen?'演示收藏保存在当前浏览器，可在记忆藏书票查看；正式小说词卡会同步到账号。':'进入记忆藏书票复习已收藏的单词，也可以到剧情回声回顾已读章节。';
       area.innerHTML='<div class="reminder-cat" aria-hidden="true">'+
         '<svg viewBox="0 0 48 48" width="30" height="30" fill="currentColor">'+
         '<ellipse cx="12" cy="15" rx="4.1" ry="5.6" transform="rotate(-24 12 15)"/>'+
@@ -54,8 +54,8 @@
         '<path d="M23 23c-6.2 0-9.6 5-13 9.4-2.2 3-1 8.6 3.7 9.1 3.9.5 6.2-2.2 9.3-2.2 3.2 0 5.5 2.7 9.4 2.2 4.7-.5 5.9-6.1 3.7-9.1C32.6 28 29.2 23 23 23Z"/></svg></div>'+
         '<div class="reminder-content"><strong>'+safe(title)+'</strong><small>'+safe(hint)+'</small></div>'+
         '<button class="primary reminder-btn" id="reviewReminderBtn">'+
-        (user?'查看云端藏书票 →':'登录后同步 →')+'</button>';
-      $('reviewReminderBtn').onclick=()=>user?navigate('words'):showLogin();
+        (user||saved.size?'查看记忆藏书票 →':'登录后同步 →')+'</button>';
+      $('reviewReminderBtn').onclick=()=>user||saved.size?navigate('words'):showLogin();
     }
     const ECHO_TYPES=[{id:'fill',title:'剧情填词',desc:'在故事原句中选择恰当的英文词',symbol:'▤'},{id:'situation',title:'情境选择',desc:'根据人物行为和事件判断词义',symbol:'✧'},{id:'spell',title:'单词找回',desc:'键盘或平板系统手写拼出单词',symbol:'✎'}];
     const ECHO_BANK=[
@@ -494,28 +494,33 @@
     function openChapter(num){resetDemoReadingUI();if(num>0&&!has('cet4')){showRegister({intent:'locked'});return}if(num<0||num>=CHAPTERS.length)return;chapter=num;VISITED.add(num);CHAPTER_WORDS[num].forEach(touchWord);saveReview();navigate('reader');$('chapterNo').textContent=`CHAPTER ${String(num+1).padStart(2,'0')} · ${num===0?'FREE PREVIEW':'MEMBER PREVIEW'}`;$('chapterTitle').textContent=CHAPTERS[num].title;$('storyText').innerHTML=CHAPTERS[num].parts.map(p=>`<p>${splitPart(p)}</p>`).join('');$('storyText').style.fontSize=fontSize+'px';$('readerCrumb').textContent='四级故事馆 / '+(num===0?'免费试读':'已购演示');$('chapterList').innerHTML=CHAPTERS.map((ch,i)=>`<button class="chapter-btn ${i===num?'current':''}" data-chapter="${i}">${String(i+1).padStart(2,'0')} · ${ch.title} ${i===1&&!has('cet4')?'🔒':''}</button>`).join('')+'<button class="chapter-btn" disabled>03–30 · 内容筹备中</button>';document.querySelectorAll('[data-chapter]').forEach(b=>b.onclick=()=>openChapter(Number(b.dataset.chapter)));document.querySelectorAll('.word').forEach(b=>b.onclick=()=>openWord(b.dataset.word));$('readingStatus').textContent=has('cet4')?'四级已解锁 · 演示内容':'免费试读 · 章节02需激活';$('progressBar').style.width=(VISITED.size/CHAPTERS.length*100)+'%';$('readingChapter').textContent=`第${String(num+1).padStart(2,'0')}章`;$('savedCount').textContent=saved.size;$('nextChapter').textContent=num===0?'下一章 →':'返回书架 →';$('readerLayout').classList.toggle('night',night);$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);$('toggleNight').classList.toggle('pressed',night);$('toggleNight').textContent=night?'☀ 日间':'☾ 夜间';$('nextChapter').onclick=()=>num===0?openChapter(1):navigate('library');let side=$('readingStatus').closest('.side-panel');let extra=side.querySelector('#readerLearningStats');if(!extra){extra=document.createElement('div');extra.id='readerLearningStats';side.appendChild(extra)}extra.innerHTML=`<div class="metric"><span>待学习词汇（演示）</span><strong>${Object.keys(WORDS).length-touchedWords().length}</strong></div><div class="metric"><span>今天待复习</span><strong>${dueList().length}</strong></div>`;try{localStorage.setItem('miaowu_demo_lastchapter',String(num))}catch(e){} }
     function openWord(w){if(!WORDS[w])return;popWord=w;touchWord(w);const info=WORDS[w];$('wordPop').innerHTML=`<button class="modal-close" id="wordClose" aria-label="关闭">×</button><div class="eyebrow">MIAOWU · WORD IN STORY</div><h3>${safe(w)}</h3><div class="pron">${safe(info.phonetic)} · ${safe(info.part)}</div><div class="meaning">${safe(info.meaning)}</div><div class="context">故事原句：<br>${safe(info.context)}</div><div class="word-extra"><strong>额外例句</strong><br>${safe(info.example)}<br><span style="color:var(--muted)">${safe(info.translation)}</span></div><div class="word-extra"><strong>常用搭配</strong><br>${info.collocations.map(x=>safe(x[0])+' · '+safe(x[1])).join('<br>')}</div><div class="word-actions"><button id="wordSpeak">♫ 听发音</button><button id="wordSave">${saved.has(w)?'✓ 已收藏':'♡ 收藏藏书票'}</button></div>`;$('wordPop').classList.add('on');$('wordBackdrop').classList.add('on');$('wordClose').onclick=closeWord;$('wordSpeak').onclick=()=>speakWord(w);$('wordSave').onclick=()=>toggleWord(w)}
     function closeWord(){$('wordPop').classList.remove('on');$('wordBackdrop').classList.remove('on');popWord=null}
-    function toggleWord(w){if(saved.has(w)){saved.delete(w);toast('已从藏书票移除，学习记录继续保留')}else{saved.add(w);toast('已收藏到记忆藏书票')}saveWords();if(popWord===w)openWord(w);$('savedCount').textContent=saved.size}
+    function toggleWord(w){if(saved.has(w)){saved.delete(w);toast('已从本机演示收藏移除，学习记录继续保留')}else{saved.add(w);toast('已收藏到本机演示藏书票（仅此浏览器）')}saveWords();if(popWord===w)openWord(w);$('savedCount').textContent=saved.size;if(view==='words')renderWords()}
     function saveWords(){try{localStorage.setItem('miaowu_demo_words',JSON.stringify([...saved]));localStorage.setItem('miaowu_demo_mastered',JSON.stringify([...mastered]))}catch(e){}}
     function renderWords(){
       document.querySelectorAll('[data-word-filter]').forEach(x=>x.classList.toggle('active',x.dataset.wordFilter===wordFilter));
       const words=[...cloudSaved.values()].filter(w=>wordFilter==='all'||
         (wordFilter==='mastered'?w.status==='mastered':w.status!=='mastered'));
-      $('bookplateCount').textContent=user?cloudSaved.size:'0';
-      if(!user){
+      const localWords=[...saved].filter(id=>WORDS[id]&&(wordFilter==='all'||
+        (wordFilter==='mastered'?mastered.has(id):!mastered.has(id))));
+      const cloudTotal=user?cloudSaved.size:0;
+      const localTotal=saved.size;
+      $('bookplateCount').textContent=String(cloudTotal+localTotal);
+      if(!user&&!localWords.length){
         $('vocabGrid').innerHTML='<div class="empty" style="grid-column:1/-1">'+
           '<div class="big">♧</div><h3>登录后，打开你的云端藏书票</h3>'+
           '<p>登录同一账号即可在不同设备读取已收藏的单词。</p>'+
           '<button class="primary" id="cloudWordsLogin">登录我的书房</button></div>';
         $('cloudWordsLogin').onclick=showLogin;return;
       }
-      if(!words.length){
+      if(!words.length&&!localWords.length){
+        const hasSaved=cloudTotal+localTotal>0;
         $('vocabGrid').innerHTML='<div class="empty" style="grid-column:1/-1">'+
-          '<div class="big">♧</div><h3>第一张藏书票，等你来收下</h3>'+
-          '<p>打开已发布小说，在有英文标注的章节里点击单词并收藏。这里不会显示演示词卡。</p>'+
+          '<div class="big">♧</div><h3>'+(hasSaved?'这个筛选下暂无藏书票':'第一张藏书票，等你来收下')+'</h3>'+
+          '<p>'+(hasSaved?'试试切换「全部收藏」，查看其它学习状态的词卡。':'打开《玫瑰未落幕》可以收藏本机演示词卡；正式小说词卡将在上线后支持云端同步。')+'</p>'+
           '<button class="primary" id="emptyRead">寻找故事 →</button></div>';
         $('emptyRead').onclick=()=>navigate('library');return;
       }
-      $('vocabGrid').innerHTML=words.map(w=>{
+      const cloudCards=user?words.map(w=>{
         const mastered=w.status==='mastered';
         const pairs=Array.isArray(w.collocations)?w.collocations:[];
         return '<div class="vocab-card status-'+(mastered?'mastered':'learning')+'">'+
@@ -536,7 +541,48 @@
           '<div class="card-tools"><button data-cloud-say="'+safe(w.word_id)+'">♫ 发音</button>'+
           '<button data-cloud-master="'+safe(w.word_id)+'">'+(mastered?'↻ 改为学习中':'✓ 标记已掌握')+'</button>'+
           '<button data-cloud-remove="'+safe(w.word_id)+'">移除收藏</button></div></div>';
+      }).join(''):'';
+      const demoCards=localWords.map(id=>{
+        const w=WORDS[id],isMastered=mastered.has(id);
+        return '<div class="vocab-card demo-vocab-card status-'+(isMastered?'mastered':'learning')+'">'+
+          '<div class="bookplate-card-top"><span class="eyebrow">MIAOWU · DEMO BOOKPLATE</span>'+
+          '<span class="word-status">'+(isMastered?'✓ 已记住':'◷ 学习中')+'</span></div>'+
+          '<h3>'+safe(id)+'</h3><p class="vocab-phonetic">'+safe(w.phonetic||'')+
+          ' <button data-demo-voice="'+safe(id)+'" aria-label="播放发音">♫</button></p>'+
+          '<p>'+safe(w.part||'')+' '+safe(w.meaning||'')+'</p>'+
+          '<div class="vocab-section"><b>《玫瑰未落幕》演示原句</b>'+
+          '<div class="vocab-example">'+safe(w.context||'')+'</div></div>'+
+          '<div class="vocab-section"><b>例句 / EXAMPLE</b>'+
+          '<div class="vocab-example">'+safe(w.example||'')+'</div>'+
+          '<p class="vocab-translation">'+safe(w.translation||'')+'</p></div>'+
+          '<div class="vocab-section"><b>常用搭配 / COLLOCATIONS</b>'+
+          (w.collocations||[]).map(pair=>'<div class="vocab-collocation"><span>'+
+            safe(pair[0])+'</span><span>'+safe(pair[1])+'</span></div>').join('')+'</div>'+
+          '<div class="card-tools"><button data-demo-say="'+safe(id)+'">♫ 发音</button>'+
+          '<button data-demo-master="'+safe(id)+'">'+(isMastered?'↻ 改为学习中':'✓ 标记已掌握')+'</button>'+
+          '<button data-demo-remove="'+safe(id)+'">移除收藏</button></div></div>';
       }).join('');
+      const sources='<div class="bookplate-source-summary">云端词卡 '+cloudTotal+
+        ' 张 · 本机演示收藏 '+localTotal+' 张'+
+        '<small>本机演示词卡仅保存在当前浏览器，不与账号同步；正式内容的收藏由云端保存。</small></div>';
+      const cloudSection=cloudCards?'<div class="bookplate-source-heading">☁ 云端收藏 · 已同步到账号</div>'+cloudCards:'';
+      const demoSection=demoCards?'<div class="bookplate-source-heading">✦ 本机演示收藏 · 《玫瑰未落幕》</div>'+demoCards:'';
+      $('vocabGrid').innerHTML=sources+cloudSection+demoSection;
+      document.querySelectorAll('[data-demo-voice],[data-demo-say]').forEach(button=>{
+        button.onclick=()=>speakWord(button.dataset.demoVoice||button.dataset.demoSay);
+      });
+      document.querySelectorAll('[data-demo-master]').forEach(button=>button.onclick=()=>{
+        const id=button.dataset.demoMaster;
+        if(!saved.has(id))return;
+        if(mastered.has(id))mastered.delete(id);else mastered.add(id);
+        saveWords();renderWords();
+        toast(mastered.has(id)?'本机演示词已标记掌握':'本机演示词已改为学习中');
+      });
+      document.querySelectorAll('[data-demo-remove]').forEach(button=>button.onclick=()=>{
+        const id=button.dataset.demoRemove;
+        saved.delete(id);saveWords();renderWords();
+        toast('已从本机演示收藏移除');
+      });
       document.querySelectorAll('[data-cloud-voice],[data-cloud-say]').forEach(x=>{
         x.onclick=()=>{const w=cloudSaved.get(x.dataset.cloudVoice||x.dataset.cloudSay);if(w)speakWord(w.headword)};
       });
@@ -694,7 +740,7 @@
       const mastered=[...cloudSaved.values()].filter(w=>w.status==='mastered').length;
       const recent=cloudProgress[0]||null;
       const stats=[{n:books.size+'本',t:'已开始阅读'},{n:completed.length+'章',t:'已完成章节'},
-        {n:cloudSaved.size+'个',t:'已收藏单词'},{n:mastered+'个',t:'标记已掌握'}];
+        {n:cloudSaved.size+'个',t:'云端已收藏词'},{n:mastered+'个',t:'标记已掌握'}];
       $('accountPanel').innerHTML='<div class="account-box">'+
         '<div class="account-row"><div class="avatar">'+safe(user.name[0].toUpperCase())+'</div>'+
         '<div><span class="eyebrow">YOUR PRIVATE SHELF</span>'+
@@ -705,7 +751,7 @@
         x.t+'</small></div>').join('')+'</div>'+
         '<div class="account-reminder"><div><strong>♧ 记忆藏书票</strong>'+
         '<div class="echo-tip">到期词卡 '+due+' 张 · 已收藏 '+cloudSaved.size+
-        ' 张 · 剧情回声练习已同步云端</div></div>'+
+        ' 张 · 本机演示收藏 '+saved.size+' 张（仅此浏览器） · 剧情回声记录单独保存云端</div></div>'+
         '<button class="primary" id="accountStartReview">查看藏书票 →</button></div>'+
         '<div class="account-content"><div class="account-block"><h3>已解锁学习分类</h3>'+
         (ent.map(c=>'<span class="account-tag">✓ '+safe(c.name)+'</span>').join('')||
