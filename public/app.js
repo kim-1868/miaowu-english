@@ -74,7 +74,7 @@
       {type:'spell',ch:1,word:'promise',q:'某个遥远的 ______，仍留在记忆里。',hint:'承诺 · 名词'},
       {type:'spell',ch:1,word:'identity',q:'照片背面的名字让她重新思考自己的 ______。',hint:'身份 · 名词'}
     ];
-    let echoScope='recent',echoTypes=new Set(['fill','situation','spell']),echoPhase='setup',echoChapterSet=new Set([0]),quizQuestions=[],quizHint=false;
+    let echoMode='demo',echoScope='recent',echoTypes=new Set(['fill','situation','spell']),echoPhase='setup',echoChapterSet=new Set([0]),quizQuestions=[],quizHint=false;
     let echoCustomBook='all',echoCustomRange='all',echoRangeStart=1,echoRangeEnd=3;
     // Demo has one published book; the selector layout supports future books without one-by-one ticking.
     const availablePublishedBooks=()=>BOOKS.filter(b=>b.status==='demo');
@@ -99,7 +99,7 @@
     function asMeaning(c){return WORDS[c]?`${safe(c)}：${safe(WORDS[c].meaning)}`:safe(c)}
     function reportExamResult(q,ans,hint=false){if(quizAnswer!==null)return;quizAnswer=ans;const ok=ans.toLowerCase().trim()===q.word; if(ok)quizScore++;recordAnswer(q.word,ok,hint);renderQuiz()}
 
-    function navigate(to){if(view==='echo'&&window.MiaowuCloudEcho?.running()){window.MiaowuCloudEcho.leave(to);return}if(view==='echo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='reader'&&to!=='reader')stopReading();view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words')renderWords();if(to==='echo')renderQuiz();if(to==='account')renderAccount();$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
+    function navigate(to){if(view==='echo'&&echoMode==='cloud'&&window.MiaowuCloudEcho?.running()){window.MiaowuCloudEcho.leave(to);return}if(view==='echo'&&echoMode==='demo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='reader'&&to!=='reader')stopReading();view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words')renderWords();if(to==='echo')renderQuiz();if(to==='account')renderAccount();$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
 
     // D1 is the primary reader source. Legacy chapter sample stays unreachable from default book cards.
     // No paid chapter bodies are bundled into app.js or held in a client-side book constant.
@@ -608,11 +608,34 @@
       $('echoResume').onclick=closeModal;
       $('echoConfirmExit').onclick=()=>{closeModal();echoPhase='setup';quizQuestions=[];quizAnswer=null;quizIndex=0;quizScore=0;quizHint=false;if(destination==='setup')renderQuiz();else navigate(destination)};
     }
+    function renderEchoModeSwitch(){
+      const area=$('echoModeSwitch');
+      if(!area)return;
+      const playing=echoMode==='cloud'?!!window.MiaowuCloudEcho?.running():
+        echoPhase==='playing'&&quizIndex<quizQuestions.length;
+      if(playing){area.innerHTML='';return}
+      area.innerHTML='<div class="echo-mode-switch" role="group" aria-label="选择剧情回声模式">'+
+        '<button type="button" class="echo-mode-button '+(echoMode==='demo'?'selected':'')+
+        '" data-echo-mode="demo" aria-pressed="'+(echoMode==='demo')+'">✦ 故事演示练习</button>'+
+        '<button type="button" class="echo-mode-button '+(echoMode==='cloud'?'selected':'')+
+        '" data-echo-mode="cloud" aria-pressed="'+(echoMode==='cloud')+'">☁ 云端正式练习</button></div>'+
+        '<p class="echo-mode-note">'+(echoMode==='demo'?
+        '《玫瑰未落幕》的演示题目 · 练习记录仅保存在当前浏览器，不计入云端账号。':
+        '仅从已发布、已读完且有阅读权限的正式章节出题，学习记录同步到账号。')+'</p>';
+      area.querySelectorAll('[data-echo-mode]').forEach(button=>button.onclick=()=>{
+        const next=button.dataset.echoMode;
+        if(next===echoMode)return;
+        echoMode=next;
+        if(next==='demo')echoPhase='setup';
+        renderQuiz();
+      });
+    }
     function renderQuiz(){
       const c=$('quizContainer');
-      if(window.MiaowuCloudEcho){
+      renderEchoModeSwitch();
+      if(echoMode==='cloud'&&window.MiaowuCloudEcho){
         if(!user){
-          c.innerHTML='<div class="echo-panel"><span class="eyebrow">STORY ECHO · YOUR REAL MEMORY</span><h3>登录后，从读过的故事里练习</h3><p class="echo-tip">云端剧情回声仅使用已读完、仍有权限阅读的章节词汇，练习结果同步到你的账号。</p><button class="primary" id="cloudEchoLogin">登录我的书房 →</button></div>';
+          c.innerHTML='<div class="echo-panel"><span class="eyebrow">STORY ECHO · YOUR REAL MEMORY</span><h3>登录后，从读过的故事里练习</h3><p class="echo-tip">云端剧情回声仅使用已读完、仍有权限阅读的正式章节。暂时也可以切换上方的「故事演示练习」体验三种玩法。</p><button class="primary" id="cloudEchoLogin">登录我的书房 →</button></div>';
           $('cloudEchoLogin').onclick=showLogin;
           return;
         }
@@ -622,7 +645,7 @@
       if(echoPhase==='setup'){
         let chapters=echoAvailableChapters();
         const selection=echoScope==='custom'?`<div class="echo-batch-filter"><div class="echo-filter-caption"><strong>按书籍与章节范围快速筛选</strong><small>无需逐章勾选，支持未来多书目</small></div><div class="echo-filter-row"><label>小说<select id="echoBookSelect"><option value="all">全部已读书籍</option>${availablePublishedBooks().map(b=>`<option value="${b.id}" ${echoCustomBook===b.id?'selected':''}>《${safe(b.name)}》</option>`).join('')}</select></label><label>章节范围<select id="echoRangeSelect">${[{id:'all',name:'全部已读章节'},{id:'recent3',name:'最近3章'},{id:'recent10',name:'最近10章'},{id:'range',name:'指定起止章节'}].map(x=>`<option value="${x.id}" ${echoCustomRange===x.id?'selected':''}>${x.name}</option>`).join('')}</select></label></div>${echoCustomRange==='range'?`<div class="echo-range-row"><label>从第 <input type="number" id="echoFrom" min="1" max="${CHAPTERS.length}" value="${echoRangeStart}" aria-label="起始章节"> 章</label><label>至第 <input type="number" id="echoTo" min="1" max="${CHAPTERS.length}" value="${echoRangeEnd}" aria-label="结束章节"> 章</label></div>`:''}<p class="echo-tip">当前可复习 ${echoCustomChapters().length} 个已读演示章节 · 未阅读及未解锁章节不会纳入练习。</p></div>`:'';
-        c.innerHTML=`<div class="echo-panel"><span class="eyebrow">DESIGN YOUR MEMORY SESSION</span><h3 class="echo-selector-heading">选一种喜欢的复习方式</h3><p class="echo-tip">可以只练一种，也可以混合两种或三种玩法。每轮约5–8题，中途随时可退出或换玩法。</p><div class="echo-selector-title">01 · 选择练习范围</div><div class="echo-radio-group">${[{id:'chapter',t:'本章复习'},{id:'recent',t:'最近章节'},{id:'custom',t:'自选已读章节'},{id:'due',t:'今日到期词汇'}].map(x=>`<button class="echo-radio ${echoScope===x.id?'selected':''}" data-scope="${x.id}">${x.t}</button>`).join('')}</div>${selection}<div class="echo-selector-title">02 · 选择玩法（至少一项）</div><div class="echo-options">${ECHO_TYPES.map(t=>`<button data-type="${t.id}" class="echo-option ${echoTypes.has(t.id)?'selected':''}" aria-pressed="${echoTypes.has(t.id)}"><span class="echo-option-title">${t.symbol} ${t.title}</span><span class="echo-option-sub">${t.desc}</span><span class="echo-check">${echoTypes.has(t.id)?'✓ 已选择':'○ 点击加入'}</span></button>`).join('')}</div><div class="echo-footer-actions"><span class="echo-tip">${echoTypes.size}种玩法 · 本范围可出 ${quizPool().length} 道演示题</span><button class="primary" id="beginEcho">开始剧情回声 →</button></div></div>`;
+        c.innerHTML=`<div class="echo-panel"><span class="eyebrow">DESIGN YOUR MEMORY SESSION</span><h3 class="echo-selector-heading">选一种喜欢的复习方式</h3><p class="echo-tip">《玫瑰未落幕》演示题库，仅保存在本机浏览器；可以只练一种，也可以混合三种玩法，每轮最多8题。</p><div class="echo-selector-title">01 · 选择练习范围</div><div class="echo-radio-group">${[{id:'chapter',t:'本章复习'},{id:'recent',t:'最近章节'},{id:'custom',t:'自选已读章节'},{id:'due',t:'今日到期词汇'}].map(x=>`<button class="echo-radio ${echoScope===x.id?'selected':''}" data-scope="${x.id}">${x.t}</button>`).join('')}</div>${selection}<div class="echo-selector-title">02 · 选择玩法（至少一项）</div><div class="echo-options">${ECHO_TYPES.map(t=>`<button data-type="${t.id}" class="echo-option ${echoTypes.has(t.id)?'selected':''}" aria-pressed="${echoTypes.has(t.id)}"><span class="echo-option-title">${t.symbol} ${t.title}</span><span class="echo-option-sub">${t.desc}</span><span class="echo-check">${echoTypes.has(t.id)?'✓ 已选择':'○ 点击加入'}</span></button>`).join('')}</div><div class="echo-footer-actions"><span class="echo-tip">${echoTypes.size}种玩法 · 本范围可出 ${quizPool().length} 道演示题</span><button class="primary" id="beginEcho">开始剧情回声 →</button></div></div>`;
         c.querySelectorAll('[data-scope]').forEach(el=>el.onclick=()=>{echoScope=el.dataset.scope;renderQuiz()});
         c.querySelectorAll('[data-type]').forEach(el=>el.onclick=()=>{const id=el.dataset.type;if(echoTypes.has(id)&&echoTypes.size>1)echoTypes.delete(id);else echoTypes.add(id);renderQuiz()});
         if($('echoBookSelect'))$('echoBookSelect').onchange=e=>{echoCustomBook=e.target.value;renderQuiz()};
@@ -634,7 +657,7 @@
       }
       if(quizIndex>=quizQuestions.length){
         echoPhase='done';
-        c.innerHTML=`<div class="quiz-card" style="text-align:center"><span class="eyebrow">MIAOWU · STORY ECHO</span><div class="stamp" style="margin:17px auto">喵呜<br>✦<br><small>记忆印章</small></div><h3>这次找回了 ${quizScore}/${quizQuestions.length} 道题</h3><p class="echo-tip">有些词只差下一次相遇。答错的目标词已进入后续待复习计划。</p><div class="hero-actions" style="justify-content:center"><button class="primary" id="quizRestart">重新选择玩法</button><button class="secondary-btn" id="quizBack">回到书架</button></div></div>`;
+        c.innerHTML=`<div class="quiz-card" style="text-align:center"><span class="eyebrow">MIAOWU · STORY ECHO</span><div class="stamp" style="margin:17px auto">喵呜<br>✦<br><small>记忆印章</small></div><h3>这次找回了 ${quizScore}/${quizQuestions.length} 道题</h3><p class="echo-tip">演示复习记录仅保存在当前浏览器，不会同步到正式账号。答错的词会加入本机待复习计划。</p><div class="hero-actions" style="justify-content:center"><button class="primary" id="quizRestart">重新选择玩法</button><button class="secondary-btn" id="quizBack">回到书架</button></div></div>`;
         $('quizRestart').onclick=()=>{echoPhase='setup';renderQuiz()};$('quizBack').onclick=()=>navigate('library');return;
       }
       const q=quizQuestions[quizIndex],answered=quizAnswer!==null,correct=answered&&quizAnswer.trim().toLowerCase()===q.word;
@@ -645,7 +668,7 @@
         answerHTML=`<h3>${safe(q.q)}</h3><div class="answer-grid">${q.choices.map(w=>`<div class="answer-choice ${answered?'answered ':''}${answered?(w===q.word?'correct':w===quizAnswer?'wrong':''):''}"><button class="answer-pick" data-answer="${safe(w)}" ${answered?'disabled':''}>${safe(w)}${answered&&w===q.word?' ✓':''}</button>${answered?`<div class="answer-extra"><span>${safe(WORDS[w].meaning)}</span><button class="answer-speak" data-say="${safe(w)}" aria-label="播放 ${safe(w)} 的发音" title="听 ${safe(w)} 发音">♫</button></div>`:''}</div>`).join('')}</div>`;
       }
       const feedback=answered?`<div class="quiz-response"><strong>${correct?'答对啦！小猫给你盖一枚记忆印章。':'这次还没找回它，看看正确答案。'}</strong><div class="quiz-correct-answer">${safe(q.word)} <span>${safe(WORDS[q.word].phonetic)} · ${safe(WORDS[q.word].meaning)}</span><button type="button" id="quizCorrectSay" class="answer-speak" aria-label="播放正确单词发音">♫</button></div><div class="story-reveal"><strong>故事原句</strong><br>${safe(WORDS[q.word].context)}</div>${q.type==='spell'?`<p class="score-status">${quizHint?'本次使用提示，记录为辅助回忆。':'本次按拼写结果更新词汇复习记录。'}</p>`:''}</div>`:'';
-      c.innerHTML=`<div class="quiz-card"><div class="quiz-kicker"><span>STORY ECHO · ${ECHO_TYPES.find(x=>x.id===q.type).title}</span><span>${quizIndex+1} / ${quizQuestions.length}</span></div><div class="quiz-exit-row"><span>当前练习 · 随时可以更换玩法</span><button class="quiet-exit" type="button" id="echoExit">✕ 退出／换玩法</button></div>${answerHTML}${feedback}<div class="quiz-foot"><small>${answered?'已提交答案已保存；可继续或退出。':'根据原剧情回忆；答题后直接显示各选项释义。'}</small><button id="quizNext" class="primary" ${!answered?'disabled':''}>${quizIndex===quizQuestions.length-1?'查看本轮结果':'下一题 →'}</button></div></div>`;
+      c.innerHTML=`<div class="quiz-card"><div class="quiz-kicker"><span>STORY ECHO · ${ECHO_TYPES.find(x=>x.id===q.type).title}</span><span>${quizIndex+1} / ${quizQuestions.length}</span></div><div class="quiz-exit-row"><span>当前练习 · 随时可以更换玩法</span><button class="quiet-exit" type="button" id="echoExit">✕ 退出／换玩法</button></div>${answerHTML}${feedback}<div class="quiz-foot"><small>${answered?'演示答案已在本机记录；可继续或退出。':'演示题目只在本机记录；根据原剧情回忆。'}</small><button id="quizNext" class="primary" ${!answered?'disabled':''}>${quizIndex===quizQuestions.length-1?'查看本轮结果':'下一题 →'}</button></div></div>`;
       $('echoExit').onclick=()=>confirmEchoExit('setup');
       c.querySelectorAll('[data-answer]').forEach(el=>el.onclick=()=>reportExamResult(q,el.dataset.answer));
       c.querySelectorAll('[data-say]').forEach(el=>el.onclick=()=>speakWord(el.dataset.say));
@@ -1018,7 +1041,7 @@
       $('playerPause').textContent='Ⅱ';speakNext();
     }
     function speakNext(){if(!speaking)return;if(speakIndex>=utterances.length){stopReading();toast('本章朗读结束');return}const seg=utterances[speakIndex++],u=new SpeechSynthesisUtterance(seg.text);u.lang=seg.lang;u.rate=seg.lang==='en-US'?.86:.94;u.onend=()=>{if(speaking)speakNext()};u.onerror=(e)=>{if(speaking&&e.error!=='interrupted')speakNext()};window.speechSynthesis.speak(u)}
-    document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=openFirstCloudBook;$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{if(activeCloud?.chapterId)window.MiaowuCloudEcho?.useChapter(activeCloud.chapterId);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);$('storyText').style.fontSize=fontSize+'px'};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);$('storyText').style.fontSize=fontSize+'px'};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=stopReading;$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
+    document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=openFirstCloudBook;$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{if(activeCloud?.chapterId){echoMode='cloud';window.MiaowuCloudEcho?.useChapter(activeCloud.chapterId)}else{echoMode='demo';echoScope='chapter'}navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);$('storyText').style.fontSize=fontSize+'px'};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);$('storyText').style.fontSize=fontSize+'px'};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=stopReading;$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
     $('cloudFinishReading').onclick=finishCloudChapter;
     window.MiaowuChapterWords?.configure({
       request:serverRequest,refresh:refreshCloudLearning,
