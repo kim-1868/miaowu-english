@@ -101,7 +101,8 @@ test("S9-C withdrawal atomically unpublishes chapters without deleting rights or
  }
  const logs=await (await call(f.env,base+"/audit")).json();
  assert.equal(logs.events[0].event_type,"book.withdraw");
- assert.equal(JSON.stringify(logs).includes(submission().reason),false);
+ assert.equal(logs.events[0].reason_note,submission().reason);
+ assert.equal(JSON.stringify(logs).includes(TOKEN),false);
  const again=await call(f.env,base+"/withdraw","POST",submission());
  assert.equal(again.status,200);assert.equal((await again.json()).alreadyApplied,true);
  assert.equal(f.sqlite.prepare("SELECT COUNT(*) AS n FROM ops_audit_events").get().n,1);
@@ -122,7 +123,8 @@ test("S9-C disabled or unconfigured console, withdrawal switch and wrong roles f
 test("S9-C withdrawal rejects incorrect title, missing acknowledgment and invalid origin",async()=>{
  const f=fixture();await createOperator(f);
  for(const bad of [
-  {confirmTitle:"wrong"},{confirmAction:"YES"},{reason:"short"},{requestId:"bad"}
+  {confirmTitle:"wrong"},{confirmAction:"YES"},{reason:"short"},{requestId:"bad"},
+  {reason:"请勿将密钥 "+TOKEN+" 记录到审计日志中。 "}
  ]){
   const r=await call(f.env,base+"/withdraw","POST",submission(bad));
   assert.equal(r.status,bad.confirmTitle?409:400);
