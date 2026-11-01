@@ -3,14 +3,16 @@
 import { randomBytes, randomUUID, createHmac } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import {assertIssuableCategory} from "./voucher-catalog.mjs";
 
 const secret = process.env.ACTIVATION_PEPPER || "";
 const category = process.env.CATEGORY_ID || "";
 const count = Number(process.env.COUNT || 0);
-if (secret.length < 32 || !["cet4","cet6","postgrad","ielts"].includes(category) ||
-    !Number.isInteger(count) || count < 1 || count > 1000) {
+if (secret.length < 32 || !Number.isInteger(count) || count < 1 || count > 1000) {
   throw new Error("Require ACTIVATION_PEPPER (32+ characters), CATEGORY_ID and COUNT=1..1000");
 }
+// No issuance of future categories before their explicit sales approval.
+assertIssuableCategory(category);
 const folder = path.resolve("private-output");
 await mkdir(folder, { recursive: true, mode: 0o700 });
 const prefix = category.toUpperCase();
