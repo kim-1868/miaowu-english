@@ -22,7 +22,7 @@ test("S56 six anchor-specific Echo contexts use natural semantics and preserve o
   [7,"contact","姐姐何时最后一次 contact 家人","姐姐最后一次 contact 家人的时间"],
   [10,"decision","做出一个艰难的 decision","做一个 decision"],
   [10,"privacy","录音涉及姐姐的 privacy","录音属于姐姐的 privacy"],
-  [11,"seal","木箱上的 seal 仍然完好","封条上的 seal 与自己手里的回执编号一致"]
+  [11,"seal","封存条放进保护套，给他们看上面完整的 seal","封条上的 seal 与自己手里的回执编号一致"]
  ];
  for(const [chapter,word,expected,banned] of checks){
   const {paragraph,q}=find(chapter,word);
