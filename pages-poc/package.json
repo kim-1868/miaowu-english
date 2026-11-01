@@ -1,0 +1,14 @@
+{
+  "name": "miaowu-pages-access-poc",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node ./build.mjs",
+    "check": "node --check ./build.mjs && node --check ./entry.mjs",
+    "test": "node --test ./entry.test.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
