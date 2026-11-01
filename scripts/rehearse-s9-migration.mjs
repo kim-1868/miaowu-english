@@ -22,9 +22,16 @@ function assert(cond,code){if(!cond)throw Error(code)}
 function tablePresent(db,name){
   return Boolean(db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?").get(name));
 }
-function digest(db,table){
-  // Never log database rows, usernames, activation codes, tokens or hashes.
-  const rows=db.prepare("SELECT * FROM "+table+" ORDER BY rowid").all();
+function columnNames(db,table){
+  // Table names are an internal constant allowlist, never untrusted input.
+  return db.prepare("PRAGMA table_info("+table+")").all().map(row=>row.name);
+}
+function digest(db,table,originalColumns){
+  // Compare only fields that existed BEFORE the migration. New columns are
+  // validated separately; SELECT * would report a false data mutation after
+  // ALTER TABLE books ADD COLUMN last_release_request_id.
+  const projection=originalColumns.map(col=>'"'+col.replaceAll('"','""')+'"').join(",");
+  const rows=db.prepare("SELECT "+projection+" FROM "+table+" ORDER BY rowid").all();
   return createHash("sha256").update(JSON.stringify(rows)).digest("hex");
 }
 function validate(db){
@@ -45,7 +52,10 @@ export function rehearseS9Migration(backupSql,sql007,sql008){
     assert(!tablePresent(db,"d1_migrations"),"UNEXPECTED_MIGRATION_LEDGER");
     assert(db.prepare("SELECT 1 FROM pragma_table_info('books') WHERE name='last_release_request_id'").get()===undefined,
       "S9_COLUMN_ALREADY_INSTALLED");
-    const original=new Map(existingTables.map(t=>[t,digest(db,t)]));
+    const original=new Map(existingTables.map(t=>{
+      const columns=columnNames(db,t);
+      return [t,{columns,digest:digest(db,t,columns)}];
+    }));
     const counts=Object.fromEntries(["books","chapters","users","entitlements",
       "reading_progress","user_words","review_events"].map(t=>[
        t,db.prepare("SELECT COUNT(*) AS n FROM "+t).get().n]));
@@ -54,7 +64,18 @@ export function rehearseS9Migration(backupSql,sql007,sql008){
     for(const t of newTables)assert(tablePresent(db,t),"S9_TABLE_NOT_CREATED_"+t);
     assert(db.prepare("SELECT 1 FROM pragma_table_info('books') WHERE name='last_release_request_id'").get()!==undefined,
       "S9_COLUMN_MISSING");
-    for(const [t,before] of original)assert(digest(db,t)===before,"ORIGINAL_ROWS_CHANGED_"+t);
+    for(const [t,before] of original){
+      const currentColumns=columnNames(db,t);
+      const expectedColumns=t==="books"
+        ?[...before.columns,"last_release_request_id"]:before.columns;
+      assert(JSON.stringify(currentColumns)===JSON.stringify(expectedColumns),
+        "UNEXPECTED_SCHEMA_CHANGE_"+t);
+      assert(digest(db,t,before.columns)===before.digest,
+        "ORIGINAL_ROWS_CHANGED_"+t);
+    }
+    // Adding the release request ID must not populate old books implicitly.
+    assert(db.prepare("SELECT COUNT(*) AS n FROM books WHERE last_release_request_id IS NOT NULL").get().n===0,
+      "LEGACY_BOOK_RELEASE_ID_CHANGED");
     assert(db.prepare("SELECT COUNT(*) AS n FROM ops_book_content_versions").get().n===counts.books,
       "BOOK_VERSION_SEED_COUNT_MISMATCH");
     assert(db.prepare("SELECT COUNT(*) AS n FROM ops_operators").get().n===0,
@@ -77,7 +98,8 @@ export function rehearseS9Migration(backupSql,sql007,sql008){
         db.exec("RELEASE s9_trigger_rehearsal");
       }
     }
-    for(const [t,before] of original)assert(digest(db,t)===before,"TRIGGER_TEST_CHANGED_"+t);
+    for(const [t,before] of original)
+      assert(digest(db,t,before.columns)===before.digest,"TRIGGER_TEST_CHANGED_"+t);
     validate(db);
     return {dryRunPassed:true,restoredLocally:true,remoteDatabaseModified:false,
       oldRowsPreserved:true,oldTablesChecked:existingTables.length,
