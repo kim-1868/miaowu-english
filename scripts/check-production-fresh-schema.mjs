@@ -22,8 +22,8 @@ export const EXPECTED_NEW_PRODUCTION_D1="649c71b3-340c-49bf-b806-3d39256851d3";
 export const EXPECTED_CATEGORY_SLUGS=["cet4","cet6","ielts","postgrad"];
 
 export function assertCleanDatabase(db){
- const tables=db.prepare("SELECT name FROM sqlite_master WHERE type IN ('table','view') AND name NOT LIKE 'sqlite_%'").all();
- if(tables.length)throw Error("NOT_A_FRESH_EMPTY_DATABASE: "+tables.length+" existing tables/views");
+ const tables=db.prepare("SELECT name FROM sqlite_master WHERE type IN ('table','view') AND name NOT LIKE 'sqlite_%' AND name <> '_cf_KV'").all();
+ if(tables.length)throw Error("NOT_A_FRESH_EMPTY_DATABASE: "+tables.length+" existing application tables/views");
 }
 export function createLocalFreshSchema(){
  const db=new DatabaseSync(":memory:");
