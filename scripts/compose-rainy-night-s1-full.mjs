@@ -11,6 +11,33 @@ const TOKEN=/\[\[([a-z]+)\]\]/g;
 const fail=code=>{throw Error("RAINY_NIGHT_S1: "+code)};
 export function composeRainyNightSeasonDraft(){
   const {bundle}=composeRainyNightDraft();
+  // Human-readable Chinese translations for the original 36 pilot examples;
+  // these are original editorial translations, not third-party dictionary text.
+  const exampleTranslations={
+    notice:"我注意到桌上有一封信。",envelope:"信封上没有寄件地址。",
+    anonymous:"一位匿名人士发送了这条消息。",familiar:"她的笔迹看起来很熟悉。",
+    handwriting:"我认出了姐姐的笔迹。",disappear:"她在两年前失踪了。",
+    urgent:"那张字条带来了一条紧急警告。",hidden:"书里藏着一条隐藏的信息。",
+    evidence:"我们需要证据，而不是猜测。",access:"只有管理员有权限访问监控文件。",
+    suspicious:"那个陌生人看起来很可疑。",approach:"一名男子走近书店。",
+    recognize:"你认出他的声音了吗？",borrow:"我可以借这本书吗？",
+    hesitate:"她在开门前犹豫了一下。",confirm:"监控能够确认他曾到场。",
+    witness:"一名目击者看见了那件灰色大衣。",reveal:"照片显露出了另一个人。",
+    risk:"她知道信任他意味着风险。",choice:"留下是她自己的选择。",
+    clue:"那张字条给了她一条重要线索。",record:"旧记录上写着另一个名字。",
+    trace:"墨水在卡片上留下了淡淡的痕迹。",identity:"她想知道访客的身份。",
+    document:"文件上的日期是两年前。",investigate:"他们决定调查缺失的那一页。",
+    restore:"他试图修复受损的纸张。",suspect:"她开始怀疑卡片曾被人改动。",
+    detail:"一个细小的细节改变了整件事的含义。",delay:"暴雨导致投递延误。",
+    accurate:"卡片上的时间是准确的。",stamp:"卡片上盖着一枚不同寻常的印章。",
+    warning:"最后一句话是一则警告。",secret:"装订夹层里藏着一个秘密。",
+    respond:"他拒绝回答她的问题。",separate:"那两页纸一直分开放着。"
+  };
+  for(const word of bundle.words){
+    if(!word.exampleZh&&exampleTranslations[word.headword])
+      word.exampleZh=exampleTranslations[word.headword];
+    if(!word.exampleZh)fail("MISSING_INITIAL_TRANSLATION_"+word.headword);
+  }
   bundle.sourceLabel="rainy-night-s1-all12-private-first-draft-not-approved";
   bundle.book.title="【测试】雨夜档案 · 第一季全12章待审核初稿";
   bundle.book.description="原创轻悬疑《雨夜档案》第一季12章内部初稿：包含23:47归还信箱、被错误分类的档案、社区防汛物资登记、姐妹重聚等完整故事主线。文字自然度、CET4词汇等级、音标、读音、语境义与教学效果仍待人工审核。仅供开发校对，禁止公开展示或收费。";
