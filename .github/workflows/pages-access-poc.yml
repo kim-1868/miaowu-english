@@ -1,0 +1,45 @@
+name: Pages access connectivity PoC
+on:
+  pull_request:
+    paths:
+      - "pages-poc/**"
+      - "src/**"
+      - "public/**"
+      - ".github/workflows/pages-access-poc.yml"
+  push:
+    branches:
+      - "dev/pages-access-network-poc"
+    paths:
+      - "pages-poc/**"
+      - "src/**"
+      - "public/**"
+      - ".github/workflows/pages-access-poc.yml"
+permissions:
+  contents: read
+jobs:
+  pages-proof:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pages-poc
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install isolated build dependency
+        run: npm install --no-audit --no-fund
+      - name: Verify Node script syntax
+        run: npm run check
+      - name: Bundle Pages Function and protected static assets
+        run: npm run build
+      - name: Assert all routes stay behind Pages Function except two safe network probes
+        run: |
+          node -e "const fs=require('node:fs');const r=JSON.parse(fs.readFileSync('dist/_routes.json'));if(JSON.stringify(r.include)!=='[\"/*\"]'||r.exclude.length!==0)process.exit(1)"
+          test -f dist/index.html
+          test -s dist/_worker.js
+          test -f dist/__miaowu_pages_asset_probe.txt
+          grep -q "stagingGate" dist/_worker.js
+          grep -q "ACTIVATION_PEPPER" dist/_worker.js
+          test ! -e dist/db
+          test ! -e dist/private-output
