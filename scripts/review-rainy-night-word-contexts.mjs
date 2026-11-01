@@ -6,6 +6,7 @@ import {fileURLToPath} from "node:url";
 import {composeRainyNightSeasonDraft} from "./compose-rainy-night-s1-full.mjs";
 import {buildRainyNightTeachingTrackPlan} from "./plan-rainy-night-teaching-tracks.mjs";
 import {createVocabularyReviewQueue} from "./prepare-rainy-night-vocabulary-review.mjs";
+import {codeSwitchPosRisk} from "../src/editorial-code-switch-lint.js";
 
 function csvCell(value){
  const t=String(value??"");
@@ -36,6 +37,8 @@ export function buildRainyNightOccurrenceReview(bundle){
     const earlier=segments.slice(0,si).map(s=>s.text??s.surface).join("");
     const later=segments.slice(si+1).map(s=>s.text??s.surface).join("");
     const risk=new Set(["POS_SENSE_CONTEXT_UNREVIEWED","ENGLISH_CHINESE_MIX_UNREVIEWED"]);
+    for(const f of codeSwitchPosRisk({partOfSpeech:word.partOfSpeech,before:earlier,after:later}))
+      risk.add(f);
     if(counts.get(word.id)>1)risk.add("SAME_WORD_REPEATED_IN_PARAGRAPH");
     if(paraWordIds.length>4)risk.add("DENSE_WORD_PARAGRAPH");
     const wordFlags=flagsByWord.get(word.id)||[];
@@ -61,13 +64,18 @@ export function buildRainyNightOccurrenceReview(bundle){
  const flaggedName=[
   "NON_CET4_CORE_TARGET","UK_IPA_NOT_IN_SOURCE",
   "UK_IPA_VARIANT_NEEDS_SENSE_REVIEW","US_ARPA_VARIANT_NEEDS_SENSE_REVIEW",
-  "DENSE_WORD_PARAGRAPH","SAME_WORD_REPEATED_IN_PARAGRAPH"];
+  "DENSE_WORD_PARAGRAPH","SAME_WORD_REPEATED_IN_PARAGRAPH",
+  "CODE_SWITCH_VERB_AFTER_NOMINAL_CLASSIFIER",
+  "CODE_SWITCH_VERB_IN_NOUN_MODIFIER_SLOT",
+  "CODE_SWITCH_ADJECTIVE_HEAD_NOUN_MISSING",
+  "CODE_SWITCH_ADJECTIVE_LINKER_REVIEW"];
  const flags=Object.fromEntries(flaggedName.map(s=>[s,rows.filter(r=>r.reviewFlags.includes(s)).length]));
  const overview={source:"private 12-chapter actual composed draft",
   status:"FULL_CONTEXT_REVIEW_NOT_APPROVED",
   chapterCount:bundle.chapters.length,wordCount:words.size,occurrenceCount:rows.length,
   perChapter:[...totalsByChapter].map(([chapter,occurrences])=>({chapter,occurrences})),
-  flags,unreviewed:rows.length,publicationAllowed:false};
+  flags,unreviewed:rows.length,publicationAllowed:false,
+  syntaxRiskFlagsAreReviewHintsOnly:true};
  if(rows.length!==vocab.overview.totalMentions)
   throw Error("WORD_CONTEXT_REVIEW_COUNT_DRIFT");
  if(new Set(rows.map(r=>r.ref)).size!==rows.length)
