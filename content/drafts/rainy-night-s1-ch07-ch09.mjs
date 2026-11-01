@@ -157,7 +157,7 @@ export const wordRows=[
 ["resident","n.","居民","A resident described the flood.","一位居民描述了洪水。","local resident","当地居民"],
 ["statement","n.","陈述；声明","She checked her statement before signing.","她签名前核对了陈述。","written statement","书面陈述"],
 ["legal","adj.","合法的；法律的","They followed the legal process.","他们遵循了法律程序。","legal procedure","法律程序"],
-["consent","n.","同意；许可","They obtained her consent to record.","他们取得她的录音同意。","written consent","书面同意"],
+["consent","n.","同意；许可","They obtained her consent before recording the interview.","他们在录制访谈前征得了她的同意。","written consent","书面同意"],
 ["gather","v.","收集；聚集","They gathered all available evidence.","他们收集了所有可用证据。","gather information","收集信息"],
 ["secure","adj.","安全的；可靠的","She kept the recording in a secure place.","她把录音存放在安全的地方。","secure storage","安全存储"],
 ["independent","adj.","独立的","An independent expert checked the figures.","一位独立专家核查了数字。","independent review","独立审查"],
@@ -166,6 +166,6 @@ export const wordRows=[
 ["supply","n.","供应品；物资","The shelter needed more supplies.","安置点需要更多物资。","medical supplies","医疗用品"],
 ["shortage","n.","短缺","The storm caused a shortage of clean water.","暴雨导致干净饮水短缺。","water shortage","缺水"],
 ["voice","n.","声音","She recognized her sister's voice.","她认出了姐姐的声音。","familiar voice","熟悉的声音"],
-["recording","n.","录音","The recording lasted thirty seconds.","录音持续了三十秒。","audio recording","音频录音"],
+["recording","n.","录音","The recording lasted about two minutes.","那段录音持续了约两分钟。","audio recording","音频录音"],
 ["survive","v.","幸存；挺过","They hoped to survive the difficult winter.","他们希望熬过艰难的冬天。","survive a crisis","挺过危机"]
 ];
