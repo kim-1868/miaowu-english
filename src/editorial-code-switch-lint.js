@@ -21,7 +21,7 @@ export function codeSwitchPosRisk({partOfSpeech="",before="",after=""}={}){
  }
  if(adjective){
   // "保留 original。" leaves an adjective without its head noun.
-  if(/^(?:[，。！？；]|不该|就|去向|来源)(?:[，。！？；\s]|$)/.test(right) &&
+  if(/^(?:[，。！？；]|不该|就|去向|来源)/.test(right) &&
     /(?:核对|保留|保存|移交|交给|拿到|拿出|留下|保护|检查|找到|要求|收到|存放|收好|签收|递交)\s*$/.test(left))
    flags.push("CODE_SWITCH_ADJECTIVE_HEAD_NOUN_MISSING");
   // "一条 missing 的记录" is worth reviewing for unnecessary 的.
