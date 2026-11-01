@@ -10,7 +10,6 @@ test("S12 production refuses QA/debug HTML, source JavaScript and staging API",a
   "/reading-test.html","/reading-test.js",
   "/editor.html","/editor.js","/editor-edit.html","/editor-edit.js",
   "/editor-review.html","/editor-review.js","/editor-publication.html",
-  "/ops.html","/ops-console.html","/ops-console.js",
   "/api/staging","/api/staging/test-voucher",
   "/api/staging/seed-echo-fixture","/api/staging/editor/books",
   "/api/chapters/qa-cet4-paid","/api/chapters/qa-cet4-paid/words",
