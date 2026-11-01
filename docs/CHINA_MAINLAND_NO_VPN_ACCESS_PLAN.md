@@ -12,6 +12,28 @@
 - 目前的页面仍受到 staging reviewer 预览口令保护。绑定域名不会默认将其变成公开正式产品，不能直接去掉防护。
 - Cloudflare 全球网络不保证大陆可达性与延迟。Cloudflare China Network 要 Enterprise + 额外服务 + 备案/ICP 及内容审核，不符合本阶段低成本路线。不能把“用了 Cloudflare”误判为“中国境内加速”。
 
+## 用户提供的直接竞品参考：story-verification.pages.dev
+
+参考：https://story-verification.pages.dev
+
+可直接从域名形态确定：这是 **Cloudflare Pages 的默认 `pages.dev` 项目域名**，无需为此默认域名单独付费购买独立域名；它不能证明该网站已配自有域名，更不能证明在中国大陆网络可以免 VPN 使用。
+
+此前产品对标观察：分类故事书架、试读、章节阅读、朗读/词卡、注册、订单号或兑换码激活等业务模式。属于可借鉴的产品流程，但**不能在未获得网站源代码或网络响应检查的情况下断定竞品的数据库、支付、登录权限、设备绑定真实实现**。当前外部检查未能成功读取目标站页面 HTML 或源文件，因此不要把该站后端技术细节当成已核实事实。
+
+妙屋英语当前已实现 Worker 静态页面 + D1 私有正文/权限 + 云端收藏、完成进度与剧情回声，且已有 staging 账号实机联调记录。为了模仿 `pages.dev` 域名而转到 Cloudflare Pages 不会自动改善中国大陆访问，更没有必要重做已有学习后端。
+
+**注册商选择**：优先从阿里云万网或腾讯云购买可自由修改 NS 的自有品牌 `.com`，不要现在就迁移注册商至 Cloudflare Registrar；后者更换权威 DNS 时必须先迁出注册关系，不利于验证失败时快速改换运营商或服务。参考：https://developers.cloudflare.com/dns/nameservers/update-nameservers/
+
+2026-11-01 查询价格：阿里云万网英文 `.com` 标准 **注册 85 元 / 首年，续费 95 元 / 年**（依实际结算、具体名字是否属于溢价域名会变）；腾讯云标准 `.com` **续费 90 元 / 年**。来源：https://wanwang.aliyun.com/help/price.html 和 https://buy.cloud.tencent.com/domain/price?type=renew 。避免用超低首年价格、次年几百的后缀，仅为节省首年费用而选择非品牌后缀。
+
+**域名命名备选**：`miaowuenglish.com`、`miaowu-english.com`、`readmiaowu.com`；仅为查询候选，尚**未证明可注册，也没有核查商标冲突或溢价**。选定后可用 `test.<根域名>` 指向 staging，主域名保留给未来正式线上产品；用子域名不会额外增加域名注册费。购买前须完成注册商域名可用性及续费价格核对。
+
+**真实大陆连通试验**：
+
+- 首先用户关闭 VPN 直接尝试参考站 `https://story-verification.pages.dev/`，说明「能打开 / 不能打开」及网络类型。参考站如果能打开，只说明该 URL 在该网络当下可达，不能直接证明 Pages 平台长期可达。
+- 为妙屋英语自己的域名开 `test.` 子域名绑定现有 Worker Custom Domain，真实关闭 VPN 测网站与 API。如果只看首屏、未检查账号登录与云端保存，不得确认业务可用。
+- 若域名后 4G/5G/宽带仍无法稳定连接，继续按本文第二阶段考虑非 Cloudflare 入口/同源后端部署。不能简单通过换域名后缀或从 Workers 切换 Pages 宣称免 VPN 保证。
+
 ## 第一阶段（推荐）：独立域名挂到原 staging Worker，零数据库迁移
 
 **前置必须由用户提供或完成：** 确认是否已有自己控制的独立域名；如果没有，则选域名注册购买（费用/可注册性须另行确认），不要注册与他人商标冲突的名称。
