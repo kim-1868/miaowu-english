@@ -33,26 +33,34 @@ async function available(env,user,url){
   const to=Number(url.searchParams.get("to")||300);
   if(!Number.isInteger(from)||!Number.isInteger(to)||from<1||to>300||from>to)
     return fail("INVALID_CHAPTER_RANGE");
-  const rows=await exec(env,"SELECT ch.id chapter_id,ch.chapter_no,ch.book_id,b.title book_title,"+
-    "cw.context_sentence,w.id word_id,w.headword,w.phonetic_uk,w.phonetic_us,"+
-    "w.meaning_zh,w.part_of_speech,w.example_en,w.example_zh "+core+
-    " ORDER BY p.updated_at DESC,ch.chapter_no DESC,cw.context_anchor ASC LIMIT 600",
-    user.id).all();
-  let data=rows.results||[];
+  // Filter in SQL before LIMIT. A completed 12-chapter book already has 733
+  // occurrences: filtering in JS *after* LIMIT silently hid older chapters
+  // and older due words, even when their owner had legitimate access.
+  const binds=[user.id];
+  let scoped=core;
   if(scope==="chapter"){
     if(!chapterId)return fail("CHAPTER_REQUIRED");
-    data=data.filter(x=>x.chapter_id===chapterId);
+    scoped+=" AND ch.id=?";
+    binds.push(chapterId);
   }else if(scope==="custom"){
-    if(bookId)data=data.filter(x=>x.book_id===bookId);
-    data=data.filter(x=>x.chapter_no>=from&&x.chapter_no<=to);
-  }else if(scope==="recent"){
+    if(bookId){scoped+=" AND b.id=?";binds.push(bookId)}
+    scoped+=" AND ch.chapter_no BETWEEN ? AND ?";
+    binds.push(from,to);
+  }else if(scope==="due"){
+    scoped+=" AND EXISTS(SELECT 1 FROM user_words uw "+
+      "WHERE uw.user_id=p.user_id AND uw.word_id=cw.word_id "+
+      "AND uw.status!='mastered' AND uw.due_at IS NOT NULL "+
+      "AND uw.due_at<=CURRENT_TIMESTAMP)";
+  }
+  const rows=await exec(env,"SELECT ch.id chapter_id,ch.chapter_no,ch.book_id,b.title book_title,"+
+    "cw.context_sentence,w.id word_id,w.headword,w.phonetic_uk,w.phonetic_us,"+
+    "w.meaning_zh,w.part_of_speech,w.example_en,w.example_zh "+scoped+
+    " ORDER BY p.updated_at DESC,ch.chapter_no DESC,cw.context_anchor ASC LIMIT 600",
+    ...binds).all();
+  let data=rows.results||[];
+  if(scope==="recent"){
     const ids=[...new Set(data.map(x=>x.chapter_id))].slice(0,3);
     data=data.filter(x=>ids.includes(x.chapter_id));
-  }else{
-    const due=await exec(env,"SELECT word_id FROM user_words WHERE user_id=? "+
-      "AND status!='mastered' AND due_at IS NOT NULL AND due_at<=CURRENT_TIMESTAMP",user.id).all();
-    const dueIds=new Set((due.results||[]).map(x=>x.word_id));
-    data=data.filter(x=>dueIds.has(x.word_id));
   }
   const seen=new Set();
   data=data.filter(x=>{if(seen.has(x.word_id))return false;seen.add(x.word_id);return true}).slice(0,60);
