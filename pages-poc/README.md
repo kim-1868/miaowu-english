@@ -1,90 +1,81 @@
-# 妙屋英语 · 中国大陆无 VPN 入口实验（Cloudflare Pages PoC）
+# 妙屋英语 Pages 免 VPN 访问验证｜Service Binding 版
 
-> 2026-11-01：用户确认 `story-verification.pages.dev` 在同一网络下关闭 VPN 仍可以访问，而 `miaowu-english-staging.kim10086a.workers.dev` 需要 VPN。**此结论仅代表用户实际测到的这两个 URL，不推导到所有 Pages 服务。**
+更新时间：2026-11-01。**只在测试环境使用，不代表已正式上线。**
 
-## 目标和安全边界
+## 已获真实浏览器验证的事实
 
-- 创建**一个全新的 Pages 项目**，例如 `miaowu-english-access-check`（仅候选名称；新建完成后由 Cloudflare 确定实际 `*.pages.dev` URL）。
-- **不**切换已经在使用的 `miaowu-english-staging` Worker 的部署分支，不创建/修改用户数据，不跑 SQL，不动原 D1 与其备份。
-- `pages-poc/wrangler.jsonc` 仅将 `DB` 绑定到已验证的**staging D1**（`miaowu-english-test`），`APP_ENV=staging`。这里不存在生产数据库绑定。
-- 全部网页与 `/api/*` 经过 `src/staging-gate.js`；**只有两个完全不含账号/数据的探针路径公开**。缺少预览口令时，其他路径 fail-closed 返回 503；有预览口令但未登录读者账号时，付费正文继续被 401 阻断。
-- 该分支不写正式激活码，不启用 S9 `OPS_PUBLICATION_ENABLED`、`OPS_CONSOLE_ENABLED`、`OPS_WITHDRAWAL_ENABLED`，更不能收款。
+用户反馈其中国大陆手机网络在**关闭 VPN**时：
 
-## Cloudflare Pages 创建项目（需要账号持有者在后台操作）
+- 竞品参考站 `https://story-verification.pages.dev/` 可以正常打开；
+- 妙屋英语旧测试入口 `*.workers.dev` 需要 VPN；
+- 新建的 `https://miaowu-english-access-check.pages.dev/__miaowu_pages_function_probe` 和 `/__miaowu_pages_asset_probe.txt` 均返回预期。
 
-进入 **Cloudflare → Workers & Pages → Create application → Pages → Connect to Git**，选择已经授权 GitHub 的仓库 `kim-1868/miaowu-english`，但要**创建新的 Pages 项目**而不是编辑原 Worker。
+这仅证明 Pages **静态资源与动态入口**在一次实际测试中可达，不代表后端登录、云端阅读或跨 ISP 稳定性已经通过。
 
-| 字段 | 输入 |
-|---|---|
-| 项目名称 | `miaowu-english-access-check`（如名称已被占用，可自定义） |
-| Repository | `kim-1868/miaowu-english` |
-| Production branch | `dev/pages-access-network-poc` |
-| Framework preset | `None` |
-| Root directory (advanced) | `pages-poc` |
-| Build command | `npm install --no-audit --no-fund && npm run build` |
-| Build output directory | `dist` |
+## 更安全、更省事的最终 PoC 架构
 
-根目录内的 `wrangler.jsonc` 是 **Pages** 配置，不要选择仓库根部的 `wrangler.jsonc`（那是旧 Worker 配置）。此 Pages 项目在首次构建后还需核对 Settings → Bindings 是否绑定到 **`miaowu-english-test`**，而不是生产库，变量 `APP_ENV=staging`。如配置不一致则**停止，不做登录/测试数据写入**。
+```text
+中国大陆浏览器（不使用 VPN）
+    ↓ https://miaowu-english-access-check.pages.dev/
+Cloudflare Pages Advanced Mode（pages-poc/_worker.js）
+    ├─ /__miaowu_pages_function_probe  → 无用户数据的公开 Function 测试
+    ├─ /__miaowu_pages_asset_probe.txt → 无用户数据的公开静态测试
+    └─ 其余任何路径 → Service binding STAGING_ORIGIN
+                             ↓ Cloudflare 内部调用
+                  Worker: miaowu-english-staging
+                             ├─ 已有 preview reviewer 密钥
+                             ├─ 已有读者身份/授权
+                             ├─ 已有测试 D1: miaowu-english-test
+                             └─ 原有阅读/单词/复习 API
+```
 
-## 第一步：只做网络探针（还不需要敏感密钥）
+Cloudflare 官方明确支持 **Pages Functions → Worker Service Binding**，无需通过公网调用原 `workers.dev`，也无需在 Pages 设置第二份 `ACTIVATION_PEPPER`、`STAGING_PREVIEW_PASSWORD` 或 D1 绑定：
+https://developers.cloudflare.com/pages/functions/bindings/#service-bindings
 
-等待**新 Pages 项目**显示 Ready，复制 Cloudflare 给出的 **实际 `https://...pages.dev`** 地址，分别在关闭 VPN 的中国大陆手机网络和电脑宽带测试：
+安全收益：
+- Pages 不持有任何密码哈希 Pepper、预览口令或 D1 直接读写权限；
+- 原 staging Worker 负责统一保护、审核与访问控制；
+- Pages 缺少 `STAGING_ORIGIN` 绑定时，除了两个无敏感信息探针，所有请求**503 默认拒绝**；
+- **不要**在 Pages 项目上额外设置 D1 绑定或复制 Worker 密钥，避免造成多个地方持有敏感凭据；
+- 不修改现有 Worker 的部署分支、原 D1 数据、任何密码或运营开关。
 
-1. `https://<Cloudflare 实际域名>/__miaowu_pages_function_probe`：应该显示 `"ok":true,"layer":"pages-function"`，这是 **动态 Pages Function** 的连通性测试。
-2. `https://<Cloudflare 实际域名>/__miaowu_pages_asset_probe.txt`：应该显示 `MIAOWU_PAGES_STATIC_ASSET_OK`，这是由 Pages Function 转发的 **静态文件**连通性测试。
-3. `https://<Cloudflare 实际域名>/`：此阶段未安装预览口令时可能显示 `Staging is not ready` 的 503，**这是预期的保护**，并非代表页面无法正常部署。不要为了让首页变成 200 而改掉 Gate。
+## 已创建的 Cloudflare Pages 项目
 
-**关键测试结论**：如果动态 Functions 探针在大陆仍打不开，即使 `pages.dev` 静态站参考页面可以打开，也不能直接采用此方案用于妙屋英语有数据库的完整产品；应回退到自有域名/其他稳定入口。
+`miaowu-english-access-check` （URL 上文），Git 分支 `dev/pages-access-network-poc`，构建根 `pages-poc`、输出目录 `dist`。
 
-## 实际验证记录（2026-11-01）
+**下一步用户只需要核对或添加一个 Service binding：**
 
-用户已在不使用 VPN 的中国大陆真实网络完成两项测试：
+1. 打开 Cloudflare → Workers & Pages → **`miaowu-english-access-check`** → **Settings** → **Bindings**。
+2. 查看是否有 `STAGING_ORIGIN`，且指向同一账号下的 Worker **`miaowu-english-staging`**。
+3. 如没有，选择 **Add → Service binding**，Variable name 填 `STAGING_ORIGIN`，Service 选择 `miaowu-english-staging`；不要选错成其它 Worker。
+4. 保存后在 Pages Deployments 中 **Redeploy** 当前版本，以使运行时绑定生效；不要修改旧 Worker，不运行 D1 migrations。
+5. **不用设置新的密码/密钥、也不用填写 Pages D1 Binding**。
 
-- `https://miaowu-english-access-check.pages.dev/__miaowu_pages_function_probe` → **动态 Pages Function 返回符合预期**。
-- `https://miaowu-english-access-check.pages.dev/__miaowu_pages_asset_probe.txt` → **静态资源返回符合预期**。
+从 Git 自动部署时，根目录内的 `pages-poc/wrangler.jsonc` 亦指定了上述 service 绑定。Cloudflare Wrangler 配置若已自动注入，步骤3**不用重复添加**。若 UI 与该配置不一致，应截图核对并停止后续账户登录。
 
-**仅两项网络探针通过**，不能宣称整站阅读与付费鉴权已经可免 VPN 使用。目前账号/DB/剧情回声尚未验证。
+## 配置正确的验证
 
-已加强 Pages 入口安全：当 `APP_ENV` 不是 `staging` 或 `DB` 未绑定时，除了上述两条无敏感信息探针，所有网页和 API 都直接返回 503。新的动态探针同时返回两项粗粒度状态字段：`stagingConfigured`、`dbBindingPresent`，便于验证配置，不查询用户资料。项目现有 CI 会自动校验该保护逻辑。
+关闭 VPN，通过手机流量重新访问：
 
-## 第二步：仅第一步 Functions 探针通过才做端到端验收
+`https://miaowu-english-access-check.pages.dev/__miaowu_pages_function_probe`
 
-Pages 项目 Settings → Variables and Secrets 设置以下两个原有用途的**测试环境**密钥（保持强度与现有测试 Worker 一致，但不需要发给助手）：
+输出应包含：
+```json
+{ "ok": true, "layer": "pages-function", "serviceBindingPresent": true }
+```
 
-- `STAGING_PREVIEW_PASSWORD`：仅用于 reviewer 预览访问；满足代码最低长度。
-- `ACTIVATION_PEPPER`：若希望同一 D1 原有测试读者密码仍可验证，必须在 Pages 环境中设置与现有 staging Worker **一致**的值；此密钥绝不通过聊天、GitHub、网页或者截图展示。如无法安全配置，停止同库账号验收。
-- **不添加** `OPS_TOKEN_PEPPER`，也不启用任何 S9 运营开关。
+注意第一次部署的旧版本只有 `ok` 和 `layer`，没有 `serviceBindingPresent`；必须确认最新 Pages 自动部署成功后再判断状态。如果 `serviceBindingPresent:false`，先检查 Settings → Bindings 是否设置并 Redeploy。
 
-**安全要求：**
-- 先检查 Pages → Settings → Bindings：`DB` 必须是 **`miaowu-english-test`**，不是任何将来正式用的 D1。若已经从 `pages-poc/wrangler.jsonc` 自动导入此绑定，不要重复添加；若不存在，按 Cloudflare 官方 Pages D1 绑定 UI 添加。 
-- 检查 Pages → Settings → Variables and Secrets（Production）：`APP_ENV` 必须是普通变量 `staging`。如 `wrangler.jsonc` 生成的配置已生效，就不要配置冲突的值。
-- `STAGING_PREVIEW_PASSWORD` 要用 Pages 的 **Encrypt** Secret，最少16字符。可以设置与旧 staging 预览相同的私有值，也可设一个新的，仅作为新 Pages 的 reviewer 访问密码。
-- `ACTIVATION_PEPPER` **必须与原 Worker 测试环境的值完全相同**，否则原测试读者密码验证会失败，同一 D1 后续生成/校验的兑换码也不一致。Cloudflare 通常不会再次显示已保存的 Secret 明文：如果最初没另行安全保存它，**不要随意新建不同值绑定同一个 D1，更不要重置原 Worker 的 Secret**；停止这一步，改走受控的独立测试库或其他安全复用方案。
-- 如页面显示 `Development` / `Preview` / `Production`，本项目的生产分支是内部 QA 测试分支，故应在 **Pages Production 环境** 设置配置；这里的 `Production` **只指 Pages 部署槽位，并不表示已开启用户商业产品**。
-- 配好绑定和 Secret 后需要在新 Pages 项目里 **Retry deployment / Redeploy**，使运行时配置刷新。不要在旧 Worker 项目上操作。
-- 保留 S9 运营开关关闭，不用再执行任何 D1 migrations。
+若 Service binding 已注入，接着访问根路径 `/`：
 
-需要重新部署 Pages 项目使绑定和环境变量生效。切记：**不要将密钥放入 Pages 构建命令参数、GitHub 环境变量、仓库文件、截图或聊天**；只能用 Cloudflare Pages 的加密 Secrets。
+- 尚未经过 reviewer 的浏览器：原 staging Worker 应返回 HTTP 401、要求 reviewer 预览验证；
+- 使用原有 reviewer 预览密钥（仅在自己的设备输入，不在聊天公开），之后用原测试读者账号登录；
+- 新域名首次登录需重新设置 host-only Cookie，**不会删除原 D1 里的收藏和阅读进度**；
+- 验证 `/api/auth/me` 是否显示已登录（不分享账号身份）、四级 QA 章节（游客 401 / 有权限 200）、`promise` 云端藏书票、QA 第3章已读完状态；
+- 回到剧情回声，验证练习可提交、成功反馈，适当核对后台 D1 只读记录。无需创建新账号或兑换码。
 
-此时：
-- 使用原 `reviewer` 预览身份进入新 Pages 站点；
-- 再使用现有测试**读者账号**登录；
-- 检查四级 QA 试读、已授权章节、`promise` 云端收藏与「本章已读完」状态、剧情回声答题。新域名的 host-only Cookie 与原 Worker 不共享，读者需重新登录，云端 D1 数据仍在。
+## 上线判定
 
-## 结果判定
+上述实际读写验证通过后，才做三网（电信、联通、移动）不同时间段的稳定性测试；实际运营仍需要自有域名、合规隐私和内容/支付审查。
 
-| 情况 | 意义 |
-|---|---|
-| 静态探针和 Functions 探针都可在大陆免 VPN 打开 | 具备继续进行真实账号/读写测试的条件，**尚不能宣称商用稳定** |
-| 只有静态探针能打开 | 说明静态资源与动态服务路径可达性不同；不应仅迁前端后继续依赖无 VPN 不可达的后端 |
-| 探针均不能打开 | 当前 Pages 平台入口在该网络不能解决问题，考虑独立域名和其他服务商 |
-| 探针可打开但登录/读写超时 | 仍不符合商业上线条件；需检查 D1 延迟、域名/网关、TLS 和 Functions 执行 |
-
-需测中国电信/联通/移动，以及不同时间段的手机流量与宽带。域名注册放在确认可行之后，避免用户提前支出。
-
-## 来源
-
-- Pages Advanced Mode `_worker.js`：https://developers.cloudflare.com/pages/functions/advanced-mode/
-- Pages D1 绑定：https://developers.cloudflare.com/pages/functions/bindings/
-- Pages Wrangler 配置：https://developers.cloudflare.com/pages/functions/wrangler-configuration/
-- Pages 同一 Git 仓库多项目：https://developers.cloudflare.com/pages/configuration/monorepos/
+Pages 自有 `pages.dev` 域名虽然可能在某网络可达，**不保证长期中国大陆全部地区稳定可达**；始终保留独立域名及其他网络入口的备选路线。
