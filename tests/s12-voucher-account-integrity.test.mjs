@@ -27,14 +27,15 @@ class LocalD1{
  }
  prepare(sql){
   const db=this.db;
-  return {bind(...args){
+  const bound=(args=[])=>{
     const statement=db.prepare(sql);
     return {
       first:async()=>statement.get(...args)??null,
       all:async()=>({results:statement.all(...args)}),
       run:async()=>({success:true,meta:statement.run(...args)})
     };
-  }};
+  };
+  return {...bound(),bind(...args){return bound(args)}};
  }
  async batch(statements){
   this.db.exec("BEGIN IMMEDIATE");
