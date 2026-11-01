@@ -12,7 +12,7 @@ test("S61 opening 2-chapter bilingual passages avoid forced wording and unground
  const cases=[
  [1,5,"细节听起来很 familiar，也不足以据此 confirm 姐姐的行踪","记忆再 familiar"],
  [1,8,"那行字看起来格外 familiar","familiar 感"],
- [1,23,"recognize 出这正是信里警告过的试探","recognize 了姐姐的名字"],
+ [1,23,"recognize 这正是信里警告过的试探","recognize 了姐姐的名字"],
  [1,30,"你能 confirm 是谁让你来的吗","confirm 一下，是谁让你来的吗"],
  [2,28,"但这不能证明有人故意删改了数据","必定留下过另一份记录"],
  [2,32,"两个 separate 文件袋里","故意 separate 保存"]
