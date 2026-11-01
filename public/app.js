@@ -43,8 +43,8 @@
         due?'喵呜，今天有 '+due+' 个单词等你复习':
         seen?'喵呜，你已收藏 '+seen+' 张云端词卡':'喵呜，读一段故事，收藏第一张词卡';
       const hint=!user?'登录后，你的章节进度和藏书票就能跨设备保存。':
-        due?'这些词已到复习时间，记忆练习将在云端剧情回声上线后同步。':
-        '进入记忆藏书票查看保存的单词。剧情回声目前仍为演示玩法。';
+        due?'这些词已经到复习时间。进入剧情回声，完成练习后会更新云端学习记录。':
+        '进入记忆藏书票复习已收藏的单词，也可以到剧情回声回顾已读章节。';
       area.innerHTML='<div class="reminder-cat" aria-hidden="true">'+
         '<svg viewBox="0 0 48 48" width="30" height="30" fill="currentColor">'+
         '<ellipse cx="12" cy="15" rx="4.1" ry="5.6" transform="rotate(-24 12 15)"/>'+
