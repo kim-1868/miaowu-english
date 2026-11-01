@@ -11,7 +11,7 @@ test("S68 chapter seven cannot depart the archive or read proof before the evide
  assert.match(para(7,27),/仍坐在阅览桌边.*即使今天获得一条 recent 线索/);
  assert.doesNotMatch(para(7,27),/走出馆门后|那张几周前的签名放回文件袋/);
  assert.match(para(7,28),/从夹层里取出一张最近的复印件/);
- assert.match(para(7,29),/自愿提交的笔录 transcript/);
+ assert.match(para(7,29),/自愿提交、经授权保存的 transcript/);
  assert.match(para(7,32),/阅览室另一边，一位母亲正带着孩子来借书/);
  assert.doesNotMatch(para(7,32),/离开阅览室时/);
  assert.match(para(7,34),/把阅览桌上的笔记重新翻到开头/);
