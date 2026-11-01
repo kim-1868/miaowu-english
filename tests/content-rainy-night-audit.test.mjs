@@ -14,8 +14,10 @@ test("manuscript audit is derived from 12 actual private chapters, not fabricate
  assert.equal(audit.wordsWithNoMentions,0);
  assert.ok(audit.wordsOnlyOnce+audit.repeatedAcrossChapters<=audit.targetWords);
  assert.ok(audit.repeatedAcrossChapters>=20,"At least 20 core words recur in later chapters");
- assert.ok(audit.crossChapterReusePlanningTarget>audit.repeatedAcrossChapters);
- assert.ok(audit.crossChapterReuseGap>0);
+ assert.equal(audit.crossChapterReuseGap,
+  Math.max(0,audit.crossChapterReusePlanningTarget-audit.repeatedAcrossChapters));
+ assert.ok(audit.repeatedAcrossChapters>=audit.crossChapterReusePlanningTarget,
+  "At least 30% of candidate words now recur across separate chapters");
  assert.equal(audit.wordsWithoutIpa,audit.targetWords);
  assert.equal(audit.wordsWithoutVerifiedLevel,audit.targetWords);
  assert.equal(audit.wordsWithoutTranslations,0);
