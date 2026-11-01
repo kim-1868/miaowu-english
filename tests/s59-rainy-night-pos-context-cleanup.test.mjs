@@ -18,7 +18,7 @@ const cases=[
  [9,"第一次 contact 值班人员的经过","最早的一次 contact"],
  [9,"每次 distribute 物资后留下的记录","每一次 distribute 物资的记录"],
  [9,"independent 核查员复核","independent 人员复核"],
- [9,"写明今后该如何 contact 他","注明日期和 contact 方式"],
+ [8,"写明今后该如何 contact 他","注明日期和 contact 方式"],
  [9,"通过获授权的渠道 contact 姐姐","合法的 contact 渠道"],
  [7,"original 纸本的去向","纸本 original 去向"],
  [9,"保留录音的 original 文件","保留文件的 original，"],
