@@ -252,3 +252,110 @@ test("future high-school and zhuanshengben classifications work without rebuildi
  assert.ok((await cate.json()).categories.some(x=>x.slug==="high-school"));
  db.db.close();
 });
+
+test("S14 password change validates current password, rotates current cookie and revokes other devices",async()=>{
+ const db=new LocalD1();
+ await db.voucher(codeA,"voucher-a","cet4");
+ const app=env(db);
+ const registered=await worker.fetch(request("/api/auth/register","POST",{
+  username:"password-learner",password:pass,activationCode:codeA
+ }),app);
+ assert.equal(registered.status,201);
+ const originalCookie=session(registered);
+ const oldDevice=await worker.fetch(request("/api/auth/login","POST",{
+  username:"password-learner",password:pass
+ }),app);
+ assert.equal(oldDevice.status,200);
+ const oldDeviceCookie=session(oldDevice);
+ assert.notEqual(originalCookie,oldDeviceCookie);
+
+ const denied=await worker.fetch(request("/api/auth/change-password","POST",{
+  currentPassword:"incorrect-but-long-2026",newPassword:"new-only-pass-2026-STRONG"
+ },originalCookie),app);
+ assert.equal(denied.status,401);
+ assert.equal((await denied.json()).error,"INVALID_CURRENT_PASSWORD");
+ const previousBefore=await worker.fetch(request("/api/auth/me","GET",undefined,oldDeviceCookie),app);
+ assert.equal(previousBefore.status,200);
+ const unchanged=await worker.fetch(request("/api/auth/change-password","POST",{
+  currentPassword:pass,newPassword:pass
+ },originalCookie),app);
+ assert.equal(unchanged.status,400);
+ assert.equal((await unchanged.json()).error,"PASSWORD_REUSE_NOT_ALLOWED");
+
+ const change=await worker.fetch(request("/api/auth/change-password","POST",{
+  currentPassword:pass,newPassword:"new-only-pass-2026-STRONG"
+ },originalCookie),app);
+ assert.equal(change.status,200);
+ assert.deepEqual(await change.json(),{ok:true,otherSessionsRevoked:true});
+ const freshCookie=session(change);
+ assert.notEqual(freshCookie,originalCookie);
+ const sessionRows=db.db.prepare("SELECT COUNT(*) AS n FROM sessions").get().n;
+ assert.equal(sessionRows,1);
+ for(const cookie of [originalCookie,oldDeviceCookie]){
+  const stale=await worker.fetch(request("/api/auth/me","GET",undefined,cookie),app);
+  assert.equal(stale.status,401);
+ }
+ const stillLogged=await worker.fetch(request("/api/auth/me","GET",undefined,freshCookie),app);
+ assert.equal(stillLogged.status,200);
+ assert.deepEqual((await stillLogged.json()).categories.map(x=>x.slug),["cet4"]);
+ const read=await worker.fetch(request("/api/chapters/chapter-cet4","GET",undefined,freshCookie),app);
+ assert.equal(read.status,200);
+ assert.match(JSON.stringify(await read.json()),/FOUR_SECRET/);
+ const oldLogin=await worker.fetch(request("/api/auth/login","POST",{
+  username:"password-learner",password:pass
+ }),app);
+ assert.equal(oldLogin.status,401);
+ const newLogin=await worker.fetch(request("/api/auth/login","POST",{
+  username:"password-learner",password:"new-only-pass-2026-STRONG"
+ }),app);
+ assert.equal(newLogin.status,200);
+ db.db.close();
+});
+
+test("S14 password endpoint rejects unauthenticated and wrong-origin requests without changing data",async()=>{
+ const db=new LocalD1();
+ await db.voucher(codeA,"voucher-a","cet4");
+ const app=env(db);
+ const registered=await worker.fetch(request("/api/auth/register","POST",{
+  username:"origin-learner",password:pass,activationCode:codeA
+ }),app);
+ const validCookie=session(registered);
+ const noLogin=await worker.fetch(request("/api/auth/change-password","POST",{
+  currentPassword:pass,newPassword:"another-private-pass-2026"
+ }),app);
+ assert.equal(noLogin.status,401);
+ assert.equal((await noLogin.json()).error,"LOGIN_REQUIRED");
+ const foreignRequest=new Request(origin+"/api/auth/change-password",{
+  method:"POST",headers:{"Origin":"https://attacker.invalid","Content-Type":"application/json",
+   Cookie:validCookie},body:JSON.stringify({
+    currentPassword:pass,newPassword:"another-private-pass-2026"
+   })
+ });
+ const forged=await worker.fetch(foreignRequest,app);
+ assert.equal(forged.status,403);
+ assert.equal((await forged.json()).error,"INVALID_ORIGIN");
+ const stillOld=await worker.fetch(request("/api/auth/login","POST",{
+  username:"origin-learner",password:pass
+ }),app);
+ assert.equal(stillOld.status,200);
+ db.db.close();
+});
+
+test("S14 invalid new password does not revoke any sessions or overwrite password",async()=>{
+ const db=new LocalD1();
+ await db.voucher(codeA,"voucher-a","cet4");
+ const app=env(db);
+ const registered=await worker.fetch(request("/api/auth/register","POST",{
+  username:"format-learner",password:pass,activationCode:codeA
+ }),app);
+ const cookie=session(registered);
+ for(const nextPassword of ["short","x".repeat(129)]){
+  const res=await worker.fetch(request("/api/auth/change-password","POST",{
+   currentPassword:pass,newPassword:nextPassword
+  },cookie),app);
+  assert.equal(res.status,400);
+ }
+ const preserved=await worker.fetch(request("/api/auth/me","GET",undefined,cookie),app);
+ assert.equal(preserved.status,200);
+ db.db.close();
+});
