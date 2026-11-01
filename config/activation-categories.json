@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "categories": [
+    {
+      "slug": "cet4",
+      "name": "大学英语四级",
+      "salesEnabled": true
+    },
+    {
+      "slug": "cet6",
+      "name": "大学英语六级",
+      "salesEnabled": true
+    },
+    {
+      "slug": "postgrad",
+      "name": "考研英语",
+      "salesEnabled": true
+    },
+    {
+      "slug": "ielts",
+      "name": "雅思英语",
+      "salesEnabled": true
+    },
+    {
+      "slug": "high-school",
+      "name": "高中英语",
+      "salesEnabled": false
+    },
+    {
+      "slug": "zhuanshengben",
+      "name": "专升本英语",
+      "salesEnabled": false
+    }
+  ],
+  "note": "Offline voucher-issuance allowlist ONLY. Does not publish a category or authorize a payment."
+}
