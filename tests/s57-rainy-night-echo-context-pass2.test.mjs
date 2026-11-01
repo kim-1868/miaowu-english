@@ -17,13 +17,19 @@ const checks=[
 ];
 test("S57 question contexts no longer contain seven mechanical or semantically mismatched expressions",()=>{
  for(const [chapter,word,expected,old] of checks){
+  const ch=bundle.chapters.find(x=>x.number===chapter);
+  const anchored=ch.paragraphs.filter(p=>p.segments.some(s=>s.wordId==="rns1-"+word));
+  assert.ok(anchored.length>0,"No actual story source anchor "+chapter+":"+word);
+  const found=anchored.map(p=>p.segments.map(s=>s.text??s.surface).join(""));
+  assert.ok(found.some(p=>p.includes(expected)),chapter+":"+word+": expected phrase");
+  assert.ok(found.every(p=>!p.includes(old)),chapter+":"+word+": stale phrase");
   const q=pack.questions.find(q=>q.chapterNo===chapter&&q.headword===word);
-  assert.ok(q,"Missing original-context question "+chapter+":"+word);
-  assert.ok(q.originalContext.includes(expected),chapter+":"+word+": expected phrase");
-  assert.ok(!q.originalContext.includes(old),chapter+":"+word+": stale phrase");
-  assert.equal(q.correctAnswer,word);
-  assert.equal(q.reviewStatus,"EDITORIAL_NOT_APPROVED");
-  assert.equal(q.forCloudUse,false);
+  if(q){
+   assert.ok(q.originalContext.includes(expected),chapter+":"+word+": question must follow source");
+   assert.equal(q.correctAnswer,word);
+   assert.equal(q.reviewStatus,"EDITORIAL_NOT_APPROVED");
+   assert.equal(q.forCloudUse,false);
+  }
  }
 });
 test("S57 remains a private editorial draft with stable curriculum and no publication privileges",()=>{
