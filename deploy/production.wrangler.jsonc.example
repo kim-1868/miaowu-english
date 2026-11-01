@@ -18,6 +18,10 @@
     }
   ],
   "secrets": {
-    "required": ["ACTIVATION_PEPPER"]
-  }
+    "required": [
+      "ACTIVATION_PEPPER"
+    ]
+  },
+  "workers_dev": false,
+  "preview_urls": false
 }
