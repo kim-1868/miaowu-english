@@ -1,5 +1,6 @@
 import { stagingGate, stagingCookieAfterBasic } from "./staging-gate.js";
 import { handleEditor } from "./editorial-admin.js";
+import { handleOps } from "./ops-access.js";
 import { handleLearningState } from "./reading-library.js";
 import {handleEcho} from "./echo-cloud.js";
 import {
@@ -420,6 +421,12 @@ async function api(req, env) {
         : "hidden",
       authConfigured: !!env.DB && typeof env.ACTIVATION_PEPPER === "string" && env.ACTIVATION_PEPPER.length >= 32,
       paymentIntegration: false });
+  }
+  // Independent S9 operator identity is never a customer session or S3 staging key.
+  // Only /api/ops/me GET exists; mutations remain disabled until S9-B review.
+  if (path.startsWith("/api/ops/")) {
+    if (["POST","PUT","PATCH","DELETE"].includes(req.method) && !checkOrigin(req)) return reject("INVALID_ORIGIN",403);
+    return handleOps(req,env,path);
   }
   if (!env.DB || !env.ACTIVATION_PEPPER || env.ACTIVATION_PEPPER.length < 32) {
     return reject("SERVICE_NOT_CONFIGURED", 503);
