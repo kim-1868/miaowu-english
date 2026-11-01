@@ -12,7 +12,7 @@ const examples={
  resemble:["The new signature resembled the one in the old ledger.","新签名与旧登记簿上的签名很相似。"],
  blurred:["The blurred image made the face impossible to recognize.","图像太模糊，无法辨认那张脸。"],
  responsibility:["He accepted responsibility for his decision.","他为自己的决定承担了责任。"],
- transcript:["The interview transcript included a signature dated last week.","那份访谈记录附有上周的签名。"],
+ transcript:["The witness signed the interview transcript last week.","证人上周在那份访谈记录上签了名。"],
  routine:["Every night, the mail slot opened as part of a fixed routine.","每天夜里，投递槽都会按固定程序打开。"],
  operate:["The device operated on a fixed schedule.","这台装置按固定时间表运作。"],
  release:["At 11:47 p.m., the mechanism released the letters from the slot.","晚上十一点四十七分，装置将信件从投递槽放出。"],
