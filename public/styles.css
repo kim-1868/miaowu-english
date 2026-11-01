@@ -356,3 +356,17 @@ html[data-theme="dark"] .reader-layout .read-top #readerBack:focus-visible,
 .demo-vocab-card{border-top-style:dashed!important}
 html[data-theme="dark"] .bookplate-source-summary{background:var(--paper);color:var(--ink)}
 html[data-theme="dark"] .bookplate-source-heading{color:#eed3bc}
+
+
+/* Explicit Story Echo modes. The demo is browser-local; cloud exercises require D1 chapters. */
+.echo-mode-switch{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px}
+.echo-mode-button{border:1px solid var(--line);background:var(--paper);color:var(--wine);border-radius:24px;
+ padding:10px 16px;cursor:pointer;font-size:13px;font-weight:700}
+.echo-mode-button.selected{background:var(--wine);color:#fff7ef;border-color:var(--wine)}
+.echo-mode-button:focus-visible{outline:2px solid #efc18d;outline-offset:3px}
+.echo-mode-note{font-size:12px;line-height:1.65;color:var(--muted);margin:0 0 18px}
+.echo-cloud-empty{border:1px dashed var(--line);border-radius:12px;padding:12px 14px;
+ color:var(--muted);font-size:12px;line-height:1.65;margin:10px 0}
+html[data-theme="dark"] .echo-mode-button{background:var(--paper);color:var(--ink)}
+html[data-theme="dark"] .echo-mode-button.selected{background:#854761;color:#fff3e8;border-color:#a67d90}
+html[data-theme="dark"] .echo-cloud-empty{border-color:var(--line);color:var(--muted)}

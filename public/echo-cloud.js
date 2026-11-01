@@ -7,6 +7,7 @@ const st={scope:"recent",selected:new Set(kinds.map(x=>x[0])),book:"all",from:1,
  phase:"setup",questions:[],idx:0,answer:null,hint:false,correct:0,posting:false};
 let adapter=null;
 function setup(){
+ const hasCompletedChapter=adapter.progress().some(p=>!!p.completed_at);
  const items=new Map(adapter.progress().map(p=>[p.book_id,p.book_title]));
  $("quizContainer").innerHTML='<div class="echo-panel"><span class="eyebrow">STORY ECHO · YOUR REAL STORY</span>'+
  '<h3 class="echo-selector-heading">让读过的故事，再次回响</h3>'+
@@ -26,8 +27,9 @@ function setup(){
  '<span class="echo-option-title">'+x[1]+'</span><span class="echo-option-sub">'+
  (x[0]==="spell"?"主动拼写，支持系统手写键盘":"原剧情与英文词义选择")+
  '</span><span class="echo-check">'+(st.selected.has(x[0])?"✓ 已选择":"○ 点击加入")+'</span></button>').join("")+
- '</div><div class="echo-footer-actions"><span class="echo-tip">答题后显示对应释义与原剧情句子</span>'+
- '<button class="primary" id="cloudEchoStart">开始复习 →</button></div></div>';
+ '</div>'+(hasCompletedChapter?'':'<div id="echoCloudEmpty" class="echo-cloud-empty" role="status">目前还没有已读完的正式云端章节，所以暂时没有云端练习题。可以切换上方「故事演示练习」，体验《玫瑰未落幕》的三种玩法。</div>')+
+ '<div class="echo-footer-actions"><span class="echo-tip">答题后显示对应释义与原剧情句子</span>'+
+ '<button class="primary" id="cloudEchoStart" '+(hasCompletedChapter?'':'disabled')+'>开始复习 →</button></div></div>';
  document.querySelectorAll("[data-scope]").forEach(b=>b.onclick=()=>{st.scope=b.dataset.scope;setup()});
  document.querySelectorAll("[data-kind]").forEach(b=>b.onclick=()=>{
  const id=b.dataset.kind;if(st.selected.has(id)&&st.selected.size>1)st.selected.delete(id);
