@@ -34,9 +34,9 @@ db/production/001_one_paid_order_one_code.sql
 db/production/002_account_recovery_codes.sql
 ```
 
-**初始化 SQL：** `db/production/BOOTSTRAP_NEW_EMPTY_D1.sql` 是带审计注释的原始版本；**在 Cloudflare D1 Console 粘贴应优先用 `db/production/BOOTSTRAP_CONSOLE_PASTE.sql`（去掉全部 `--` 注释）**。用户曾在 Console 看到 `No SQL statements detected.`，无法从该消息认定建表成功，因此必须先执行只读 `SELECT COUNT(*) AS table_count FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';` 核对。若为0，可在空库中执行**无注释版**一次；若非0，立即停止，不可重放整个初始化脚本。无注释版内容与10份审计源 SQL 一致，CI 还验证其换行被浏览器压平为单行时，内存 SQLite 仍能创建**22张表、4个分类、0条用户/订单/书籍数据**。
+**初始化 SQL：** `db/production/BOOTSTRAP_NEW_EMPTY_D1.sql` 是带审计注释的原始版本；**在 Cloudflare D1 Console 粘贴应优先用 `db/production/BOOTSTRAP_CONSOLE_PASTE.sql`（去掉全部 `--` 注释）**。用户曾在 Console 看到 `No SQL statements detected.`，随后只读查询发现 `sqlite_master` 里**唯一的一张表是 `_cf_KV`**。Cloudflare 官方说明 `_cf_KV` 是 D1 **底层存储的保留内部表**，因此这代表当前 **0张应用业务表**，不是部分执行失败；绝对不能删除 `_cf_KV`。若最新查询仍只有 `_cf_KV`，可以在这个空业务库执行**无注释版**一次。任何业务表已存在时立即停止，不可重放整个初始化脚本。对应只读查询：`SELECT COUNT(*) AS application_table_count FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name <> '_cf_KV';`。官方依据：https://developers.cloudflare.com/d1/best-practices/import-export-data/ 。无注释版内容与10份审计源 SQL 一致，CI 还验证其换行被浏览器压平为单行时，内存 SQLite 仍能创建**22张表、4个分类、0条用户/订单/书籍数据**。
 
-**需要 Cloudflare 账号所有者执行的下一项操作**：重新核对当前 D1 的名称与 UUID，在 **Console** 的底部输入框粘贴上述 `SELECT COUNT(*)...` 并执行。**只有返回0表**时，才复制 `BOOTSTRAP_CONSOLE_PASTE.sql` 的 GitHub Raw 全部文本，在 Console 执行一次（不能用旧的带注释文件）。成功后可执行 `db/production/VERIFY_FRESH_D1_READONLY.sql` 只读查询，应看到 22 张表、四级/六级/雅思/考研四种 slug、账号/码/书/恢复码/运营员计数全为0、账号恢复及订单防重索引存在。
+**需要 Cloudflare 账号所有者执行的下一项操作**：根据 2026-11-01 最新截图，Cloudflare D1 当前只有内置 `_cf_KV`，业务表数是0，满足空业务库条件。可确认当前仍选中 `miaowu-english-prod` 和 UUID `649c71b3-340c-49bf-b806-3d39256851d3` 后，复制 `BOOTSTRAP_CONSOLE_PASTE.sql` **无注释版**的 GitHub Raw 全文，在 Console 底部输入框执行**一次**。成功后可执行 `db/production/VERIFY_FRESH_D1_READONLY.sql` 只读查询，应看到**应用表22张**（加 `_cf_KV` 共23张，在界面统计数字可能不同）、四级/六级/雅思/考研四种 slug、用户/码/书/恢复码/运营员记录为0、账号恢复及订单唯一索引存在。**任何报错立即停下，不要再运行同一整份 SQL**。
 
 **发生任何 Cloudflare SQL 错误时立即停止并记录错误，不可直接把整段脚本再跑一遍**：第008部分的 `ALTER TABLE books ADD COLUMN` 不支持重复执行，失败后可能已经留下先前步骤创建的表。先由开发者对照远程结构做差异检查，再决定如何安全续跑；绝不在旧 `miaowu-english-test` 执行。
 
@@ -46,7 +46,7 @@ db/production/002_account_recovery_codes.sql
 
 下面这些是以后确实需要**账号所有者操作**的项，不能由 GitHub 上传文件替代：
 
-1. **已完成**：Cloudflare 新建独立 D1 `miaowu-english-prod`（UUID：`649c71b3-340c-49bf-b806-3d39256851d3`，截图时0表）。不更改原测试 D1。
+1. **已完成**：Cloudflare 新建独立 D1 `miaowu-english-prod`（UUID：`649c71b3-340c-49bf-b806-3d39256851d3`，最后截图只显示内置 `_cf_KV`，业务表0张）。不更改原测试 D1。
 2. **下一项账号操作**：10份 SQL 已统一在 `db/production/BOOTSTRAP_NEW_EMPTY_D1.sql`，本地 CI 已验证。针对这个**确认仍为空且 UUID 正确**的生产 D1 可按上节手册仅执行一次完整 bootstrap，然后执行只读验证文件；没有用户数据迁移，也没有生产售卖。007、008 是为全新空库一起初始化的发布表和触发器，不是向旧 QA D1 无条件重复迁移。
 3. **生产 Worker 配置已在开发分支准备好**：`deploy/production.wrangler.jsonc` 使用本次截图里的新 UUID，保持 `workers_dev:false`、`preview_urls:false`。`node scripts/check-production-config.mjs deploy/production.wrangler.jsonc` 已作为纯配置校验流程；真正部署前仍需实机验收。Worker 的 `ACTIVATION_PEPPER` **必须通过 Cloudflare Workers 的 `wrangler secret put ACTIVATION_PEPPER` 安全设置**（不得复用测试 Pepper）；在终端交互输入，不在配置、命令参数、聊天或截图中公开。生产配置文件内不允许声明明文或伪 `secrets` 属性。
 4. 创建独立 Worker `miaowu-english-production`，配置绑定 `DB` 指向正式 D1、`ASSETS` 指向正式静态文件；在隔离的联调部署中验证路由和 schema，再配置最小权限及日志策略。**确保 Worker 未公开 workers.dev 和 Preview/Version URL**。Service Binding 可调用无公开 URL 的 Worker。
