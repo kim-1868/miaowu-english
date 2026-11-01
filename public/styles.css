@@ -370,3 +370,22 @@ html[data-theme="dark"] .bookplate-source-heading{color:#eed3bc}
 html[data-theme="dark"] .echo-mode-button{background:var(--paper);color:var(--ink)}
 html[data-theme="dark"] .echo-mode-button.selected{background:#854761;color:#fff3e8;border-color:#a67d90}
 html[data-theme="dark"] .echo-cloud-empty{border-color:var(--line);color:var(--muted)}
+
+
+/* Account: make browser-local demo learning visible without contaminating D1 metrics. */
+.account-demo-section{margin-top:22px;padding:20px;border:1px solid var(--line);border-radius:16px;
+  background:var(--paper);color:var(--ink)}
+.account-demo-heading h3{margin:7px 0 5px;font-size:19px;color:var(--wine)}
+.account-demo-heading p{font-size:12px;line-height:1.75;color:var(--muted);margin:0 0 14px}
+.account-demo-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+.account-demo-stat{background:var(--surface,#f9f4ee);border:1px solid var(--line);border-radius:12px;
+  min-width:0;padding:13px 8px;text-align:center}
+.account-demo-stat strong{display:block;font-size:21px;font-weight:700;color:var(--wine);font-variant-numeric:tabular-nums}
+.account-demo-stat small{display:block;font-size:11px;line-height:1.5;color:var(--muted);margin-top:4px}
+.account-demo-recent,.account-demo-note{font-size:12px;line-height:1.75;margin:14px 0 10px;color:var(--ink)}
+.account-demo-note{font-size:11px;color:var(--muted);margin-top:4px}
+.account-demo-section>.secondary-btn{margin-top:5px}
+@media(max-width:760px){.account-demo-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+html[data-theme="dark"] .account-demo-section{background:var(--paper);color:var(--ink);border-color:var(--line)}
+html[data-theme="dark"] .account-demo-heading h3,html[data-theme="dark"] .account-demo-stat strong{color:#f1d3dc}
+html[data-theme="dark"] .account-demo-stat{background:#3c3440;border-color:var(--line)}
