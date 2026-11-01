@@ -278,7 +278,7 @@
         if(!chapters.length){toast('这本书尚无已发布章节');return;}
         activeCloud={bookId:book.id,title:book.title,slug,chapters,chapterId:null,parts:[]};
         showModal(`<span class="eyebrow">MIAOWU · STORY CHAPTERS</span><h2 id="modalTitle">${safe(book.title)}</h2>
-          <p>目录可见。免费试读公开，付费正文由服务器检查账号分类权限后返回。目前站点处于测试环境，不代表正式售卖。</p>
+          <p>目录可见。免费试读公开，完整正文由服务器核对账号所属分类的权限后返回。</p>
           <div class="cloud-chapter-options">${chapters.map(ch=>`<button class="chapter-btn" type="button" data-cloud-choose="${safe(ch.id)}">${String(ch.chapterNo).padStart(2,'0')} · ${safe(ch.title)} ${ch.isPreview?'· 免费试读':(ch.canRead?'· 已授权':'· 🔒 未解锁')}</button>`).join('')}</div>`);
         document.querySelectorAll('[data-cloud-choose]').forEach(btn=>{
           btn.onclick=()=>openCloudChapter(btn.dataset.cloudChoose);
@@ -681,9 +681,9 @@
       if(!user){
         $('accountPanel').innerHTML='<div class="onboarding" style="margin:0">'+
           '<span class="eyebrow">YOUR ACCOUNT</span><h3>还没有打开你的私人书房</h3>'+
-          '<p>用之前创建的测试账号登录；新用户可以使用一次性测试激活码注册。'+
+          '<p>已有账号请登录；新用户可以使用一次性分类激活码注册。'+
           '云端阅读记录与收藏都将关联到你的账号。不要使用常用密码。</p>'+
-          '<button class="primary" id="accountRegister">注册并激活测试账号</button>'+
+          '<button class="primary" id="accountRegister">注册并激活</button>'+
           '<button class="secondary-btn" id="accountLogin" style="margin-left:8px">已有账号？登录</button></div>';
         $('accountRegister').onclick=showRegister;$('accountLogin').onclick=showLogin;return;
       }
@@ -711,8 +711,8 @@
         (ent.map(c=>'<span class="account-tag">✓ '+safe(c.name)+'</span>').join('')||
           '<p>暂无已解锁分类</p>')+
         '<p>分类授权由服务器核对，试看章开放，付费章仅授权账号可读。</p></div>'+
-        '<div class="account-block"><h3>兑换新商品</h3>'+
-        '<p>输入新的测试激活码解锁更多分类。当前尚未接入正式支付。</p>'+
+        '<div class="account-block"><h3>兑换新的学习分类</h3>'+
+        '<p>输入通过官方渠道获得的激活码，解锁其他英语分类。每枚码对应一个分类。</p>'+
         '<button class="primary" id="doRedeem">＋ 兑换激活码</button></div></div>'+
         '<div class="account-expanded">'+
         '<div class="account-feature account-reading-feature"><span class="eyebrow">CURRENTLY READING · 继续阅读</span>'+
@@ -736,7 +736,7 @@
         else navigate('library');
       };
       $('logout').onclick=async()=>{
-        try{await serverRequest('/api/auth/logout','POST',{});applyServerAccount(null,true);toast('已退出测试账号')}
+        try{await serverRequest('/api/auth/logout','POST',{});applyServerAccount(null,true);toast('已退出账号')}
         catch(e){toast(e.message)}
       };
     }
@@ -747,19 +747,18 @@
       showModal([
         '<span class="eyebrow">OPEN YOUR LIBRARY</span>',
         '<h2 id="modalTitle">注册并激活</h2>',
-        '<p>使用全新的测试用户名、密码和未兑换的测试激活码开通分类。账号真实保存在 D1 测试数据库中。</p>',
+        '<p>设置用户名和登录密码，并输入获得的一次性分类激活码。你的阅读记录与藏书票会关联到这个账号。</p>',
         '<form id="registerForm">',
           '<div class="form-field"><label for="rName">自定义用户名</label>',
           '<input id="rName" autocomplete="username" minlength="3" maxlength="24" placeholder="3–24位字母、数字或下划线等" required></div>',
-          '<div class="form-field"><label for="rPass">测试账号密码</label>',
+          '<div class="form-field"><label for="rPass">登录密码</label>',
           '<input id="rPass" type="password" autocomplete="new-password" minlength="10" maxlength="128" placeholder="至少10位，请勿使用常用密码" required></div>',
-          '<div class="form-field"><label for="rCode">一次性测试激活码</label>',
-          '<input id="rCode" autocomplete="off" placeholder="输入联调页生成的测试码" required></div>',
-          '<p class="helper">当前只提供测试账号，不能支付或购买正式小说。若需要测试码，可在账号联调实验室生成。</p>',
+          '<div class="form-field"><label for="rCode">一次性分类激活码</label>',
+          '<input id="rCode" autocomplete="off" placeholder="输入获得的分类激活码" required></div>',
+          '<p class="helper">激活码由网站运营方通过指定渠道提供，当前不支持站内直接付款。分类权益及售后请以实际商品说明为准。</p>',
           '<div class="form-actions"><button type="submit" class="primary">创建书房并激活 →</button></div>',
           '<div id="formMessage"></div>',
         '</form>',
-        '<p class="helper"><a href="/account-test.html">打开账号联调实验室（测试专用）</a></p>',
         '<div style="margin-top:15px"><button class="tiny-action" id="switchLogin">已有账号？去登录</button></div>'
       ].join(''));
       $('switchLogin').onclick=showLogin;
@@ -778,7 +777,7 @@
             closeModal();
             applyServerAccount(result,true);
             if(result.recoveryCode)showRecoveryNotice(result.recoveryCode);
-            else toast('测试账号创建成功，分类已开通');
+            else toast('书房创建成功，分类已开通');
           });
       };
     }
@@ -786,12 +785,12 @@
       showModal([
         '<span class="eyebrow">WELCOME BACK</span>',
         '<h2 id="modalTitle">登录我的书房</h2>',
-        '<p>使用之前创建的真实测试用户名和密码登录。测试站访问密码 reviewer 与这里的账号不同。</p>',
+        '<p>使用已注册的用户名和密码登录，继续阅读并同步你的个人学习记录。</p>',
         '<form id="loginForm">',
           '<div class="form-field"><label for="lName">用户名</label>',
-          '<input id="lName" autocomplete="username" placeholder="你注册的测试用户名" required></div>',
+          '<input id="lName" autocomplete="username" placeholder="你注册的用户名" required></div>',
           '<div class="form-field"><label for="lPass">登录密码</label>',
-          '<input id="lPass" type="password" autocomplete="current-password" placeholder="你设置的测试密码" required></div>',
+          '<input id="lPass" type="password" autocomplete="current-password" placeholder="你设置的登录密码" required></div>',
           '<div class="form-actions"><button class="primary" type="submit">登录书房 →</button></div>',
           '<div id="formMessage"></div>',
         '</form>',
@@ -916,12 +915,12 @@
       showModal([
         '<span class="eyebrow">EXPAND YOUR LIBRARY</span>',
         '<h2 id="modalTitle">兑换新学习分类</h2>',
-        '<p>当前账号：',safe(user.name),'。输入另一枚尚未使用的测试码，增加购买分类权限。</p>',
-        '<form id="redeemForm"><div class="form-field"><label for="redeemCode">新的测试激活码</label>',
-        '<input id="redeemCode" autocomplete="off" placeholder="输入另一枚测试激活码" required></div>',
+        '<p>当前账号：',safe(user.name),'。输入另一枚尚未使用的分类激活码，增加你的阅读权限。</p>',
+        '<form id="redeemForm"><div class="form-field"><label for="redeemCode">新的分类激活码</label>',
+        '<input id="redeemCode" autocomplete="off" placeholder="输入另一枚分类激活码" required></div>',
         '<div class="form-actions"><button class="primary" type="submit">验证并解锁 →</button></div>',
         '<div id="formMessage"></div></form>',
-        '<p class="helper">测试码来自 <a href="/account-test.html">账号联调实验室</a>。正式销售及内容授权尚未开放。</p>'
+        '<p class="helper">同一账号可累积多个英语分类的阅读权限，具体内容与使用期限以购买时的权益说明为准。</p>'
       ].join(''));
       $('redeemForm').onsubmit=e=>{
         e.preventDefault();const form=e.currentTarget;
@@ -932,12 +931,12 @@
           result=>{
             closeModal();
             applyServerAccount({user:{username:user.name},categories:result.categories},true);
-            toast('测试分类已成功添加');
+            toast('学习分类已成功解锁');
           });
       };
     }
     function formError(s){$('formMessage').innerHTML=`<div class="form-message">${safe(s)}</div>`}
-    function explain(){showModal(`<span class="eyebrow">HOW IT WORKS</span><h2 id="modalTitle">一部小说，一段词汇记忆</h2><p>这是一款将阅读、听书、词汇收藏与情节回忆组合在一起的互动阅读器。</p><div class="onboarding" style="padding:15px;margin:12px 0"><h3>01 · 先读故事</h3><p>第一章开放试读，点击酒红色英文词查义、听发音。</p><h3>02 · 收下藏书票</h3><p>收藏之后，你可以在「记忆藏书票」里复习。</p><h3>03 · 听见剧情回声</h3><p>可选不同玩法、章节范围，通过选择与拼写练习回忆词汇。</p><h3>04 · 解锁完整书架</h3><p>注册测试账号后用真实一次性测试码开通分类，正式购买功能仍未上线。</p></div><button class="primary" id="explainRead" style="width:100%">开始试读 →</button>`);$('explainRead').onclick=()=>{closeModal();openFirstCloudBook()}}
+    function explain(){showModal(`<span class="eyebrow">HOW IT WORKS</span><h2 id="modalTitle">一部小说，一段词汇记忆</h2><p>这是一款将阅读、听书、词汇收藏与情节回忆组合在一起的互动阅读器。</p><div class="onboarding" style="padding:15px;margin:12px 0"><h3>01 · 先读故事</h3><p>第一章开放试读，点击酒红色英文词查义、听发音。</p><h3>02 · 收下藏书票</h3><p>收藏之后，你可以在「记忆藏书票」里复习。</p><h3>03 · 听见剧情回声</h3><p>可选不同玩法、章节范围，通过选择与拼写练习回忆词汇。</p><h3>04 · 解锁完整书架</h3><p>注册账号后使用一次性分类激活码解锁更多作品，实际开放内容以书架为准。</p></div><button class="primary" id="explainRead" style="width:100%">开始试读 →</button>`);$('explainRead').onclick=()=>{closeModal();openFirstCloudBook()}}
     function speakWord(w){if(!('speechSynthesis' in window)){toast('此浏览器暂不支持语音朗读');return}window.speechSynthesis.cancel();speaking=false;$('player').classList.remove('show');let u=new SpeechSynthesisUtterance(w);u.lang='en-US';u.rate=.82;window.speechSynthesis.speak(u)}
     function stopReading(){if('speechSynthesis' in window)window.speechSynthesis.cancel();speaking=false;paused=false;utterances=[];$('player').classList.remove('show')}
     function startReading(){
