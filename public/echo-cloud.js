@@ -63,7 +63,9 @@ async function start(){
 function blank(w){
  const text=w.context_sentence||"";
  const escaped=w.headword.replace(/[.*+?^$()|[\]{}\\]/g,"\\$&");
- const filled=text.replace(new RegExp(escaped,"gi"),"______");
+ // Match a complete English headword only. Do not erase `record` inside `recording`
+ // or blank multiple positions if the same target repeats in a story sentence.
+ const filled=text.replace(new RegExp("\\b"+escaped+"\\b","i"),"______");
  return filled===text?"根据中文提示找到对应英文："+w.meaning_zh:filled;
 }
 function draw(){
