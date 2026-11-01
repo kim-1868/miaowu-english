@@ -15,13 +15,13 @@ export function composeRainyNightSeasonDraft(){
   // these are original editorial translations, not third-party dictionary text.
   const exampleTranslations={
     notice:"我注意到桌上有一封信。",envelope:"信封上没有寄件地址。",
-    anonymous:"一位匿名人士发送了这条消息。",familiar:"她的笔迹看起来很熟悉。",
+    anonymous:"那封信来自一名匿名寄件人。",familiar:"她的笔迹看起来很熟悉。",
     handwriting:"我认出了姐姐的笔迹。",disappear:"她在两年前失踪了。",
     urgent:"那张字条带来了一条紧急警告。",hidden:"书里藏着一条隐藏的信息。",
     evidence:"我们需要证据，而不是猜测。",access:"只有管理员有权限访问监控文件。",
     suspicious:"那个陌生人看起来很可疑。",approach:"一名男子走近书店。",
     recognize:"你认出他的声音了吗？",borrow:"我可以借这本书吗？",
-    hesitate:"她在开门前犹豫了一下。",confirm:"监控能够确认他曾到场。",
+    hesitate:"她在开门前犹豫了一下。",confirm:"监控录像可以证实他何时走进了店里。",
     witness:"一名目击者看见了那件灰色大衣。",reveal:"照片显露出了另一个人。",
     risk:"她知道信任他意味着风险。",choice:"留下是她自己的选择。",
     clue:"那张字条给了她一条重要线索。",record:"旧记录上写着另一个名字。",
