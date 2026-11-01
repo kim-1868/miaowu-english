@@ -99,8 +99,43 @@ async function setWord(req,env,userId,id){
     userId,id,status,bookmarked?1:0,status).run();
   return json({saved:true,wordId:id,bookmarked,status});
 }
+async function quickReview(req,env,userId){
+  const input=await readJson(req);
+  if(input.error)return err(input.error,400);
+  const {wordId,chapterId,remembered}=input.data;
+  if(!ID.test(wordId||"")||!ID.test(chapterId||"")||typeof remembered!=="boolean")
+    return err("INVALID_REVIEW",400);
+  const match=await sql(env,"SELECT 1 AS ok FROM chapter_words cw "+
+    "JOIN chapters ch ON ch.id=cw.chapter_id JOIN books b ON b.id=ch.book_id "+
+    "JOIN categories c ON c.id=b.category_id WHERE cw.word_id=? AND ch.id=? "+
+    "AND b.status='published' AND c.is_visible=1 "+
+    "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
+    "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
+    "WHERE e.user_id=? AND e.category_id=b.category_id AND e.revoked_at IS NULL))",
+    wordId,chapterId,userId).first();
+  if(!match)return err("WORD_NOT_AVAILABLE",403);
+  // An answer of "remembered" does not imply permanently mastered.
+  // The prior bookmark status is preserved; "forgot" adds a bookmark.
+  const due=remembered?"+3 days":"+1 day";
+  await env.DB.batch([
+    sql(env,"INSERT INTO review_events(id,user_id,word_id,chapter_id,game_type,result) "+
+      "VALUES(?,?,?,?,?,?)",crypto.randomUUID(),userId,wordId,chapterId,
+      "chapter-quick-review",remembered?"correct":"incorrect"),
+    sql(env,"INSERT INTO user_words(user_id,word_id,status,bookmarked,last_seen_at,due_at) "+
+      "VALUES(?,?,'learning',?,CURRENT_TIMESTAMP,datetime('now','"+due+"')) "+
+      "ON CONFLICT(user_id,word_id) DO UPDATE SET "+
+      "status=CASE WHEN user_words.status='mastered' AND ?=1 THEN 'mastered' ELSE 'learning' END,"+
+      "bookmarked=MAX(user_words.bookmarked,excluded.bookmarked),"+
+      "last_seen_at=CURRENT_TIMESTAMP,"+
+      "due_at=CASE WHEN user_words.status='mastered' AND ?=1 THEN user_words.due_at "+
+      "ELSE excluded.due_at END",
+      userId,wordId,remembered?0:1,remembered?1:0,remembered?1:0)
+  ]);
+  return json({saved:true,wordId,chapterId,remembered,bookmarked:!remembered,nextReviewDays:remembered?3:1});
+}
 export async function handleLearningState(req,env,path,user){
   if(!user)return err("LOGIN_REQUIRED",401);
+  if(path==="/api/me/quick-review"&&req.method==="POST")return quickReview(req,env,user.id);
   if(path==="/api/me/progress"&&req.method==="GET")return progressList(env,user.id);
   if(path==="/api/me/words"&&req.method==="GET")return wordList(env,user.id);
   if(path==="/api/me/progress"&&req.method==="POST")return setProgress(req,env,user.id);
