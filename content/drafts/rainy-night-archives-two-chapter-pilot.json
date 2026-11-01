@@ -1,0 +1,1285 @@
+{
+  "version": 1,
+  "sourceLabel": "rainy-night-editorial-draft-do-not-publish",
+  "book": {
+    "id": "draft-rainy-night-archives-01",
+    "category": "cet4",
+    "title": "【测试】雨夜档案 · 前两章校对稿",
+    "description": "原创都市轻悬疑《雨夜档案》第一季的前两章内容校对稿。林予安在家族旧书店收到失踪姐姐的匿名来信，调查借阅卡背面的日期与十一点四十七分的谜题。未完成全季，不适用于正式售卖。",
+    "coverKey": "rainy-night-draft-not-for-sale"
+  },
+  "words": [
+    {
+      "id": "rns1-notice",
+      "headword": "notice",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "v.",
+      "meaningZh": "注意到",
+      "exampleEn": "I noticed a letter on the desk.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "notice a change",
+          "zh": "注意到变化"
+        },
+        {
+          "en": "take notice of",
+          "zh": "注意到；留意"
+        }
+      ]
+    },
+    {
+      "id": "rns1-envelope",
+      "headword": "envelope",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "信封",
+      "exampleEn": "The envelope had no return address.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "open an envelope",
+          "zh": "打开信封"
+        },
+        {
+          "en": "a sealed envelope",
+          "zh": "密封的信封"
+        }
+      ]
+    },
+    {
+      "id": "rns1-anonymous",
+      "headword": "anonymous",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "adj.",
+      "meaningZh": "匿名的",
+      "exampleEn": "An anonymous person sent the message.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "an anonymous letter",
+          "zh": "匿名信"
+        },
+        {
+          "en": "remain anonymous",
+          "zh": "保持匿名"
+        }
+      ]
+    },
+    {
+      "id": "rns1-familiar",
+      "headword": "familiar",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "adj.",
+      "meaningZh": "熟悉的",
+      "exampleEn": "Her handwriting looked familiar.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "look familiar",
+          "zh": "看起来熟悉"
+        },
+        {
+          "en": "a familiar face",
+          "zh": "熟悉的面孔"
+        }
+      ]
+    },
+    {
+      "id": "rns1-handwriting",
+      "headword": "handwriting",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "笔迹",
+      "exampleEn": "I recognized my sister's handwriting.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "recognize handwriting",
+          "zh": "辨认笔迹"
+        },
+        {
+          "en": "neat handwriting",
+          "zh": "工整的字迹"
+        }
+      ]
+    },
+    {
+      "id": "rns1-disappear",
+      "headword": "disappear",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "v.",
+      "meaningZh": "消失；失踪",
+      "exampleEn": "She disappeared two years ago.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "disappear suddenly",
+          "zh": "突然消失"
+        },
+        {
+          "en": "disappear without a trace",
+          "zh": "消失得无影无踪"
+        }
+      ]
+    },
+    {
+      "id": "rns1-urgent",
+      "headword": "urgent",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "adj.",
+      "meaningZh": "紧急的",
+      "exampleEn": "The note carried an urgent warning.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "an urgent matter",
+          "zh": "紧急事项"
+        },
+        {
+          "en": "urgent action",
+          "zh": "紧急行动"
+        }
+      ]
+    },
+    {
+      "id": "rns1-hidden",
+      "headword": "hidden",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "adj.",
+      "meaningZh": "隐藏的",
+      "exampleEn": "There was a hidden message in the book.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "a hidden message",
+          "zh": "隐藏的信息"
+        },
+        {
+          "en": "hidden from view",
+          "zh": "藏在视线之外"
+        }
+      ]
+    },
+    {
+      "id": "rns1-evidence",
+      "headword": "evidence",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "证据",
+      "exampleEn": "We need evidence, not a guess.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "collect evidence",
+          "zh": "收集证据"
+        },
+        {
+          "en": "strong evidence",
+          "zh": "有力证据"
+        }
+      ]
+    },
+    {
+      "id": "rns1-access",
+      "headword": "access",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "使用权限",
+      "exampleEn": "Only the manager had access to the camera files.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "have access to",
+          "zh": "有权访问"
+        },
+        {
+          "en": "deny access",
+          "zh": "拒绝访问"
+        }
+      ]
+    },
+    {
+      "id": "rns1-suspicious",
+      "headword": "suspicious",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "adj.",
+      "meaningZh": "可疑的",
+      "exampleEn": "The stranger seemed suspicious.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "a suspicious visitor",
+          "zh": "可疑访客"
+        },
+        {
+          "en": "look suspicious",
+          "zh": "看起来可疑"
+        }
+      ]
+    },
+    {
+      "id": "rns1-approach",
+      "headword": "approach",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "v.",
+      "meaningZh": "靠近",
+      "exampleEn": "A man approached the bookstore.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "approach the counter",
+          "zh": "走近柜台"
+        },
+        {
+          "en": "approach carefully",
+          "zh": "小心接近"
+        }
+      ]
+    },
+    {
+      "id": "rns1-recognize",
+      "headword": "recognize",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "v.",
+      "meaningZh": "认出",
+      "exampleEn": "Did you recognize his voice?",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "recognize a voice",
+          "zh": "辨认声音"
+        },
+        {
+          "en": "recognize immediately",
+          "zh": "立刻认出"
+        }
+      ]
+    },
+    {
+      "id": "rns1-borrow",
+      "headword": "borrow",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "v.",
+      "meaningZh": "借入",
+      "exampleEn": "May I borrow this book?",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "borrow a book",
+          "zh": "借书"
+        },
+        {
+          "en": "borrow from a friend",
+          "zh": "向朋友借"
+        }
+      ]
+    },
+    {
+      "id": "rns1-hesitate",
+      "headword": "hesitate",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "v.",
+      "meaningZh": "犹豫",
+      "exampleEn": "She hesitated before opening the door.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "hesitate to speak",
+          "zh": "犹豫要不要开口"
+        },
+        {
+          "en": "without hesitation",
+          "zh": "毫不犹豫地"
+        }
+      ]
+    },
+    {
+      "id": "rns1-confirm",
+      "headword": "confirm",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "v.",
+      "meaningZh": "确认",
+      "exampleEn": "The camera could confirm his arrival.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "confirm the details",
+          "zh": "确认细节"
+        },
+        {
+          "en": "confirm an appointment",
+          "zh": "确认预约"
+        }
+      ]
+    },
+    {
+      "id": "rns1-witness",
+      "headword": "witness",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "目击者；证人",
+      "exampleEn": "A witness saw the gray coat.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "a key witness",
+          "zh": "关键证人"
+        },
+        {
+          "en": "witness a scene",
+          "zh": "目睹现场"
+        }
+      ]
+    },
+    {
+      "id": "rns1-reveal",
+      "headword": "reveal",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "v.",
+      "meaningZh": "揭示；显露",
+      "exampleEn": "The photo revealed another person.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "reveal a secret",
+          "zh": "揭露秘密"
+        },
+        {
+          "en": "reveal the truth",
+          "zh": "揭示真相"
+        }
+      ]
+    },
+    {
+      "id": "rns1-risk",
+      "headword": "risk",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "风险",
+      "exampleEn": "She knew the risk of trusting him.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "take a risk",
+          "zh": "承担风险"
+        },
+        {
+          "en": "reduce the risk",
+          "zh": "降低风险"
+        }
+      ]
+    },
+    {
+      "id": "rns1-choice",
+      "headword": "choice",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "选择",
+      "exampleEn": "It was her choice to stay.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "make a choice",
+          "zh": "作出选择"
+        },
+        {
+          "en": "a difficult choice",
+          "zh": "艰难的选择"
+        }
+      ]
+    },
+    {
+      "id": "rns1-clue",
+      "headword": "clue",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "线索",
+      "exampleEn": "The note gave her an important clue.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "follow a clue",
+          "zh": "追查线索"
+        },
+        {
+          "en": "an important clue",
+          "zh": "重要线索"
+        }
+      ]
+    },
+    {
+      "id": "rns1-record",
+      "headword": "record",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "记录",
+      "exampleEn": "The old record showed a different name.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "keep a record",
+          "zh": "保留记录"
+        },
+        {
+          "en": "a written record",
+          "zh": "书面记录"
+        }
+      ]
+    },
+    {
+      "id": "rns1-trace",
+      "headword": "trace",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n./v.",
+      "meaningZh": "痕迹；追踪",
+      "exampleEn": "The ink left a faint trace on the card.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "leave a trace",
+          "zh": "留下痕迹"
+        },
+        {
+          "en": "trace the source",
+          "zh": "追查来源"
+        }
+      ]
+    },
+    {
+      "id": "rns1-identity",
+      "headword": "identity",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "身份",
+      "exampleEn": "She wanted to know the visitor's identity.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "confirm an identity",
+          "zh": "确认身份"
+        },
+        {
+          "en": "hide an identity",
+          "zh": "隐藏身份"
+        }
+      ]
+    },
+    {
+      "id": "rns1-document",
+      "headword": "document",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "文件；文档",
+      "exampleEn": "The document was dated two years earlier.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "official document",
+          "zh": "官方文件"
+        },
+        {
+          "en": "check a document",
+          "zh": "核查文件"
+        }
+      ]
+    },
+    {
+      "id": "rns1-investigate",
+      "headword": "investigate",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "v.",
+      "meaningZh": "调查",
+      "exampleEn": "They decided to investigate the missing page.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "investigate a case",
+          "zh": "调查案件"
+        },
+        {
+          "en": "investigate carefully",
+          "zh": "仔细调查"
+        }
+      ]
+    },
+    {
+      "id": "rns1-restore",
+      "headword": "restore",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "v.",
+      "meaningZh": "恢复；修复",
+      "exampleEn": "He tried to restore the damaged paper.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "restore a document",
+          "zh": "修复文件"
+        },
+        {
+          "en": "restore the original",
+          "zh": "恢复原状"
+        }
+      ]
+    },
+    {
+      "id": "rns1-suspect",
+      "headword": "suspect",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "v.",
+      "meaningZh": "怀疑",
+      "exampleEn": "She began to suspect the card had been altered.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "suspect a mistake",
+          "zh": "怀疑有错误"
+        },
+        {
+          "en": "suspect someone",
+          "zh": "怀疑某人"
+        }
+      ]
+    },
+    {
+      "id": "rns1-detail",
+      "headword": "detail",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "细节",
+      "exampleEn": "One small detail changed the meaning.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "check the details",
+          "zh": "检查细节"
+        },
+        {
+          "en": "in detail",
+          "zh": "详细地"
+        }
+      ]
+    },
+    {
+      "id": "rns1-delay",
+      "headword": "delay",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n./v.",
+      "meaningZh": "延迟；推迟",
+      "exampleEn": "The storm caused a delay in delivery.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "a short delay",
+          "zh": "短暂延误"
+        },
+        {
+          "en": "delay a decision",
+          "zh": "推迟决定"
+        }
+      ]
+    },
+    {
+      "id": "rns1-accurate",
+      "headword": "accurate",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "adj.",
+      "meaningZh": "准确的",
+      "exampleEn": "The time on the card was accurate.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "accurate information",
+          "zh": "准确的信息"
+        },
+        {
+          "en": "an accurate description",
+          "zh": "准确的描述"
+        }
+      ]
+    },
+    {
+      "id": "rns1-stamp",
+      "headword": "stamp",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "印章；邮戳",
+      "exampleEn": "The card carried an unusual stamp.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "date stamp",
+          "zh": "日期戳"
+        },
+        {
+          "en": "rubber stamp",
+          "zh": "橡皮印章"
+        }
+      ]
+    },
+    {
+      "id": "rns1-warning",
+      "headword": "warning",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "警告",
+      "exampleEn": "The final sentence was a warning.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "issue a warning",
+          "zh": "发出警告"
+        },
+        {
+          "en": "ignore a warning",
+          "zh": "忽视警告"
+        }
+      ]
+    },
+    {
+      "id": "rns1-secret",
+      "headword": "secret",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "秘密",
+      "exampleEn": "There was a secret inside the binding.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "keep a secret",
+          "zh": "保守秘密"
+        },
+        {
+          "en": "a family secret",
+          "zh": "家族秘密"
+        }
+      ]
+    },
+    {
+      "id": "rns1-respond",
+      "headword": "respond",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "v.",
+      "meaningZh": "回应；回答",
+      "exampleEn": "He refused to respond to her question.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "respond to a question",
+          "zh": "回答问题"
+        },
+        {
+          "en": "respond quickly",
+          "zh": "迅速回应"
+        }
+      ]
+    },
+    {
+      "id": "rns1-separate",
+      "headword": "separate",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "adj./v.",
+      "meaningZh": "分开的；分离",
+      "exampleEn": "The two pages had been kept separate.",
+      "exampleZh": null,
+      "collocations": [
+        {
+          "en": "keep separate",
+          "zh": "分开放置"
+        },
+        {
+          "en": "separate the pages",
+          "zh": "分开纸页"
+        }
+      ]
+    }
+  ],
+  "chapters": [
+    {
+      "id": "rns1-ch01",
+      "number": 1,
+      "title": "最后一位借阅者",
+      "preview": true,
+      "paragraphs": [
+        {
+          "segments": [
+            {
+              "text": "雨下到夜里十一点四十一分，旧书店还没有关门。林予安原本只想收起最后一排书，却忽然 "
+            },
+            {
+              "wordId": "rns1-notice",
+              "surface": "notice",
+              "gloss": "注意到"
+            },
+            {
+              "text": " 到柜台上多了一只米白色的 "
+            },
+            {
+              "wordId": "rns1-envelope",
+              "surface": "envelope",
+              "gloss": "信封"
+            },
+            {
+              "text": "。窗玻璃上的雨水把街灯拖成一条条发亮的线，店里没有人进来过。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "它不是快递，也没有邮票。封面上只写着“给仍在等待的人”，没有姓名，没有地址。看起来像一封 "
+            },
+            {
+              "wordId": "rns1-anonymous",
+              "surface": "anonymous",
+              "gloss": "匿名的"
+            },
+            {
+              "text": " 来信。她刚要把它收进失物盒，却发现纸张带着书店旧信笺才有的细小水印。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "林予安的手指停在封口处。那行字有一种难以解释的 "
+            },
+            {
+              "wordId": "rns1-familiar",
+              "surface": "familiar",
+              "gloss": "熟悉的"
+            },
+            {
+              "text": " 感。她把信放到台灯下，终于认出那微微向右倾斜的 "
+            },
+            {
+              "wordId": "rns1-handwriting",
+              "surface": "handwriting",
+              "gloss": "笔迹"
+            },
+            {
+              "text": "——和姐姐林予宁的一模一样。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "两年前，姐姐林予宁在一场暴雨后突然 "
+            },
+            {
+              "wordId": "rns1-disappear",
+              "surface": "disappear",
+              "gloss": "消失"
+            },
+            {
+              "text": "。警方没有找到可靠线索，家人后来不再提起她的名字。只有予安一直留着姐姐最后借走的那本小说《海边的第二封信》，把它放在收银台后面最靠里的抽屉。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "信里只有三句话。第一句是：“这不是恶作剧。”第二句是：“情况 "
+            },
+            {
+              "wordId": "rns1-urgent",
+              "surface": "urgent",
+              "gloss": "紧急的"
+            },
+            {
+              "text": "，十一点四十七分以前，不要让穿灰色大衣的男人借走《海边的第二封信》。”予安第一反应是看表：十一点四十三分。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "第三句写在纸张折痕的背面，几乎要对着灯才能看清，像某个 "
+            },
+            {
+              "wordId": "rns1-hidden",
+              "surface": "hidden",
+              "gloss": "隐藏的"
+            },
+            {
+              "text": " 的暗号：“如果你还想见到我，请别相信第一个说出我名字的人。”这行字的最后一个句号，竟画成了姐姐小时候常用的小星星。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "她需要 "
+            },
+            {
+              "wordId": "rns1-evidence",
+              "surface": "evidence",
+              "gloss": "证据"
+            },
+            {
+              "text": " 来证明这封信不是有人故意戏弄，于是打开收银台旁的监控电脑。屏幕上却跳出一条提示：无 "
+            },
+            {
+              "wordId": "rns1-access",
+              "surface": "access",
+              "gloss": "使用权限"
+            },
+            {
+              "text": " 权限。她明明昨天还看过这段录像，今天系统却说她的身份不存在。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "她刚准备拨电话，门铃响了。一个穿灰色大衣的男人站在门口，雨水沿伞骨滴在地板上。巧合得让人觉得 "
+            },
+            {
+              "wordId": "rns1-suspicious",
+              "surface": "suspicious",
+              "gloss": "可疑的"
+            },
+            {
+              "text": "。男人先看了眼墙上时钟，然后才把伞收起来。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "那人没有立刻走进来，只是慢慢 "
+            },
+            {
+              "wordId": "rns1-approach",
+              "surface": "approach",
+              "gloss": "靠近"
+            },
+            {
+              "text": " 柜台。他的目光略过一整面书架，最后停在抽屉边缘露出的一小截蓝色书脊。予安下意识把抽屉向里推了推。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“你认识林予宁吗？”男人问。予安几乎立刻 "
+            },
+            {
+              "wordId": "rns1-recognize",
+              "surface": "recognize",
+              "gloss": "认出"
+            },
+            {
+              "text": " 出了姐姐的名字，却不敢露出表情。她想起信里第三句话，便没有回答。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“我想 "
+            },
+            {
+              "wordId": "rns1-borrow",
+              "surface": "borrow",
+              "gloss": "借入"
+            },
+            {
+              "text": " 一本书。”他说，“《海边的第二封信》。有人告诉我，它一直在这里。”他念出书名时停顿了一下，像是在确认自己说对了每个字。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "予安开始 "
+            },
+            {
+              "wordId": "rns1-hesitate",
+              "surface": "hesitate",
+              "gloss": "犹豫"
+            },
+            {
+              "text": "。如果把书交出去，她可能会失去唯一的 "
+            },
+            {
+              "wordId": "rns1-clue",
+              "surface": "clue",
+              "gloss": "线索"
+            },
+            {
+              "text": "；如果拒绝，她也许永远不知道姐姐发生了什么。她把手压在抽屉上，听见窗外雨声忽然变大。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "她故作镇定：“你能 "
+            },
+            {
+              "wordId": "rns1-confirm",
+              "surface": "confirm",
+              "gloss": "确认"
+            },
+            {
+              "text": " 一下，是谁让你来的吗？”男人沉默了几秒，说：“我是那晚唯一的 "
+            },
+            {
+              "wordId": "rns1-witness",
+              "surface": "witness",
+              "gloss": "目击者"
+            },
+            {
+              "text": "。”他从大衣口袋里拿出一张照片，却没有立刻递给她。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "照片里的姐姐站在这家书店门前。男人把照片慢慢翻向灯光，几乎被暗影遮住的角落 "
+            },
+            {
+              "wordId": "rns1-reveal",
+              "surface": "reveal",
+              "gloss": "揭示"
+            },
+            {
+              "text": " 出第三个人影。那个人背对着镜头，手里拿着一只印有旧书店标志的纸袋。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "予安知道自己正在冒 "
+            },
+            {
+              "wordId": "rns1-risk",
+              "surface": "risk",
+              "gloss": "风险"
+            },
+            {
+              "text": "。她有两个 "
+            },
+            {
+              "wordId": "rns1-choice",
+              "surface": "choice",
+              "gloss": "选择"
+            },
+            {
+              "text": "：继续追问，或者立刻关门报警。她选择先问那个人影是谁，因为照片背面的日期，正是姐姐失踪的那一夜。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "男人的视线突然落在她手中的米白色信封上，脸色变了。“你把那封信打开了？”他声音低得几乎听不见。就在这时，墙上时钟的分针跳到了十一点四十七分。门外传来金属信箱轻轻合上的声音。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rns1-ch02",
+      "number": 2,
+      "title": "被划掉的借书卡",
+      "preview": false,
+      "paragraphs": [
+        {
+          "segments": [
+            {
+              "text": "十一点四十七分，书店门口的旧信箱发出一声轻响。予安没有动。灰大衣男人站在灯下，神情像一个来晚了许多年的人。“先别碰那只箱子。”他说。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“你刚才说你是目击者。”予安把信封压在桌面上，“那么请留下你的 "
+            },
+            {
+              "wordId": "rns1-identity",
+              "surface": "identity",
+              "gloss": "身份"
+            },
+            {
+              "text": " 证明。”男人掏出一张褪色的工作证，姓名一栏几乎被雨水磨掉，只剩“档案修复”四个字。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "他自称周砚，曾在街区资料馆工作。予安不打算凭一张旧证件相信他。她取出一只空白借书卡，要求他把姓名和联系方式写下来，作为这次来访的 "
+            },
+            {
+              "wordId": "rns1-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "周砚写字时，笔尖在“借阅日期”那一栏停了一瞬。予安发现他的字不像信上那样右倾，反倒笔画很直。她暗暗松了口气，却没有因此放松警惕。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“你的姐姐查过这里的借阅档案。”周砚说，“她想 "
+            },
+            {
+              "wordId": "rns1-trace",
+              "surface": "trace",
+              "gloss": "痕迹"
+            },
+            {
+              "text": " 一张被换掉的纸。”他说的不是失踪当天的事，而是更早的一个冬天。那年书店仍属于旧资料馆的附属借阅点。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "予安打开柜台下的铁盒。盒里有一叠泛黄卡片，每张背面都盖有日期。第47号卡的正面记录完好，背面却留下了一条被橡皮擦过的灰色 "
+            },
+            {
+              "wordId": "rns1-trace",
+              "surface": "trace",
+              "gloss": "痕迹"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“你一直知道这里有问题？”她问。周砚没有立刻 "
+            },
+            {
+              "wordId": "rns1-respond",
+              "surface": "respond",
+              "gloss": "回应"
+            },
+            {
+              "text": "，只是指着卡片右下角的蓝色印记：“这不是借书店的章。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "那是一个水滴形 "
+            },
+            {
+              "wordId": "rns1-stamp",
+              "surface": "stamp",
+              "gloss": "印章"
+            },
+            {
+              "text": "，中间藏着细得看不清的数字。予安借来放大镜，发现数字竟是二十三和四十七。她想起刚才钟表的时间，心里升起一种被精心安排过的感觉。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "周砚拿出一份修复工作的旧 "
+            },
+            {
+              "wordId": "rns1-document",
+              "surface": "document",
+              "gloss": "文件"
+            },
+            {
+              "text": "。它列着六本受潮书籍，只有《海边的第二封信》被标成“需要 "
+            },
+            {
+              "wordId": "rns1-restore",
+              "surface": "restore",
+              "gloss": "恢复"
+            },
+            {
+              "text": " 书脊”。原本写着领取人姓名的一栏，被人用不同颜色的墨水盖住。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“这个表是谁填的？”予安问。周砚说，负责登记的人早已离开，但他一直 "
+            },
+            {
+              "wordId": "rns1-suspect",
+              "surface": "suspect",
+              "gloss": "怀疑"
+            },
+            {
+              "text": " 有人改过卡片，因为所有日期都对得上，唯独这一本书的归还时间少了十一分钟。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "予安把卡片翻到背面，发现还有一个小 "
+            },
+            {
+              "wordId": "rns1-detail",
+              "surface": "detail",
+              "gloss": "细节"
+            },
+            {
+              "text": "：曾经盖过的日期下面，藏着一个写反的数字。她把卡片举到镜子前，才看清那是“明天”。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "如果记录是真的，姐姐失踪那晚借出的书，居然在第二天才被归还。可书一直在抽屉里。予安拿来店里的日历核对，发现旧卡上的年份十分 "
+            },
+            {
+              "wordId": "rns1-accurate",
+              "surface": "accurate",
+              "gloss": "准确的"
+            },
+            {
+              "text": "，月份却比其他卡少了一位。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "周砚承认当年资料馆经历过断电，手工登记因此发生 "
+            },
+            {
+              "wordId": "rns1-delay",
+              "surface": "delay",
+              "gloss": "延迟"
+            },
+            {
+              "text": "。但他说没有人能够在停电后补齐所有纸张，那十一分钟的空白必定留下过另一份记录。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“你愿意跟我一起 "
+            },
+            {
+              "wordId": "rns1-investigate",
+              "surface": "investigate",
+              "gloss": "调查"
+            },
+            {
+              "text": " 吗？”他终于问。予安没有答应。她用手机拍下两张卡片，让纸本留在店里。她清楚，一份未经核实的记录不能直接当成证据。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "她把照片里的第三个人影和周砚的工作证放在一起看。两张照片的边缘使用同一种蓝色纸纹，却被人故意 "
+            },
+            {
+              "wordId": "rns1-separate",
+              "surface": "separate",
+              "gloss": "分开的"
+            },
+            {
+              "text": " 保存。就在此刻，旧信箱又响了一声。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "第二封信的封面只写着一句 "
+            },
+            {
+              "wordId": "rns1-warning",
+              "surface": "warning",
+              "gloss": "警告"
+            },
+            {
+              "text": "：“不要把书交给他。”周砚看见这行字，缓缓后退。他的惊讶不像演戏：“这封信不该在今天到达。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "予安拆开信封，里面是一张打印过的归还单，日期清楚写着明天。最下面还有姐姐留下的签名。有人保守着一个 "
+            },
+            {
+              "wordId": "rns1-secret",
+              "surface": "secret",
+              "gloss": "秘密"
+            },
+            {
+              "text": "，而真正的线索也许根本不在书里。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "她正想问个明白，书店灯突然熄灭。黑暗中，周砚却准确说出了那张归还单的编号——就像他早已看过。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
