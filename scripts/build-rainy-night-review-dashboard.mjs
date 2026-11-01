@@ -65,10 +65,12 @@ export function buildRainyNightOfflineReviewDashboard(bundle){
   .join(" ").toLowerCase())+'">'+
   '<div class="line"><h3>第'+q.chapterNo+'章 · 候选题 '+(i+1)+
   '</h3><span class="pill">段'+q.paragraphNo+'</span></div>'+
-  '<p>'+h(q.prompt)+'</p><p class="context">'+h(q.blankContext)+'</p>'+
+  '<p>'+h(q.prompt)+'</p><p><strong>题面提示（待核）：</strong>'+h(q.hintZh)+
+  ' · 首字母 '+h(q.firstLetter)+' · '+q.answerLetterCount+' 个英文字母</p>'+
+  '<p class="context">'+h(q.blankContext)+'</p>'+
   '<details><summary>核对答案与词义（仅供编辑）</summary><p>'+
   h(q.correctAnswer)+' · '+h(q.meaningZh)+' · '+h(q.partOfSpeech)+'</p></details>'+
-  '<p class="unapproved">EDITORIAL_NOT_APPROVED：检查答案唯一性与真实故事语境</p></article>'
+  '<p class="unapproved">EDITORIAL_NOT_APPROVED：提示不代表唯一答案已经核实；人工复核词义、字母数和其他可接受答案。</p></article>'
  ).join("");
  const html=[
   '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">',
