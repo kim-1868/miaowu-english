@@ -26,6 +26,7 @@ export function buildRainyNightOfflineReviewDashboard(bundle){
     echo.questions.some(q=>q.reviewStatus!=="EDITORIAL_NOT_APPROVED"))
   throw Error("S51_REVIEW_DASHBOARD_REQUIRES_UNAPPROVED_12_CHAPTER_DRAFT");
  const trackById=new Map(tracks.rows.map(x=>[x.wordId,x.track]));
+ const syntaxRiskCount=contexts.rows.filter(r=>r.reviewFlags.some(f=>f.startsWith("CODE_SWITCH_"))).length;
  const summaries={
   status:"PRIVATE_EDITORIAL_NOT_APPROVED",wordCards:words.rows.length,
   contexts:contexts.rows.length,echoQuestions:echo.questions.length,
@@ -49,6 +50,7 @@ export function buildRainyNightOfflineReviewDashboard(bundle){
  ).join("");
  const contextsHtml=contexts.rows.map(r=>
   '<article class="item" data-entry data-kind="context" data-chapter="'+r.chapter+
+  '" data-syntax-risk="'+(r.reviewFlags.some(f=>f.startsWith("CODE_SWITCH_"))?"yes":"no")+
   '" data-search="'+h([r.word,r.gloss,r.originalContext,r.reviewFlags.join(" ")]
    .join(" ").toLowerCase())+'">'+
   '<div class="line"><h3>'+h(r.word)+'</h3><span class="pill">第'+r.chapter+'章 · '+h(r.ref)+'</span></div>'+
@@ -97,27 +99,32 @@ export function buildRainyNightOfflineReviewDashboard(bundle){
   '<div class="count"><div class="stat"><b>188</b>未签审词卡</div>',
   '<div class="stat"><b>733</b>未签审语境</div>',
   '<div class="stat"><b>36</b>未签审剧情回声题</div>',
-  '<div class="stat"><b>0</b>正式批准音标词</div></div>',
+  '<div class="stat"><b>0</b>正式批准音标词</div>',
+  '<div class="stat"><b>'+syntaxRiskCount+'</b>词性混排风险提示 · 非审核结论</div></div>',
   '<div class="toolbar"><label for="kind">检查内容</label>',
   '<select id="kind"><option value="words">词卡 · 188</option><option value="contexts">故事语境 · 733</option><option value="echo">剧情回声 · 36</option></select>',
   '<input id="search" type="search" placeholder="搜索单词、释义或正文" aria-label="搜索审校记录">',
   '<label for="chapter">章节</label><select id="chapter"><option value="">全部章节</option>',
   ...Array.from({length:12},(_,i)=>'<option value="'+(i+1)+'">第'+(i+1)+'章</option>'),
-  '</select></div><p id="visible-count" aria-live="polite"></p>',
+  '</select><label for="syntaxRisk">混排语境</label>',
+  '<select id="syntaxRisk"><option value="">所有语境</option><option value="yes">优先看语法风险提示</option><option value="no">未触发本类提示</option></select></div>',
+  '<p class="muted">词性混排风险是自动启发式提示，存在误报；没有提示也不表示获得审核批准。仅在“故事语境”页启用筛选。</p>',
+  '<p id="visible-count" aria-live="polite"></p>',
   '<section class="panel" data-panel="words"><h2>词卡审核候选</h2>',wordsHtml,'</section>',
   '<section class="panel" data-panel="contexts" hidden><h2>733处正文锚点</h2>',contextsHtml,'</section>',
   '<section class="panel" data-panel="echo" hidden><h2>36道剧情回声候选题</h2>',echoHtml,'</section>',
   '<p class="warning">只读离线审校辅助。没有保存审核结果；没有权利验证或售卖功能。请按正式签审制度保留人工证据。</p>',
   '<script>',
-  '(function(){const kind=document.getElementById("kind"),search=document.getElementById("search"),chapter=document.getElementById("chapter"),count=document.getElementById("visible-count");',
-  'function refresh(){let shown=0;const current=kind.value;chapter.disabled=current==="words";',
+  '(function(){const kind=document.getElementById("kind"),search=document.getElementById("search"),chapter=document.getElementById("chapter"),syntaxRisk=document.getElementById("syntaxRisk"),count=document.getElementById("visible-count");',
+  'function refresh(){let shown=0;const current=kind.value;chapter.disabled=current==="words";syntaxRisk.disabled=current!=="contexts";',
   'document.querySelectorAll("[data-panel]").forEach(p=>{p.hidden=p.dataset.panel!==current});',
   'document.querySelectorAll("[data-panel="+current+"] [data-entry]").forEach(item=>{',
   'const ok=item.dataset.search.includes(search.value.trim().toLowerCase())&&',
-  '(current==="words"||!chapter.value||item.dataset.chapter===chapter.value);',
+  '(current==="words"||!chapter.value||item.dataset.chapter===chapter.value)&&',
+  '(current!=="contexts"||!syntaxRisk.value||item.dataset.syntaxRisk===syntaxRisk.value);',
   'item.hidden=!ok;if(ok)shown++;});count.textContent="当前显示 "+shown+" 条未审核记录";}',
   'kind.addEventListener("change",refresh);search.addEventListener("input",refresh);',
-  'chapter.addEventListener("change",refresh);refresh();})();',
+  'chapter.addEventListener("change",refresh);syntaxRisk.addEventListener("change",refresh);refresh();})();',
   '</script></body></html>'
  ].join("");
  return {summary:summaries,html};
