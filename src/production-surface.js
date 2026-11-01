@@ -1,7 +1,7 @@
 // Production-only route floor. The current reader app has staging-only
 // laboratories that must never be exposed as public commercial endpoints.
 // This block does NOT replace identity, entitlement or admin authentication.
-const LAB_ASSET=/^\/(?:account-test|reading-test|editor(?:-(?:edit|review|publication))?)(?:\.(?:html|js|css))$/i;
+const LAB_ASSET=/^\/(?:account-test|reading-test|editor(?:-(?:edit|review|publication))?|ops(?:-console)?)(?:\.(?:html|js|css))$/i;
 const QA_CHAPTER=/^\/api\/chapters\/qa[-_][a-z0-9_-]*(?:\/words)?$/i;
 const QA_BOOK=/^\/api\/books\/qa[-_][a-z0-9_-]*\/chapters$/i;
 
