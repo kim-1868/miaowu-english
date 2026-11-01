@@ -20,7 +20,7 @@ export function auditProductionConfig(config){
   ([k,v])=>/staging|preview|qa|test/i.test(k)||/staging|qa_only|test-only/i.test(String(v))));
  reject("PRODUCTION_ASSETS_MUST_RUN_THROUGH_WORKER",
   config.assets?.binding!=="ASSETS"||config.assets?.run_worker_first!==true||
-  !/public\/?$/.test(config.assets?.directory??""));
+  config.assets?.directory!=="../dist-production/public");
  reject("WORKER_ENTRY_MISSING",typeof config.main!=="string"||
   !/src\/worker\.js$/.test(config.main));
  const dbs=config.d1_databases;
