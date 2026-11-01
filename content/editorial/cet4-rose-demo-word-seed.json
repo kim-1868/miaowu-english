@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "candidateOnly": true,
+  "id": "rose-v03-browser-demo",
+  "name": "玫瑰未落幕",
+  "category": "cet4",
+  "source": "public/app.js:WORDS",
+  "sourceType": "browser-demo-only",
+  "publishable": false,
+  "headwords": [
+    "contract",
+    "indifferent",
+    "confirm",
+    "hesitate",
+    "signature",
+    "evidence",
+    "identity",
+    "transfer",
+    "reveal",
+    "promise",
+    "approach",
+    "consequence"
+  ],
+  "notes": "The existing two demo chapters and 12 visible word cards are NOT a completed published book. Only word identity candidates are included; verifiedCET4 and IPA are not inferred from their demo content."
+}
