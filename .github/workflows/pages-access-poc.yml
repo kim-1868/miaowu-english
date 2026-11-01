@@ -41,7 +41,8 @@ jobs:
           test -f dist/index.html
           test -s dist/_worker.js
           test -f dist/__miaowu_pages_asset_probe.txt
-          grep -q "stagingGate" dist/_worker.js
-          grep -q "ACTIVATION_PEPPER" dist/_worker.js
+          grep -q "STAGING_ORIGIN" dist/_worker.js
+          ! grep -q "ACTIVATION_PEPPER" dist/_worker.js
+          ! grep -q "STAGING_PREVIEW_PASSWORD" dist/_worker.js
           test ! -e dist/db
           test ! -e dist/private-output
