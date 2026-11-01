@@ -81,3 +81,21 @@ test('S7 matches the original V0.3 design rules while showing actual progress an
   assert.match(script,/token\.surface/);
   assert.match(markup,/剧情回声已接入 Cloudflare D1/);
 });
+
+test('S8 original reader embeds chapter word sidebar and secure quick-review controls',()=>{
+  const js=app(),markup=html();
+  const chapterWords=readFileSync(new URL('../public/chapter-words.js',import.meta.url),'utf8');
+  assert.match(markup,/id="chapterVocabPanel"/);
+  assert.match(markup,/id="chapterVocabBody"/);
+  assert.match(markup,/id="mobileVocabOpen"/);
+  assert.match(markup,/id="chapterVocabToggle"/);
+  assert.match(markup,/src="\/chapter-words\.js"/);
+  assert.match(js,/window\.MiaowuChapterWords\?\.openChapter\(id\)/);
+  assert.match(js,/window\.MiaowuChapterWords\?\.setWords/);
+  assert.match(chapterWords,/\/api\/me\/quick-review/);
+  assert.match(chapterWords,/remembered/);
+  assert.match(chapterWords,/judgments/);
+  assert.match(chapterWords,/word_id/);
+  assert.match(chapterWords,/mobileVocabOpen/);
+  assert.doesNotMatch(chapterWords,/innerHTML\s*=\s*.*\bdata\.meaning_zh\b/);
+});
