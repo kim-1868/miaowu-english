@@ -15,7 +15,7 @@ const isObject=x=>x!==null&&typeof x==="object"&&!Array.isArray(x);
 const sqlQuoted=s=>"'"+s.replaceAll("'","''")+"'";
 export function parseConfirmedOrdersCsv(csv){
  if(typeof csv!=="string"||csv.length>20000)throw Error("INVALID_ORDERS_FILE");
- const lines=csv.replace(/\r\n/g,"\n").trimEnd().split("\n");
+ const lines=csv.replace(/\r\n/g,"\n").replace(/\n$/,"").split("\n");
  if(lines.shift()?.replace(/^\uFEFF/,"")!==TITLE)throw Error("INVALID_ORDERS_HEADER");
  if(lines.length<1||lines.length>LIMIT)throw Error("INVALID_ORDER_COUNT");
  const rows=[],seen=new Set();
