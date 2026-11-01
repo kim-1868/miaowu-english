@@ -16,6 +16,7 @@ class LocalD1{
   this.db.exec(readFileSync(new URL("../db/001_schema.sql",import.meta.url),"utf8"));
   this.db.exec(readFileSync(new URL("../db/002_s1.sql",import.meta.url),"utf8"));
   this.db.exec(readFileSync(new URL("../db/003_public_categories.sql",import.meta.url),"utf8"));
+  this.db.exec(readFileSync(new URL("../db/production/002_account_recovery_codes.sql",import.meta.url),"utf8"));
   this.db.exec(`
     INSERT INTO books(id,category_id,title,status)
     VALUES ('book-cet4','cet4','Private CET4 QA Fixture','published'),
@@ -286,7 +287,10 @@ test("S14 password change validates current password, rotates current cookie and
   currentPassword:pass,newPassword:"new-only-pass-2026-STRONG"
  },originalCookie),app);
  assert.equal(change.status,200);
- assert.deepEqual(await change.json(),{ok:true,otherSessionsRevoked:true});
+ const changedPasswordResponse=await change.json();
+ assert.equal(changedPasswordResponse.ok,true);
+ assert.equal(changedPasswordResponse.otherSessionsRevoked,true);
+ assert.match(changedPasswordResponse.recoveryCode,/^[0-9a-f]{8}(?:-[0-9a-f]{8}){7}$/);
  const freshCookie=session(change);
  assert.notEqual(freshCookie,originalCookie);
  const sessionRows=db.db.prepare("SELECT COUNT(*) AS n FROM sessions").get().n;
@@ -357,5 +361,119 @@ test("S14 invalid new password does not revoke any sessions or overwrite passwor
  }
  const preserved=await worker.fetch(request("/api/auth/me","GET",undefined,cookie),app);
  assert.equal(preserved.status,200);
+ db.db.close();
+});
+
+
+test("S18 paid-category account recovers with a single-use code and rejects old devices",async()=>{
+ const db=new LocalD1();
+ await db.voucher(codeA,"recovery-a","cet4");
+ const app=env(db);
+ const signup=await worker.fetch(request("/api/auth/register","POST",{
+   username:"recover-owner",password:pass,activationCode:codeA
+ }),app);
+ assert.equal(signup.status,201);
+ const signed=await signup.json();
+ assert.match(signed.recoveryCode,/^[0-9a-f]{8}(?:-[0-9a-f]{8}){7}$/);
+ const previousCookie=session(signup);
+ const otherDevice=await worker.fetch(request("/api/auth/login","POST",{
+  username:"recover-owner",password:pass
+ }),app);
+ assert.equal(otherDevice.status,200);
+ const oldSecond=session(otherDevice);
+ const records=db.db.prepare("SELECT code_hash FROM account_recovery").all();
+ assert.equal(records.length,1);
+ assert.ok(!records[0].code_hash.includes(signed.recoveryCode.replaceAll("-","")));
+ const wrong=await worker.fetch(request("/api/auth/recover","POST",{
+  username:"recover-owner",recoveryCode:"A".repeat(64),newPassword:"new-recovery-password-2026"
+ }),app);
+ assert.equal(wrong.status,401);
+ assert.equal((await wrong.json()).error,"INVALID_RECOVERY_CREDENTIALS");
+ const reset=await worker.fetch(request("/api/auth/recover","POST",{
+  username:"recover-owner",recoveryCode:signed.recoveryCode,
+  newPassword:"new-recovery-password-2026"
+ }),app);
+ assert.equal(reset.status,200);
+ const outcome=await reset.json();
+ assert.equal(outcome.oldSessionsRevoked,true);
+ assert.notEqual(outcome.recoveryCode,signed.recoveryCode);
+ assert.deepEqual(outcome.categories.map(x=>x.slug),["cet4"]);
+ const fresh=session(reset);
+ assert.equal(db.db.prepare("SELECT COUNT(*) AS n FROM sessions").get().n,1);
+ for(const cookie of [previousCookie,oldSecond]){
+  const stale=await worker.fetch(request("/api/auth/me","GET",undefined,cookie),app);
+  assert.equal(stale.status,401);
+ }
+ assert.equal((await worker.fetch(request("/api/auth/me","GET",undefined,fresh),app)).status,200);
+ assert.equal((await worker.fetch(request("/api/chapters/chapter-cet4","GET",undefined,fresh),app)).status,200);
+ const replay=await worker.fetch(request("/api/auth/recover","POST",{
+  username:"recover-owner",recoveryCode:signed.recoveryCode,
+  newPassword:"account-stolen-password-2026"
+ }),app);
+ assert.equal(replay.status,401);
+ const oldLogin=await worker.fetch(request("/api/auth/login","POST",{
+  username:"recover-owner",password:pass
+ }),app);
+ assert.equal(oldLogin.status,401);
+ const currentLogin=await worker.fetch(request("/api/auth/login","POST",{
+  username:"recover-owner",password:"new-recovery-password-2026"
+ }),app);
+ assert.equal(currentLogin.status,200);
+ db.db.close();
+});
+
+test("S18 logged-in password change invalidates the former offline recovery credential",async()=>{
+ const db=new LocalD1();
+ await db.voucher(codeA,"recovery-b","cet4");
+ const app=env(db);
+ const signup=await worker.fetch(request("/api/auth/register","POST",{
+  username:"recover-rotator",password:pass,activationCode:codeA
+ }),app);
+ const oldCode=(await signup.json()).recoveryCode;
+ const previousCookie=session(signup);
+ const change=await worker.fetch(request("/api/auth/change-password","POST",{
+  currentPassword:pass,newPassword:"after-change-only-password-2026"
+ },previousCookie),app);
+ assert.equal(change.status,200);
+ const changed=await change.json();
+ assert.match(changed.recoveryCode,/^[0-9a-f]{8}(?:-[0-9a-f]{8}){7}$/);
+ assert.notEqual(changed.recoveryCode,oldCode);
+ const failed=await worker.fetch(request("/api/auth/recover","POST",{
+  username:"recover-rotator",recoveryCode:oldCode,
+  newPassword:"BAD_ACTOR_PASSWORD_2026"
+ }),app);
+ assert.equal(failed.status,401);
+ const works=await worker.fetch(request("/api/auth/recover","POST",{
+  username:"recover-rotator",recoveryCode:changed.recoveryCode,
+  newPassword:"legit-final-password-2026"
+ }),app);
+ assert.equal(works.status,200);
+ assert.equal((await works.json()).categories[0].slug,"cet4");
+ db.db.close();
+});
+
+test("S18 recovery only in production and requires same-origin proof for state-changing operations",async()=>{
+ const db=new LocalD1();
+ const staging=env(db);staging.APP_ENV="staging";
+ const denied=await worker.fetch(request("/api/auth/recover","POST",{
+  username:"guest-user",recoveryCode:"a".repeat(64),
+  newPassword:"some-test-password-2026"
+ }),staging);
+ // The existing staging preview guard runs before account endpoints.
+ // Without a preview password the staging API safely fails closed at 503.
+ assert.equal(denied.status,503);
+ const forged=new Request(origin+"/api/auth/recover",{
+  method:"POST",headers:{"Origin":"https://malicious.invalid",
+   "Content-Type":"application/json"},body:JSON.stringify({
+   username:"guest-user",recoveryCode:"a".repeat(64),
+   newPassword:"some-test-password-2026"
+  })
+ });
+ const mismatch=await worker.fetch(forged,env(db));
+ assert.equal(mismatch.status,403);
+ const malformed=await worker.fetch(request("/api/auth/recover","POST",{
+  username:"guest-user",recoveryCode:"missing",newPassword:"some-test-password-2026"
+ }),env(db));
+ assert.equal(malformed.status,400);
  db.db.close();
 });

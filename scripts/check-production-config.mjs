@@ -14,11 +14,13 @@ export function auditProductionConfig(config){
  const name=config.name;
  reject("WORKER_NAME_MUST_BE_PRODUCTION",typeof name!=="string"||!/^miaowu-english-(?:production|prod)$/.test(name));
  reject("APP_ENV_NOT_PRODUCTION",config.vars?.APP_ENV!=="production");
+ reject("PUBLIC_WORKERS_DEV_NOT_DISABLED",config.workers_dev!==false);
+ reject("WORKER_PREVIEW_URLS_NOT_DISABLED",config.preview_urls!==false);
  reject("STAGING_VARIABLES_PRESENT",Object.entries(config.vars??{}).some(
   ([k,v])=>/staging|preview|qa|test/i.test(k)||/staging|qa_only|test-only/i.test(String(v))));
  reject("PRODUCTION_ASSETS_MUST_RUN_THROUGH_WORKER",
   config.assets?.binding!=="ASSETS"||config.assets?.run_worker_first!==true||
-  !/public\/?$/.test(config.assets?.directory??""));
+  config.assets?.directory!=="../dist-production/public");
  reject("WORKER_ENTRY_MISSING",typeof config.main!=="string"||
   !/src\/worker\.js$/.test(config.main));
  const dbs=config.d1_databases;
@@ -31,11 +33,10 @@ export function auditProductionConfig(config){
   reject("STAGING_DB_IDENTIFIER",!UUID.test(db.database_id??"")||
     db.database_id===STAGING_DB_ID);
  }
- const required=config.secrets?.required;
- reject("ACTIVATION_PEPPER_SECRET_REQUIRED",!Array.isArray(required)||
-  !required.includes("ACTIVATION_PEPPER"));
- reject("PREVIEW_PASSWORD_NOT_ALLOWED_IN_PUBLIC_CONFIG",
-  Array.isArray(required)&&required.some(s=>/STAGING_PREVIEW_PASSWORD/i.test(s)));
+ // Wrangler secrets are provisioned separately using secret put; never
+ // place a nonstandard secrets object or secret values in this file.
+ reject("SECRETS_CANNOT_BE_DECLARED_IN_PUBLIC_WRANGLER",
+  Object.prototype.hasOwnProperty.call(config,"secrets"));
  reject("NO_OPS_PUBLISHING_IN_RELEASE_CONFIG",
   Object.entries(config.vars??{}).some(([k,v])=>
    ["OPS_CONSOLE_ENABLED","OPS_WITHDRAWAL_ENABLED","OPS_PUBLICATION_ENABLED"].includes(k)&&String(v)==="true"));

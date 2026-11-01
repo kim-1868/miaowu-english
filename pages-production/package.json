@@ -1,0 +1,10 @@
+{
+  "name": "miaowu-pages-production-proxy",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "check": "node --check build.mjs && node --check entry.mjs",
+    "test": "node --test entry.test.mjs"
+  }
+}

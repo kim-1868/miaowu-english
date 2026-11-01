@@ -1,5 +1,6 @@
 import { stagingGate, stagingCookieAfterBasic } from "./staging-gate.js";
 import { productionSurfaceBlock } from "./production-surface.js";
+import {createRecoveryCode,recoveryDigest} from "./recovery-code.js";
 import { handleEditor } from "./editorial-admin.js";
 import { handleOps } from "./ops-access.js";
 import { handleOpsPublication } from "./ops-publication.js";
@@ -83,6 +84,7 @@ async function register(req, env) {
   const userId = crypto.randomUUID();
   const { hash, salt } = await atStage("register.password_hash", () => newPasswordHash(body.password, env));
   const session = await atStage("register.session_token", () => sessionData(userId));
+  const recovery=env.APP_ENV==="production"?await createRecoveryCode(env):null;
   try {
     // D1.batch is transactional: an invalid or used code causes the NOT NULL
     // entitlement insert to fail, rolling back user and session creation.
@@ -97,7 +99,9 @@ async function register(req, env) {
           (SELECT id FROM activation_codes WHERE code_hash=? AND redeemed_by=? AND redemption_nonce=? AND status='redeemed'))`,
           userId, codeHash, userId, redemptionNonce, codeHash, userId, redemptionNonce),
       dbStmt(db, `INSERT INTO sessions(id_hash,user_id,expires_at) VALUES(?,?,?)`,
-        session.idHash, userId, session.expires)
+        session.idHash, userId, session.expires),
+      ...(recovery?[dbStmt(db,`INSERT INTO account_recovery(user_id,code_hash)
+        VALUES(?,?)`,userId,recovery.codeHash)]:[])
     ]);
   } catch {
     await atStage("register.failed_attempt", () => countFailure(db, key));
@@ -107,7 +111,7 @@ async function register(req, env) {
   }
   await atStage("register.reset_attempts", () => resetFailures(db, key));
   const categories = await atStage("register.list_entitlements", () => userEntitlements(db, userId));
-  return json({ user: { username }, categories }, 201, { "set-cookie": sessionCookie(session.token, req) });
+  return json({ user: { username }, categories, ...(recovery?{recoveryCode:recovery.displayCode}:{}) }, 201, { "set-cookie": sessionCookie(session.token, req) });
 }
 async function login(req, env) {
   const body = await parseBody(req);
@@ -168,6 +172,7 @@ async function changePassword(req, env, user) {
     ()=>newPasswordHash(nextPassword,env));
   const nextSession=await atStage("password_change.next_session",
     ()=>sessionData(user.id));
+  const recovery=env.APP_ENV==="production"?await createRecoveryCode(env):null;
   try {
     // Atomic D1.batch:
     // 1) Compare-and-set password prevents stale concurrent requests.
@@ -181,15 +186,69 @@ async function changePassword(req, env, user) {
       dbStmt(db,"DELETE FROM sessions WHERE user_id=?",user.id),
       dbStmt(db,`INSERT INTO sessions(id_hash,user_id,expires_at)
         VALUES(?,(SELECT id FROM users WHERE id=? AND password_hash=? AND password_salt=?),?)`,
-        nextSession.idHash,user.id,hash,salt,nextSession.expires)
+        nextSession.idHash,user.id,hash,salt,nextSession.expires),
+      ...(recovery?[dbStmt(db,`INSERT INTO account_recovery(user_id,code_hash,issued_at)
+        VALUES(?,?,CURRENT_TIMESTAMP)
+        ON CONFLICT(user_id) DO UPDATE SET
+          code_hash=excluded.code_hash,issued_at=CURRENT_TIMESTAMP`,
+        user.id,recovery.codeHash)]:[])
     ]);
   } catch {
     // Never leak salts, password material, internal database errors or SQL.
     return reject("PASSWORD_CHANGE_RETRY",409);
   }
   await atStage("password_change.reset_attempts",()=>resetFailures(db,throttle));
-  return json({ok:true,otherSessionsRevoked:true},200,
+  return json({ok:true,otherSessionsRevoked:true,...(recovery?{recoveryCode:recovery.displayCode}:{})},200,
     {"set-cookie":sessionCookie(nextSession.token,req)});
+}
+// One-time offline account recovery. Produces a NEW one-time code, revokes
+// all old login sessions, and returns the fresh session cookie. Failed codes
+// cannot consume or replace the old one because D1.batch rolls back entirely.
+async function recoverAccount(req,env){
+ if(env.APP_ENV!=="production")return reject("NOT_FOUND",404);
+ const body=await parseBody(req);
+ const username=normalizedUsername(body.username);
+ const digest=await recoveryDigest(body.recoveryCode,env);
+ const newPassword=body.newPassword;
+ if(!username||!digest||!validPassword(newPassword))
+  return reject("INVALID_RECOVERY_INPUT",400);
+ const db=env.DB;
+ const key=await throttleKey(env,"account-recovery",req,username);
+ const sourceKey=await throttleKey(env,"account-recovery-source",req);
+ if(await isBlocked(db,key)||await isBlocked(db,sourceKey))
+  return reject("TOO_MANY_ATTEMPTS",429);
+ // Always calculate a fresh salted password hash, even for unknown username.
+ const {hash,salt}=await newPasswordHash(newPassword,env);
+ const replacement=await createRecoveryCode(env);
+ const userRecord=await dbStmt(db,"SELECT id,username FROM users WHERE username=?",username).first();
+ const nextSession=await sessionData(userRecord?.id||"nonexistent");
+ try{
+  await db.batch([
+   dbStmt(db,`UPDATE account_recovery SET code_hash=?,issued_at=CURRENT_TIMESTAMP
+     WHERE user_id=(SELECT id FROM users WHERE username=?) AND code_hash=?`,
+     replacement.codeHash,username,digest),
+   dbStmt(db,`UPDATE users SET password_hash=?,password_salt=?
+     WHERE username=? AND EXISTS(SELECT 1 FROM account_recovery r
+     WHERE r.user_id=users.id AND r.code_hash=?)`,
+     hash,salt,username,replacement.codeHash),
+   dbStmt(db,`DELETE FROM sessions WHERE user_id=
+     (SELECT user_id FROM account_recovery WHERE code_hash=?)`,
+     replacement.codeHash),
+   dbStmt(db,`INSERT INTO sessions(id_hash,user_id,expires_at)
+     VALUES(?,(SELECT user_id FROM account_recovery WHERE code_hash=?),?)`,
+     nextSession.idHash,replacement.codeHash,nextSession.expires)
+  ]);
+ }catch{
+  await countFailure(db,key);
+  await countFailure(db,sourceKey);
+  return reject("INVALID_RECOVERY_CREDENTIALS",401);
+ }
+ await resetFailures(db,key);
+ await resetFailures(db,sourceKey);
+ return json({user:{username},
+   categories:await userEntitlements(db,userRecord.id),
+   recoveryCode:replacement.displayCode,oldSessionsRevoked:true
+ },200,{"set-cookie":sessionCookie(nextSession.token,req)});
 }
 async function redeem(req, env, user) {
   const body = await parseBody(req);
@@ -517,6 +576,7 @@ async function api(req, env) {
   }
   if (path === "/api/auth/register" && req.method === "POST") return register(req, env);
   if (path === "/api/auth/login" && req.method === "POST") return login(req, env);
+  if (path === "/api/auth/recover" && req.method === "POST") return recoverAccount(req,env);
   if (path === "/api/auth/logout" && req.method === "POST") return logout(req, env);
   if (path === "/api/auth/change-password" && req.method === "POST") return changePassword(req, env, user);
   if (path === "/api/auth/me" && req.method === "GET") {
