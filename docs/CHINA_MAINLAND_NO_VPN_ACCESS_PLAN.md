@@ -34,7 +34,17 @@
 - 为妙屋英语自己的域名开 `test.` 子域名绑定现有 Worker Custom Domain，真实关闭 VPN 测网站与 API。如果只看首屏、未检查账号登录与云端保存，不得确认业务可用。
 - 若域名后 4G/5G/宽带仍无法稳定连接，继续按本文第二阶段考虑非 Cloudflare 入口/同源后端部署。不能简单通过换域名后缀或从 Workers 切换 Pages 宣称免 VPN 保证。
 
-## 第一阶段（推荐）：独立域名挂到原 staging Worker，零数据库迁移
+## 2026-11-01 更新：用户实测 Pages 参考站免 VPN 可以打开（决策顺序改变）
+
+用户通过手机在不使用 VPN 的情况下访问 `https://story-verification.pages.dev/` **成功**；但现有妙屋英语 `workers.dev` 测试站需要 VPN。由此只能推断“该网络上参考站 URL 可达”，不能保证全部 `pages.dev` 和 Pages Functions/D1 请求均可达。
+
+**行动优先级调整：域名购买延后，先测试无须域名的 Pages 双层网络连通性。** 已创建专门的 Draft PR #21（`dev/pages-access-network-poc`）：`pages-poc/` 使用 Cloudflare Pages Advanced Mode 打包原 Worker，保留 staging Basic 预览访问与原 D1 绑定；两条公开、无敏感信息的路径分别验证动态 Pages Function（`/__miaowu_pages_function_probe`）与静态资源（`/__miaowu_pages_asset_probe.txt`）。CI 已验证构建、全部路由保护，旧 Worker/数据未改动。下一步仅由用户登录 Cloudflare 新建一个 Pages 项目，production branch `dev/pages-access-network-poc`，根目录 `pages-poc`，build command `npm install --no-audit --no-fund && npm run build`，输出目录 `dist`。具体教程见 `pages-poc/README.md`。
+
+- **Pages Function 探针中国大陆免 VPN 通过** → 再设置测试 Secrets、验证登录和学习 D1 读写，依旧不能保证所有 ISP 全天可用；实测稳定后才决定购买品牌域名。
+- **只有静态站可达，动态 Function 不可达** → 不能用纯 Pages 静态前端替代当前 Worker+D1，必须考虑能够访问的独立后端/全栈服务。
+- **Pages 两条探针都不可达** → 保留现有 staging，继续原有自定义域名与香港/国内可访问接入计划。
+
+## 第一阶段（在 Pages 实验失败时）：独立域名挂到原 staging Worker，零数据库迁移
 
 **前置必须由用户提供或完成：** 确认是否已有自己控制的独立域名；如果没有，则选域名注册购买（费用/可注册性须另行确认），不要注册与他人商标冲突的名称。
 
