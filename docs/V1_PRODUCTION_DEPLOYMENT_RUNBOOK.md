@@ -13,13 +13,42 @@
 
 **重要：GitHub 目前 PR #29 仍为 Draft；不要将该分支无审查地配置成自动部署正式环境。**
 
-## 第1阶段：只有操作者可以在 Cloudflare 账号完成的步骤（暂不要执行）
+## 生产 D1 已创建：现已进入“空库初始化”检查点（2026-11-01）
+
+用户在 Cloudflare 控制台截图确认全新 `miaowu-english-prod`，数据库 UUID `649c71b3-340c-49bf-b806-3d39256851d3`，截图时 **Number of Tables = 0**。与原 QA 数据库 UUID `88a817cb-23bb-4ae4-bcb8-92286c4165d4` 完全不同。**D1 UUID 是资源标识符，不是访问密钥**。
+
+已经在开发分支新增 `deploy/production.wrangler.jsonc` 并填入此新 UUID，同时关闭生产 Worker 的 workers.dev 与预览 URL；未给它配置真实秘密，也未部署 Worker。
+
+已按以下顺序汇总10个 SQL 源文件，且有 CI 检查防止脚本与真实源文件内容漂移：
+
+```
+db/001_schema.sql
+db/002_s1.sql
+db/003_public_categories.sql
+db/004_editorial_content.sql
+db/005_editorial_revisions.sql
+db/006_editorial_review_signoffs.sql
+db/007_ops_identity_audit.sql
+db/008_ops_release_workflow.sql
+db/production/001_one_paid_order_one_code.sql
+db/production/002_account_recovery_codes.sql
+```
+
+**一键初始化 SQL：** `db/production/BOOTSTRAP_NEW_EMPTY_D1.sql`。此脚本仅包含上述建表、触发器/索引与四种分类定义，不含测试用户、兑换码、付费章节或密钥。CI 使用内存 SQLite 模拟，确认期望的**22个用户/权限/学习/运营表、4条分类、0条用户/订单/书籍数据**。
+
+**需要 Cloudflare 账号所有者执行的下一项操作**：重新核对当前 D1 的名称与 UUID、确认仍为0张表，再进入 **Console**，粘贴整个 `BOOTSTRAP_NEW_EMPTY_D1.sql` 执行一次，**只可运行一次**。成功后可执行 `db/production/VERIFY_FRESH_D1_READONLY.sql` 只读查询，应看到 22 张表、四级/六级/雅思/考研四种 slug、账号/码/书/恢复码/运营员计数全为0、账号恢复及订单防重索引存在。
+
+**发生任何 Cloudflare SQL 错误时立即停止并记录错误，不可直接把整段脚本再跑一遍**：第008部分的 `ALTER TABLE books ADD COLUMN` 不支持重复执行，失败后可能已经留下先前步骤创建的表。先由开发者对照远程结构做差异检查，再决定如何安全续跑；绝不在旧 `miaowu-english-test` 执行。
+
+上述 D1 初始化只解决服务端数据表。**独立 Worker、生产 Secret、Pages 服务绑定和付款/首发内容仍未就绪，不能称为正式网站已经上线。**
+
+## 第1阶段：只有操作者可以在 Cloudflare 账号完成的步骤（D1 建表操作现已可在复核后执行，其余阶段继续待验收）
 
 下面这些是以后确实需要**账号所有者操作**的项，不能由 GitHub 上传文件替代：
 
-1. 在同一个 Cloudflare 账号新建 D1：**`miaowu-english-prod`**；记录新的 database UUID，确保不等于测试库 `88a817cb-23bb-4ae4-bcb8-92286c4165d4`。保留旧的 `miaowu-english-test` 不动。
-2. 先独立审核 `db/001_schema.sql`、`db/002_s1.sql`、`db/003_public_categories.sql`、`db/production/001_one_paid_order_one_code.sql`、**`db/production/002_account_recovery_codes.sql`** 及其他需要的初始化/内容管理变更，**只对这个空白新 D1**初始化表/类别；导入前记录新库备份点。不要复制 staging 用户、验证码、匿名测试发码或测试小说。**不要**直接批量运行已在旧测试库执行过的 007、008 迁移文件。
-3. 将 `deploy/production.wrangler.jsonc.example` 复制为**单独未公开追踪**的 `deploy/production.wrangler.jsonc`，填写新的 UUID，保持 `workers_dev:false`、`preview_urls:false`。运行 `node scripts/check-production-config.mjs deploy/production.wrangler.jsonc` 做只读核验。Worker 的 `ACTIVATION_PEPPER` **必须通过 Cloudflare Workers 的 `wrangler secret put ACTIVATION_PEPPER` 安全设置**（不得复用测试 Pepper）；在终端交互输入，不在配置、命令参数、聊天或截图中公开。生产配置文件内不允许声明明文或伪 `secrets` 属性。
+1. **已完成**：Cloudflare 新建独立 D1 `miaowu-english-prod`（UUID：`649c71b3-340c-49bf-b806-3d39256851d3`，截图时0表）。不更改原测试 D1。
+2. **下一项账号操作**：10份 SQL 已统一在 `db/production/BOOTSTRAP_NEW_EMPTY_D1.sql`，本地 CI 已验证。针对这个**确认仍为空且 UUID 正确**的生产 D1 可按上节手册仅执行一次完整 bootstrap，然后执行只读验证文件；没有用户数据迁移，也没有生产售卖。007、008 是为全新空库一起初始化的发布表和触发器，不是向旧 QA D1 无条件重复迁移。
+3. **生产 Worker 配置已在开发分支准备好**：`deploy/production.wrangler.jsonc` 使用本次截图里的新 UUID，保持 `workers_dev:false`、`preview_urls:false`。`node scripts/check-production-config.mjs deploy/production.wrangler.jsonc` 已作为纯配置校验流程；真正部署前仍需实机验收。Worker 的 `ACTIVATION_PEPPER` **必须通过 Cloudflare Workers 的 `wrangler secret put ACTIVATION_PEPPER` 安全设置**（不得复用测试 Pepper）；在终端交互输入，不在配置、命令参数、聊天或截图中公开。生产配置文件内不允许声明明文或伪 `secrets` 属性。
 4. 创建独立 Worker `miaowu-english-production`，配置绑定 `DB` 指向正式 D1、`ASSETS` 指向正式静态文件；在隔离的联调部署中验证路由和 schema，再配置最小权限及日志策略。**确保 Worker 未公开 workers.dev 和 Preview/Version URL**。Service Binding 可调用无公开 URL 的 Worker。
 5. 新建 Cloudflare Pages 项目 `miaowu-english-web`：Git分支为审查通过的独立发布分支，Root directory `pages-production`、Build command `npm run build`、Build output `dist`，与 `pages-production/wrangler.jsonc` 中的 `PRODUCTION_ORIGIN` service 绑定完全一致。此 Pages 项目不得加 D1、`ACTIVATION_PEPPER` 或来自旧站的 reviewer 密钥。
 6. 首先在正式环境部署一个**没有可售商品、真实用户/真实销售关闭**的内部验收版本，并在新 Pages URL 上核查：网络可达、生产 Worker绑定、全站路由、身份注册/登录/修改密码、跨账号隔离、未登录/未购买付费章节 401/403、退出失效、重复码拒绝、数据库备份恢复。
