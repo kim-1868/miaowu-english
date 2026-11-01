@@ -274,3 +274,36 @@ html[data-theme="dark"] .cloud-chapter-options .chapter-btn:hover{
     font-size:clamp(15px,3.2vw,19px);
   }
 }
+
+/* S8: V0.3 in-reader vocabulary and quick cards, no new visual theme. */
+.chapter-vocab-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.chapter-vocab-header h3{margin:0}
+.chapter-vocab-panel{max-height:min(68vh,670px);overflow-y:auto;overscroll-behavior:contain}
+.chapter-vocab-actions{margin:15px 0}
+.chapter-vocab-actions button{width:100%}
+.chapter-vocab-list{display:flex;flex-direction:column;gap:7px}
+.chapter-vocab-item{display:flex;align-items:center;gap:4px;background:var(--paper);
+  border:1px solid var(--line);border-radius:10px;padding:5px 6px}
+.chapter-vocab-select{border:0;background:transparent;cursor:pointer;text-align:left;
+  color:var(--ink);min-width:0;flex:1;padding:5px 6px}
+.chapter-vocab-select strong{font:600 15px Georgia,serif;display:block;color:var(--wine)}
+.chapter-vocab-select small{font-size:11px;display:block;line-height:1.5;color:var(--muted)}
+.chapter-vocab-voice{border:0;background:transparent;color:var(--wine);cursor:pointer;padding:8px}
+.quick-review-card{padding-top:13px}
+.quick-counter{font:11px Georgia,serif;letter-spacing:.16em;color:var(--gold,#a8836d)}
+.quick-word{font:600 26px Georgia,serif;color:var(--wine);margin:13px 0 6px;overflow-wrap:anywhere}
+.quick-pron,.quick-context{color:var(--muted);font-size:12px;line-height:1.8}
+.quick-meaning{font-size:15px;font-weight:600;margin:11px 0;color:var(--ink)}
+.quick-context{background:var(--bg);padding:10px;border-radius:8px}
+.quick-review-navigation,.quick-review-vote{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}
+.quick-review-navigation button,.quick-review-vote button{
+  background:var(--paper);border:1px solid var(--line);border-radius:8px;
+  color:var(--ink);padding:10px 5px;cursor:pointer;font-size:12px}
+.quick-review-vote button:first-child{background:#f7e3e4;border-color:#d6a8ac;color:#8c3850}
+.quick-review-vote button:last-child{background:#e6eee3;border-color:#a3bba2;color:#476a49}
+.quick-review-navigation button:disabled,.quick-review-vote button:disabled{opacity:.55;cursor:not-allowed}
+.quick-decision{font-size:12px;color:var(--wine);margin-top:8px}
+.quick-back{background:none;border:0;color:var(--wine);font-size:12px;margin-top:14px;cursor:pointer}
+@media(max-width:950px){
+  .chapter-vocab-panel{max-height:350px}
+}
