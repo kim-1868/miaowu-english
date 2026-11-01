@@ -31,6 +31,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Verify Node script syntax
         run: npm run check
+      - name: Run fail-closed Pages routing tests
+        run: npm test
       - name: Bundle Pages Function and protected static assets
         run: npm run build
       - name: Assert all routes stay behind Pages Function except two safe network probes
