@@ -70,8 +70,8 @@ Cloudflare 官方文档：
 下面这些是以后确实需要**账号所有者操作**的项，不能由 GitHub 上传文件替代：
 
 1. **已完成**：Cloudflare 新建独立 D1 `miaowu-english-prod`（UUID：`649c71b3-340c-49bf-b806-3d39256851d3`，最后截图只显示内置 `_cf_KV`，业务表0张）。不更改原测试 D1。
-2. **下一项账号操作**：10份 SQL 已统一在 `db/production/BOOTSTRAP_NEW_EMPTY_D1.sql`，本地 CI 已验证。针对这个**确认仍为空且 UUID 正确**的生产 D1 可按上节手册仅执行一次完整 bootstrap，然后执行只读验证文件；没有用户数据迁移，也没有生产售卖。007、008 是为全新空库一起初始化的发布表和触发器，不是向旧 QA D1 无条件重复迁移。
-3. **生产 Worker 配置已在开发分支准备好**：`deploy/production.wrangler.jsonc` 使用本次截图里的新 UUID，保持 `workers_dev:false`、`preview_urls:false`。`node scripts/check-production-config.mjs deploy/production.wrangler.jsonc` 已作为纯配置校验流程；真正部署前仍需实机验收。Worker 的 `ACTIVATION_PEPPER` **必须通过 Cloudflare Workers 的 `wrangler secret put ACTIVATION_PEPPER` 安全设置**（不得复用测试 Pepper）；在终端交互输入，不在配置、命令参数、聊天或截图中公开。生产配置文件内不允许声明明文或伪 `secrets` 属性。
+2. **已完成，绝不重复**：10份 SQL 的无注释版 `db/production/BOOTSTRAP_CONSOLE_PASTE.sql` 已在真实新生产 D1 执行，用户控制台只读查询已验证 **22张业务表**。`db/007`、`db/008` 已经包含在初始化包内。后续只做只读复核，不得再次运行整份 Bootstrap。
+3. **生产 Worker 配置与真实编译预检已完成**：`deploy/production.wrangler.jsonc` 指向本次创建的生产 D1、新的 `dist-production/public` 白名单资源目录，禁用 workers.dev/预览 URL；GitHub CI 已用 Wrangler --dry-run 实际打包验证，但仍未部署。Worker 的 `ACTIVATION_PEPPER` **必须通过 Cloudflare Workers 的 `wrangler secret put ACTIVATION_PEPPER` 安全设置**（不得复用测试 Pepper）；在终端交互输入，不在配置、命令参数、聊天或截图中公开。生产配置文件内不允许声明明文或伪 `secrets` 属性。
 4. 创建独立 Worker `miaowu-english-production`，配置绑定 `DB` 指向正式 D1、`ASSETS` 指向正式静态文件；在隔离的联调部署中验证路由和 schema，再配置最小权限及日志策略。**确保 Worker 未公开 workers.dev 和 Preview/Version URL**。Service Binding 可调用无公开 URL 的 Worker。
 5. 新建 Cloudflare Pages 项目 `miaowu-english-web`：Git分支为审查通过的独立发布分支，Root directory `pages-production`、Build command `npm run build`、Build output `dist`，与 `pages-production/wrangler.jsonc` 中的 `PRODUCTION_ORIGIN` service 绑定完全一致。此 Pages 项目不得加 D1、`ACTIVATION_PEPPER` 或来自旧站的 reviewer 密钥。
 6. 首先在正式环境部署一个**没有可售商品、真实用户/真实销售关闭**的内部验收版本，并在新 Pages URL 上核查：网络可达、生产 Worker绑定、全站路由、身份注册/登录/修改密码、跨账号隔离、未登录/未购买付费章节 401/403、退出失效、重复码拒绝、数据库备份恢复。
