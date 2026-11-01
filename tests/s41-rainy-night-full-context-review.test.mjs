@@ -37,7 +37,8 @@ test("S41 risk flags include actual word-sense IPA ambiguity, non-CET4 target wo
  assert.ok(review.overview.flags.NON_CET4_CORE_TARGET>0);
  assert.ok(review.overview.flags.US_ARPA_VARIANT_NEEDS_SENSE_REVIEW>0);
  assert.ok(review.overview.flags.UK_IPA_NOT_IN_SOURCE>0);
- assert.ok(review.overview.flags.DENSE_WORD_PARAGRAPH>0);
+ assert.equal(review.overview.flags.DENSE_WORD_PARAGRAPH,
+  review.rows.filter(x=>x.paragraphWordCount>4).length);
  assert.ok(review.rows.filter(x=>x.reviewFlags.includes("NON_CET4_CORE_TARGET"))
   .every(x=>tracks.get(x.wordId)!=="CET4_FORM_CANDIDATE"));
  assert.ok(review.rows.filter(x=>x.reviewFlags.includes("UK_IPA_NOT_IN_SOURCE"))
