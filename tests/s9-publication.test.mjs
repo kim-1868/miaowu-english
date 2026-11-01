@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {DatabaseSync} from "node:sqlite";
 import {readFileSync} from "node:fs";
 import worker from "../src/worker.js";
+import {isNonProductionManuscript} from "../src/ops-publication.js";
 import {digestOpsToken} from "../src/ops-access.js";
 import {generateSql} from "../scripts/build-content-import.mjs";
 
@@ -212,4 +213,11 @@ test("S9-B audit failure must rollback book and chapter publication atomically",
   assert.equal(f.sqlite.prepare("SELECT status FROM books WHERE id=?").get(BOOK).status,"draft");
   assert.equal(f.sqlite.prepare("SELECT COUNT(*) AS n FROM chapters WHERE book_id=? AND published_at IS NOT NULL").get(BOOK).n,0);
   assert.equal(f.sqlite.prepare("SELECT COUNT(*) AS n FROM ops_audit_events WHERE event_type='book.publish'").get().n,0);
+});
+
+test("S9 test and draft identifiers are blocked even when the title sounds commercial",()=>{
+  assert.equal(isNonProductionManuscript({id:"qa-archive",title:"雨夜档案"}),true);
+  assert.equal(isNonProductionManuscript({id:"draft-cet4",title:"雨夜档案"}),true);
+  assert.equal(isNonProductionManuscript({id:"original-cet4",title:"雨夜档案"}),false);
+  assert.equal(isNonProductionManuscript({id:"original-cet4",title:"测试雨夜档案"}),true);
 });

@@ -13,7 +13,9 @@ const HEX=/^[a-f0-9]{64}$/;
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 const REQUEST_ID=/^[a-zA-Z0-9_-]{8,100}$/;
 const CHECKS=["ORIGINALITY_AND_RIGHTS","LANGUAGE_PROOFREADING","PRODUCT_SCOPE"];
-const forbidden=book=>/示例|测试|sample|demo|test|^qa-/i.test(book.title+" "+book.id);
+export const isNonProductionManuscript=book=>
+  /示例|测试|sample|demo|test/i.test(book.title+" "+book.id) ||
+  /^qa[-_]/i.test(book.id) || /^draft[-_]/i.test(book.id);
 const stmt=(db,sql,...args)=>db.prepare(sql).bind(...args);
 
 async function schemaReady(db){
@@ -68,7 +70,7 @@ async function readiness(env,id){
   const result=await review(env,id);
   if(result.error)return fail(result.error,result.status);
   const r=result.report;
-  const unsafe=forbidden(r.book);
+  const unsafe=isNonProductionManuscript(r.book);
   const approval=await stmt(env.DB,
     "SELECT id,operator_id,content_fingerprint,content_version,created_at "+
     "FROM ops_publication_approvals WHERE book_id=? ORDER BY rowid DESC LIMIT 1",id).first();
@@ -91,7 +93,7 @@ async function approve(req,env,operator,id){
   const checked=await review(env,id);
   if(checked.error)return fail(checked.error,checked.status);
   const r=checked.report;
-  if(forbidden(r.book))return fail("TEST_MANUSCRIPT_BLOCKED",409);
+  if(isNonProductionManuscript(r.book))return fail("TEST_MANUSCRIPT_BLOCKED",409);
   if(!r.technicalCheckPassed||r.blockerCount>0)return fail("EDITORIAL_CHECKS_FAILED",409);
   if(d.expectedFingerprint!==r.contentFingerprint)return fail("CONTENT_CHANGED",409);
   const idApproval=crypto.randomUUID(),auditId=crypto.randomUUID();
@@ -134,7 +136,7 @@ async function publish(req,env,operator,id){
   const checked=await review(env,id);
   if(checked.error)return fail(checked.error,checked.status);
   const r=checked.report;
-  if(forbidden(r.book))return fail("TEST_MANUSCRIPT_BLOCKED",409);
+  if(isNonProductionManuscript(r.book))return fail("TEST_MANUSCRIPT_BLOCKED",409);
   if(!r.technicalCheckPassed||r.blockerCount>0)return fail("EDITORIAL_CHECKS_FAILED",409);
   if(d.expectedFingerprint!==r.contentFingerprint||d.confirmTitle!==r.book.title)
     return fail("PUBLICATION_CONFIRMATION_MISMATCH",409);

@@ -42,7 +42,7 @@ async function audit(env,id){
   const b=await getBook(env.DB,id);
   if(!b)return error("BOOK_NOT_FOUND",404);
   const rows=await query(env.DB,`SELECT a.id,a.event_type,a.actor_id,a.request_id,
-    a.reason_code,a.created_at
+    a.reason_code,a.reason_note,a.created_at
     FROM ops_audit_events a WHERE a.resource_type='book' AND a.resource_id=?
     ORDER BY a.rowid DESC LIMIT 30`,id).all();
   return answer({book:{id:b.id,title:b.title,status:b.status},events:rows.results||[]});
@@ -75,7 +75,9 @@ async function withdraw(req,env,operator,id){
   if(!REQUEST_ID.test(d.requestId||"")||typeof d.confirmTitle!=="string"||
      d.confirmAction!=="WITHDRAW_PUBLIC_ACCESS"||
      typeof d.reason!=="string"||d.reason.trim().length<12||d.reason.length>400||
-     /[\u0000-\u001f]/.test(d.reason))return error("INVALID_WITHDRAWAL_CONFIRMATION",400);
+     /[\u0000-\u001f]/.test(d.reason)||
+     /mwops_[0-9a-f]{64}/i.test(d.reason))
+    return error("INVALID_WITHDRAWAL_CONFIRMATION",400);
   // Unique event and request id allows safe retry without altering a newer state.
   const prior=await query(env.DB,`SELECT actor_id,resource_id
     FROM ops_audit_events WHERE event_type='book.withdraw' AND request_id=?`,d.requestId).first();
@@ -99,12 +101,12 @@ async function withdraw(req,env,operator,id){
         WHERE book_id=? AND EXISTS(SELECT 1 FROM books WHERE id=?
         AND status='draft' AND last_release_request_id=?)`,id,id,d.requestId),
       query(env.DB,`INSERT INTO ops_audit_events
-        (id,actor_id,event_type,resource_type,resource_id,request_id,reason_code)
+        (id,actor_id,event_type,resource_type,resource_id,request_id,reason_code,reason_note)
         VALUES(?,?,CASE WHEN EXISTS(SELECT 1 FROM books
         WHERE id=? AND status='draft' AND last_release_request_id=?)
         AND NOT EXISTS(SELECT 1 FROM chapters WHERE book_id=? AND published_at IS NOT NULL)
-        THEN 'book.withdraw' ELSE NULL END,'book',?,?,'OWNER_CONFIRMED_WITHDRAWAL')`,
-        auditId,operator.id,id,d.requestId,id,id,d.requestId)
+        THEN 'book.withdraw' ELSE NULL END,'book',?,?,'OWNER_CONFIRMED_WITHDRAWAL',?)`,
+        auditId,operator.id,id,d.requestId,id,id,d.requestId,d.reason.trim())
     ]);
   }catch{return error("WITHDRAWAL_CONFLICT",409)}
   return answer({withdrawn:true,bookId:id,

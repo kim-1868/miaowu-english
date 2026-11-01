@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS ops_audit_events (
   request_id TEXT NOT NULL,
   content_fingerprint TEXT,
   reason_code TEXT,
+  reason_note TEXT CHECK(reason_note IS NULL OR length(reason_note) BETWEEN 12 AND 400),
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(event_type,request_id)
 );
