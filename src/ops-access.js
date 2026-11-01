@@ -79,6 +79,7 @@ export async function appendOpsAudit(db,actor,entry){
     !/^[a-z][a-z0-9_.-]{2,63}$/.test(entry.eventType||"")||
     !/^[a-z][a-z0-9_-]{1,39}$/.test(entry.resourceType||"")||
     typeof entry.resourceId!=="string"||entry.resourceId.length<1||entry.resourceId.length>80||
+    entry.resourceId.startsWith("mwops_")||
     !/^[a-zA-Z0-9_-]{8,100}$/.test(entry.requestId||"")||
     (entry.contentFingerprint!=null&&!HEX.test(entry.contentFingerprint))||
     (entry.reasonCode!=null&&!/^[A-Z][A-Z0-9_]{1,59}$/.test(entry.reasonCode)))
