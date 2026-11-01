@@ -16,7 +16,8 @@ export async function publicationReadiness(env,id) {
     "技术审核未通过","请先解决 "+report.blockerCount+" 项结构问题，然后重新执行审核。");
   // This is a safety gate: the QA fixtures and demo manuscript must never be
   // available to readers because somebody clicked through a prototype UI.
-  const demo=/示例|测试|sample|demo|^qa-/i.test(report.book.title+" "+report.book.id);
+  const demo=/示例|测试|sample|demo/i.test(report.book.title+" "+report.book.id) ||
+    /^qa[-_]/i.test(report.book.id) || /^draft[-_]/i.test(report.book.id);
   if(demo)add(blocks,"TEST_MANUSCRIPT",
     "这是测试内容","测试/示例书籍禁止进入正式发布流程，请使用独立的新书目进行后续验收。");
   const {results=[]}=await env.DB.prepare(
