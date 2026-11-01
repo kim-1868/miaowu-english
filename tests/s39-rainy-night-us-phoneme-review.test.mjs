@@ -34,7 +34,7 @@ test("S39 retain all noun-v-verb pronunciation variants for homographs",()=>{
 });
 test("S39 licence/provenance and review flags prevent auto-populating public word cards",()=>{
  const text=readFileSync(new URL("../docs/third-party/CMUDICT_DATA_LICENSE.txt",import.meta.url),"utf8");
- assert.match(text,/Copyright \\(C\\) 1993-2015 Carnegie Mellon University/);
+ assert.ok(text.includes("Copyright (C) 1993-2015 Carnegie Mellon University"));
  assert.match(text,/AS IS/);
  assert.equal(data.status,"UNVERIFIED_US_ARPABET_CANDIDATES_NOT_IPA");
  assert.equal(data.sourceDictionarySha256.length,64);
