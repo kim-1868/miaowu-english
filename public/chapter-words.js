@@ -55,6 +55,12 @@ async function vote(remembered){
     api.toast(remembered?"已记录「记得」":"已加入记忆藏书票 · 待复习");
   }catch(error){api.toast(error.message);render()}
 }
+$("chapterVocabToggle").onclick=()=>{
+  const body=$("chapterVocabBody"),folded=!body.hidden;
+  body.hidden=folded;
+  $("chapterVocabToggle").setAttribute("aria-expanded",String(!folded));
+  $("chapterVocabToggle").textContent=folded?"展开":"收起";
+};
 $("mobileVocabOpen").onclick=()=>{
   $("readerLayout").classList.add("vocab-drawer-open");
   $("mobileVocabOpen").setAttribute("aria-expanded","true");
