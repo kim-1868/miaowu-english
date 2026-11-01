@@ -141,6 +141,7 @@ async function loadAudit(bookId){
     const item=byId("div",undefined,"audit-entry");
     item.append(byId("strong",e.event_type));
     item.append(byId("small",e.created_at+" · 操作员 "+e.actor_id+" · 请求 "+e.request_id));
+    if(e.reason_note)item.append(byId("p","原因："+e.reason_note,"hint"));
     root.append(item);
   }
 }
