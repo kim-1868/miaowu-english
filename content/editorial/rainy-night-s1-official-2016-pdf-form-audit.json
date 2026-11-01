@@ -1,0 +1,1537 @@
+{
+  "sourceTitle": "全国大学英语四、六级考试大纲（2016年修订版）",
+  "sourceFormat": "user-supplied PDF copy, not redistributed",
+  "sourceSha256": "9166d3c03b7bc43abd9d9df91bd2ef8085b4419286f1e5ca100dea68f3cfd1f1",
+  "sourceBytes": 12070155,
+  "sourcePages": 215,
+  "glossaryStartPdfPage": 21,
+  "glossaryEndPdfPage": 149,
+  "sourceNotes": "The page 20 note states 5,418 entries; ★ designates CET6 entries; the list has headword forms but no POS, gloss, IPA or audio. A derived form not individually listed cannot be declared out-of-syllabus solely on that basis. The nine starred items include allocation on the ★allocate row.",
+  "reviewStatus": "SOURCE_BACKED_HEADWORD_FORM_CHECK_ONLY_NOT_PEDAGOGICAL_RELEASE",
+  "extractionMethod": "PyMuPDF text+word bounding boxes on uploaded PDF; grouping by aligned rows; four printed variants and high-risk examples visually cross-checked against rendered pages.",
+  "caveats": "Source-level direct headword findings only, do not equate with meaning/POS verified, do not auto-tag verifiedCET4, do not include complete PDF nor full vocabulary lexicon in git.",
+  "counts": {
+    "CET4_UNSTARRED_HEADWORD": 168,
+    "CET6_STARRED_HEADWORD_OR_FAMILY": 9,
+    "NOT_STANDALONE_HEADWORD": 7,
+    "CET4_PRINTED_VARIANT": 4
+  },
+  "wordCount": 188,
+  "words": [
+    {
+      "headword": "accept",
+      "pdfPage": 21,
+      "bookPage": 16,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "access",
+      "pdfPage": 21,
+      "bookPage": 16,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "account",
+      "pdfPage": 21,
+      "bookPage": 16,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "accountability",
+      "pdfPage": 21,
+      "bookPage": 16,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "accurate",
+      "pdfPage": 21,
+      "bookPage": 16,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "address",
+      "pdfPage": 22,
+      "bookPage": 17,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "admit",
+      "pdfPage": 22,
+      "bookPage": 17,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "allocation",
+      "pdfPage": 24,
+      "bookPage": 19,
+      "formStatus": "CET6_STARRED_HEADWORD_OR_FAMILY",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "anonymous",
+      "pdfPage": 25,
+      "bookPage": 20,
+      "formStatus": "CET6_STARRED_HEADWORD_OR_FAMILY",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "apology",
+      "pdfPage": 26,
+      "bookPage": 21,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "appointment",
+      "pdfPage": 26,
+      "bookPage": 21,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "approach",
+      "pdfPage": 26,
+      "bookPage": 21,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "approve",
+      "pdfPage": 26,
+      "bookPage": 21,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "archive",
+      "pdfPage": 27,
+      "bookPage": 22,
+      "formStatus": "CET6_STARRED_HEADWORD_OR_FAMILY",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "assistance",
+      "pdfPage": 28,
+      "bookPage": 23,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "assistant",
+      "pdfPage": 28,
+      "bookPage": 23,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "attempt",
+      "pdfPage": 28,
+      "bookPage": 23,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "automatic",
+      "pdfPage": 29,
+      "bookPage": 24,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "backup",
+      "pdfPage": 30,
+      "bookPage": 25,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "blurred",
+      "pdfPage": 34,
+      "bookPage": 29,
+      "formStatus": "NOT_STANDALONE_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false,
+      "relatedHeadword": "blur"
+    },
+    {
+      "headword": "borrow",
+      "pdfPage": 34,
+      "bookPage": 29,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "calculate",
+      "pdfPage": 37,
+      "bookPage": 32,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "childhood",
+      "pdfPage": 41,
+      "bookPage": 36,
+      "formStatus": "NOT_STANDALONE_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false,
+      "relatedHeadword": "child"
+    },
+    {
+      "headword": "choice",
+      "pdfPage": 41,
+      "bookPage": 36,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "choose",
+      "pdfPage": 41,
+      "bookPage": 36,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "circumstance",
+      "pdfPage": 41,
+      "bookPage": 36,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "classify",
+      "pdfPage": 42,
+      "bookPage": 37,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "clue",
+      "pdfPage": 43,
+      "bookPage": 38,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "collect",
+      "pdfPage": 43,
+      "bookPage": 38,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "community",
+      "pdfPage": 44,
+      "bookPage": 39,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "compare",
+      "pdfPage": 44,
+      "bookPage": 39,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "conclusion",
+      "pdfPage": 45,
+      "bookPage": 40,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "confidential",
+      "pdfPage": 46,
+      "bookPage": 41,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "confirm",
+      "pdfPage": 46,
+      "bookPage": 41,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "conflict",
+      "pdfPage": 46,
+      "bookPage": 41,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "confuse",
+      "pdfPage": 46,
+      "bookPage": 41,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "connect",
+      "pdfPage": 46,
+      "bookPage": 41,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "connection",
+      "pdfPage": 46,
+      "bookPage": 41,
+      "formStatus": "CET4_PRINTED_VARIANT",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false,
+      "printedVariant": "connection/-xion"
+    },
+    {
+      "headword": "consent",
+      "pdfPage": 46,
+      "bookPage": 41,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "consequence",
+      "pdfPage": 46,
+      "bookPage": 41,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "contact",
+      "pdfPage": 47,
+      "bookPage": 42,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "continue",
+      "pdfPage": 47,
+      "bookPage": 42,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "contrast",
+      "pdfPage": 47,
+      "bookPage": 42,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "cooperate",
+      "pdfPage": 48,
+      "bookPage": 43,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "correction",
+      "pdfPage": 48,
+      "bookPage": 43,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "cycle",
+      "pdfPage": 51,
+      "bookPage": 46,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "damage",
+      "pdfPage": 51,
+      "bookPage": 46,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "date",
+      "pdfPage": 51,
+      "bookPage": 46,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "decision",
+      "pdfPage": 52,
+      "bookPage": 47,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "delay",
+      "pdfPage": 53,
+      "bookPage": 48,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "delivery",
+      "pdfPage": 53,
+      "bookPage": 48,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "deny",
+      "pdfPage": 53,
+      "bookPage": 48,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "deserve",
+      "pdfPage": 54,
+      "bookPage": 49,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "detail",
+      "pdfPage": 54,
+      "bookPage": 49,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "device",
+      "pdfPage": 54,
+      "bookPage": 49,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "digital",
+      "pdfPage": 55,
+      "bookPage": 50,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "direct",
+      "pdfPage": 55,
+      "bookPage": 50,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "disappear",
+      "pdfPage": 55,
+      "bookPage": 50,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "disclose",
+      "pdfPage": 56,
+      "bookPage": 51,
+      "formStatus": "CET6_STARRED_HEADWORD_OR_FAMILY",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "discrepancy",
+      "pdfPage": 56,
+      "bookPage": 51,
+      "formStatus": "CET6_STARRED_HEADWORD_OR_FAMILY",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "distribute",
+      "pdfPage": 57,
+      "bookPage": 52,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "document",
+      "pdfPage": 57,
+      "bookPage": 52,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "duplicate",
+      "pdfPage": 59,
+      "bookPage": 54,
+      "formStatus": "CET6_STARRED_HEADWORD_OR_FAMILY",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "duration",
+      "pdfPage": 59,
+      "bookPage": 54,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "emergency",
+      "pdfPage": 61,
+      "bookPage": 56,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "enlarge",
+      "pdfPage": 61,
+      "bookPage": 56,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "envelope",
+      "pdfPage": 62,
+      "bookPage": 57,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "evidence",
+      "pdfPage": 63,
+      "bookPage": 58,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "explain",
+      "pdfPage": 64,
+      "bookPage": 59,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "expose",
+      "pdfPage": 64,
+      "bookPage": 59,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "falsify",
+      "pdfPage": 65,
+      "bookPage": 60,
+      "formStatus": "NOT_STANDALONE_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false,
+      "relatedHeadword": "false"
+    },
+    {
+      "headword": "familiar",
+      "pdfPage": 65,
+      "bookPage": 60,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "fiber",
+      "pdfPage": 67,
+      "bookPage": 62,
+      "formStatus": "CET4_PRINTED_VARIANT",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false,
+      "printedVariant": "fiber/-bre"
+    },
+    {
+      "headword": "forgive",
+      "pdfPage": 69,
+      "bookPage": 64,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "former",
+      "pdfPage": 69,
+      "bookPage": 64,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "future",
+      "pdfPage": 71,
+      "bookPage": 66,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "gather",
+      "pdfPage": 71,
+      "bookPage": 66,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "guilt",
+      "pdfPage": 74,
+      "bookPage": 69,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "handwriting",
+      "pdfPage": 75,
+      "bookPage": 70,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "hesitate",
+      "pdfPage": 76,
+      "bookPage": 71,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "hidden",
+      "pdfPage": 76,
+      "bookPage": 71,
+      "formStatus": "NOT_STANDALONE_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false,
+      "relatedHeadword": "hide"
+    },
+    {
+      "headword": "identify",
+      "pdfPage": 79,
+      "bookPage": 74,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "identity",
+      "pdfPage": 79,
+      "bookPage": 74,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "incorrect",
+      "pdfPage": 48,
+      "bookPage": 43,
+      "formStatus": "NOT_STANDALONE_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false,
+      "relatedHeadword": "correct"
+    },
+    {
+      "headword": "independent",
+      "pdfPage": 80,
+      "bookPage": 75,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "indicate",
+      "pdfPage": 80,
+      "bookPage": 75,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "insert",
+      "pdfPage": 82,
+      "bookPage": 77,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "interrupt",
+      "pdfPage": 83,
+      "bookPage": 78,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "interview",
+      "pdfPage": 83,
+      "bookPage": 78,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "inventory",
+      "pdfPage": 83,
+      "bookPage": 78,
+      "formStatus": "CET6_STARRED_HEADWORD_OR_FAMILY",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "investigate",
+      "pdfPage": 83,
+      "bookPage": 78,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "journey",
+      "pdfPage": 84,
+      "bookPage": 79,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "justice",
+      "pdfPage": 85,
+      "bookPage": 80,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "label",
+      "pdfPage": 86,
+      "bookPage": 81,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "legal",
+      "pdfPage": 87,
+      "bookPage": 82,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "librarian",
+      "pdfPage": 88,
+      "bookPage": 83,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "locate",
+      "pdfPage": 89,
+      "bookPage": 84,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "maintain",
+      "pdfPage": 90,
+      "bookPage": 85,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "mechanism",
+      "pdfPage": 92,
+      "bookPage": 87,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "memory",
+      "pdfPage": 92,
+      "bookPage": 87,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "missing",
+      "pdfPage": 94,
+      "bookPage": 89,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "mistake",
+      "pdfPage": 94,
+      "bookPage": 89,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "negative",
+      "pdfPage": 97,
+      "bookPage": 92,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "notice",
+      "pdfPage": 98,
+      "bookPage": 93,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "occur",
+      "pdfPage": 99,
+      "bookPage": 94,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "official",
+      "pdfPage": 99,
+      "bookPage": 94,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "operate",
+      "pdfPage": 100,
+      "bookPage": 95,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "option",
+      "pdfPage": 100,
+      "bookPage": 95,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "original",
+      "pdfPage": 101,
+      "bookPage": 96,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "outage",
+      "pdfPage": 101,
+      "bookPage": 96,
+      "formStatus": "NOT_STANDALONE_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false,
+      "relatedHeadword": "out"
+    },
+    {
+      "headword": "outline",
+      "pdfPage": 101,
+      "bookPage": 96,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "pattern",
+      "pdfPage": 104,
+      "bookPage": 99,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "permission",
+      "pdfPage": 105,
+      "bookPage": 100,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "photograph",
+      "pdfPage": 106,
+      "bookPage": 101,
+      "formStatus": "CET4_PRINTED_VARIANT",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false,
+      "printedVariant": "photo(graph)"
+    },
+    {
+      "headword": "position",
+      "pdfPage": 108,
+      "bookPage": 103,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "predict",
+      "pdfPage": 109,
+      "bookPage": 104,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "prepare",
+      "pdfPage": 109,
+      "bookPage": 104,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "preserve",
+      "pdfPage": 109,
+      "bookPage": 104,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "privacy",
+      "pdfPage": 110,
+      "bookPage": 105,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "promise",
+      "pdfPage": 110,
+      "bookPage": 105,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "proof",
+      "pdfPage": 110,
+      "bookPage": 105,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "propose",
+      "pdfPage": 111,
+      "bookPage": 106,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "protect",
+      "pdfPage": 111,
+      "bookPage": 106,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "puzzle",
+      "pdfPage": 112,
+      "bookPage": 107,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "receipt",
+      "pdfPage": 113,
+      "bookPage": 108,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "recent",
+      "pdfPage": 113,
+      "bookPage": 108,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "recognize",
+      "pdfPage": 114,
+      "bookPage": 109,
+      "formStatus": "CET4_PRINTED_VARIANT",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false,
+      "printedVariant": "recognize/-ise"
+    },
+    {
+      "headword": "record",
+      "pdfPage": 114,
+      "bookPage": 109,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "recording",
+      "pdfPage": 114,
+      "bookPage": 109,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "recover",
+      "pdfPage": 114,
+      "bookPage": 109,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "reflect",
+      "pdfPage": 114,
+      "bookPage": 109,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "register",
+      "pdfPage": 114,
+      "bookPage": 109,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "regret",
+      "pdfPage": 114,
+      "bookPage": 109,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "release",
+      "pdfPage": 115,
+      "bookPage": 110,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "relief",
+      "pdfPage": 115,
+      "bookPage": 110,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "reluctance",
+      "pdfPage": 115,
+      "bookPage": 110,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "remove",
+      "pdfPage": 115,
+      "bookPage": 110,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "repair",
+      "pdfPage": 115,
+      "bookPage": 110,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "replace",
+      "pdfPage": 115,
+      "bookPage": 110,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "request",
+      "pdfPage": 116,
+      "bookPage": 111,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "resemble",
+      "pdfPage": 116,
+      "bookPage": 111,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "resident",
+      "pdfPage": 116,
+      "bookPage": 111,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "respond",
+      "pdfPage": 116,
+      "bookPage": 111,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "responsibility",
+      "pdfPage": 116,
+      "bookPage": 111,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "responsible",
+      "pdfPage": 116,
+      "bookPage": 111,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "restore",
+      "pdfPage": 116,
+      "bookPage": 111,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "retain",
+      "pdfPage": 116,
+      "bookPage": 111,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "return",
+      "pdfPage": 117,
+      "bookPage": 112,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "reunite",
+      "pdfPage": 117,
+      "bookPage": 112,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "reveal",
+      "pdfPage": 117,
+      "bookPage": 112,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "reverse",
+      "pdfPage": 117,
+      "bookPage": 112,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "risk",
+      "pdfPage": 117,
+      "bookPage": 112,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "routine",
+      "pdfPage": 118,
+      "bookPage": 113,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "schedule",
+      "pdfPage": 120,
+      "bookPage": 115,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "seal",
+      "pdfPage": 120,
+      "bookPage": 115,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "secret",
+      "pdfPage": 120,
+      "bookPage": 115,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "secure",
+      "pdfPage": 121,
+      "bookPage": 116,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "separate",
+      "pdfPage": 121,
+      "bookPage": 116,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "sequence",
+      "pdfPage": 121,
+      "bookPage": 116,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "shelter",
+      "pdfPage": 122,
+      "bookPage": 117,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "shortage",
+      "pdfPage": 122,
+      "bookPage": 117,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "signature",
+      "pdfPage": 123,
+      "bookPage": 118,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "solution",
+      "pdfPage": 126,
+      "bookPage": 121,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "source",
+      "pdfPage": 126,
+      "bookPage": 121,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "spine",
+      "pdfPage": 127,
+      "bookPage": 122,
+      "formStatus": "CET6_STARRED_HEADWORD_OR_FAMILY",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "stamp",
+      "pdfPage": 128,
+      "bookPage": 123,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "statement",
+      "pdfPage": 129,
+      "bookPage": 124,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "storage",
+      "pdfPage": 130,
+      "bookPage": 125,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "supply",
+      "pdfPage": 132,
+      "bookPage": 127,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "survive",
+      "pdfPage": 133,
+      "bookPage": 128,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "suspect",
+      "pdfPage": 133,
+      "bookPage": 128,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "suspicious",
+      "pdfPage": 133,
+      "bookPage": 128,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "switch",
+      "pdfPage": 133,
+      "bookPage": 128,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "testimony",
+      "pdfPage": 135,
+      "bookPage": 130,
+      "formStatus": "CET6_STARRED_HEADWORD_OR_FAMILY",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "threaten",
+      "pdfPage": 136,
+      "bookPage": 131,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "timing",
+      "pdfPage": 137,
+      "bookPage": 132,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "trace",
+      "pdfPage": 138,
+      "bookPage": 133,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "transcript",
+      "pdfPage": 138,
+      "bookPage": 133,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "transfer",
+      "pdfPage": 138,
+      "bookPage": 133,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "transparent",
+      "pdfPage": 139,
+      "bookPage": 134,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "trust",
+      "pdfPage": 140,
+      "bookPage": 135,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "uncertain",
+      "pdfPage": 141,
+      "bookPage": 136,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "urgent",
+      "pdfPage": 142,
+      "bookPage": 137,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "verify",
+      "pdfPage": 143,
+      "bookPage": 138,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "voice",
+      "pdfPage": 144,
+      "bookPage": 139,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "warning",
+      "pdfPage": 145,
+      "bookPage": 140,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    },
+    {
+      "headword": "watermark",
+      "pdfPage": 145,
+      "bookPage": 140,
+      "formStatus": "NOT_STANDALONE_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false,
+      "relatedHeadword": "water"
+    },
+    {
+      "headword": "witness",
+      "pdfPage": 147,
+      "bookPage": 142,
+      "formStatus": "CET4_UNSTARRED_HEADWORD",
+      "sourceMethod": "PDF_TEXT_GEOMETRY_AND_SELECTED_VISUAL_SPOT_CHECK",
+      "posSenseIpaVerified": false
+    }
+  ]
+}
