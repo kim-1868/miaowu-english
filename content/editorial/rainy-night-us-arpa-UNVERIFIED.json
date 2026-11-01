@@ -1,0 +1,1568 @@
+{
+  "status": "UNVERIFIED_US_ARPABET_CANDIDATES_NOT_IPA",
+  "source": "Carnegie Mellon University CMU Pronouncing Dictionary data, local cmudict 1.1.3",
+  "sourceUrl": "https://github.com/cmusphinx/cmudict",
+  "sourceDictionarySha256": "81917843c7f44ce2b094ac63873c2c7a4cf802040792c455ba3ca406891c3d22",
+  "license": "CMU BSD-style redistribution terms, retain source attribution and disclaimer",
+  "attribution": "Copyright (C) 1993-2015 Carnegie Mellon University. All rights reserved.",
+  "caveat": "ARDABet is not IPA. Homograph pronunciation choices, sense and stress are not manually verified; do not copy any of these candidates into published phonetic_us fields until review.",
+  "total": 188,
+  "multipleCandidates": 47,
+  "entries": [
+    {
+      "headword": "accept",
+      "arpaCandidates": [
+        "AE0 K S EH1 P T",
+        "AH0 K S EH1 P T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "access",
+      "arpaCandidates": [
+        "AE1 K S EH2 S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "account",
+      "arpaCandidates": [
+        "AH0 K AW1 N T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "accountability",
+      "arpaCandidates": [
+        "AH0 K AW1 N T AH0 B IH2 L IH0 T IY0",
+        "AH0 K AW1 N AH0 B IH0 L IH0 T IY0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "accurate",
+      "arpaCandidates": [
+        "AE1 K Y ER0 AH0 T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "address",
+      "arpaCandidates": [
+        "AE1 D R EH2 S",
+        "AH0 D R EH1 S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "admit",
+      "arpaCandidates": [
+        "AH0 D M IH1 T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "allocation",
+      "arpaCandidates": [
+        "AE2 L AH0 K EY1 SH AH0 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "anonymous",
+      "arpaCandidates": [
+        "AH0 N AA1 N AH0 M AH0 S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "apology",
+      "arpaCandidates": [
+        "AH0 P AA1 L AH0 JH IY2"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "appointment",
+      "arpaCandidates": [
+        "AH0 P OY1 N T M AH0 N T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "approach",
+      "arpaCandidates": [
+        "AH0 P R OW1 CH"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "approve",
+      "arpaCandidates": [
+        "AH0 P R UW1 V"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "archive",
+      "arpaCandidates": [
+        "AA1 R K AY2 V"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "assistance",
+      "arpaCandidates": [
+        "AH0 S IH1 S T AH0 N S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "assistant",
+      "arpaCandidates": [
+        "AH0 S IH1 S T AH0 N T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "attempt",
+      "arpaCandidates": [
+        "AH0 T EH1 M P T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "automatic",
+      "arpaCandidates": [
+        "AO2 T AH0 M AE1 T IH0 K",
+        "AO2 T OW0 M AE1 T IH0 K"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "backup",
+      "arpaCandidates": [
+        "B AE1 K AH2 P"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "blurred",
+      "arpaCandidates": [
+        "B L ER1 D"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "borrow",
+      "arpaCandidates": [
+        "B AA1 R OW2"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "calculate",
+      "arpaCandidates": [
+        "K AE1 L K Y AH0 L EY2 T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "childhood",
+      "arpaCandidates": [
+        "CH AY1 L D HH UH2 D"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "choice",
+      "arpaCandidates": [
+        "CH OY1 S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "choose",
+      "arpaCandidates": [
+        "CH UW1 Z"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "circumstance",
+      "arpaCandidates": [
+        "S ER1 K AH0 M S T AE2 N S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "classify",
+      "arpaCandidates": [
+        "K L AE1 S AH0 F AY2"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "clue",
+      "arpaCandidates": [
+        "K L UW1"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "collect",
+      "arpaCandidates": [
+        "K AH0 L EH1 K T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "community",
+      "arpaCandidates": [
+        "K AH0 M Y UW1 N AH0 T IY0",
+        "K AH0 M Y UW1 N IH0 T IY0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "compare",
+      "arpaCandidates": [
+        "K AH0 M P EH1 R"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "conclusion",
+      "arpaCandidates": [
+        "K AH0 N K L UW1 ZH AH0 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "confidential",
+      "arpaCandidates": [
+        "K AA2 N F AH0 D EH1 N SH AH0 L"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "confirm",
+      "arpaCandidates": [
+        "K AH0 N F ER1 M"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "conflict",
+      "arpaCandidates": [
+        "K AA1 N F L IH0 K T",
+        "K AH0 N F L IH1 K T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "confuse",
+      "arpaCandidates": [
+        "K AH0 N F Y UW1 Z"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "connect",
+      "arpaCandidates": [
+        "K AH0 N EH1 K T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "connection",
+      "arpaCandidates": [
+        "K AH0 N EH1 K SH AH0 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "consent",
+      "arpaCandidates": [
+        "K AH0 N S EH1 N T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "consequence",
+      "arpaCandidates": [
+        "K AA1 N S AH0 K W AH0 N S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "contact",
+      "arpaCandidates": [
+        "K AA1 N T AE2 K T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "continue",
+      "arpaCandidates": [
+        "K AH0 N T IH1 N Y UW0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "contrast",
+      "arpaCandidates": [
+        "K AA1 N T R AE0 S T",
+        "K AH0 N T R AE1 S T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "cooperate",
+      "arpaCandidates": [
+        "K OW0 AA1 P ER0 EY2 T",
+        "K W AA1 P ER0 EY2 T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "correction",
+      "arpaCandidates": [
+        "K ER0 EH1 K SH AH0 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "cycle",
+      "arpaCandidates": [
+        "S AY1 K AH0 L"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "damage",
+      "arpaCandidates": [
+        "D AE1 M AH0 JH",
+        "D AE1 M IH0 JH"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "date",
+      "arpaCandidates": [
+        "D EY1 T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "decision",
+      "arpaCandidates": [
+        "D IH0 S IH1 ZH AH0 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "delay",
+      "arpaCandidates": [
+        "D IH0 L EY1"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "delivery",
+      "arpaCandidates": [
+        "D IH0 L IH1 V ER0 IY0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "deny",
+      "arpaCandidates": [
+        "D IH0 N AY1"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "deserve",
+      "arpaCandidates": [
+        "D IH0 Z ER1 V"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "detail",
+      "arpaCandidates": [
+        "D IH0 T EY1 L",
+        "D IY1 T EY0 L"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "device",
+      "arpaCandidates": [
+        "D IH0 V AY1 S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "digital",
+      "arpaCandidates": [
+        "D IH1 JH AH0 T AH0 L",
+        "D IH1 JH IH0 T AH0 L"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "direct",
+      "arpaCandidates": [
+        "D ER0 EH1 K T",
+        "D AY0 R EH1 K T",
+        "D IH0 R EH1 K T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "disappear",
+      "arpaCandidates": [
+        "D IH2 S AH0 P IH1 R",
+        "D IH2 S AH0 P IY1 R"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "disclose",
+      "arpaCandidates": [
+        "D IH0 S K L OW1 Z"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "discrepancy",
+      "arpaCandidates": [
+        "D IH0 S K R EH1 P AH0 N S IY0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "distribute",
+      "arpaCandidates": [
+        "D IH0 S T R IH1 B Y UW0 T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "document",
+      "arpaCandidates": [
+        "D AA1 K Y AH0 M EH0 N T",
+        "D AA1 K Y UW0 M EH0 N T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "duplicate",
+      "arpaCandidates": [
+        "D UW1 P L AH0 K AH0 T",
+        "D UW1 P L AH0 K EY2 T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "duration",
+      "arpaCandidates": [
+        "D UH1 R EY1 SH AH0 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "emergency",
+      "arpaCandidates": [
+        "IH0 M ER1 JH AH0 N S IY0",
+        "IY1 M ER0 JH AH0 N S IY0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "enlarge",
+      "arpaCandidates": [
+        "EH2 N L AA1 R JH",
+        "IH0 N L AA1 R JH"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "envelope",
+      "arpaCandidates": [
+        "EH1 N V AH0 L OW2 P"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "evidence",
+      "arpaCandidates": [
+        "EH1 V AH0 D AH0 N S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "explain",
+      "arpaCandidates": [
+        "IH0 K S P L EY1 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "expose",
+      "arpaCandidates": [
+        "IH0 K S P OW1 Z"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "falsify",
+      "arpaCandidates": [
+        "F AO1 L S AH0 F AY2"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "familiar",
+      "arpaCandidates": [
+        "F AH0 M IH1 L Y ER0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "fiber",
+      "arpaCandidates": [
+        "F AY1 B ER0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "forgive",
+      "arpaCandidates": [
+        "F ER0 G IH1 V",
+        "F AO0 R G IH1 V"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "former",
+      "arpaCandidates": [
+        "F AO1 R M ER0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "future",
+      "arpaCandidates": [
+        "F Y UW1 CH ER0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "gather",
+      "arpaCandidates": [
+        "G AE1 DH ER0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "guilt",
+      "arpaCandidates": [
+        "G IH1 L T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "handwriting",
+      "arpaCandidates": [
+        "HH AE1 N D R AY2 T IH0 NG"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "hesitate",
+      "arpaCandidates": [
+        "HH EH1 Z AH0 T EY2 T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "hidden",
+      "arpaCandidates": [
+        "HH IH1 D AH0 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "identify",
+      "arpaCandidates": [
+        "AY0 D EH1 N T AH0 F AY2"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "identity",
+      "arpaCandidates": [
+        "AY0 D EH1 N T IH0 T IY2"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "incorrect",
+      "arpaCandidates": [
+        "IH2 N K ER0 EH1 K T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "independent",
+      "arpaCandidates": [
+        "IH2 N D IH0 P EH1 N D AH0 N T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "indicate",
+      "arpaCandidates": [
+        "IH1 N D AH0 K EY2 T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "insert",
+      "arpaCandidates": [
+        "IH2 N S ER1 T",
+        "IH1 N S ER2 T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "interrupt",
+      "arpaCandidates": [
+        "IH2 N T ER0 AH1 P T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "interview",
+      "arpaCandidates": [
+        "IH1 N T ER0 V Y UW2"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "inventory",
+      "arpaCandidates": [
+        "IH2 N V AH0 N T AO1 R IY0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "investigate",
+      "arpaCandidates": [
+        "IH2 N V EH1 S T AH0 G EY2 T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "journey",
+      "arpaCandidates": [
+        "JH ER1 N IY0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "justice",
+      "arpaCandidates": [
+        "JH AH1 S T AH0 S",
+        "JH AH1 S T IH0 S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "label",
+      "arpaCandidates": [
+        "L EY1 B AH0 L"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "legal",
+      "arpaCandidates": [
+        "L IY1 G AH0 L"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "librarian",
+      "arpaCandidates": [
+        "L AY0 B R EH1 R IY2 AH0 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "locate",
+      "arpaCandidates": [
+        "L OW1 K EY2 T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "maintain",
+      "arpaCandidates": [
+        "M EY0 N T EY1 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "mechanism",
+      "arpaCandidates": [
+        "M EH1 K AH0 N IH2 Z AH0 M"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "memory",
+      "arpaCandidates": [
+        "M EH1 M ER0 IY0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "missing",
+      "arpaCandidates": [
+        "M IH1 S IH0 NG"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "mistake",
+      "arpaCandidates": [
+        "M IH0 S T EY1 K"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "negative",
+      "arpaCandidates": [
+        "N EH1 G AH0 T IH0 V"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "notice",
+      "arpaCandidates": [
+        "N OW1 T AH0 S",
+        "N OW1 T IH0 S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "occur",
+      "arpaCandidates": [
+        "AH0 K ER1"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "official",
+      "arpaCandidates": [
+        "AH0 F IH1 SH AH0 L"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "operate",
+      "arpaCandidates": [
+        "AA1 P ER0 EY2 T",
+        "AO1 P ER0 EY2 T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "option",
+      "arpaCandidates": [
+        "AA1 P SH AH0 N",
+        "AO1 P SH AH0 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "original",
+      "arpaCandidates": [
+        "ER0 IH1 JH AH0 N AH0 L"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "outage",
+      "arpaCandidates": [
+        "AW1 T AH0 JH",
+        "AW1 T IH0 JH"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "outline",
+      "arpaCandidates": [
+        "AW1 T L AY2 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "pattern",
+      "arpaCandidates": [
+        "P AE1 T ER0 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "permission",
+      "arpaCandidates": [
+        "P ER0 M IH1 SH AH0 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "photograph",
+      "arpaCandidates": [
+        "F OW1 T AH0 G R AE2 F"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "position",
+      "arpaCandidates": [
+        "P AH0 Z IH1 SH AH0 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "predict",
+      "arpaCandidates": [
+        "P R IH0 D IH1 K T",
+        "P R IY0 D IH1 K T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "prepare",
+      "arpaCandidates": [
+        "P R IY0 P EH1 R"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "preserve",
+      "arpaCandidates": [
+        "P R AH0 Z ER1 V",
+        "P R IH0 Z ER1 V",
+        "P R IY0 Z ER1 V"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "privacy",
+      "arpaCandidates": [
+        "P R AY1 V AH0 S IY0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "promise",
+      "arpaCandidates": [
+        "P R AA1 M AH0 S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "proof",
+      "arpaCandidates": [
+        "P R UW1 F"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "propose",
+      "arpaCandidates": [
+        "P R AH0 P OW1 Z"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "protect",
+      "arpaCandidates": [
+        "P R AH0 T EH1 K T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "puzzle",
+      "arpaCandidates": [
+        "P AH1 Z AH0 L"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "receipt",
+      "arpaCandidates": [
+        "R IH0 S IY1 T",
+        "R IY0 S IY1 T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "recent",
+      "arpaCandidates": [
+        "R IY1 S AH0 N T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "recognize",
+      "arpaCandidates": [
+        "R EH1 K AH0 G N AY2 Z"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "record",
+      "arpaCandidates": [
+        "R AH0 K AO1 R D",
+        "R EH1 K ER0 D",
+        "R IH0 K AO1 R D"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "recording",
+      "arpaCandidates": [
+        "R AH0 K AO1 R D IH0 NG",
+        "R IH0 K AO1 R D IH0 NG"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "recover",
+      "arpaCandidates": [
+        "R IH0 K AH1 V ER0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "reflect",
+      "arpaCandidates": [
+        "R IH0 F L EH1 K T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "register",
+      "arpaCandidates": [
+        "R EH1 JH IH0 S T ER0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "regret",
+      "arpaCandidates": [
+        "R AH0 G R EH1 T",
+        "R IH0 G R EH1 T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "release",
+      "arpaCandidates": [
+        "R IY0 L IY1 S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "relief",
+      "arpaCandidates": [
+        "R IH0 L IY1 F",
+        "R IY0 L IY1 F"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "reluctance",
+      "arpaCandidates": [
+        "R IH0 L AH1 K T AH0 N S",
+        "R IY0 L AH1 K T AH0 N S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "remove",
+      "arpaCandidates": [
+        "R IY0 M UW1 V"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "repair",
+      "arpaCandidates": [
+        "R IH0 P EH1 R"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "replace",
+      "arpaCandidates": [
+        "R IY2 P L EY1 S",
+        "ER0 P L EY1 S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "request",
+      "arpaCandidates": [
+        "R IH0 K W EH1 S T",
+        "R IY0 K W EH1 S T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "resemble",
+      "arpaCandidates": [
+        "R IH0 Z EH1 M B AH0 L",
+        "R IY0 Z EH1 M B AH0 L"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "resident",
+      "arpaCandidates": [
+        "R EH1 Z IH0 D AH0 N T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "respond",
+      "arpaCandidates": [
+        "R IH0 S P AA1 N D",
+        "R IY0 S P AA1 N D"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "responsibility",
+      "arpaCandidates": [
+        "R IY0 S P AA2 N S AH0 B IH1 L AH0 T IY0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "responsible",
+      "arpaCandidates": [
+        "R IY0 S P AA1 N S AH0 B AH0 L"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "restore",
+      "arpaCandidates": [
+        "R IH0 S T AO1 R"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "retain",
+      "arpaCandidates": [
+        "R IH0 T EY1 N",
+        "R IY0 T EY1 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "return",
+      "arpaCandidates": [
+        "R IH0 T ER1 N",
+        "R IY0 T ER1 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "reunite",
+      "arpaCandidates": [
+        "R IY2 UW0 N AY1 T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "reveal",
+      "arpaCandidates": [
+        "R IH0 V IY1 L",
+        "R IY0 V IY1 L"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "reverse",
+      "arpaCandidates": [
+        "R IH0 V ER1 S",
+        "R IY0 V ER1 S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "risk",
+      "arpaCandidates": [
+        "R IH1 S K"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "routine",
+      "arpaCandidates": [
+        "R UW0 T IY1 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "schedule",
+      "arpaCandidates": [
+        "S K EH1 JH UH0 L",
+        "S K EH1 JH UW0 L"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "seal",
+      "arpaCandidates": [
+        "S IY1 L"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "secret",
+      "arpaCandidates": [
+        "S IY1 K R AH0 T",
+        "S IY1 K R IH0 T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "secure",
+      "arpaCandidates": [
+        "S IH0 K Y UH1 R"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "separate",
+      "arpaCandidates": [
+        "S EH1 P ER0 EY2 T",
+        "S EH1 P ER0 IH0 T",
+        "S EH1 P R AH0 T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "sequence",
+      "arpaCandidates": [
+        "S IY1 K W AH0 N S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "shelter",
+      "arpaCandidates": [
+        "SH EH1 L T ER0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "shortage",
+      "arpaCandidates": [
+        "SH AO1 R T AH0 JH",
+        "SH AO1 R T IH0 JH"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "signature",
+      "arpaCandidates": [
+        "S IH1 G N AH0 CH ER0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "solution",
+      "arpaCandidates": [
+        "S AH0 L UW1 SH AH0 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "source",
+      "arpaCandidates": [
+        "S AO1 R S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "spine",
+      "arpaCandidates": [
+        "S P AY1 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "stamp",
+      "arpaCandidates": [
+        "S T AE1 M P"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "statement",
+      "arpaCandidates": [
+        "S T EY1 T M AH0 N T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "storage",
+      "arpaCandidates": [
+        "S T AO1 R AH0 JH",
+        "S T AO1 R IH0 JH"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "supply",
+      "arpaCandidates": [
+        "S AH0 P L AY1"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "survive",
+      "arpaCandidates": [
+        "S ER0 V AY1 V"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "suspect",
+      "arpaCandidates": [
+        "S AH0 S P EH1 K T",
+        "S AH1 S P EH2 K T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "suspicious",
+      "arpaCandidates": [
+        "S AH0 S P IH1 SH AH0 S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "switch",
+      "arpaCandidates": [
+        "S W IH1 CH"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "testimony",
+      "arpaCandidates": [
+        "T EH1 S T AH0 M OW2 N IY0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "threaten",
+      "arpaCandidates": [
+        "TH R EH1 T AH0 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "timing",
+      "arpaCandidates": [
+        "T AY1 M IH0 NG"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "trace",
+      "arpaCandidates": [
+        "T R EY1 S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "transcript",
+      "arpaCandidates": [
+        "T R AE1 N S K R IH2 P T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "transfer",
+      "arpaCandidates": [
+        "T R AE0 N S F ER1",
+        "T R AE1 N S F ER0"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "transparent",
+      "arpaCandidates": [
+        "T R AE0 N S P EH1 R AH0 N T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "trust",
+      "arpaCandidates": [
+        "T R AH1 S T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "uncertain",
+      "arpaCandidates": [
+        "AH0 N S ER1 T AH0 N"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "urgent",
+      "arpaCandidates": [
+        "ER1 JH AH0 N T"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "verify",
+      "arpaCandidates": [
+        "V EH1 R AH0 F AY2"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "voice",
+      "arpaCandidates": [
+        "V OY1 S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "warning",
+      "arpaCandidates": [
+        "W AO1 R N IH0 NG"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "watermark",
+      "arpaCandidates": [
+        "W AO1 T ER0 M AA2 R K"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    },
+    {
+      "headword": "witness",
+      "arpaCandidates": [
+        "W IH1 T N AH0 S"
+      ],
+      "selected": null,
+      "reviewStatus": "UNVERIFIED"
+    }
+  ]
+}
