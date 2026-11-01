@@ -7,7 +7,7 @@ const clean=()=>({
  name:"miaowu-english-production",workers_dev:false,preview_urls:false,
  main:"../src/worker.js",
  vars:{APP_ENV:"production"},
- assets:{directory:"../public",binding:"ASSETS",run_worker_first:true},
+ assets:{directory:"../dist-production/public",binding:"ASSETS",run_worker_first:true},
  d1_databases:[{binding:"DB",database_name:"miaowu-english-prod",
   database_id:"1ec3883a-75ca-4572-a167-9860f341927d"}],
 
