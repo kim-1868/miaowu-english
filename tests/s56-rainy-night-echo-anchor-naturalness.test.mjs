@@ -18,7 +18,7 @@ test("S56 six anchor-specific Echo contexts use natural semantics and preserve o
  const checks=[
   [2,"identity","请出示能证明你 identity 的证件","请留下你的 identity 证明"],
   [4,"official","official 受理记录上的通话时间","official 通话时间"],
-  [6,"negative","negative（负片）模式","黑白底片像一张 negative"],
+  [6,"negative","negative（底片）与冲印照片明暗相反","黑白底片像一张 negative"],
   [7,"contact","姐姐何时最后一次 contact 家人","姐姐最后一次 contact 家人的时间"],
   [10,"decision","做出一个艰难的 decision","做一个 decision"],
   [10,"privacy","录音涉及姐姐的 privacy","录音属于姐姐的 privacy"],
