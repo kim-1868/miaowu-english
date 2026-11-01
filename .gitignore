@@ -16,3 +16,4 @@ private-input/
 
 # Cloudflare Pages Advanced Mode generated release artifacts; never commit.
 pages-production/dist/
+dist-production/
