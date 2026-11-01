@@ -287,7 +287,10 @@ test("S14 password change validates current password, rotates current cookie and
   currentPassword:pass,newPassword:"new-only-pass-2026-STRONG"
  },originalCookie),app);
  assert.equal(change.status,200);
- assert.deepEqual(await change.json(),{ok:true,otherSessionsRevoked:true});
+ const changedPasswordResponse=await change.json();
+ assert.equal(changedPasswordResponse.ok,true);
+ assert.equal(changedPasswordResponse.otherSessionsRevoked,true);
+ assert.match(changedPasswordResponse.recoveryCode,/^[0-9a-f]{8}(?:-[0-9a-f]{8}){7}$/);
  const freshCookie=session(change);
  assert.notEqual(freshCookie,originalCookie);
  const sessionRows=db.db.prepare("SELECT COUNT(*) AS n FROM sessions").get().n;
@@ -456,7 +459,9 @@ test("S18 recovery only in production and requires same-origin proof for state-c
   username:"guest-user",recoveryCode:"a".repeat(64),
   newPassword:"some-test-password-2026"
  }),staging);
- assert.equal(denied.status,404);
+ // The existing staging preview guard runs before account endpoints.
+ // Without a preview password the staging API safely fails closed at 503.
+ assert.equal(denied.status,503);
  const forged=new Request(origin+"/api/auth/recover",{
   method:"POST",headers:{"Origin":"https://malicious.invalid",
    "Content-Type":"application/json"},body:JSON.stringify({
