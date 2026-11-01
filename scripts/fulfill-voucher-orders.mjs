@@ -2,7 +2,7 @@
 // One settled order -> one category -> one single-use voucher. No PII in input.
 // The output directory is gitignored and must never be uploaded.
 import {createHmac,randomBytes,randomUUID} from "node:crypto";
-import {readFile,writeFile,rename,open,mkdir,unlink,stat} from "node:fs/promises";
+import {readFile,writeFile,rename,open,mkdir,unlink,lstat} from "node:fs/promises";
 import {basename,join,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {assertIssuableCategory,loadVoucherCatalog} from "./voucher-catalog.mjs";
@@ -76,7 +76,7 @@ export async function fulfillOrders({ordersCsv,pepper,outputDir,categoryRows=loa
  const dir=resolve(outputDir);
  await mkdir(dir,{recursive:true,mode:0o700});
  // Refuse if the operator has accidentally replaced the private directory with a symlink.
- if(!(await stat(dir)).isDirectory())throw Error("INVALID_PRIVATE_DIRECTORY");
+ if(!(await lstat(dir)).isDirectory())throw Error("INVALID_PRIVATE_DIRECTORY");
  const lockPath=join(dir,"fulfillment.lock");
  const lock=await open(lockPath,"wx",0o600); // stale lock => manual inspection, never overwrite
  const ledgerPath=join(dir,"fulfillment-ledger.json");
