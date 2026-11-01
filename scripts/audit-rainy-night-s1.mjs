@@ -88,6 +88,8 @@ export function reportMarkdown(report){
   "| 正文未出现的词条 | "+report.wordsWithNoMentions+" |\n"+
   "| 仅标注一次的词条 | "+report.wordsOnlyOnce+" |\n"+
   "| 至少跨两章出现的词条 | "+report.repeatedAcrossChapters+" |\n"+
+  "| 编辑规划跨章复现目标（内部暂定30%） | "+report.crossChapterReusePlanningTarget+" |\n"+
+  "| 尚需增加跨章复现的词条 | "+report.crossChapterReuseGap+" |\n"+
   "| 未完成英美音标核验 | "+report.wordsWithoutIpa+" |\n"+
   "| 未完成CET4等级独立核验 | "+report.wordsWithoutVerifiedLevel+" |\n"+
   "| 缺少完整双语例句 | "+report.wordsWithoutTranslations+" |\n\n";
