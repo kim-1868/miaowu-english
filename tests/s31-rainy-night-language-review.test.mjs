@@ -41,6 +41,15 @@ test("S31 vocabulary QA queue covers all actual 188 manuscript words, including 
  assert.equal(queue.overview.totalMentions,audit.totalMentions);
  assert.equal(queue.overview.flaggedForIpa,188);
  assert.equal(queue.overview.flaggedForLevel,188);
+ assert.equal(queue.overview.oneMentionWords,25);
+ assert.equal(queue.overview.singleChapterWords,97);
+ assert.equal(queue.overview.ukCandidatesFound,181);
+ assert.equal(queue.overview.ukCandidatesMissing,7);
+ assert.equal(queue.overview.ukVariantsNeedingReview,14);
+ assert.equal(queue.overview.ukCandidateLicence,"MIT");
+ assert.equal(queue.rows.filter(r=>r.sourceUkCandidatesCount>0).length,181);
+ assert.ok(queue.rows.every(r=>r.phoneticUk===""&&r.phoneticUs===""));
+ assert.ok(queue.rows.every(r=>r.sourceUkProvenance.includes("JoseLlarena/Britfone")));
  assert.equal(queue.overview.acrossTwoOrMore,audit.repeatedAcrossChapters);
  assert.equal(queue.overview.notPublished,true);
  assert.ok(queue.rows.some(w=>w.mentions>=6&&w.chapterCount>=2));
