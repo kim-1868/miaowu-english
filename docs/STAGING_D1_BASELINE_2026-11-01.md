@@ -6,7 +6,7 @@
 
 在 D1 数据库 `miaowu-english-test` 运行只读查询，仅命中 `editorial_revisions` 和 `word_categories`，未命中 `ops_operators`、`ops_publication_approvals`、`d1_migrations`。
 
-**确定**：007、008 的目标对象尚不存在；005 和 004 中的关键表存在；该数据库缺少 Wrangler 的 `d1_migrations` 历史台账。**未确定**：006 审核表、001–006 全部列与真实约束是否匹配仓库 SQL；`books.last_release_request_id` 是否已出现；具体 Time Travel bookmark、D1 version、恢复能力和数据量。
+**确定**：007、008 的目标对象尚不存在；005 和 004 中的关键表存在；该数据库缺少 Wrangler 的 `d1_migrations` 历史台账。第二轮用户截图进一步核对：`editorial_review_signoffs=1`（006 表存在）、`ops_book_content_versions=0`、`books.last_release_request_id=0`。D1 → Time Travel 页面显示最近 **7 天**的恢复期限，截图当时可恢复窗口从 2026-10-31 02:46 到 2026-11-01 12:28；这不是独立、永久备份。**未确定**：001–006 全部列与真实约束是否精确匹配仓库 SQL；是否已记录当前 bookmark；是否完成独立导出和恢复演练、数据量与 D1 使用限制。
 
 ## 为什么不能现在运行 `npm run db:migrate:remote`
 
