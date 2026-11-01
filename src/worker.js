@@ -140,6 +140,57 @@ async function logout(req, env) {
   if (token) await dbStmt(env.DB, "DELETE FROM sessions WHERE id_hash=?", await sha256(token)).run();
   return json({ ok: true }, 200, { "set-cookie": clearSessionCookie(req) });
 }
+// Authenticated password rotation. No account-recovery bypass here:
+// the reader must prove knowledge of their CURRENT password.
+async function changePassword(req, env, user) {
+  if (!user) return reject("LOGIN_REQUIRED", 401);
+  const body = await parseBody(req);
+  const currentPassword = body.currentPassword;
+  const nextPassword = body.newPassword;
+  if (typeof currentPassword !== "string" || currentPassword.length > 128 ||
+      !validPassword(nextPassword)) return reject("INVALID_PASSWORD_INPUT", 400);
+  if (currentPassword === nextPassword) return reject("PASSWORD_REUSE_NOT_ALLOWED", 400);
+
+  const db=env.DB;
+  const throttle=await atStage("password_change.throttle_key",
+    ()=>throttleKey(env,"password-change",req,user.id));
+  if(await atStage("password_change.throttle_check",()=>isBlocked(db,throttle)))
+    return reject("TOO_MANY_ATTEMPTS",429);
+  const stored=await atStage("password_change.lookup",
+    ()=>dbStmt(db,"SELECT password_hash,password_salt FROM users WHERE id=?",user.id).first());
+  const correct=stored && await verifyPassword(currentPassword,
+    stored.password_salt,stored.password_hash,env);
+  if(!correct){
+    await atStage("password_change.failed_attempt",()=>countFailure(db,throttle));
+    return reject("INVALID_CURRENT_PASSWORD",401);
+  }
+  const {hash,salt}=await atStage("password_change.new_hash",
+    ()=>newPasswordHash(nextPassword,env));
+  const nextSession=await atStage("password_change.next_session",
+    ()=>sessionData(user.id));
+  try {
+    // Atomic D1.batch:
+    // 1) Compare-and-set password prevents stale concurrent requests.
+    // 2) Revoke all old device sessions.
+    // 3) Guarded INSERT rolls back the entire batch when (1) lost the race.
+    // The new device keeps only a fresh, rotated HttpOnly session.
+    await db.batch([
+      dbStmt(db,`UPDATE users SET password_hash=?,password_salt=?
+        WHERE id=? AND password_hash=? AND password_salt=?`,
+        hash,salt,user.id,stored.password_hash,stored.password_salt),
+      dbStmt(db,"DELETE FROM sessions WHERE user_id=?",user.id),
+      dbStmt(db,`INSERT INTO sessions(id_hash,user_id,expires_at)
+        VALUES(?,(SELECT id FROM users WHERE id=? AND password_hash=? AND password_salt=?),?)`,
+        nextSession.idHash,user.id,hash,salt,nextSession.expires)
+    ]);
+  } catch {
+    // Never leak salts, password material, internal database errors or SQL.
+    return reject("PASSWORD_CHANGE_RETRY",409);
+  }
+  await atStage("password_change.reset_attempts",()=>resetFailures(db,throttle));
+  return json({ok:true,otherSessionsRevoked:true},200,
+    {"set-cookie":sessionCookie(nextSession.token,req)});
+}
 async function redeem(req, env, user) {
   const body = await parseBody(req);
   const code = normalizeCode(body.activationCode);
@@ -467,6 +518,7 @@ async function api(req, env) {
   if (path === "/api/auth/register" && req.method === "POST") return register(req, env);
   if (path === "/api/auth/login" && req.method === "POST") return login(req, env);
   if (path === "/api/auth/logout" && req.method === "POST") return logout(req, env);
+  if (path === "/api/auth/change-password" && req.method === "POST") return changePassword(req, env, user);
   if (path === "/api/auth/me" && req.method === "GET") {
     if (!user) return reject("LOGIN_REQUIRED", 401);
     return json({ user: { username: user.username }, categories: await userEntitlements(env.DB, user.id) });
