@@ -17,11 +17,6 @@
       "database_id": "REPLACE_WITH_NEW_PRODUCTION_D1_ID"
     }
   ],
-  "secrets": {
-    "required": [
-      "ACTIVATION_PEPPER"
-    ]
-  },
   "workers_dev": false,
   "preview_urls": false
 }
