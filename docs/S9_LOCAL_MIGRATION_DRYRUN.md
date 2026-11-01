@@ -45,3 +45,11 @@ npm run db:dry-run-s9 -- "$HOME/Documents/MiaowuPrivateBackups/miaowu-english-te
 6. 最后才调整 Cloudflare staging Worker 构建分支与实机验收。
 
 **数据库写入不能由本离线演练脚本自动触发。** 生产库或正式售卖功能更不在本步骤范围内。
+
+## 2026-11-01 校验器缺陷修复记录
+
+用户首次对 17 张表的真实备份进行本地演练时得到 `S9_DRY_RUN_FAILED: ORIGINAL_ROWS_CHANGED_books`。原因是演练脚本错误地将 **007/008 新增后的 `books.last_release_request_id` 列**包括在 `SELECT *` 的逐行哈希里。新增空列自然会改变“整行结构”，并不表示原有书籍字段已修改。
+
+修复版在导入备份后**先记录每张旧表的原始列名及逐行哈希**；模拟 007/008 后只比较原有列，另行验证旧表 schema 的新增变更仅限 `books.last_release_request_id`，并要求旧书的新增列全部为 NULL。新增测试用包含书籍、用户、权益、阅读、生词、复习记录的样本，确认真实旧数据仍可逐行比对，且故意修改原字段或插入额外新列必须被程序阻断。
+
+**首轮失败是在本机内存演练，Cloudflare 及用户备份都没有修改**。不要把第一轮失败误解为迁移成功，也不要因此绕过数据保护；从修复版分支重新下载 ZIP 后重新执行离线模拟，只有得到 `dryRunPassed=true` 和 `oldRowsPreserved=true` 才进入远程测试库迁移审查。
