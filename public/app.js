@@ -124,6 +124,7 @@
         renderReminder();
         if(view==='account')renderAccount();
         if(view==='words')renderWords();
+        if(view==='echo'&&echoMode==='cloud'&&!window.MiaowuCloudEcho?.running())renderQuiz();
         if(activeCloud?.chapterId)showCloudProgress(activeCloud.chapterId);
       }catch(error){if(seq===cloudLearningSequence)toast('云端学习记录暂未加载：'+error.message)}
     }
