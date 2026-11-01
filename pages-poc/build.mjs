@@ -27,11 +27,13 @@ writeFileSync(join(output,"_routes.json"),JSON.stringify(routeConfig,null,2)+"\n
 writeFileSync(join(output,"__miaowu_pages_asset_probe.txt"),
   "MIAOWU_PAGES_STATIC_ASSET_OK\nNo account data or secret appears here.\n");
 const script=readFileSync(join(output,"_worker.js"),"utf8");
-if(!script.includes("STAGING_PREVIEW_PASSWORD")||!script.includes("stagingGate"))
-  throw Error("PAGES_POC_PROTECTED_ROUTER_NOT_BUNDLED");
+if(!script.includes("STAGING_ORIGIN")||!script.includes("service binding not ready"))
+  throw Error("PAGES_POC_PROTECTED_SERVICE_ROUTER_NOT_BUNDLED");
+if(script.includes("ACTIVATION_PEPPER")||script.includes("STAGING_PREVIEW_PASSWORD"))
+  throw Error("PAGES_POC_COPIED_SECRET_DEPENDENCY");
 if(script.includes("88a817cb-23bb-4ae4-bcb8-92286c4165d4"))
   throw Error("PAGES_POC_BUNDLED_DB_IDENTIFIER_UNEXPECTED");
 for(const file of ["index.html","_worker.js","_routes.json","__miaowu_pages_asset_probe.txt"]){
  if(!existsSync(join(output,file)))throw Error("MISSING_PAGES_ARTIFACT_"+file);
 }
-console.log("Pages proof-of-connectivity build ready: routing protected, probes intentionally public.");
+console.log("Pages proof-of-connectivity build ready: service-bound protected router, probes intentionally public.");
