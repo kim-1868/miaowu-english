@@ -1,4 +1,5 @@
 import { stagingGate, stagingCookieAfterBasic } from "./staging-gate.js";
+import { productionSurfaceBlock } from "./production-surface.js";
 import { handleEditor } from "./editorial-admin.js";
 import { handleOps } from "./ops-access.js";
 import { handleOpsPublication } from "./ops-publication.js";
@@ -509,6 +510,8 @@ function attachPreviewCookie(response, previewCookie) {
 }
 export default {
   async fetch(request, env) {
+    const forbidden=productionSurfaceBlock(request,env);
+    if(forbidden)return forbidden;
     // Staging gate applies to both public files and API routes.
     // Wrangler assets.run_worker_first MUST remain true for this to work.
     const blocked = await stagingGate(request, env);
