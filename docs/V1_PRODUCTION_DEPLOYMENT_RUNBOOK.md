@@ -18,8 +18,8 @@
 下面这些是以后确实需要**账号所有者操作**的项，不能由 GitHub 上传文件替代：
 
 1. 在同一个 Cloudflare 账号新建 D1：**`miaowu-english-prod`**；记录新的 database UUID，确保不等于测试库 `88a817cb-23bb-4ae4-bcb8-92286c4165d4`。保留旧的 `miaowu-english-test` 不动。
-2. 先独立审核 `db/001_schema.sql` 及后续实际使用到的变更，**只对这个空白新 D1**初始化表/类别；导入前记录新库备份点。不要复制 staging 用户、验证码、匿名测试发码或测试小说。**不要**直接批量运行已在旧测试库执行过的 007、008 迁移文件。
-3. 将 `deploy/production.wrangler.jsonc.example` 复制为**单独未公开追踪**的 `deploy/production.wrangler.jsonc`，填写新的 UUID，保持 `workers_dev:false`、`preview_urls:false`。运行 `node scripts/check-production-config.mjs deploy/production.wrangler.jsonc` 做只读核验。注意示例中的 `secrets.required` 是项目审计字段，**不是 Wrangler 原生字段**：实际 Wrangler 部署前须从部署副本中删去该段，同时通过 Cloudflare Workers 的 `wrangler secret put ACTIVATION_PEPPER` 在 Worker 环境设置高强度独立密钥（**不得复用测试 Pepper**）；在终端交互输入秘密，不在命令参数/聊天/截图中明文填写。
+2. 先独立审核 `db/001_schema.sql`、`db/002_s1.sql`、`db/003_public_categories.sql`、`db/production/001_one_paid_order_one_code.sql`、**`db/production/002_account_recovery_codes.sql`** 及其他需要的初始化/内容管理变更，**只对这个空白新 D1**初始化表/类别；导入前记录新库备份点。不要复制 staging 用户、验证码、匿名测试发码或测试小说。**不要**直接批量运行已在旧测试库执行过的 007、008 迁移文件。
+3. 将 `deploy/production.wrangler.jsonc.example` 复制为**单独未公开追踪**的 `deploy/production.wrangler.jsonc`，填写新的 UUID，保持 `workers_dev:false`、`preview_urls:false`。运行 `node scripts/check-production-config.mjs deploy/production.wrangler.jsonc` 做只读核验。Worker 的 `ACTIVATION_PEPPER` **必须通过 Cloudflare Workers 的 `wrangler secret put ACTIVATION_PEPPER` 安全设置**（不得复用测试 Pepper）；在终端交互输入，不在配置、命令参数、聊天或截图中公开。生产配置文件内不允许声明明文或伪 `secrets` 属性。
 4. 创建独立 Worker `miaowu-english-production`，配置绑定 `DB` 指向正式 D1、`ASSETS` 指向正式静态文件；在隔离的联调部署中验证路由和 schema，再配置最小权限及日志策略。**确保 Worker 未公开 workers.dev 和 Preview/Version URL**。Service Binding 可调用无公开 URL 的 Worker。
 5. 新建 Cloudflare Pages 项目 `miaowu-english-web`：Git分支为审查通过的独立发布分支，Root directory `pages-production`、Build command `npm run build`、Build output `dist`，与 `pages-production/wrangler.jsonc` 中的 `PRODUCTION_ORIGIN` service 绑定完全一致。此 Pages 项目不得加 D1、`ACTIVATION_PEPPER` 或来自旧站的 reviewer 密钥。
 6. 首先在正式环境部署一个**没有可售商品、真实用户/真实销售关闭**的内部验收版本，并在新 Pages URL 上核查：网络可达、生产 Worker绑定、全站路由、身份注册/登录/修改密码、跨账号隔离、未登录/未购买付费章节 401/403、退出失效、重复码拒绝、数据库备份恢复。
@@ -40,7 +40,7 @@ node scripts/check-production-config.mjs deploy/production.wrangler.jsonc.exampl
 
 - **课程内容**：《雨夜档案》12章现为草稿，188个候选词、220次标注；需完成剧情长度、词义、CET4来源、IPA/发音、跨章复现及原创性审核。Rose 2章仅为演示，不可作为付费完整小说。
 - **分类商品**：四级、六级、考研、雅思是权限**类别**，没有通过审核的正式小说时不要出售空书架。未来高中/专升本分类继续禁用离线发码。
-- **账号恢复**：S14 只实现已登录用户凭原密码修改密码。**没有通过安全审计的忘记密码找回机制**，不能向顾客承诺可自助找回。付款前须有明确售后和安全找回措施。
+- **账号恢复**：S18 已在开发分支实现**正式环境一次性恢复码**：注册时显示一次、数据库只存 HMAC 摘要；重设密码后旧码/旧会话失效，并颁发新码。仍未在 Cloudflare 实机验收，必须验证生产 D1 已执行恢复码迁移、不同浏览器兼容、错误码限流和真实用户能正确保存恢复码。若密码与恢复码都丢失，仍须提供经过核验的人工售后流程，不能保证自动找回。
 - **支付与发货**：只有人工核对确认到账的真实订单才能走离线兑换码库存；一单一码必须在生产 D1 的订单唯一约束下核验。不能把网银/支付截图直接当服务端确定到账证明。
 - **合规**：隐私/用户条款、数字内容和退款说明、适用网络经营要求、用户数据最小收集、备份和合法教材内容授权。
 - **网络**：用户曾在单一中国大陆网络实测旧 Pages host 无 VPN 可用；新正式 Pages 主机必须按移动、联通、电信和不同时段分别复测，不可保证全国均可访问。
