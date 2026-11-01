@@ -1,0 +1,38 @@
+:root{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:#faf6ef;color:#342b2b;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0}header{padding:24px max(22px,calc((100% - 1120px)/2));background:#fffaf6;border-bottom:1px solid #e7d9c9;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{color:#722f37;font-family:Georgia,"Songti SC",serif;font-size:23px;font-weight:bold}.brand span{display:block;font:10px system-ui;letter-spacing:.17em;color:#90735e;margin-top:5px}
+.strap{color:#604c44;font-size:13px}main{max-width:1120px;margin:auto;padding:22px 20px 55px}
+.crumb{font-size:13px}a{color:#722f37}h1{font:36px Georgia,"Songti SC",serif;color:#722f37;margin:17px 0 6px}h2{font:24px Georgia,"Songti SC",serif;margin:0 0 11px;color:#722f37}
+h3{font-size:17px;margin:18px 0 10px}p{line-height:1.65}.intro{color:#6b5853;margin-bottom:20px}.notice{background:#f7eae3;border-left:3px solid #722f37;border-radius:9px;padding:14px;color:#62464a;line-height:1.7;font-size:13px;margin:14px 0}
+.mini{margin-bottom:18px}
+.panel{background:#fffdfa;border:1px solid #e6d9ca;border-radius:15px;margin:16px 0;padding:22px;box-shadow:0 3px 16px rgba(70,37,33,.025)}
+.panel-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.cols{display:grid;grid-template-columns:minmax(270px,.85fr) minmax(360px,1.15fr);gap:17px;align-items:start}
+.row{display:flex;align-items:end;gap:9px;flex-wrap:wrap;margin:10px 0}.stretch{flex:1;min-width:210px}
+button,input,textarea{font:inherit}label{display:block;font-size:13px;font-weight:600;margin:12px 0 7px}
+input:not([type=checkbox]),textarea{display:block;border:1px solid #d7c7b9;background:#fff;color:#352c29;border-radius:9px;padding:11px 12px;width:100%;margin-top:7px}
+input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid #722f37;outline-offset:2px}
+input[type=checkbox]{accent-color:#722f37}
+fieldset{border:1px solid #e7d8cb;border-radius:10px;padding:12px;margin-top:13px}fieldset label,.checkline{font-weight:normal;font-size:13px;line-height:1.6;display:flex;align-items:flex-start;gap:9px}
+fieldset input,.checkline input{margin-top:4px;flex:none}
+button{background:#722f37;border:0;border-radius:9px;color:#fff;font-size:13px;font-weight:600;padding:11px 15px;cursor:pointer}
+button.secondary{background:#efe6d9;color:#6b353a}button.danger{background:#9c3434}button:disabled{opacity:.46;cursor:not-allowed}
+button:hover:not(:disabled){filter:brightness(.95)}
+.status{background:#f4ede3;color:#604c45;padding:12px;border-radius:8px;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}
+.soft,.hint{color:#796b61;font-size:12px}.hint{line-height:1.7}
+.pill{border:1px solid #a38268;border-radius:30px;padding:4px 8px;font-size:11px}
+.books{display:grid;gap:8px}.book-entry{background:#faf4ec;border:1px solid #e9dfd2;border-radius:9px;padding:13px}
+.book-entry strong{display:block;overflow-wrap:anywhere}.book-entry p{margin:7px 0;font-size:12px;color:#7c655b}
+.book-entry button{padding:7px 11px}.book-title{font:21px Georgia,"Songti SC",serif;color:#722f37;margin:8px 0}
+.report{white-space:pre-wrap;line-height:1.8;background:#f7f2eb;border-radius:10px;padding:13px;color:#54423e;font-size:13px;overflow-wrap:anywhere}
+.audit-entry{padding:11px 0;border-bottom:1px solid #eee3d8}.audit-entry:last-child{border-bottom:0}
+.audit-entry strong{display:block}.audit-entry small{color:#857468}hr{border:0;border-top:1px solid #e6d8cb;margin:23px 0}
+[hidden]{display:none!important}footer{text-align:center;font-size:11px;color:#9c8b7e;margin-top:30px}
+@media(max-width:790px){.cols{grid-template-columns:1fr}header{padding:18px 20px}h1{font-size:31px}.panel{padding:18px}}
+@media(prefers-color-scheme:dark){
+:root{background:#261f25;color:#f1e3dd;color-scheme:dark}header,.panel{background:#332a31;border-color:#574652}.brand,h1,h2,.book-title{color:#f0bac1}.brand span,.soft,.hint,.intro,.book-entry p{color:#cab9af}a{color:#ffbfc6}
+.notice{background:#46333c;border-color:#c98795;color:#f3d7dc}.status,.report,.book-entry{background:#3e343c;border-color:#5a4651;color:#eddadd}
+input:not([type=checkbox]),textarea{background:#29252b;border-color:#78606b;color:#fff}fieldset{border-color:#644d58}
+button.secondary{background:#5c4852;color:#f9e8eb}hr{border-color:#674d5a}.audit-entry{border-color:#624a59}footer{color:#c2aaa9}
+}
