@@ -34,9 +34,9 @@ db/production/001_one_paid_order_one_code.sql
 db/production/002_account_recovery_codes.sql
 ```
 
-**一键初始化 SQL：** `db/production/BOOTSTRAP_NEW_EMPTY_D1.sql`。此脚本仅包含上述建表、触发器/索引与四种分类定义，不含测试用户、兑换码、付费章节或密钥。CI 使用内存 SQLite 模拟，确认期望的**22个用户/权限/学习/运营表、4条分类、0条用户/订单/书籍数据**。
+**初始化 SQL：** `db/production/BOOTSTRAP_NEW_EMPTY_D1.sql` 是带审计注释的原始版本；**在 Cloudflare D1 Console 粘贴应优先用 `db/production/BOOTSTRAP_CONSOLE_PASTE.sql`（去掉全部 `--` 注释）**。用户曾在 Console 看到 `No SQL statements detected.`，无法从该消息认定建表成功，因此必须先执行只读 `SELECT COUNT(*) AS table_count FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';` 核对。若为0，可在空库中执行**无注释版**一次；若非0，立即停止，不可重放整个初始化脚本。无注释版内容与10份审计源 SQL 一致，CI 还验证其换行被浏览器压平为单行时，内存 SQLite 仍能创建**22张表、4个分类、0条用户/订单/书籍数据**。
 
-**需要 Cloudflare 账号所有者执行的下一项操作**：重新核对当前 D1 的名称与 UUID、确认仍为0张表，再进入 **Console**，粘贴整个 `BOOTSTRAP_NEW_EMPTY_D1.sql` 执行一次，**只可运行一次**。成功后可执行 `db/production/VERIFY_FRESH_D1_READONLY.sql` 只读查询，应看到 22 张表、四级/六级/雅思/考研四种 slug、账号/码/书/恢复码/运营员计数全为0、账号恢复及订单防重索引存在。
+**需要 Cloudflare 账号所有者执行的下一项操作**：重新核对当前 D1 的名称与 UUID，在 **Console** 的底部输入框粘贴上述 `SELECT COUNT(*)...` 并执行。**只有返回0表**时，才复制 `BOOTSTRAP_CONSOLE_PASTE.sql` 的 GitHub Raw 全部文本，在 Console 执行一次（不能用旧的带注释文件）。成功后可执行 `db/production/VERIFY_FRESH_D1_READONLY.sql` 只读查询，应看到 22 张表、四级/六级/雅思/考研四种 slug、账号/码/书/恢复码/运营员计数全为0、账号恢复及订单防重索引存在。
 
 **发生任何 Cloudflare SQL 错误时立即停止并记录错误，不可直接把整段脚本再跑一遍**：第008部分的 `ALTER TABLE books ADD COLUMN` 不支持重复执行，失败后可能已经留下先前步骤创建的表。先由开发者对照远程结构做差异检查，再决定如何安全续跑；绝不在旧 `miaowu-english-test` 执行。
 
