@@ -14,8 +14,20 @@ test("S16 candidate master plan derives real manuscript words and 12 Rose demo w
  assert.equal(plan.targetSizePlanningOnly,4500);
  assert.equal(plan.actualVerifiedOfficialLexiconSize,0);
  assert.equal(plan.books[0].uniqueHeadwords,188);
- assert.equal(plan.books[0].wordMentions,220);
- assert.equal(plan.books[0].acrossChaptersRepeatedWords,22);
+ const actualMentions=bundle.chapters.flatMap(ch=>ch.paragraphs.flatMap(p=>p.segments))
+   .filter(s=>typeof s.wordId==="string").length;
+ assert.equal(plan.books[0].wordMentions,actualMentions);
+ assert.ok(plan.books[0].wordMentions>=300,
+   "Expanded manuscript must not silently regress below the 300 word-mention milestone");
+ const chaptersPerWord=new Map();
+ for(const ch of bundle.chapters){
+   for(const id of new Set(ch.paragraphs.flatMap(p=>p.segments)
+       .filter(s=>s.wordId).map(s=>s.wordId))){
+     chaptersPerWord.set(id,(chaptersPerWord.get(id)||0)+1);
+   }
+ }
+ assert.equal(plan.books[0].acrossChaptersRepeatedWords,
+   [...chaptersPerWord.values()].filter(n=>n>1).length);
  assert.equal(plan.chapters.length,12);
  assert.equal(plan.books[1].uniqueHeadwords,12);
  assert.equal(plan.books[1].reusedFromPreviousBooks,10);
