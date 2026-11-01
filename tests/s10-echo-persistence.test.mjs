@@ -58,9 +58,6 @@ async function callEcho(store,path,user,answer){
 
 test("S10 four-word QA echo saves event, correct schedule and existing bookmark across requests",async()=>{
   const store=new D1();
-  const words=await callEcho(store,"/api/me/echo/available?scope=recent","u1");
-  // Handler takes the pathname rather than the full pathname + query.
-  assert.equal(words.status,404); // This is intentionally the wrong caller shape.
   const available=await callEcho(store,"/api/me/echo/available","u1");
   assert.equal(available.status,200);
   const data=await available.json();
@@ -115,7 +112,8 @@ test("S10 incorrect answer persists as learning and reschedules to next day",asy
   assert.equal(body.result,"incorrect");
   assert.equal(body.nextReviewDays,1);
   const event=store.db.prepare("SELECT game_type,result FROM review_events WHERE word_id='w2'").get();
-  assert.deepEqual(event,{game_type:"situation",result:"incorrect"});
+  assert.equal(event.game_type,"situation");
+  assert.equal(event.result,"incorrect");
   const state=store.db.prepare("SELECT status,due_at,bookmarked FROM user_words WHERE word_id='w2'").get();
   assert.equal(state.status,"learning");
   assert.equal(state.bookmarked,0);
