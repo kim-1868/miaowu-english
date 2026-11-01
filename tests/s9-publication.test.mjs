@@ -221,3 +221,60 @@ test("S9 test and draft identifiers are blocked even when the title sounds comme
   assert.equal(isNonProductionManuscript({id:"original-cet4",title:"雨夜档案"}),false);
   assert.equal(isNonProductionManuscript({id:"original-cet4",title:"测试雨夜档案"}),true);
 });
+
+
+test("S46 operator cannot approve an exam story with incomplete UK/US phonetics, POS or bilingual examples",async()=>{
+ for(const [column,label] of [
+  ["phonetic_uk","missingUk"],["phonetic_us","missingUs"],
+  ["part_of_speech","missingPos"],["example_en","missingExampleEn"],
+  ["example_zh","missingExampleZh"]
+ ]){
+  const f=fixture();await operator(f.sqlite);
+  f.sqlite.prepare("UPDATE words SET "+column+"='' WHERE id='cet4-hesitate'").run();
+  const r=await ready(f.env);
+  assert.equal(r.technicalCheckPassed,true,"structural draft review remains separate");
+  assert.equal(r.learningMetadata.complete,false,column);
+  assert.equal(r.learningMetadata[label],1,column);
+  assert.equal(r.publishAvailable,false,column);
+  const approvalAttempt=await approve(f.env,r);
+  assert.equal(approvalAttempt.status,409,column);
+  assert.equal((await approvalAttempt.json()).error,"LEARNING_METADATA_INCOMPLETE",column);
+  assert.equal(f.sqlite.prepare("SELECT COUNT(*) n FROM ops_publication_approvals").get().n,0);
+  assert.equal(f.sqlite.prepare("SELECT status FROM books WHERE id=?").get(BOOK).status,"draft");
+  f.sqlite.close();
+ }
+});
+
+test("S46 readiness reports exact missing words without multiplying repeated chapter word anchors",async()=>{
+ const f=fixture();await operator(f.sqlite);
+ let result=await ready(f.env);
+ assert.equal(result.learningMetadata.complete,true);
+ assert.equal(result.learningMetadata.wordCount,2);
+ assert.equal(result.learningMetadata.missingUk,0);
+ assert.equal(result.learningMetadata.missingUs,0);
+ f.sqlite.prepare("UPDATE words SET phonetic_uk=NULL,phonetic_us=NULL,example_en=NULL WHERE id='cet4-promise'").run();
+ result=await ready(f.env);
+ assert.equal(result.learningMetadata.wordCount,2);
+ assert.equal(result.learningMetadata.missingUk,1);
+ assert.equal(result.learningMetadata.missingUs,1);
+ assert.equal(result.learningMetadata.missingExampleEn,1);
+ assert.equal(result.learningMetadata.complete,false);
+ assert.equal(result.publishAvailable,false);
+ f.sqlite.close();
+});
+
+test("S46 post-approval deletion of a pronunciation is blocked at publish without changing the book",async()=>{
+ const f=fixture();await operator(f.sqlite);
+ const report=await ready(f.env);
+ const approvalId=(await (await approve(f.env,report)).json()).approvalId;
+ assert.ok(approvalId);
+ f.sqlite.prepare("UPDATE words SET phonetic_us='' WHERE id='cet4-hesitate'").run();
+ const next=await ready(f.env);
+ assert.equal(next.learningMetadata.complete,false);
+ const result=await call(f.env,base(BOOK)+"/publish","POST",confirmation(report,approvalId));
+ assert.equal(result.status,409);
+ assert.equal((await result.json()).error,"LEARNING_METADATA_INCOMPLETE");
+ assert.equal(f.sqlite.prepare("SELECT status FROM books WHERE id=?").get(BOOK).status,"draft");
+ assert.equal(f.sqlite.prepare("SELECT COUNT(*) n FROM chapters WHERE published_at IS NOT NULL").get().n,0);
+ f.sqlite.close();
+});
