@@ -1,0 +1,1148 @@
+{
+  "schemaVersion": 1,
+  "reviewStatus": "UNVERIFIED_COMMUNITY_TRANSCRIPTION_CROSSCHECK",
+  "examSyllabus": "全国大学英语四、六级考试大纲（2016年修订版）",
+  "officialSyllabusUrl": "https://cet.neea.edu.cn/res/Home/1704/55b02330ac17274664f06d9d3db8249d.pdf",
+  "officialPublisher": "教育部教育考试院 / 全国大学英语四、六级考试委员会",
+  "secondarySourceRepo": "https://github.com/mahavivo/english-wordlists",
+  "secondarySourceCombinedFile": "CET_4+6_edited.txt",
+  "secondarySourceCombinedSha": "f475530423d216b635efde558f5fb78acd679dec",
+  "secondarySourceC6StarFile": "英语六级词汇（星标，1726）.txt",
+  "secondarySourceC6Sha": "61720ffa1a8b6f55e364e488c0421aea3bdcb6ac",
+  "warning": "This is a word-form intersection against an independent community transcription, not an official verification or copyright clearance. Inflected/derived/variant forms may be absent. The source PDFs mark CET6-specific words with a star; human verification against official syllabus is still mandatory.",
+  "counts": {
+    "fourBandCandidates": 172,
+    "sixBandStarred": 9,
+    "notFound": 7
+  },
+  "words": [
+    {
+      "headword": "accept",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "access",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "account",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "accountability",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "accurate",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "address",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "admit",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "allocation",
+      "provisionalMatch": "CET6_STARRED",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "anonymous",
+      "provisionalMatch": "CET6_STARRED",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "apology",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "appointment",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "approach",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "approve",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "archive",
+      "provisionalMatch": "CET6_STARRED",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "assistance",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "assistant",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "attempt",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "automatic",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "backup",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "blurred",
+      "provisionalMatch": "NOT_FOUND_IN_TRANSCRIPTION",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "borrow",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "calculate",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "childhood",
+      "provisionalMatch": "NOT_FOUND_IN_TRANSCRIPTION",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "choice",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "choose",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "circumstance",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "classify",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "clue",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "collect",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "community",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "compare",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "conclusion",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "confidential",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "confirm",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "conflict",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "confuse",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "connect",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "connection",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "consent",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "consequence",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "contact",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "continue",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "contrast",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "cooperate",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "correction",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "cycle",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "damage",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "date",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "decision",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "delay",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "delivery",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "deny",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "deserve",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "detail",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "device",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "digital",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "direct",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "disappear",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "disclose",
+      "provisionalMatch": "CET6_STARRED",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "discrepancy",
+      "provisionalMatch": "CET6_STARRED",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "distribute",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "document",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "duplicate",
+      "provisionalMatch": "CET6_STARRED",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "duration",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "emergency",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "enlarge",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "envelope",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "evidence",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "explain",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "expose",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "falsify",
+      "provisionalMatch": "NOT_FOUND_IN_TRANSCRIPTION",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "familiar",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "fiber",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "forgive",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "former",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "future",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "gather",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "guilt",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "handwriting",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "hesitate",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "hidden",
+      "provisionalMatch": "NOT_FOUND_IN_TRANSCRIPTION",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "identify",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "identity",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "incorrect",
+      "provisionalMatch": "NOT_FOUND_IN_TRANSCRIPTION",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "independent",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "indicate",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "insert",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "interrupt",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "interview",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "inventory",
+      "provisionalMatch": "CET6_STARRED",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "investigate",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "journey",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "justice",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "label",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "legal",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "librarian",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "locate",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "maintain",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "mechanism",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "memory",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "missing",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "mistake",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "negative",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "notice",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "occur",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "official",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "operate",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "option",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "original",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "outage",
+      "provisionalMatch": "NOT_FOUND_IN_TRANSCRIPTION",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "outline",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "pattern",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "permission",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "photograph",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "position",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "predict",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "prepare",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "preserve",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "privacy",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "promise",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "proof",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "propose",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "protect",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "puzzle",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "receipt",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "recent",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "recognize",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "record",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "recording",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "recover",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "reflect",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "register",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "regret",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "release",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "relief",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "reluctance",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "remove",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "repair",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "replace",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "request",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "resemble",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "resident",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "respond",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "responsibility",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "responsible",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "restore",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "retain",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "return",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "reunite",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "reveal",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "reverse",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "risk",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "routine",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "schedule",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "seal",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "secret",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "secure",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "separate",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "sequence",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "shelter",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "shortage",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "signature",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "solution",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "source",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "spine",
+      "provisionalMatch": "CET6_STARRED",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "stamp",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "statement",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "storage",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "supply",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "survive",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "suspect",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "suspicious",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "switch",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "testimony",
+      "provisionalMatch": "CET6_STARRED",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "threaten",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "timing",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "trace",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "transcript",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "transfer",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "transparent",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "trust",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "uncertain",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "urgent",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "verify",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "voice",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "warning",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "watermark",
+      "provisionalMatch": "NOT_FOUND_IN_TRANSCRIPTION",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    },
+    {
+      "headword": "witness",
+      "provisionalMatch": "FOUR_BAND_CANDIDATE",
+      "officialVerified": false,
+      "requiresContextAndSourceReview": true
+    }
+  ]
+}
