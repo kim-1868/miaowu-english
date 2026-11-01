@@ -52,6 +52,33 @@ function noteValid(note){
   return typeof note==="string"&&note.trim().length>=12&&note.length<=800&&
     !/[\u0000-\u001f]/.test(note);
 }
+// This is a *release* gate, stricter than draft-only editorial review warnings.
+// Do not allow an exam-learning product to go live with absent UK/US IPA,
+// part of speech, or bilingual teaching examples, even if a manual checkbox
+// was acknowledged. It does not claim the supplied values are correct.
+async function learningMetadataGaps(db,bookId){
+  const row=await stmt(db,
+    "SELECT COUNT(*) AS word_count, "+
+    "COALESCE(SUM(CASE WHEN TRIM(COALESCE(phonetic_uk,''))='' THEN 1 ELSE 0 END),0) missing_uk, "+
+    "COALESCE(SUM(CASE WHEN TRIM(COALESCE(phonetic_us,''))='' THEN 1 ELSE 0 END),0) missing_us, "+
+    "COALESCE(SUM(CASE WHEN TRIM(COALESCE(part_of_speech,''))='' THEN 1 ELSE 0 END),0) missing_pos, "+
+    "COALESCE(SUM(CASE WHEN TRIM(COALESCE(example_en,''))='' THEN 1 ELSE 0 END),0) missing_example_en, "+
+    "COALESCE(SUM(CASE WHEN TRIM(COALESCE(example_zh,''))='' THEN 1 ELSE 0 END),0) missing_example_zh "+
+    "FROM (SELECT DISTINCT w.id,w.phonetic_uk,w.phonetic_us,w.part_of_speech,"+
+    "w.example_en,w.example_zh FROM words w "+
+    "JOIN chapter_words cw ON cw.word_id=w.id "+
+    "JOIN chapters ch ON ch.id=cw.chapter_id WHERE ch.book_id=?)",bookId).first();
+  const metadata={
+    wordCount:row?.word_count??0,missingUk:row?.missing_uk??0,
+    missingUs:row?.missing_us??0,missingPos:row?.missing_pos??0,
+    missingExampleEn:row?.missing_example_en??0,
+    missingExampleZh:row?.missing_example_zh??0
+  };
+  return {...metadata,complete:metadata.wordCount>0&&
+    metadata.missingUk===0&&metadata.missingUs===0&&
+    metadata.missingPos===0&&metadata.missingExampleEn===0&&
+    metadata.missingExampleZh===0};
+}
 async function version(db,id){
   return await stmt(db,"SELECT version FROM ops_book_content_versions WHERE book_id=?",id).first();
 }
@@ -71,6 +98,7 @@ async function readiness(env,id){
   if(result.error)return fail(result.error,result.status);
   const r=result.report;
   const unsafe=isNonProductionManuscript(r.book);
+  const learningMetadata=await learningMetadataGaps(env.DB,id);
   const approval=await stmt(env.DB,
     "SELECT id,operator_id,content_fingerprint,content_version,created_at "+
     "FROM ops_publication_approvals WHERE book_id=? ORDER BY rowid DESC LIMIT 1",id).first();
@@ -80,8 +108,9 @@ async function readiness(env,id){
     blockers:r.blockers,warnings:r.warnings,manualChecks:r.manualChecks,
     contentFingerprint:r.contentFingerprint,contentVersion:versionRow?.version??null,
     approval:{id:approval?.id||null,current:approvalValid,createdAt:approval?.created_at||null},
-    sampleBlocked:unsafe,publishAvailable:env.OPS_PUBLICATION_ENABLED==="true"&&
-      r.technicalCheckPassed&&!unsafe&&approvalValid,
+    sampleBlocked:unsafe,learningMetadata,
+    publishAvailable:env.OPS_PUBLICATION_ENABLED==="true"&&
+      r.technicalCheckPassed&&!unsafe&&learningMetadata.complete&&approvalValid,
     note:"人工复核必须真实完成。预检不会发布内容。"});
 }
 async function approve(req,env,operator,id){
@@ -95,6 +124,8 @@ async function approve(req,env,operator,id){
   const r=checked.report;
   if(isNonProductionManuscript(r.book))return fail("TEST_MANUSCRIPT_BLOCKED",409);
   if(!r.technicalCheckPassed||r.blockerCount>0)return fail("EDITORIAL_CHECKS_FAILED",409);
+  if(!(await learningMetadataGaps(env.DB,id)).complete)
+    return fail("LEARNING_METADATA_INCOMPLETE",409);
   if(d.expectedFingerprint!==r.contentFingerprint)return fail("CONTENT_CHANGED",409);
   const idApproval=crypto.randomUUID(),auditId=crypto.randomUUID();
   try{
@@ -138,6 +169,8 @@ async function publish(req,env,operator,id){
   const r=checked.report;
   if(isNonProductionManuscript(r.book))return fail("TEST_MANUSCRIPT_BLOCKED",409);
   if(!r.technicalCheckPassed||r.blockerCount>0)return fail("EDITORIAL_CHECKS_FAILED",409);
+  if(!(await learningMetadataGaps(env.DB,id)).complete)
+    return fail("LEARNING_METADATA_INCOMPLETE",409);
   if(d.expectedFingerprint!==r.contentFingerprint||d.confirmTitle!==r.book.title)
     return fail("PUBLICATION_CONFIRMATION_MISMATCH",409);
   const approval=await stmt(env.DB,
