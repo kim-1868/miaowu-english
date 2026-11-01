@@ -6,6 +6,9 @@ import {resolve} from "node:path";
 import {mkdirSync,writeFileSync,readFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 const UK_SOURCE=JSON.parse(readFileSync(new URL("../content/editorial/rainy-night-s1-britfone-uk-ipa-candidates.json",import.meta.url),"utf8"));
+const US_SOURCE=JSON.parse(readFileSync(new URL("../content/editorial/rainy-night-us-arpa-UNVERIFIED.json",import.meta.url),"utf8"));
+if(US_SOURCE.status!=="UNVERIFIED_US_ARPABET_CANDIDATES_NOT_IPA")
+ throw Error("US ARPAbet phonetics must remain explicitly unreviewed");
 if(UK_SOURCE.status!=="UNVERIFIED_CANDIDATES_PRIVATE_EDITORIAL_ONLY")
  throw Error("UK IPA candidates must remain explicitly unreviewed");
 function csv(value){
@@ -18,6 +21,10 @@ export function createVocabularyReviewQueue(bundle){
  if(pronunciationCandidates.size!==bundle.words.length||
    !bundle.words.every(w=>pronunciationCandidates.has(w.headword)))
   throw Error("British IPA candidate source must match exactly the editable word set");
+ const usCandidate=new Map(US_SOURCE.entries.map(w=>[w.headword,w]));
+ if(usCandidate.size!==bundle.words.length||
+   !bundle.words.every(w=>usCandidate.has(w.headword)))
+  throw Error("US ARPAbet candidate source must match the editable word set");
  const usage=new Map(bundle.words.map(w=>[w.id,{
     count:0,chapters:new Map(),first:null,example:null
  }]));
@@ -45,6 +52,9 @@ export function createVocabularyReviewQueue(bundle){
   const hasIpa=!!(w.phoneticUk?.trim()&&w.phoneticUs?.trim());
   const verifiedLevel=w.verifiedCET4===true;
   const missingExample=!(w.exampleEn?.trim()&&w.exampleZh?.trim());
+  const usPronunciation=usCandidate.get(w.headword);
+  if(usPronunciation.reviewStatus!=="UNVERIFIED"||usPronunciation.selected!==null)
+   throw Error("US CMU pronunciations must never be promoted automatically");
   const ukCandidate=pronunciationCandidates.get(w.headword);
   const possibleUkPronunciations=ukCandidate.phoneticUkCandidates;
   if(ukCandidate.humanVerified!==false||ukCandidate.selectedCandidate!==null)
@@ -57,7 +67,8 @@ export function createVocabularyReviewQueue(bundle){
    u.chapters.size===1?"SINGLE_CHAPTER":null,
    missingExample?"BILINGUAL_EXAMPLE_MISSING":null,
    possibleUkPronunciations.length===0?"UK_IPA_NOT_IN_SOURCE":null,
-   possibleUkPronunciations.length>1?"UK_IPA_VARIANT_NEEDS_SENSE_REVIEW":null
+   possibleUkPronunciations.length>1?"UK_IPA_VARIANT_NEEDS_SENSE_REVIEW":null,
+   usPronunciation.arpaCandidates.length>1?"US_ARPA_VARIANT_NEEDS_SENSE_REVIEW":null
   ].filter(Boolean);
   const priority=u.count===0?"CRITICAL":u.count===1?"HIGH":
     u.chapters.size===1?"REPETITION_REVIEW":"NORMAL";
@@ -71,6 +82,9 @@ export function createVocabularyReviewQueue(bundle){
    sourceUkCandidates:possibleUkPronunciations.join(" | "),
    sourceUkCandidatesCount:possibleUkPronunciations.length,
    sourceUkProvenance:UK_SOURCE.source+"#"+UK_SOURCE.sourceSha,
+   sourceUsArpaCandidates:usPronunciation.arpaCandidates.join(" | "),
+   sourceUsArpaCount:usPronunciation.arpaCandidates.length,
+   sourceUsProvenance:US_SOURCE.source+"#"+US_SOURCE.sourceDictionarySha256,
    verifiedCET4:verifiedLevel,reviewFlags,priority,
    reviewer:"",ipaSource:"",cet4LevelSource:"",reviewDecision:"UNREVIEWED"};
  }).sort((a,b)=>{
@@ -87,6 +101,10 @@ export function createVocabularyReviewQueue(bundle){
   oneMentionWords:rows.filter(r=>r.mentions===1).length,
   singleChapterWords:rows.filter(r=>r.chapterCount===1).length,
   ukCandidatesFound:rows.filter(r=>r.sourceUkCandidatesCount>0).length,
+  usArpaCandidatesFound:rows.filter(r=>r.sourceUsArpaCount>0).length,
+  usArpaVariantWords:rows.filter(r=>r.sourceUsArpaCount>1).length,
+  usArpaSource:US_SOURCE.source,
+  usArpaSourceHash:US_SOURCE.sourceDictionarySha256,
   ukCandidatesMissing:rows.filter(r=>r.sourceUkCandidatesCount===0).length,
   ukVariantsNeedingReview:rows.filter(r=>r.sourceUkCandidatesCount>1).length,
   ukCandidateSource:UK_SOURCE.source,
@@ -100,6 +118,7 @@ export function reviewCsv({rows}){
  "chapters","firstChapter","firstParagraph","firstContext","exampleEn","exampleZh",
  "collocations","phoneticUk","phoneticUs","sourceUkCandidates",
  "sourceUkCandidatesCount","sourceUkProvenance",
+ "sourceUsArpaCandidates","sourceUsArpaCount","sourceUsProvenance",
  "verifiedCET4","reviewFlags","priority",
  "reviewer","ipaSource","cet4LevelSource","reviewDecision"];
  return [columns.join(","),
