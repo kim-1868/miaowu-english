@@ -200,13 +200,42 @@
           item.querySelector('.book-actions button').onclick=()=>openCloudBook(book,slug);
           list.append(item);
         });
-        // Keep the approved V0.3 three-cover rhythm for the first collection.
-        // These are disabled editorial placeholders, not published D1 books.
-        if(slug==='cet4'&&books.length<3){
-          BOOKS.filter(b=>b.status==='planned').slice(0,3-books.length).forEach((b,i)=>{
+        // Preserve the user's approved original two-chapter local demo as a
+        // clearly labelled teaching/interaction sample. D1 is still the ONLY
+        // source for published and paid books. Never double-render a D1 book.
+        const showRoseDemo=slug==='cet4'&&!books.some(b=>
+          b.id==='rose'||b.title==='玫瑰未落幕');
+        if(showRoseDemo){
+          const rose=BOOKS.find(b=>b.id==='rose'&&b.status==='demo');
+          if(rose){
+            const item=document.createElement('div');
+            item.className='book-item demo-book-item';
+            const ix=books.length+1;
+            item.innerHTML='<div class="book-cover '+safe(rose.kind)+'" aria-label="'+safe(rose.name)+' 互动演示">'+
+              '<span class="book-tag">互动演示 · 非正式商品</span>'+
+              '<span class="edition">THE STORY EDITION / '+String(ix).padStart(2,'0')+'</span>'+
+              '<span class="illustration">'+safe(rose.illustration)+'</span>'+
+              '<h3>'+safe(rose.name)+'</h3><span class="edition-bottom">DEMO · 2 CHAPTERS</span></div>'+
+              '<div class="book-info"><div class="line1"><h3>'+safe(rose.name)+'</h3>'+
+              '<span class="eyebrow">'+String(ix).padStart(2,'0')+'</span></div>'+
+              '<p>保留的两章互动测试故事；点击英文词可体验词卡与发音。演示进度保存在本浏览器，不代表正式购买权益。</p>'+
+              '<div class="book-meta"><span class="pill">CET4 演示</span>'+
+              '<span class="pill">仅供体验 · 不出售</span></div>'+
+              '<div class="shelf-progress"><div class="progress-text">'+
+              '<span>共2章 · 浏览器本地演示</span><span>—</span></div></div>'+
+              '<div class="book-actions"><button class="secondary-btn" type="button">试读演示第1章 →</button></div></div>';
+            item.querySelector('.book-actions button').onclick=()=>openChapter(0);
+            list.append(item);
+          }
+        }
+        // Keep the approved V0.3 three-cover rhythm when room remains.
+        // Placeholder covers have no published body or downloadable content.
+        const visibleCardCount=books.length+(showRoseDemo?1:0);
+        if(slug==='cet4'&&visibleCardCount<3){
+          BOOKS.filter(b=>b.status==='planned').slice(0,3-visibleCardCount).forEach((b,i)=>{
             const item=document.createElement('div');
             item.className='book-item planned-book-item';
-            const ix=books.length+i+1;
+            const ix=visibleCardCount+i+1;
             item.innerHTML='<div class="book-cover '+safe(b.kind)+'">'+
               '<span class="book-tag">内容筹备中</span>'+
               '<span class="edition">THE STORY EDITION / '+String(ix).padStart(2,'0')+'</span>'+
@@ -227,7 +256,9 @@
           explanation.className='onboarding cloud-shelf-empty';
           explanation.innerHTML='<span class="eyebrow">YOUR NEXT STORY</span>'+
             '<h3>这一层书架，还在等待故事</h3>'+
-            '<p>目前没有已发布的小说。下方封面为尚未上架的设计企划，不能阅读或购买。</p>';
+            '<p>'+(showRoseDemo?
+              '目前没有正式发布的数据库小说。《玫瑰未落幕》仅保留两章临时互动演示，不是付费商品；其余封面为未上架企划。':
+              '目前没有已发布的小说。下方封面为尚未上架的设计企划，不能阅读或购买。')+'</p>';
           list.prepend(explanation);
         }
         updateCloudShelfProgress();
