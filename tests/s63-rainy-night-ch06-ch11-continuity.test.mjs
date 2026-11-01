@@ -11,7 +11,7 @@ const paragraph=(chapter,no)=>bundle.chapters.find(ch=>ch.number===chapter).para
 test("S63 chapter six evidence and repair reveal follow an intelligible time sequence",()=>{
  assert.match(paragraph(6,1),/前一晚.*第二天.*spine/);
  assert.match(paragraph(6,2),/周砚此前交给自己的 photograph 与陌生短信附带的照片/);
- assert.match(paragraph(6,3),/先备份手机里的两张照片.*negative（负片）模式/);
+ assert.match(paragraph(6,3),/先备份手机里的两张照片.*negative（底片）与冲印照片明暗相反/);
  assert.match(paragraph(6,4),/装帧铺还没有开门/);
  assert.match(paragraph(6,5),/店主到店后没有立即取书/);
  assert.match(paragraph(6,6),/打开书脊前/);
