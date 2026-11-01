@@ -307,3 +307,19 @@ html[data-theme="dark"] .cloud-chapter-options .chapter-btn:hover{
 @media(max-width:950px){
   .chapter-vocab-panel{max-height:350px}
 }
+
+/* Responsive wordbook drawer on narrow reading layouts; desktop retains sidebar. */
+.mobile-vocab-open,.mobile-vocab-close{display:none!important}
+@media(max-width:980px){
+  .mobile-vocab-open{display:inline-flex!important;white-space:nowrap}
+  .reader-layout.vocab-drawer-open>.sidebar:last-child{display:block!important;
+    position:fixed;top:9vh;bottom:6vh;right:12px;left:auto;width:min(370px,calc(100vw - 24px));
+    background:var(--paper);border:1px solid var(--line);border-radius:16px;
+    z-index:40;padding:14px;overflow:auto;box-shadow:0 20px 70px #24141d66}
+  .reader-layout.vocab-drawer-open>.sidebar:last-child>.side-panel:not(.chapter-vocab-panel),
+  .reader-layout.vocab-drawer-open>.sidebar:last-child>.mini-note{display:none!important}
+  .mobile-vocab-close{display:block!important;float:right;background:transparent;
+    border:0;color:var(--wine);font-size:24px;cursor:pointer;margin:-10px -7px 0 4px}
+  .reader-layout.vocab-drawer-open .chapter-vocab-panel{
+    display:block!important;max-height:none;overflow:visible}
+}
