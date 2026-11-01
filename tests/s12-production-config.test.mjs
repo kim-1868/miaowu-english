@@ -10,7 +10,7 @@ const clean=()=>({
  assets:{directory:"../public",binding:"ASSETS",run_worker_first:true},
  d1_databases:[{binding:"DB",database_name:"miaowu-english-prod",
   database_id:"1ec3883a-75ca-4572-a167-9860f341927d"}],
- secrets:{required:["ACTIVATION_PEPPER"]}
+
 });
 test("S12 new and isolated production Worker config passes audit but is NOT approved to launch",()=>{
  const audit=auditProductionConfig(clean());
@@ -39,8 +39,8 @@ test("S12 prohibit legacy staging, unsafe static paths and secrets in plain env"
   c=>c.assets.run_worker_first=false,
   c=>c.assets.directory="../public-unverified",
   c=>c.main="../src/suspicious.js",
-  c=>c.secrets.required=[],
-  c=>c.secrets.required.push("STAGING_PREVIEW_PASSWORD"),
+  c=>c.secrets={required:["ACTIVATION_PEPPER"]},
+  c=>c.secrets={required:["STAGING_PREVIEW_PASSWORD"]},
   c=>c.d1_databases[0].database_name="miaowu-english-test",
   c=>c.vars.OPS_PUBLICATION_ENABLED="true",
   c=>c.migrations_auto_apply=true
