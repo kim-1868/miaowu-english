@@ -177,3 +177,77 @@ test("S12 each customer's cloud reading data stays separated and logout revokes 
  assert.equal(stillBob.status,200);
  db.db.close();
 });
+
+test("category entitlement automatically covers another published novel added later to the same category",async()=>{
+ const db=new LocalD1();
+ await db.voucher(codeA,"voucher-a","cet4");
+ await db.voucher(codeB,"voucher-b","cet6");
+ const app=env(db);
+ const alice=await worker.fetch(request("/api/auth/register","POST",{
+  username:"alice-category",password:pass,activationCode:codeA
+ }),app);
+ const aCookie=session(alice);
+ const bob=await worker.fetch(request("/api/auth/register","POST",{
+  username:"bob-category",password:pass,activationCode:codeB
+ }),app);
+ const bCookie=session(bob);
+ // The new book comes AFTER the user's original category purchase.
+ db.db.prepare("INSERT INTO books(id,category_id,title,status) VALUES (?,?,?,'published')")
+  .run("book-cet4-next","cet4","A New CET4 Mystery");
+ db.db.prepare("INSERT INTO chapters(id,book_id,chapter_no,title,content_json,is_preview,published_at) "+
+  "VALUES (?,?,?,?,?,0,CURRENT_TIMESTAMP)")
+  .run("chapter-cet4-next","book-cet4-next",1,"New Chapter",
+   JSON.stringify({paragraphs:["NEW_CET4_STORY_PRIVATE"]}));
+ const readAlice=await worker.fetch(request("/api/chapters/chapter-cet4-next","GET",undefined,aCookie),app);
+ assert.equal(readAlice.status,200);
+ assert.match(JSON.stringify(await readAlice.json()),/NEW_CET4_STORY_PRIVATE/);
+ const readBob=await worker.fetch(request("/api/chapters/chapter-cet4-next","GET",undefined,bCookie),app);
+ assert.equal(readBob.status,403);
+ assert.doesNotMatch(JSON.stringify(await readBob.json()),/NEW_CET4_STORY_PRIVATE/);
+ assert.equal(db.db.prepare("SELECT COUNT(*) AS n FROM entitlements").get().n,2);
+ db.db.close();
+});
+
+test("future high-school and zhuanshengben classifications work without rebuilding the user entitlement schema",async()=>{
+ const db=new LocalD1();
+ db.db.prepare("INSERT INTO categories(id,slug,title,is_visible) VALUES(?,?,?,1)")
+  .run("high-school","high-school","高中英语");
+ db.db.prepare("INSERT INTO categories(id,slug,title,is_visible) VALUES(?,?,?,1)")
+  .run("zhuanshengben","zhuanshengben","专升本英语");
+ db.db.prepare("INSERT INTO books(id,category_id,title,status) VALUES (?,?,?,'published')")
+  .run("future-hs-book","high-school","高中英语小说");
+ db.db.prepare("INSERT INTO books(id,category_id,title,status) VALUES (?,?,?,'published')")
+  .run("future-zsb-book","zhuanshengben","专升本英语小说");
+ for(const [id,bookId,secret] of [
+  ["future-hs-chapter","future-hs-book","PRIVATE_HIGH_SCHOOL"],
+  ["future-zsb-chapter","future-zsb-book","PRIVATE_ZHUANSHENGBEN"]]){
+  db.db.prepare("INSERT INTO chapters(id,book_id,chapter_no,title,content_json,is_preview,published_at) "+
+   "VALUES (?,?,?,?,?,0,CURRENT_TIMESTAMP)")
+   .run(id,bookId,1,"测试新类目章节",JSON.stringify({paragraphs:[secret]}));
+ }
+ const hsCode="MW-HIGH-11111111-22222222-33333333-44444444";
+ const zsbCode="MW-ZSB-55555555-66666666-77777777-88888888";
+ await db.voucher(hsCode,"future-voucher-high","high-school");
+ await db.voucher(zsbCode,"future-voucher-zsb","zhuanshengben");
+ const app=env(db);
+ const registered=await worker.fetch(request("/api/auth/register","POST",{
+  username:"future-learner",password:pass,activationCode:hsCode
+ }),app);
+ assert.equal(registered.status,201);
+ const cookie=session(registered);
+ assert.deepEqual((await registered.json()).categories.map(x=>x.slug),["high-school"]);
+ const zsbDenied=await worker.fetch(request("/api/chapters/future-zsb-chapter","GET",undefined,cookie),app);
+ assert.equal(zsbDenied.status,403);
+ const hsOpen=await worker.fetch(request("/api/chapters/future-hs-chapter","GET",undefined,cookie),app);
+ assert.equal(hsOpen.status,200);
+ const added=await worker.fetch(request("/api/activate","POST",{activationCode:zsbCode},cookie),app);
+ assert.equal(added.status,200);
+ assert.deepEqual((await added.json()).categories.map(x=>x.slug),
+  ["high-school","zhuanshengben"]);
+ const zsbOpen=await worker.fetch(request("/api/chapters/future-zsb-chapter","GET",undefined,cookie),app);
+ assert.equal(zsbOpen.status,200);
+ const cate=await worker.fetch(request("/api/categories"),app);
+ assert.equal(cate.status,200);
+ assert.ok((await cate.json()).categories.some(x=>x.slug==="high-school"));
+ db.db.close();
+});
