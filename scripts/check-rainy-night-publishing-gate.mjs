@@ -59,6 +59,8 @@ export function evaluateRainyNightPublicationGate(bundle){
    notStandalone:form.notStandalone},pronunciation:{
    ukCandidates:wordReview.ukCandidatesFound,
    usArpabetCandidates:wordReview.usArpaCandidatesFound,
+   usIpaCandidates:wordReview.usIpaCandidatesFound,
+   usIpaAmbiguousWords:wordReview.usIpaVariantsNeedingReview,
    fullyApprovedWords:wordReview.totalWords-wordReview.flaggedForIpa},
   review:{pendingWordSense:wordReview.totalWords,
    pendingOccurrences:contexts.unreviewed,pendingEcho:echo.questions.filter(
