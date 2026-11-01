@@ -8,7 +8,7 @@ const {bundle}=composeRainyNightSeasonDraft();
 const actualText=(chapter)=>bundle.chapters.find(x=>x.number===chapter).paragraphs.map(
  p=>p.segments.map(s=>s.text??s.surface).join("")).join("\n");
 const cases=[
- [2,"当年做出了一个错误的 choice","做错过一个 choice"],
+ [1,"当年做出了一个错误的 choice","做错过一个 choice"],
  [2,"旧卡上的年份看起来 accurate","年份十分 accurate"],
  [3,"还有新的 clue 值得查","引导新的 clue"],
  [5,"一条 missing 记录本该出现在这里","一条 missing 的记录"],
