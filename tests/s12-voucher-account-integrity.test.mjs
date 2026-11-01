@@ -16,6 +16,7 @@ class LocalD1{
   this.db.exec(readFileSync(new URL("../db/001_schema.sql",import.meta.url),"utf8"));
   this.db.exec(readFileSync(new URL("../db/002_s1.sql",import.meta.url),"utf8"));
   this.db.exec(readFileSync(new URL("../db/003_public_categories.sql",import.meta.url),"utf8"));
+  this.db.exec(readFileSync(new URL("../db/production/002_account_recovery_codes.sql",import.meta.url),"utf8"));
   this.db.exec(`
     INSERT INTO books(id,category_id,title,status)
     VALUES ('book-cet4','cet4','Private CET4 QA Fixture','published'),
