@@ -32,6 +32,25 @@
 
 此工具不能自动把词性视作已校验、不能生成官方CET4等级证明，也不会填造IPA或外部词典来源。当前188词全数仍有`IPA_NOT_VERIFIED`与`CET4_NOT_VERIFIED`标识；优先检查仅出现1次及仅在1章出现的词。
 
+## 英式IPA来源候选（尚未经过审定）
+
+新加入 `content/editorial/rainy-night-s1-britfone-uk-ipa-candidates.json`。候选数据通过英国发音词典 **Britfone 3.0.1** 的 MIT 授权文件 `britfone.main.3.0.1.csv` 按词形精确查找生成。来源仓库：https://github.com/JoseLlarena/Britfone；来源 SHA `51a54c553812b06a8f464f5aa85f4df2e6edb645`；源文件许可 MIT，使用及再发布须保留署名与许可。
+
+| 项目 | 数量 |
+|---|---:|
+| 第一季候选词 | 188 |
+| 找到英式发音候选 | 181 |
+| 没有英式匹配 | 7 |
+| 存在多发音候选（需按实际词性辨义） | 14 |
+| 词性、词义与发音得到人工批准 | **0** |
+| 有来源可核对的美式发音（本批） | **0** |
+
+缺失匹配：blurred、discrepancy、falsify、handwriting、outage、reunite、watermark。多发音例如 record、document、contact；不能自动取第一个就称正确。Britfone 的一些音标记号与国内教材常见写法不同，日后需要统一展示规范。
+
+`--write-private` 生成的逐词CSV已经带上 `sourceUkCandidates`、`sourceUkCandidatesCount` 和可追踪的 `sourceUkProvenance`，但绝不写入正式词卡的 `phoneticUk` 字段，也不会改动对应的 D1 数据或把任何单词标记 `verifiedCET4=true`。
+
+**词汇分布的新发现：** 708次标注中，97个候选词只出现于一个章节、25词只出现一次。这暴露了“总频次达标不等于每词有足够复现”的教学风险。下一轮要优先安排同词在隔章/后续小说中的自然复现，而不是继续堆高 record、confirm 等已经频繁出现的词。
+
 ## 上架仍需完成
 
 1. 对全书所有标注位置逐句审核中英混排自然度、表义准确性、词性与读者认知负荷；修正重复场景与时间线。
