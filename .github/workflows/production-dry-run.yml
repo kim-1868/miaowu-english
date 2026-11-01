@@ -1,0 +1,43 @@
+name: Production dry-run (no Cloudflare deployment)
+
+on:
+  pull_request:
+    paths:
+      - 'deploy/**'
+      - 'src/**'
+      - 'public/**'
+      - 'scripts/build-production-assets.mjs'
+      - 'scripts/check-production-config.mjs'
+      - 'pages-production/**'
+      - '.github/workflows/production-dry-run.yml'
+  push:
+    branches:
+      - dev/s17-integrated-v1-release-candidate
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  production-bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Wrangler only for local bundle validation
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Validate dedicated production D1, Worker routing, no public workers.dev
+        run: node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+      - name: Create reviewed production-only asset directory
+        run: npm run assets:production:build
+      - name: Compile Worker bundle without API credentials or deployment
+        run: npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/dryrun-production
+      - name: Compile safe Pages router artifact, no D1 binding
+        run: npm run pages:production:build
+      - name: Assert no Cloudflare deployment secrets were provided
+        run: |
+          test -z "${CLOUDFLARE_API_TOKEN:-}"
+          test -z "${CLOUDFLARE_ACCOUNT_ID:-}"
