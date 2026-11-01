@@ -36,6 +36,17 @@
 
 **关键测试结论**：如果动态 Functions 探针在大陆仍打不开，即使 `pages.dev` 静态站参考页面可以打开，也不能直接采用此方案用于妙屋英语有数据库的完整产品；应回退到自有域名/其他稳定入口。
 
+## 实际验证记录（2026-11-01）
+
+用户已在不使用 VPN 的中国大陆真实网络完成两项测试：
+
+- `https://miaowu-english-access-check.pages.dev/__miaowu_pages_function_probe` → **动态 Pages Function 返回符合预期**。
+- `https://miaowu-english-access-check.pages.dev/__miaowu_pages_asset_probe.txt` → **静态资源返回符合预期**。
+
+**仅两项网络探针通过**，不能宣称整站阅读与付费鉴权已经可免 VPN 使用。目前账号/DB/剧情回声尚未验证。
+
+已加强 Pages 入口安全：当 `APP_ENV` 不是 `staging` 或 `DB` 未绑定时，除了上述两条无敏感信息探针，所有网页和 API 都直接返回 503。新的动态探针同时返回两项粗粒度状态字段：`stagingConfigured`、`dbBindingPresent`，便于验证配置，不查询用户资料。项目现有 CI 会自动校验该保护逻辑。
+
 ## 第二步：仅第一步 Functions 探针通过才做端到端验收
 
 Pages 项目 Settings → Variables and Secrets 设置以下两个原有用途的**测试环境**密钥（保持强度与现有测试 Worker 一致，但不需要发给助手）：
@@ -44,7 +55,16 @@ Pages 项目 Settings → Variables and Secrets 设置以下两个原有用途�
 - `ACTIVATION_PEPPER`：若希望同一 D1 原有测试读者密码仍可验证，必须在 Pages 环境中设置与现有 staging Worker **一致**的值；此密钥绝不通过聊天、GitHub、网页或者截图展示。如无法安全配置，停止同库账号验收。
 - **不添加** `OPS_TOKEN_PEPPER`，也不启用任何 S9 运营开关。
 
-需要重新部署 Pages 项目使绑定和环境变量生效。切记：**不要将这两个密钥作为 Pages 构建命令参数、GitHub 环境变量或仓库文件**；只用 Cloudflare Pages 的加密 Secrets。
+**安全要求：**
+- 先检查 Pages → Settings → Bindings：`DB` 必须是 **`miaowu-english-test`**，不是任何将来正式用的 D1。若已经从 `pages-poc/wrangler.jsonc` 自动导入此绑定，不要重复添加；若不存在，按 Cloudflare 官方 Pages D1 绑定 UI 添加。 
+- 检查 Pages → Settings → Variables and Secrets（Production）：`APP_ENV` 必须是普通变量 `staging`。如 `wrangler.jsonc` 生成的配置已生效，就不要配置冲突的值。
+- `STAGING_PREVIEW_PASSWORD` 要用 Pages 的 **Encrypt** Secret，最少16字符。可以设置与旧 staging 预览相同的私有值，也可设一个新的，仅作为新 Pages 的 reviewer 访问密码。
+- `ACTIVATION_PEPPER` **必须与原 Worker 测试环境的值完全相同**，否则原测试读者密码验证会失败，同一 D1 后续生成/校验的兑换码也不一致。Cloudflare 通常不会再次显示已保存的 Secret 明文：如果最初没另行安全保存它，**不要随意新建不同值绑定同一个 D1，更不要重置原 Worker 的 Secret**；停止这一步，改走受控的独立测试库或其他安全复用方案。
+- 如页面显示 `Development` / `Preview` / `Production`，本项目的生产分支是内部 QA 测试分支，故应在 **Pages Production 环境** 设置配置；这里的 `Production` **只指 Pages 部署槽位，并不表示已开启用户商业产品**。
+- 配好绑定和 Secret 后需要在新 Pages 项目里 **Retry deployment / Redeploy**，使运行时配置刷新。不要在旧 Worker 项目上操作。
+- 保留 S9 运营开关关闭，不用再执行任何 D1 migrations。
+
+需要重新部署 Pages 项目使绑定和环境变量生效。切记：**不要将密钥放入 Pages 构建命令参数、GitHub 环境变量、仓库文件、截图或聊天**；只能用 Cloudflare Pages 的加密 Secrets。
 
 此时：
 - 使用原 `reviewer` 预览身份进入新 Pages 站点；
