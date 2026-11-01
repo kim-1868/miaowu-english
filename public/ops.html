@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>妙屋英语 · 运营出版台</title>
+<link rel="stylesheet" href="/ops-console.css">
+<script src="/ops-console.js" defer></script>
+</head><body>
+<header><div class="brand">喵 · 妙屋英语 <span>THE STORY & WORD LIBRARY</span></div>
+  <div class="strap">运营出版台 <span class="pill">受控操作</span></div></header>
+<main>
+  <p class="crumb"><a href="/">← 返回阅读首页</a></p>
+  <h1>故事出版台</h1>
+  <p class="intro">从内容复核到正式上架，每一步都有明确记录。请先完成审核，再独立确认上架；测试或示例书不允许出售。</p>
+  <div class="notice"><strong>运营安全提示：</strong>这里只接受独立运营密钥，不使用普通读者密码或旧版 S3 测试密钥。密钥只保留在当前页面的内存中；不写入本地存储。正式生产还需要 Cloudflare Access 等独立入口保护。</div>
+  <section class="panel" aria-label="运营身份">
+    <div class="panel-heading"><h2>① 运营身份</h2><span id="operatorIdentity" class="soft">未登录</span></div>
+    <div class="row">
+      <label class="stretch" for="opsKey">运营密钥（不会保存）<input id="opsKey" type="password" autocomplete="off" spellcheck="false" placeholder="mwops_…"></label>
+      <button id="connect" type="button">验证身份</button>
+      <button id="disconnect" type="button" class="secondary">退出／清除密钥</button>
+    </div>
+    <div id="status" class="status" role="status" aria-live="polite">请使用独立运营账号验证身份。</div>
+  </section>
+  <div class="cols">
+    <section class="panel"><div class="panel-heading"><h2>② 书籍目录</h2><button id="refresh" class="secondary" disabled>刷新</button></div>
+      <p class="hint">仅显示草稿和已发布书籍；不会包含付费正文。</p>
+      <div id="books" class="books"><p class="soft">连接后显示书目。</p></div>
+    </section>
+    <section class="panel"><h2>③ 操作与审核</h2>
+      <div id="selected" class="book-title">请选择左侧一本书</div>
+      <div id="bookSummary" class="hint"></div>
+      <div id="draftActions" hidden>
+        <div class="notice mini">单人双步骤审核：① 核实真实内容并保存审核记录；② 再次输入完整书名确认上架。改稿后之前的审核自动失效。</div>
+        <h3>审核报告</h3>
+        <div id="report" class="report"></div>
+        <fieldset id="checks"><legend>人工复核（只能勾选实际检查过的项目）</legend>
+          <label><input type="checkbox" value="ORIGINALITY_AND_RIGHTS"> 已核对原创性、版权与封面使用授权</label>
+          <label><input type="checkbox" value="LANGUAGE_PROOFREADING"> 已复核英语句法、单词释义和语境自然度</label>
+          <label><input type="checkbox" value="PRODUCT_SCOPE"> 已确认故事完整、目标词量和免费／付费边界</label>
+        </fieldset>
+        <label for="reviewNote">复核记录（具体说明你检查的范围）</label>
+        <textarea id="reviewNote" rows="3" minlength="12" maxlength="800" placeholder="例如：已逐章检查所有正文和词汇…"></textarea>
+        <div class="row"><button id="approve" disabled>保存本版审核（不上架）</button></div>
+        <hr><h3>独立发布确认</h3>
+        <p class="hint">请再次输入下方书名，不允许使用旧版本审核或系统自动发布。</p>
+        <label for="publishTitle">完整书名</label><input id="publishTitle" autocomplete="off" placeholder="输入当前书名">
+        <div class="row"><button id="publish" disabled>二次确认并正式上架</button></div>
+      </div>
+      <div id="liveActions" hidden>
+        <div class="notice mini">下架会立即阻断所有公开章节，包括免费试读。不会删除已购用户权益和历史学习记录；需要自行履行售后承诺。</div>
+        <div id="withdrawSummary" class="report"></div>
+        <label for="withdrawTitle">再次输入完整书名确认下架</label>
+        <input id="withdrawTitle" autocomplete="off" placeholder="输入当前书名">
+        <label for="withdrawReason">下架原因（至少12字）</label>
+        <textarea id="withdrawReason" rows="3" minlength="12" maxlength="400" placeholder="记录原因以及对已购买用户的处理计划"></textarea>
+        <label class="checkline"><input type="checkbox" id="withdrawConfirm"> 我理解下架会使已购买者暂时无法阅读该书，我会处理后续售后。</label>
+        <div class="row"><button id="withdraw" disabled class="danger">确认下架该书</button></div>
+      </div>
+    </section>
+  </div>
+  <section class="panel"><h2>④ 操作审计</h2><p class="hint">最近最多30条操作；审核和上架动作分别留痕，日志不会记录原始密钥或小说正文。</p>
+    <div id="audit" class="audit"><p class="soft">请选择书目查看。</p></div></section>
+  <footer>妙屋英语 · 版本受控出版工具 · 正式销售前需完成生产配置、恢复演练及售后政策</footer>
+</main></body></html>
