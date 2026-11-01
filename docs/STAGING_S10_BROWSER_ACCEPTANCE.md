@@ -22,6 +22,19 @@
 - 剧情回声答题后待复习词数可能不会立即增加，因为服务器将 `due_at` 设为未来一天或数天；不能只以“今天待复习数增加”判断是否保存。要验证写入持久化，后续应通过无敏感字段的 D1 只读聚合或新登录后数据核对。
 - 2026-11-01 的真实浏览器反馈只证明当前已测试项目，其他项目仍保持待验收状态。
 
+## 2026-11-01 剧情回声提交验收（完成）
+
+- 用户在 Cloudflare staging 的 QA 第4章剧情回声中实际提交了练习，确认界面显示「复习已保存」。**答题提交与服务端成功反馈通过**，但尚未通过远程 D1 独立只读查询复核事件数，且未验证跨设备历史同步。
+- 新增 `tests/s10-echo-persistence.test.mjs`：在 Node 内存 D1 中执行真正的 `src/echo-cloud.js`，检查可用题型、`review_events` 写入、`user_words` 复习时间更新、原始收藏保持、无对应授权/未读完章节不能写入；不连接真实 Cloudflare。当前 GitHub Actions **90/90** 测试通过。
+- 独立的 Cloudflare 只读查询（如需）：
+
+```sh
+npx wrangler d1 execute miaowu-english-test --remote --command="SELECT game_type, result, COUNT(*) AS total FROM review_events WHERE chapter_id='qa-cet4-echo' AND game_type IN ('fill','situation','spell') GROUP BY game_type, result ORDER BY game_type, result;"
+```
+
+  此查询不包含用户 ID、正文或账号信息，也不会改动数据库。仅在用户主动进行下一步终端验证时运行；如返回 0 行，应核实实际答题章节及 QA 记录，不应凭空认为保存成功。
+- 下一项设备级复测：在手机浏览器登录 **同一个测试读者账号**，打开「记忆藏书票」核对 `promise`、打开四级 QA 第3章核对「本章已读完（已同步）」。不要共享账号密码或 session Cookie，不要误用 reviewer 预览身份代替读者登录。手机端需先通过原有预览口令。
+
 当前仅针对已部署的私有测试 Worker `miaowu-english-staging`，禁止在正式生产执行。
 Cloudflare D1 007/008 已执行并验收，不能再次运行。受保护的测试站已能打开。
 下面表格中“真实浏览器通过”只适用于用户明确验证的行为，不凭自动化测试臆测线上结果。
@@ -37,7 +50,9 @@ Cloudflare D1 007/008 已执行并验收，不能再次运行。受保护的测�
 | 已登录但无六级权益 | categories 无 cet6，GET /api/chapters/qa-cet6-paid | 403 PURCHASE_REQUIRED | 未进行 |
 | 阅读进度 | 测试账号 QA 第3章标记读完后刷新 | 仍显示本章已读完（已同步） | **用户确认通过（同浏览器刷新）** |
 | 单词收藏 | 测试账号在 QA 第3章收藏 promise 并刷新 | 再次加载仍在藏书票 | **用户确认通过（同浏览器刷新）** |
-| 剧情回声与速记 | 真实 QA 章节答题、回看记录 | D1 记录稳定、无付费越权 | 未进行 |
+| 剧情回声提交 | QA 第4章实际答题 | 收到保存成功反馈 | **用户确认通过（界面反馈）**；独立 D1 验证待做 |
+| 剧情回声记录独立复核 | 只读 D1 验证复习事件 | 有 qa-cet4-echo 的 fill/situation/spell 记录 | 待进行 |
+| 速记 | QA 章节复习、回看记录 | D1 记录稳定、无付费越权 | 未进行 |
 | 跨设备 | 同一测试用户登录不同设备 | 进度和收藏一致，未授权数据不可见 | 未进行 |
 | 管理后台 | 无运营身份且 OPS_CONSOLE_ENABLED 未开 | /ops.html 不公开，敏感 API 禁止 | 未进行 |
 | 正式商品与收费 | 无支付服务接入/未配置运营发布开关 | 不允许对外售卖、发放正式兑换码 | 未商用 |
