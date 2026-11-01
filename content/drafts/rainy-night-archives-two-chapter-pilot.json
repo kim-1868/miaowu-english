@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "sourceLabel": "rainy-night-editorial-expanded-ch01-02-20261101-unreviewed-not-published",
+  "sourceLabel": "rainy-night-ch01-02-expanded-natural-repetition-unreviewed-20261101",
   "book": {
     "id": "draft-rainy-night-archives-01",
     "category": "cet4",
     "title": "【测试】雨夜档案 · 前两章扩写校对稿",
-    "description": "原创都市轻悬疑《雨夜档案》第一季的前两章内容校对稿。林予安在家族旧书店收到失踪姐姐的匿名来信，调查借阅卡背面的日期与十一点四十七分的谜题。未完成全季，不适用于正式售卖。",
+    "description": "原创都市轻悬疑《雨夜档案》前两章扩写校对稿。新增情节与词汇复现仍需人工确认；全季与英美音标、CET4词项等级尚未通过正式审核。此包是内部草稿，绝不公开展示或售卖。",
     "coverKey": "rainy-night-draft-not-for-sale"
   },
   "words": [
@@ -748,7 +748,7 @@
               "gloss": "注意到"
             },
             {
-              "text": " 到柜台上多了一只米白色的 "
+              "text": " 柜台上多了一只米白色的 "
             },
             {
               "wordId": "rns1-envelope",
@@ -810,6 +810,60 @@
             },
             {
               "text": "。予安把那些纸件装进档案袋，按日期一张张编号。她不再相信任何突然出现的好消息，却仍然会在夜深时把抽屉打开一条缝，看看书还在不在。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "她曾尝试询问旧书店的每一位老顾客，却没有 "
+            },
+            {
+              "wordId": "rns1-witness",
+              "surface": "witness",
+              "gloss": "目击者"
+            },
+            {
+              "text": " 能把姐姐最后的行踪讲完整。有人记得她带着一把蓝伞，有人坚持说伞是黑色的。这些相互矛盾的细节让予安明白，即便记忆再 "
+            },
+            {
+              "wordId": "rns1-familiar",
+              "surface": "familiar",
+              "gloss": "熟悉的"
+            },
+            {
+              "text": "，也未必 "
+            },
+            {
+              "wordId": "rns1-confirm",
+              "surface": "confirm",
+              "gloss": "确认"
+            },
+            {
+              "text": " 得了事实。她把证言分别写下，不愿为了拼凑答案而删掉不合心意的一句。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "有个修书匠曾提醒她，旧信笺的 "
+            },
+            {
+              "wordId": "rns1-handwriting",
+              "surface": "handwriting",
+              "gloss": "笔迹"
+            },
+            {
+              "text": " 可以被描摹，纸张也可能从仓库里被翻出来。那时予安听得不耐烦，如今却不得不承认这是一条有用的 "
+            },
+            {
+              "wordId": "rns1-clue",
+              "surface": "clue",
+              "gloss": "线索"
+            },
+            {
+              "text": "。她拿出放大镜检查水印的边缘，又在便签上写下“暂不下结论”。如果此刻太想见到姐姐，任何谎言都可能显得真诚。"
             }
           ]
         },
@@ -1085,6 +1139,60 @@
             },
             {
               "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "予安在纸上写下三个问题：谁能够拿到旧信笺，谁知道抽屉里的书，又是谁在今天改变了监控 "
+            },
+            {
+              "wordId": "rns1-access",
+              "surface": "access",
+              "gloss": "使用权限"
+            },
+            {
+              "text": "。她把已知事实与猜测分成两栏，不再把担忧混成同一团。电话的 "
+            },
+            {
+              "wordId": "rns1-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": " 或许可以由运营商确认，但今晚她至少能保留来电时间。她不愿把下一步 "
+            },
+            {
+              "wordId": "rns1-choice",
+              "surface": "choice",
+              "gloss": "选择"
+            },
+            {
+              "text": " 交给一个突然出现的陌生人。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "窗台上的旧猫形镇纸被雨风吹得轻轻一晃。姐姐从前常用它压住归还表，说一张纸要先放稳才能看清写了什么。予安把新信压在镇纸下，才发现信封内侧有一条淡淡的铅笔线。那道 "
+            },
+            {
+              "wordId": "rns1-hidden",
+              "surface": "hidden",
+              "gloss": "隐藏的"
+            },
+            {
+              "text": " 记号似乎指向店里某个书架，而她很难 "
+            },
+            {
+              "wordId": "rns1-confirm",
+              "surface": "confirm",
+              "gloss": "确认"
+            },
+            {
+              "text": " 这到底是线索还是巧合。"
             }
           ]
         },
@@ -1478,7 +1586,69 @@
         {
           "segments": [
             {
-              "text": "“你的姐姐查过这里的借阅档案。”周砚说，“她想 "
+              "text": "周砚在借阅卡上留下的电话号码比身份证明更容易核实。予安把纸推回去，问是否愿意让她明天向原单位 "
+            },
+            {
+              "wordId": "rns1-confirm",
+              "surface": "confirm",
+              "gloss": "确认"
+            },
+            {
+              "text": " 他的任职 "
+            },
+            {
+              "wordId": "rns1-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": "。男人答应得太快，反倒让她更谨慎。她让他写下离职年份和最后一次接触姐姐的日期，提醒自己只保存必要信息，不把任何人的隐私当作可以随意公开的 "
+            },
+            {
+              "wordId": "rns1-evidence",
+              "surface": "evidence",
+              "gloss": "证据"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "书店墙上的挂钟秒针不时停顿，似乎与旧馆使用的电子时钟不同步。周砚说，两年前设备故障后，他们曾用纸质表格补充 "
+            },
+            {
+              "wordId": "rns1-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": "，所以不少文件会出现短暂 "
+            },
+            {
+              "wordId": "rns1-delay",
+              "surface": "delay",
+              "gloss": "延迟"
+            },
+            {
+              "text": "。予安指着第47号卡问，那为何偏偏只有这一张被修改。他没有马上 "
+            },
+            {
+              "wordId": "rns1-respond",
+              "surface": "respond",
+              "gloss": "回应"
+            },
+            {
+              "text": "，只是轻声说自己也想知道真正的原因。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“你的姐姐查过这里的借阅档案。”周砚说，“她想找到那张被换掉的纸留下的 "
             },
             {
               "wordId": "rns1-trace",
@@ -1486,7 +1656,7 @@
               "gloss": "痕迹"
             },
             {
-              "text": " 一张被换掉的纸。”他说的不是失踪当天的事，而是更早的一个冬天。那年书店仍属于旧资料馆的附属借阅点。"
+              "text": "。”他说的不是失踪当天的事，而是更早的一个冬天。那年书店仍属于旧资料馆的附属借阅点。"
             }
           ]
         },
@@ -1822,6 +1992,60 @@
             },
             {
               "text": "。但他说没有人能够在停电后补齐所有纸张，那十一分钟的空白必定留下过另一份记录。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "予安提议第二天到资料馆查阅公开目录，而不是立即跟周砚去任何私人地址。如果对方说的旧 "
+            },
+            {
+              "wordId": "rns1-document",
+              "surface": "document",
+              "gloss": "文件"
+            },
+            {
+              "text": " 仍在，编号和 "
+            },
+            {
+              "wordId": "rns1-stamp",
+              "surface": "stamp",
+              "gloss": "印章"
+            },
+            {
+              "text": " 应该能够相互对应。她甚至准备请一位懂档案保护的朋友帮忙判断纸张是否受过处理。她知道自己必须 "
+            },
+            {
+              "wordId": "rns1-investigate",
+              "surface": "investigate",
+              "gloss": "调查"
+            },
+            {
+              "text": "，但调查并不意味着夜里就要相信陌生人的每一个安排。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "周砚把工作证放在桌上，终于补充了一句：“如果你找到那张被补录的登记表，请先保存原件，不要替任何人改字。”予安听出了他对某段往事的 "
+            },
+            {
+              "wordId": "rns1-warning",
+              "surface": "warning",
+              "gloss": "警告"
+            },
+            {
+              "text": "，却仍不知道这警告指向谁。她用照片记下工作证上的机构名称，同时保留一个问题：谁在两年前有权 "
+            },
+            {
+              "wordId": "rns1-access",
+              "surface": "access",
+              "gloss": "使用权限"
+            },
+            {
+              "text": " 原始账册，又是谁负责归还。"
             }
           ]
         },
