@@ -1,0 +1,41 @@
+import {test} from "node:test";
+import assert from "node:assert/strict";
+import {composeRainyNightSeasonDraft} from "../scripts/compose-rainy-night-s1-full.mjs";
+import {evaluateRainyNightPublicationGate} from "../scripts/check-rainy-night-publishing-gate.mjs";
+
+test("S42 unreviewed full-length story always fails closed with accurately counted blockers",()=>{
+ const {bundle}=composeRainyNightSeasonDraft();
+ const gate=evaluateRainyNightPublicationGate(bundle);
+ assert.equal(gate.status,"BLOCKED");
+ assert.equal(gate.publicationAllowed,false);
+ assert.equal(gate.productionDbTouched,false);
+ assert.equal(gate.productionReleasePerformed,false);
+ assert.deepEqual(gate.mismatches,[]);
+ assert.equal(gate.manuscript.chapters,12);
+ assert.equal(gate.manuscript.distinctWords,188);
+ assert.equal(gate.manuscript.annotatedOccurrences,733);
+ assert.equal(gate.manuscript.firstPassEchoQuestions,36);
+ assert.equal(gate.syllabus.fourBandCandidateForms,172);
+ assert.equal(gate.syllabus.starredCET6,9);
+ assert.equal(gate.syllabus.notStandalone,7);
+ assert.equal(gate.pronunciation.ukCandidates,181);
+ assert.equal(gate.pronunciation.usArpabetCandidates,188);
+ assert.equal(gate.pronunciation.fullyApprovedWords,0);
+ assert.equal(gate.review.pendingWordSense,188);
+ assert.equal(gate.review.pendingOccurrences,733);
+ assert.equal(gate.review.pendingEcho,36);
+ assert.ok(gate.blockers.length>=7);
+ assert.ok(gate.blockers.some(x=>x.id==="SEPARATE_PAYMENT_AND_REAL_D1_E2E_SIGNOFF_REQUIRED"));
+ assert.ok(gate.bookId.startsWith("draft-"));
+});
+test("S42 release gate returns a fresh, reproducible report without generating approvals, secrets or public text",()=>{
+ const first=evaluateRainyNightPublicationGate(composeRainyNightSeasonDraft().bundle);
+ const second=evaluateRainyNightPublicationGate(composeRainyNightSeasonDraft().bundle);
+ assert.deepEqual(first,second);
+ const serialized=JSON.stringify(first);
+ assert.ok(!serialized.includes("phoneticUs"));
+ assert.ok(!serialized.includes("correctAnswer"));
+ assert.ok(!serialized.includes("originalContext"));
+ assert.ok(!serialized.includes("activationSecret"));
+ assert.equal(first.blockers.every(x=>x.blocks===true),true);
+});
