@@ -20,7 +20,7 @@ test("Rainy Night Archives original content pilot is a valid PRIVATE draft with 
  const stats=result.chapters.map(ch=>{
    const segments=ch.paragraphs.flatMap(p=>p.segments);
    return {
-     han:[...segments.map(s=>s.text??s.surface).join("")].filter(s=>/\\p{Script=Han}/u.test(s)).length,
+     han:[...segments.map(s=>s.text??s.surface).join("")].filter(s=>/\p{Script=Han}/u.test(s)).length,
      mentions:segments.filter(s=>s.wordId).length
    };
  });
