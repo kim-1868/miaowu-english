@@ -37,7 +37,7 @@ async function addOperator(sqlite,token,role="reviewer",environment="production"
 }
 function request(path="/api/ops/me",token=TOKEN,method="GET",preview=false){
   const headers={"Origin":"https://mw.example"};
-  if(token!==undefined)headers["X-Mw-Ops-Key"]=token;
+  if(token!=null)headers["X-Mw-Ops-Key"]=token;
   if(preview)headers.Authorization="Basic "+Buffer.from("reviewer:test-preview-password-independent-2026").toString("base64");
   return new Request("https://mw.example"+path,{method,headers});
 }
@@ -52,7 +52,7 @@ test("S9-A operator endpoint is genuinely separate from reader and staging edito
   assert.equal(result.withdrawAvailable,false);
   assert.match(res.headers.get("cache-control"),/no-store/);
   assert.equal(JSON.stringify(result).includes(TOKEN),false);
-  assert.equal((await worker.fetch(request("/api/ops/me",undefined),env)).status,401);
+  assert.equal((await worker.fetch(request("/api/ops/me",null),env)).status,401);
   assert.equal((await worker.fetch(request("/api/ops/me",env.S3_EDITOR_SECRET),env)).status,401);
   assert.equal((await worker.fetch(request("/api/ops/me",OTHER_TOKEN),env)).status,401);
   assert.equal((await worker.fetch(request("/api/ops/publish",TOKEN,"POST"),env)).status,404);
