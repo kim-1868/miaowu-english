@@ -4,7 +4,7 @@ import {readFileSync} from "node:fs";
 import {auditProductionConfig,STAGING_DB_ID} from "../scripts/check-production-config.mjs";
 
 const clean=()=>({
- name:"miaowu-english-production",
+ name:"miaowu-english-production",workers_dev:false,preview_urls:false,
  main:"../src/worker.js",
  vars:{APP_ENV:"production"},
  assets:{directory:"../public",binding:"ASSETS",run_worker_first:true},
@@ -32,6 +32,8 @@ test("S12 refuse exact staging database even when it is deceptively renamed prod
 test("S12 prohibit legacy staging, unsafe static paths and secrets in plain env",()=>{
  for(const alter of [
   c=>c.name="miaowu-english-staging",
+  c=>c.workers_dev=true,
+  c=>c.preview_urls=true,
   c=>c.vars.APP_ENV="staging",
   c=>c.vars.ACTIVATION_PEPPER="DO_NOT_STORE_IN_CONFIG",
   c=>c.assets.run_worker_first=false,
