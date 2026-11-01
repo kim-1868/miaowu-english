@@ -23,7 +23,9 @@ test('original designed reader fetches paid cloud chapters from D1 without bundl
 
 test('S5 uses the existing book cover, reader, bookplates, and dashboard for real D1-backed content',()=>{
   const script=app(),markup=html();
-  assert.match(markup,/书架、阅读、单词收藏与剧情回声已接入 Cloudflare D1/);
+  assert.match(markup,/网站上线准备中/);
+  assert.match(markup,/正式小说和付费购买尚未开放/);
+  assert.doesNotMatch(markup,/私有测试环境/);
   assert.match(markup,/题目从云端生成，答题记录会保存在账号中/);
   assert.match(markup,/id="view-library"/);
   assert.match(markup,/id="view-reader"/);
@@ -79,7 +81,7 @@ test('S7 matches the original V0.3 design rules while showing actual progress an
   assert.match(script,/closeModal\(\);openFirstCloudBook\(\)/);
   assert.match(script,/activeCloud\.rawParagraphs/);
   assert.match(script,/token\.surface/);
-  assert.match(markup,/剧情回声已接入 Cloudflare D1/);
+  assert.match(markup,/正式小说和付费购买尚未开放/);
 });
 
 test('S8 original reader embeds chapter word sidebar and secure quick-review controls',()=>{
