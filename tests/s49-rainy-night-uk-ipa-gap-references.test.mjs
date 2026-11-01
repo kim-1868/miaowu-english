@@ -1,0 +1,40 @@
+import {test} from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {composeRainyNightSeasonDraft} from "../scripts/compose-rainy-night-s1-full.mjs";
+import {createVocabularyReviewQueue,reviewCsv} from "../scripts/prepare-rainy-night-vocabulary-review.mjs";
+import {evaluateRainyNightPublicationGate} from "../scripts/check-rainy-night-publishing-gate.mjs";
+const data=JSON.parse(readFileSync(new URL(
+ "../content/editorial/rainy-night-s1-uk-ipa-seven-gap-reference-UNVERIFIED.json",import.meta.url),"utf8"));
+const expected=["blurred","discrepancy","falsify","handwriting","outage","reunite","watermark"];
+test("S49 all seven Britfone gaps have directly sourced UK IPA reference but remain outside published lessons",()=>{
+ const {bundle}=composeRainyNightSeasonDraft();
+ const {rows,overview}=createVocabularyReviewQueue(bundle);
+ assert.equal(overview.ukCandidatesFound,181);
+ assert.equal(overview.ukGapReferenceCandidatesFound,7);
+ assert.equal(overview.ukCombinedReferenceCoverage,188);
+ assert.equal(overview.ukCandidatesMissing,7);
+ assert.equal(overview.ukGapCommercialApprovedCount,0);
+ assert.equal(data.count,7);
+ assert.deepEqual(data.items.map(x=>x.headword).sort(),expected);
+ const gaps=rows.filter(x=>x.sourceUkGapReference);
+ assert.deepEqual(gaps.map(x=>x.headword).sort(),expected);
+ assert.ok(gaps.every(x=>x.sourceUkGapReference.startsWith("/")));
+ assert.ok(gaps.every(x=>x.sourceUkGapReferenceUrl.startsWith("https://dictionary.cambridge.org/")));
+ assert.ok(gaps.every(x=>x.sourceUkGapCommercialApproved===false));
+ assert.ok(gaps.every(x=>x.reviewFlags.includes("UK_SECONDARY_IPA_SOURCE_NOT_CLEARED_FOR_COMMERCIAL_USE")));
+ assert.ok(gaps.every(x=>x.reviewFlags.includes("UK_IPA_NOT_IN_SOURCE")));
+ assert.ok(data.items.every(x=>x.editorialDecision==="UNREVIEWED"&&!x.ipaApproved&&!x.commercialDisplayAuthorized));
+ assert.ok(bundle.words.every(x=>!x.phoneticUk&&!x.phoneticUs));
+});
+test("S49 seven reference rows are accessible only through private CSV and cannot satisfy launch permission",()=>{
+ const {bundle}=composeRainyNightSeasonDraft();
+ const q=createVocabularyReviewQueue(bundle);
+ const csv=reviewCsv(q);
+ assert.ok(csv.includes("sourceUkGapReference"));
+ assert.ok(csv.includes("sourceUkGapReferenceUrl"));
+ assert.equal(q.overview.flaggedForIpa,188);
+ const gate=evaluateRainyNightPublicationGate(bundle);
+ assert.equal(gate.publicationAllowed,false);
+ assert.equal(gate.pronunciation.fullyApprovedWords,0);
+});
