@@ -32,12 +32,15 @@ function harness({loggedIn=true,cloudWords=[],demoWords=["contract","promise"]}=
     serverRequest:()=>{throw Error("local demo controls must not call cloud API")},
     refreshCloudLearning:()=>{throw Error("local demo controls must not refresh cloud")}
   };
+  const selectorCache=new Map();
   state.document={
     querySelectorAll(selector){
       if(selector==="[data-word-filter]")return [];
+      const cacheKey=selector+'|'+elements.vocabGrid.innerHTML;
+      if(selectorCache.has(cacheKey))return selectorCache.get(cacheKey);
       const names=[...selector.matchAll(/data-([a-z-]+)/g)].map(m=>m[1]);
       const buttons=[...elements.vocabGrid.innerHTML.matchAll(/<button\b([^>]*)>/g)];
-      return buttons.map(match=>{
+      const nodes=buttons.map(match=>{
         const attrs=match[1],dataset={};
         for(const a of attrs.matchAll(/data-([a-z-]+)="([^"]*)"/g)){
           const key=a[1].replace(/-([a-z])/g,(_,letter)=>letter.toUpperCase());
@@ -46,6 +49,8 @@ function harness({loggedIn=true,cloudWords=[],demoWords=["contract","promise"]}=
         return {dataset,onclick:null,disabled:false};
       }).filter(button=>names.some(n=>Object.prototype.hasOwnProperty.call(
         button.dataset,n.replace(/-([a-z])/g,(_,letter)=>letter.toUpperCase()))));
+      selectorCache.set(cacheKey,nodes);
+      return nodes;
     }
   };
   const render=runInNewContext(renderSource+"\nrenderWords",state);
