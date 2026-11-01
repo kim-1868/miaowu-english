@@ -13,3 +13,6 @@ private-output/
 
 # Offline manually-confirmed orders: never upload order identifiers or user details.
 private-input/
+
+# Cloudflare Pages Advanced Mode generated release artifacts; never commit.
+pages-production/dist/
