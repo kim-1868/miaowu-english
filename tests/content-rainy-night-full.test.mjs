@@ -48,5 +48,11 @@ test("source is still blocked for public release until verified CET4 words and I
  assert.equal(bundle.book.category,"cet4");
  assert.ok(bundle.words.every(w=>typeof w.meaningZh==="string"&&w.meaningZh.length>0));
  assert.ok(bundle.words.every(w=>!w.phoneticUk&&!w.phoneticUs));
- assert.equal(bundle.words.some(w=>!w.exampleZh),true);
+ assert.equal(bundle.words.some(w=>!w.exampleZh),false);
+});
+
+test("all candidate word entries now include Chinese example translations",()=>{
+ const {bundle}=composeRainyNightSeasonDraft();
+ assert.ok(bundle.words.every(w=>typeof w.exampleZh==="string"&&w.exampleZh.trim().length>=4));
+ assert.ok(bundle.words.every(w=>typeof w.exampleEn==="string"&&w.exampleEn.trim().length>=10));
 });
