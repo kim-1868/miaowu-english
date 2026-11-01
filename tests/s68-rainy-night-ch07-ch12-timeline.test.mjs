@@ -18,7 +18,7 @@ test("S68 chapter seven cannot depart the archive or read proof before the evide
  assert.doesNotMatch(para(7,34),/回程的公交车|别怪周砚/);
  assert.match(para(7,35),/帮我 contact 她/);
  assert.match(para(7,36),/她写了很久/);
- assert.match(para(7,37),/离开图书馆前.*维持|离开图书馆前/);
+ assert.match(para(7,37),/离开图书馆前，邱老师提醒她 maintain 两份独立备份/);
  assert.match(para(7,37),/获准带走的笔录复印件背面.*别怪周砚/);
  assert.equal([27,28,29,30,31,32,33,34,35,36,37]
   .filter(i=>para(7,i).includes("别怪周砚")).length,1);
