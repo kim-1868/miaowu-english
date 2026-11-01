@@ -355,6 +355,7 @@
       $('nextChapter').disabled=true;
       $('doEcho').disabled=true;
       book.chapterId=null;
+      window.MiaowuChapterWords?.openChapter(id);
       // Always fetch D1, even for previously visited chapters. Never trust
       // local entitlement flags when deciding access to protected text.
       let page;
@@ -419,6 +420,7 @@
         for(const row of (glossary.words||[])){
           if(row?.word_id&&!book.words.has(row.word_id))book.words.set(row.word_id,row);
         }
+        window.MiaowuChapterWords?.setWords([...book.words.values()]);
         showCloudProgress(id);
       }catch{
         if(activeCloud===book&&chosen===cloudChapterSequence&&book.chapterId===id){
@@ -833,6 +835,10 @@
     function speakNext(){if(!speaking)return;if(speakIndex>=utterances.length){stopReading();toast('本章朗读结束');return}const seg=utterances[speakIndex++],u=new SpeechSynthesisUtterance(seg.text);u.lang=seg.lang;u.rate=seg.lang==='en-US'?.86:.94;u.onend=()=>{if(speaking)speakNext()};u.onerror=(e)=>{if(speaking&&e.error!=='interrupted')speakNext()};window.speechSynthesis.speak(u)}
     document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=openFirstCloudBook;$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{if(activeCloud?.chapterId)window.MiaowuCloudEcho?.useChapter(activeCloud.chapterId);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);$('storyText').style.fontSize=fontSize+'px'};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);$('storyText').style.fontSize=fontSize+'px'};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=stopReading;$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
     $('cloudFinishReading').onclick=finishCloudChapter;
+    window.MiaowuChapterWords?.configure({
+      request:serverRequest,refresh:refreshCloudLearning,
+      user:()=>!!user,login:showLogin,toast,speak:speakWord,showWord:showCloudWord
+    });
     window.MiaowuCloudEcho?.configure({
       request:serverRequest,refresh:refreshCloudLearning,progress:()=>cloudProgress,
       showModal,closeModal,navigate,toast,speak:speakWord
