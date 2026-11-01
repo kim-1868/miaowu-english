@@ -1,0 +1,73 @@
+{
+  "status": "UK_IPA_REFERENCE_CROSSCHECK_NOT_LICENSED_FOR_AUTOMATIC_PUBLICATION",
+  "note": "Seven phonemic forms were read from Cambridge English pronunciation pages as review references. The dictionary pages carry Cambridge University Press copyright. No rights to bulk reuse, redistribution or hosted audio are implied. Commercial display requires appropriate rights/independent transcription and editorial confirmation. Do not automatically write to phoneticUk.",
+  "sourceName": "Cambridge Dictionary — English pronunciation",
+  "verifiedSourceChecked2026": "2026-11-02",
+  "sourceCopyright": "Cambridge University Press",
+  "count": 7,
+  "items": [
+    {
+      "headword": "blurred",
+      "ukReferenceIpa": "/blɜːd/",
+      "sourceUrl": "https://dictionary.cambridge.org/pronunciation/english/blurred",
+      "sourceMatched": true,
+      "editorialDecision": "UNREVIEWED",
+      "commercialDisplayAuthorized": false,
+      "ipaApproved": false
+    },
+    {
+      "headword": "discrepancy",
+      "ukReferenceIpa": "/dɪˈskrep.ən.si/",
+      "sourceUrl": "https://dictionary.cambridge.org/pronunciation/english/discrepancy",
+      "sourceMatched": true,
+      "editorialDecision": "UNREVIEWED",
+      "commercialDisplayAuthorized": false,
+      "ipaApproved": false
+    },
+    {
+      "headword": "falsify",
+      "ukReferenceIpa": "/ˈfɒl.sɪ.faɪ/",
+      "sourceUrl": "https://dictionary.cambridge.org/us/pronunciation/english/falsify",
+      "sourceMatched": true,
+      "editorialDecision": "UNREVIEWED",
+      "commercialDisplayAuthorized": false,
+      "ipaApproved": false
+    },
+    {
+      "headword": "handwriting",
+      "ukReferenceIpa": "/ˈhændˌraɪ.tɪŋ/",
+      "sourceUrl": "https://dictionary.cambridge.org/pronunciation/english/handwriting",
+      "sourceMatched": true,
+      "editorialDecision": "UNREVIEWED",
+      "commercialDisplayAuthorized": false,
+      "ipaApproved": false
+    },
+    {
+      "headword": "outage",
+      "ukReferenceIpa": "/ˈaʊ.tɪdʒ/",
+      "sourceUrl": "https://dictionary.cambridge.org/pronunciation/english/outage",
+      "sourceMatched": true,
+      "editorialDecision": "UNREVIEWED",
+      "commercialDisplayAuthorized": false,
+      "ipaApproved": false
+    },
+    {
+      "headword": "reunite",
+      "ukReferenceIpa": "/ˌriː.juːˈnaɪt/",
+      "sourceUrl": "https://dictionary.cambridge.org/pronunciation/english/reunite",
+      "sourceMatched": true,
+      "editorialDecision": "UNREVIEWED",
+      "commercialDisplayAuthorized": false,
+      "ipaApproved": false
+    },
+    {
+      "headword": "watermark",
+      "ukReferenceIpa": "/ˈwɔː.tə.mɑːk/",
+      "sourceUrl": "https://dictionary.cambridge.org/pronunciation/english/watermark",
+      "sourceMatched": true,
+      "editorialDecision": "UNREVIEWED",
+      "commercialDisplayAuthorized": false,
+      "ipaApproved": false
+    }
+  ]
+}
