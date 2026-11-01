@@ -14,6 +14,8 @@ export function auditProductionConfig(config){
  const name=config.name;
  reject("WORKER_NAME_MUST_BE_PRODUCTION",typeof name!=="string"||!/^miaowu-english-(?:production|prod)$/.test(name));
  reject("APP_ENV_NOT_PRODUCTION",config.vars?.APP_ENV!=="production");
+ reject("PUBLIC_WORKERS_DEV_NOT_DISABLED",config.workers_dev!==false);
+ reject("WORKER_PREVIEW_URLS_NOT_DISABLED",config.preview_urls!==false);
  reject("STAGING_VARIABLES_PRESENT",Object.entries(config.vars??{}).some(
   ([k,v])=>/staging|preview|qa|test/i.test(k)||/staging|qa_only|test-only/i.test(String(v))));
  reject("PRODUCTION_ASSETS_MUST_RUN_THROUGH_WORKER",
