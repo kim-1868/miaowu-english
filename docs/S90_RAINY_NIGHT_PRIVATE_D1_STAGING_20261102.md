@@ -15,7 +15,7 @@
 ## 防误公开措施
 
 1. GitHub Actions 先运行语法/集成测试、检查私有SQL仅包含 draft INSERT，不包含 UPDATE books、DELETE、DROP、ALTER 或 entitlement 写入；
-2. 使用 Github 原有 Cloudflare API Token 和 account ID，查询生产数据库**非用户数据**状态：CET4 必须存在；当前书目只能不存在或为 draft；章节只能为0或12；
+2. 使用独立的 GitHub secret CLOUDFLARE_D1_API_TOKEN（Account → D1 → Edit），并继续读取已有 CLOUDFLARE_ACCOUNT_ID，查询生产数据库**非用户数据**状态：CET4 必须存在；当前书目只能不存在或为 draft；章节只能为0或12；
 3. 导入阶段仅执行 `wrangler d1 execute --remote --file`，生成内容全程在 workflow 运行器的 private-output 下，绝不上传为 public asset/artifact；
 4. 导入后确认书目为 draft、12章、仅一章免费标记、没有任何已发布时间、733个词汇关联；
 5. 如果已有发布中的书目或中途意外产生章节，自动中止，不强制覆盖、不重置数据。
@@ -28,6 +28,16 @@
 
 ## 运行记录
 
-本工作流在合并到主分支时执行一次，也支持 GitHub Actions 手动执行：输入 `STAGE_RAINY_NIGHT_DRAFT`。如果失败，先看 `Preflight production D1` 或 `Import only hidden draft rows`；**不要重新生成密钥，也不要尝试直接修改 production books.status**。
+本工作流已调整为仅在 GitHub Actions 手动执行：输入 `STAGE_RAINY_NIGHT_DRAFT`。如果失败，先看 `Preflight production D1` 或 `Import only hidden draft rows`；**不要重新生成密钥，也不要尝试直接修改 production books.status**。
 
 `published` 之前，运营侧可以处理草稿但消费者不会看见第2至12章。
+
+
+## 当前阻碍（2026-11-02）
+
+首次导入工作流在远端D1只读预检阶段返回 Cloudflare 7403（账号或 API token 未获得D1服务授权），所以**没有进行任何生产数据库写入**。
+为降低部署风险，单独配置 `CLOUDFLARE_D1_API_TOKEN`，不要替换用于 Worker 部署的 `CLOUDFLARE_API_TOKEN`。
+
+操作者：Cloudflare 控制台 → API Tokens → Create Token → Custom token，Account → D1 → Edit，资源范围选择实际生产D1所属账号；在 GitHub 仓库 Settings → Secrets and variables → Actions 中添加 repository secret `CLOUDFLARE_D1_API_TOKEN`。不要在聊天或提交记录中发送密钥。
+
+完成后进入 GitHub Actions → “Stage Rainy Night (private D1 draft, not publication)” → Run workflow → 输入 `STAGE_RAINY_NIGHT_DRAFT`。该步骤只允许导入私有草稿，**正式上线仍须完成词条语境、音标、例句和最终审校发布**。
