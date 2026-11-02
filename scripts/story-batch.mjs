@@ -84,15 +84,18 @@ export function auditStoryChapter(plan,paragraphs,mode="plain",original=null){
  const approved=new Set(plan.vocabulary.map(v=>v.headword));
  const uses=[...joined.matchAll(WORD)].map(m=>m[1]);
  const count=uses.length;
- if(count<6||count>32)fail("EMBEDDING_DENSITY_INVALID");
+ const density=count/han*100;
+ if(count<8||count>100||density<2.2||density>4.3)
+  fail("EMBEDDING_DENSITY_INVALID");
  if(uses.some(w=>!approved.has(w)))fail("UNLISTED_VOCABULARY_IN_MANUSCRIPT");
- if(paragraphs.some(p=>(p.match(/\[\[[a-z]+\]\]/g)||[]).length>3))
+ if(paragraphs.some(p=>(p.match(/\[\[[a-z]+\]\]/g)||[]).length>5))
   fail("DENSE_VOCABULARY_PARAGRAPH");
  const removed=joined.replace(WORD,"");
  if(removed.includes("[[")||removed.includes("]]"))fail("MALFORMED_WORD_ANCHOR");
  const originalHan=(original.join("").match(/\p{Script=Han}/gu)||[]).length;
  if(han<originalHan*.55||han>originalHan*1.50)fail("EMBEDDING_ALTERED_SOURCE_TOO_MUCH");
- return {paragraphs:paragraphs.length,han,anchors:count,uniqueWords:new Set(uses).size,
+ return {paragraphs:paragraphs.length,han,anchors:count,occurrencesPer100Han:Number(density.toFixed(2)),
+  uniqueWords:new Set(uses).size,
   flags:["UNREVIEWED_POS_AND_SENSE","UNREVIEWED_STORY_CONTINUITY","UNREVIEWED_IPA_AND_RIGHTS"]};
 }
 const schema={type:"object",properties:{paragraphs:{type:"array",items:{type:"string"}}},
@@ -149,7 +152,7 @@ export async function produce(id,phase){
   const allowed=plan.vocabulary.map(v=>v.headword+"("+v.partOfSpeech+" "+v.meaningZh+")").join("、");
   const instructions=phase==="write"?
    "你是原创中文短篇网文作者。只写中文，剧情清晰、强钩子、情绪自然、反转有因果。绝不改写已有作品，不引用知名IP。不得出现英语锚点。严格返回 JSON 对象，其中 paragraphs 为10到32段、总字数尽量1200-1900字。不要写词汇教学。":
-   "你是中英混排编辑。逐段保留原小说具体事件和对话，将部分自然语义片段替换为[[english]]目标词（例如[[promise]]），不强制覆盖单词表。必须返回严格 JSON paragraphs，段落数和原文完全相同。每段最多3个词，每章6-32个，英语词只能按给定词性和义项使用，宁可少量自然使用，不要硬拗，绝不补音标或词卡。";
+   "你是中英混排编辑。逐段保留原小说事件与对话，自然用[[english]]替换符合当前语境的中文词。**高频要求**：以汉字数为分母，每100个汉字出现约2.2至3.6处英文词汇（每500汉字约11至18处），每段最多5处。熟悉词跨章节自然复现2至4次优先，不能连续堆积陌生词。必须返回严格 JSON paragraphs，段落数与原文相同。只选候选表内词并遵守所给词性、语境义项；不自然的用法需改写附近中文使其流畅，不能硬插英语、杜撰音标或词卡。";
   const prompt=phase==="write"?
    JSON.stringify({title:plan.title,genre:plan.genre,premise:plan.premise,
     chapter:beat.number,chapterBeat:beat.brief,
