@@ -45,9 +45,9 @@ test("S73 production generated assets contain a single free preview, not the ful
  assert.match(app,/完整版筹备中 · 不出售/);
  assert.doesNotMatch(html,/第十二章/);
 });
-test("S73 four original genre plans have fixed safe private review flags, not preapproved senses",()=>{
+test("S80 eight original short-story plans have fixed safe private review flags, not preapproved senses",()=>{
  const plans=buildStoryBatchPlans();
- assert.deepEqual(plans.map(x=>x.genre),["虐恋","爽文","玄幻","BL"]);
+ assert.deepEqual(plans.map(x=>x.genre),["虐恋","爽文","玄幻","BL","逆袭","霸总","逆袭","BL"]);
  for(const p of plans){
   assert.equal(p.chapterCount,6);
   assert.equal(p.beats.length,6);

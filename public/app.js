@@ -213,8 +213,7 @@
             '<div class="book-info"><div class="line1"><h3>雨夜档案</h3>'+
             '<span class="eyebrow">NEW</span></div>'+
             '<p>深夜书店里突然出现一封没有署名的信，失踪两年的姐姐或许留下了线索。</p>'+
-            '<div class="book-meta"><span class="pill">都市轻悬疑</span>'+
-            '<span class="pill">完整版筹备中 · 不出售</span></div>'+
+            '<div class="book-meta"><span class="pill">完整版筹备中 · 不出售</span></div>'+
             '<div class="shelf-progress"><div class="progress-text">'+
             '<span>第一章公开试读</span><span>无需激活</span></div></div>'+
             '<div class="book-actions"><a class="secondary-btn" href="/rainy-night.html">免费读第一章 →</a></div></div>';
@@ -264,7 +263,7 @@
               '<div class="book-info"><div class="line1"><h3>'+safe(b.name)+'</h3>'+
               '<span class="eyebrow">'+String(ix).padStart(2,'0')+'</span></div>'+
               '<p>'+safe(b.desc)+'</p><div class="book-meta">'+
-              '<span class="pill">'+safe(b.tag)+'</span><span class="pill">未上架 · 不可购买</span></div>'+
+              '<span class="pill">未上架 · 不可购买</span></div>'+
               '<div class="shelf-progress"><div class="progress-text"><span>故事企划阶段</span>'+
               '<span>敬请期待</span></div></div>'+
               '<div class="book-actions"><button class="secondary-btn" type="button" disabled>尚未开放</button></div></div>';
