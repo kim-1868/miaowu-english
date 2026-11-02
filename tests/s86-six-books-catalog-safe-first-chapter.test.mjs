@@ -30,7 +30,8 @@ test("S86 production allowlist never includes complete manuscripts or D1 imports
  assert.equal(live,buildS86FreeChapter());
  const app=readFileSync(new URL("../public/app.js",import.meta.url),"utf8");
  for(const title of ["重生后我不再讨好他们","被赶出豪门后我成了继承人","契约婚姻到期那天",
- "穿成恶毒女配后，我不演了","死对头突然开始对我好","合租室友藏了七年的秘密"])
+ "穿成恶毒女配后，我不演了","死对头突然开始对我好","合租室友藏了七年的秘密",
+ "离婚后，前夫公司成了我的客户","替嫁当天，我撕了婚约"])
   assert.ok(app.includes(title));
  assert.ok(app.includes("href=\"'+n.sample+'\">读第一章"));
  assert.ok(!app.includes("genre_internal"));
