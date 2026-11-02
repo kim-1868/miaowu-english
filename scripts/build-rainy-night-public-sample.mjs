@@ -33,7 +33,7 @@ export function buildRainyNightPublicSample(){
   '</style></head><body><div class="wrap"><header><a href="/">← 返回妙屋英语书架</a></header><main>'+
   '<span class="eyebrow">WORDLETTER · ORIGINAL STORY · FREE CHAPTER</span>'+
   '<h1>雨夜档案</h1><p class="eyebrow">原创轻悬疑 · 正文混合英语词汇阅读</p>'+
-  '<div class="notice">第 1 章免费试读。完整 12 章、词卡音标、练习及购买入口尚未正式开放；本页不需要注册或激活码。英语词汇仅为正文展示，不代表词义与考试级别已经全部审核。</div>'+
+  '<div class="notice">第 1 章免费试读。完整版筹备中。完整 12 章、词卡音标、练习及购买入口尚未正式开放；本页不需要注册或激活码。英语词汇仅为正文展示，不代表词义与考试级别已经全部审核。</div>'+
   '<article><h2>第一章 · '+htmlEscape(chapter.title)+'</h2>\n'+paragraph+'</article>'+
   '<div class="finish">本章试读结束。喜欢这种读小说学英语的方式，可以继续关注妙屋英语。后续章节与学习功能将在审核完成后开放。</div>'+
   '</main><footer>妙屋英语 / WordLetter · 原创故事免费试读 · 不提供下载或付费承诺</footer></div></body></html>';
