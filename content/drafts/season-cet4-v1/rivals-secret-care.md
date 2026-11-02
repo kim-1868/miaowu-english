@@ -19,7 +19,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 “你怎么在这儿？”两个人同时问。
 
-房东发来[[confirm]]：新房间独立上锁，租期一个月，押金仍由原合同处理。江望核对完[[document]]，只能拖着箱子进门。
+房东发来一条[[confirm]]消息：新房间独立上锁，租期一个月，押金仍由原合同处理。江望核对完[[document]]，只能拖着箱子进门。
 
 沈行舟接过箱子，见他手背贴着创可贴，问：“搬东西弄的？”
 
@@ -143,7 +143,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 江望本想拒绝，后来想到自己明明也会在对方生病时送药，便直接[[respond]]：要。顺便带两杯热咖啡。
 
-沈行舟撑伞赶到，肩头湿了大半。江望把伞往他那边推：“你怎么总是这样？有时候我都不知道该怎么[[return]]这份好意。”
+沈行舟撑伞赶到，肩头湿了大半。江望把伞往他那边推：“你怎么总是这样？有时候我都不知道该怎么回应这份好意。”
 
 “你不用还。”沈行舟说。
 
@@ -165,7 +165,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 回家以后，江望给老导师发了封邮件，核对当年的竞赛经过，收到与存档相符的回复。他把验证结果发给沈行舟：这回是我错了。对不起。
 
-过了一会儿，他又发：还有，我需要一点时间想[[future]]，不是拒绝你。
+过了一会儿，他又发：还有，我需要一点时间想想以后的事，不是拒绝你。
 
 沈行舟回复：好，我等你自己作决定。
 
@@ -193,7 +193,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 “也更节能。”沈行舟补充。
 
-江望侧头看他：“你看，连夸自己都要[[compare]]两句。”
+江望侧头看他：“你看，连夸自己都要比较两句。”
 
 沈行舟笑着牵住他的手，先轻声问：“可以吗？”
 
