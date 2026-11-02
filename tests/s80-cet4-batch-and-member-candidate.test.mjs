@@ -64,7 +64,9 @@ test("S80 entire Rainy Night manuscript is shaped for the existing CET4 member r
  assert.equal(v.chapters.length,12);
  assert.equal(v.words.length,188);
  assert.equal(v.mentionCount,733);
- assert.deepEqual(candidate.chapters.filter(x=>x.preview).map(x=>x.number),[1]);
+ assert.deepEqual(candidate.chapters.filter(x=>x.preview).map(x=>x.number),[]);
+ assert.deepEqual(report.freePreviewChapters,[]);
+ assert.deepEqual(report.entitledChapterNumbers,Array.from({length:12},(_,i)=>i+1));
  assert.equal(report.commercialReleaseAllowed,false);
  assert.equal(report.d1Touched,false);
  assert.equal(report.sourceGateStatus,"BLOCKED");
