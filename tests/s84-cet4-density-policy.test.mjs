@@ -15,8 +15,8 @@ test("S84 computes per-chapter density using Chinese characters rather than para
 });
 test("S84 reports existing weak-density chapters explicitly without falsely marking them for sale",()=>{
  const report=buildDensityReport(buildS82DraftBundles());
- assert.equal(report.books.length,6);
- assert.equal(report.chaptersReviewed,36);
+ assert.equal(report.books.length,8);
+ assert.equal(report.chaptersReviewed,48);
  assert.ok(report.chaptersPassing>=1);
  assert.ok(report.chaptersPassing<36);
  assert.ok(report.missingOccurrences>100);
