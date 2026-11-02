@@ -64,7 +64,7 @@ test("S73 structure QA accepts sensible chapter draft candidates and fails on fo
  const first=auditStoryChapter(plan,clean,"plain");
  assert.equal(first.anchors,0);
  const word=plan.vocabulary[0].headword;
- const embedded=clean.map(p=>p+"[["+word+"]]".repeat(5));
+ const embedded=clean.map(p=>p+("[["+word+"]]").repeat(5));
  const result=auditStoryChapter(plan,embedded,"embedded",clean);
  assert.equal(result.anchors,80);
  assert.ok(result.occurrencesPer100Han>=2.2);
