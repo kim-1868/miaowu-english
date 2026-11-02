@@ -13,7 +13,7 @@ test("S54 public Rose demo never claims an arbitrary unreviewed future chapter c
 
 test("S54 preserves honest free-demo and paid-release boundary",()=>{
  assert.match(index,/网站上线准备中/);
- assert.match(index,/正式小说和付费购买尚未开放/);
+ assert.match(index,/付费购买仍在验收中/);
  assert.match(app,/id:'rose',name:'玫瑰未落幕'/);
  assert.match(app,/status:'demo'/);
  assert.match(app,/后续章节 · 内容筹备中/);

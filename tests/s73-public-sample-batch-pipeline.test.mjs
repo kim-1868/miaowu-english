@@ -7,43 +7,36 @@ import {composeRainyNightSeasonDraft} from "../scripts/compose-rainy-night-s1-fu
 import {buildStoryBatchPlans,auditStoryChapter,requestStoryChapter} from "../scripts/story-batch.mjs";
 import {evaluateRainyNightPublicationGate} from "../scripts/check-rainy-night-publishing-gate.mjs";
 
-test("S73 public sample is exactly first 36 paragraphs, 64 highlighted word anchors, no private remaining chapters or metadata",()=>{
+test("S73 public Rainy Night page contains only cover and entitlement information, never member chapter text",()=>{
  const {bundle}=composeRainyNightSeasonDraft();
  const html=buildRainyNightPublicSample();
- assert.match(html,/<title>《雨夜档案》第一章免费试读/);
- assert.equal((html.match(/<strong lang="en">/g)||[]).length,64);
- assert.equal((html.match(/<article id="chapter">/g)||[]).length,1);
- assert.equal((html.match(/<article id="chapter">.*?<\/article>/gs)||[]).length,1);
- assert.match(html,/第一章 · 最后一位借阅者/);
- for(const paragraph of bundle.chapters[0].paragraphs){
-  for(const segment of paragraph.segments){
-   if(segment.wordId)assert.ok(html.includes('<strong lang="en">'+segment.surface+'</strong>'));
-   else if(segment.text.length>20)assert.ok(html.includes(segment.text.slice(0,18))||
-    html.includes(segment.text.slice(0,18).replace(/&/g,"&amp;")),
-    "First chapter missing real paragraph");
-  }
- }
- for(const chapter of bundle.chapters.slice(1)){
-  assert.ok(!html.includes(chapter.title),"Unexpected private chapter title "+chapter.title);
+ assert.match(html,/<title>《雨夜档案》· 四级会员专享/);
+ assert.match(html,/全部为四级会员专享内容/);
+ assert.match(html,/rainy-night-cover.webp/);
+ assert.equal((html.match(/<strong lang="en">/g)||[]).length,0);
+ assert.equal((html.match(/<article id="chapter">/g)||[]).length,0);
+ for(const chapter of bundle.chapters){
+   assert.ok(!html.includes(chapter.title),"No chapter title in public page: "+chapter.title);
+   for(const paragraph of chapter.paragraphs){
+     const plain=paragraph.segments.map(seg=>seg.wordId?seg.surface:seg.text).join("");
+     if(plain.length>30)assert.ok(!html.includes(plain.slice(0,25)),"Public chapter text detected");
+   }
  }
  for(const unsafe of ["phoneticUk","phoneticUs","correctAnswer","sourceUkGapReference",
-  "editorNotes","password","/api/auth/","chapter_words","PRIVATE-HUMAN-REVIEW"]){
-  assert.ok(!html.includes(unsafe),"Sensitive word metadata "+unsafe);
- }
- assert.match(html,/完整版筹备中/);
- assert.match(html,/不代表词义与考试级别已经全部审核/);
+   "editorNotes","password","/api/auth/","chapter_words","PRIVATE-HUMAN-REVIEW"])
+   assert.ok(!html.includes(unsafe),"Sensitive learning metadata "+unsafe);
  assert.equal(evaluateRainyNightPublicationGate(bundle).status,"BLOCKED");
 });
-test("S73 production generated assets contain a single free preview, not the full manuscript or private files",()=>{
+test("S73 production generated assets do not disclose any Rainy Night free preview",()=>{
  const output=buildProductionAssets();
  assert.ok(output.assets.includes("rainy-night.html"));
  const html=readFileSync(new URL("../dist-production/public/rainy-night.html",import.meta.url),"utf8");
  assert.equal(html,buildRainyNightPublicSample());
  const app=readFileSync(new URL("../public/app.js",import.meta.url),"utf8");
- assert.match(app,/if\(slug==='cet4'&&!books.some\(b=>b.title==='雨夜档案'\)\)/);
- assert.match(app,/href="\/rainy-night.html"/);
- assert.match(app,/完整版筹备中 · 不出售/);
+ assert.match(app,/四级会员专享/);
+ assert.equal(app.includes('href="/rainy-night.html"'),false);
  assert.doesNotMatch(html,/第十二章/);
+ assert.doesNotMatch(html,/第 1 章免费试读/);
 });
 test("S80 eight original short-story plans have fixed safe private review flags, not preapproved senses",()=>{
  const plans=buildStoryBatchPlans();

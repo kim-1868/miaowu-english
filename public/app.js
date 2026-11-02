@@ -182,8 +182,8 @@
           const test=/测试|示例|qa-|demo|sample/i.test(book.title+' '+book.id);
           const coverTitle=test?'故事试读册':book.title;
           const coverLabel=test?'TEST EDITION · 功能测试':'STORY COLLECTION';
-          const badge=test?'测试内容 · 不出售':has(slug)?'已解锁':'免费试读';
-          const action=cloudProgress.some(p=>p.book_id===book.id)?'继续阅读 →':'开始试读 →';
+          const badge=test?'测试内容 · 不出售':has(slug)?'已解锁':book.title==='雨夜档案'?'四级会员专享':'免费试读';
+          const action=cloudProgress.some(p=>p.book_id===book.id)?'继续阅读 →':book.title==='雨夜档案'?(has(slug)?'开始阅读 →':'查看会员目录 →'):'开始试读 →';
           item.innerHTML='<div class="book-cover '+kind+'" aria-label="'+safe(book.title)+'">'+
             '<span class="book-tag">'+safe(badge)+'</span>'+
             '<span class="edition">THE STORY EDITION / '+String(i+1).padStart(2,'0')+'</span>'+
@@ -193,7 +193,7 @@
             '<span class="eyebrow">'+String(i+1).padStart(2,'0')+'</span></div>'+
             '<p>'+safe(book.description||'读一本舍不得合上的故事。')+'</p>'+
             '<div class="book-meta"><span class="pill">'+safe(slug.toUpperCase())+'</span>'+
-            '<span class="pill">'+(test?'仅供联调':has(slug)?'已拥有学习权限':'免费章节开放')+'</span></div>'+
+            '<span class="pill">'+(test?'仅供联调':has(slug)?'已拥有学习权限':book.title==='雨夜档案'?'四级权益解锁全部12章':'免费章节开放')+'</span></div>'+
             '<div class="shelf-progress" data-live-progress="'+safe(book.id)+'">'+
             '<div class="progress-text"><span>正在读取阅读记录</span><span>—</span></div>'+
             '<div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>'+
@@ -201,23 +201,19 @@
           item.querySelector('.book-actions button').onclick=()=>openCloudBook(book,slug);
           list.append(item);
         });
-        // Editorially accepted story: free chapter-one reading page, NOT a
-        // D1-published / purchasable book. Do not render a duplicate if a
-        // formally published D1 book with the same title already exists.
+        // Show only public book metadata until the protected D1 edition is published.
+        // No free Rainy Night chapter or manuscript content is bundled in the client.
         if(slug==='cet4'&&!books.some(b=>b.title==='雨夜档案')){
-          const sample=document.createElement('div');
-          sample.className='book-item rainy-night-sample-book-item';
-          sample.innerHTML='<div class="book-cover three" aria-label="雨夜档案 免费第一章">'+
-            '<img class="rainy-night-cover-image" src="/rainy-night-cover.webp" alt="《雨夜档案》原创小说封面：雨夜旧书店与神秘信封" loading="lazy" decoding="async">'+
-            '<span class="book-tag">免费试读 · 第一章</span></div>'+
-            '<div class="book-info"><div class="line1"><h3>雨夜档案</h3>'+
-            '<span class="eyebrow">NEW</span></div>'+
-            '<p>深夜书店里突然出现一封没有署名的信，失踪两年的姐姐或许留下了线索。</p>'+
-            '<div class="book-meta"><span class="pill">完整版筹备中 · 不出售</span></div>'+
-            '<div class="shelf-progress"><div class="progress-text">'+
-            '<span>第一章公开试读</span><span>无需激活</span></div></div>'+
-            '<div class="book-actions"><a class="secondary-btn" href="/rainy-night.html">免费读第一章 →</a></div></div>';
-          list.append(sample);
+          const item=document.createElement('div');
+          item.className='book-item rainy-night-sample-book-item';
+          item.innerHTML='<div class="book-cover three" aria-label="雨夜档案 四级会员专享">'+
+            '<img class="rainy-night-cover-image" src="/rainy-night-cover.webp" alt="《雨夜档案》原创小说封面" loading="lazy" decoding="async">'+
+            '<span class="book-tag">四级会员专享</span></div>'+
+            '<div class="book-info"><div class="line1"><h3>雨夜档案</h3><span class="eyebrow">12 CHAPTERS</span></div>'+
+            '<p>十二章完整小说，四级权益用户可阅读全部章节。不提供免费试读。</p>'+
+            '<div class="book-meta"><span class="pill">等待正式发布</span></div>'+
+            '<div class="book-actions"><span class="soft">登录后查看四级会员内容</span></div></div>';
+          list.append(item);
         }
         // Original CET4 content queue. Internal writing genres are NEVER presented
         // to buyers. No unreviewed full chapters are bundled as public assets.
@@ -336,7 +332,7 @@
         if(!chapters.length){toast('这本书尚无已发布章节');return;}
         activeCloud={bookId:book.id,title:book.title,slug,chapters,chapterId:null,parts:[]};
         showModal(`<span class="eyebrow">MIAOWU · STORY CHAPTERS</span><h2 id="modalTitle">${safe(book.title)}</h2>
-          <p>目录可见。免费试读公开，完整正文由服务器核对账号所属分类的权限后返回。</p>
+          <p>目录可见。正文由服务器核对当前账号的分类购买权益后返回；《雨夜档案》不提供免费试读。</p>
           <div class="cloud-chapter-options">${chapters.map(ch=>`<button class="chapter-btn" type="button" data-cloud-choose="${safe(ch.id)}">${String(ch.chapterNo).padStart(2,'0')} · ${safe(ch.title)} ${ch.isPreview?'· 免费试读':(ch.canRead?'· 已授权':'· 🔒 未解锁')}</button>`).join('')}</div>`);
         document.querySelectorAll('[data-cloud-choose]').forEach(btn=>{
           btn.onclick=()=>openCloudChapter(btn.dataset.cloudChoose);
