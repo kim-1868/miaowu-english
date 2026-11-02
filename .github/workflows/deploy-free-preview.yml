@@ -2,7 +2,7 @@
 # The production source remains on the separate, release-reviewed branch.
 # No automatic push/PR deploy, no database writes, no private manuscript assets.
 name: Deploy Miaowu free preview (production Worker)
-run-name: Free preview Worker · pinned S73 · ${{ github.actor }}
+run-name: Free preview Worker · pinned S75 · ${{ github.actor }}
 
 on:
   workflow_dispatch:
@@ -28,14 +28,14 @@ jobs:
       - name: Checkout fixed, reviewed release (not default main)
         uses: actions/checkout@v4
         with:
-          ref: 7538a730fe693240b1d396be87814b8199e7783d
+          ref: a9e718c669c24736b99b39c49196191f797f46da
           persist-credentials: false
 
       - name: Guard exact release SHA and target config
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "7538a730fe693240b1d396be87814b8199e7783d"
+          test "$(git rev-parse HEAD)" = "a9e718c669c24736b99b39c49196191f797f46da"
           grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
           grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
           test ! -e private-output
@@ -61,6 +61,7 @@ jobs:
           node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
           npm run assets:production:build
           test -f dist-production/public/rainy-night.html
+          test -s dist-production/public/rainy-night-cover.webp
           test ! -e dist-production/public/rainy-night-s1-OWNER-FULL-READING-PREVIEW-20261102.md
           node --input-type=module -e '
             import {readFileSync} from "node:fs";
@@ -102,12 +103,14 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc
 
-      - name: Verify anonymous story sample through actual Pages host
+      - name: Verify anonymous story sample and cover through actual Pages host
         shell: bash
         run: |
           set -euo pipefail
           curl --fail --silent --show-error --max-time 30 \
             "https://miaowu-english-pages.pages.dev/rainy-night.html" -o /tmp/miaowu-free-sample.html
+          curl --fail --silent --show-error --max-time 30 "https://miaowu-english-pages.pages.dev/rainy-night-cover.webp" -o /tmp/miaowu-cover.webp
+          test "$(wc -c < /tmp/miaowu-cover.webp)" -eq 7618
           node --input-type=module -e '
             import {readFileSync} from "node:fs";
             import assert from "node:assert/strict";
