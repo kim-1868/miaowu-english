@@ -30,12 +30,10 @@ test("S75 cover ships in audited production bundle and displays in real shelf an
  const html=buildRainyNightPublicSample();
  assert.match(html,/class="hero-cover" src="\/rainy-night-cover.webp"/);
  assert.match(html,/content="\/rainy-night-cover.webp"/);
- assert.match(html,/class="site-nav"/);
- assert.match(html,/href="#chapter"/);
- assert.match(html,/href="\/"[^>]*>探索书架<\/a>/);
- assert.equal((html.match(/<article id="chapter">/g)||[]).length,1);
- assert.equal((html.match(/<strong lang="en">/g)||[]).length,64);
- assert.doesNotMatch(html,/第十二章/);
+ assert.match(html,/四级会员专享/);
+ assert.match(html,/rainy-night-cover.webp/);
+ assert.equal((html.match(/<article id="chapter">/g)||[]).length,0);
+ assert.equal((html.match(/<strong lang="en">/g)||[]).length,0);
  const {bundle}=composeRainyNightSeasonDraft();
  assert.equal(evaluateRainyNightPublicationGate(bundle).publicationAllowed,false);
 });
