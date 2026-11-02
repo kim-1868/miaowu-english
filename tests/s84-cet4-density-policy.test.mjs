@@ -31,9 +31,9 @@ test("S84 generated manuscripts reject density under 2.2 anchors per 100 Han",()
  const clean=Array.from({length:16},()=> "她知道这段关系里藏着太多误会，却决定先离开这座城，整理自己的生活与选择。".repeat(2));
  const tooFew=clean.map((p,i)=>i<12?p+"[["+word+"]]":p);
  assert.throws(()=>auditStoryChapter(plan,tooFew,"embedded",clean),/EMBEDDING_DENSITY_INVALID/);
- const okay=clean.map(p=>p+"[["+word+"]][["+word+"]]");
+ const okay=clean.map(p=>p+"[["+word+"]]".repeat(5));
  const good=auditStoryChapter(plan,okay,"embedded",clean);
  assert.ok(good.occurrencesPer100Han>=DENSITY.minimum);
  assert.ok(good.occurrencesPer100Han<=DENSITY.hardMaximum);
- assert.equal(good.anchors,32);
+ assert.equal(good.anchors,80);
 });
