@@ -261,7 +261,7 @@ test("S3 C1 QA report stays private, read-only and never publishes",async()=>{
   assert.equal((await worker.fetch(new Request(url+path,{headers}),env)).status,401);
 });
 
-test("S3 C1 catches missing free previews, broken word anchors and nonsequential chapters",async()=>{
+test("S3 C1 permits fully paid books while catching broken anchors and nonsequential chapters",async()=>{
   const env=fixture(),headers={"X-Mw-Editor-Key":EDITOR_KEY};
   assert.equal((await call(env,"/api/staging/editor/drafts","POST",{package:sample},{headers})).status,201);
   env.sqlite.exec("UPDATE chapters SET is_preview=0 WHERE book_id='sample-cet4-letter'");
@@ -272,7 +272,8 @@ test("S3 C1 catches missing free previews, broken word anchors and nonsequential
   const report=await res.json();
   assert.equal(report.technicalCheckPassed,false);
   const codes=new Set(report.blockers.map(x=>x.code));
-  assert.ok(codes.has("NO_FREE_PREVIEW"));
+  assert.equal(codes.has("NO_FREE_PREVIEW"),false);
+  assert.equal(report.metrics.previewChapters,0);
   assert.ok(codes.has("CHAPTER_GAP"));
   assert.ok(codes.has("MISSING_WORD_ANCHOR"));
   assert.equal(report.publicationEnabled,false);
@@ -332,6 +333,8 @@ test("S3 C2 rejects false checklist, empty note, stale fingerprint and structura
   assert.equal(blocked.status,409);
   const result=(await blocked.json()).error;
   assert.equal(result,"REVIEW_CONTENT_CHANGED");
+  // A zero-preview CET4 book is allowed; introduce a genuine structural error.
+  env.sqlite.exec("UPDATE chapters SET chapter_no=3 WHERE id=\'sample-letter-ch2\'");
   const report2=await (await call(env,"/api/staging/editor/drafts/sample-cet4-letter/review","GET",undefined,{headers})).json();
   const blocked2=await call(env,path,"POST",{...body,expectedFingerprint:report2.contentFingerprint},{headers});
   assert.equal(blocked2.status,409);
