@@ -79,17 +79,18 @@ export function parseS82Markdown(id,source,byWord,allowed){
     fail("MALFORMED_ANCHORS_"+id);
    return {segments:parts};
   });
-  if(anchors<2||anchors>45)fail("BAD_WORD_DENSITY_"+id+"_"+(i+1));
+  if(anchors<2||anchors>200)fail("BAD_WORD_DENSITY_"+id+"_"+(i+1));
   return {id:"s82-"+id+"-ch"+String(i+1).padStart(2,"0"),
    number:i+1,title:heading[2].trim(),preview:i===0,paragraphs:segments};
  });
  const words=[...ids].map(w=>structuredClone(byWord.get(w)));
- const bundle={version:1,sourceLabel:"s82-cet4-6-originals-private-first-draft-not-approved",
+ const bundle={version:1,sourceLabel:"s85-cet4-originals-private-first-draft-includes-unverified-form-candidates",
   book:{id:"s82-"+id,category:"cet4",title:meta.title,
    description:descriptions[id],coverKey:null},words,chapters};
  const checked=validatePackage(bundle);
  return {bundle,summary:{id,title:meta.title,internalGenre:meta.genre_internal,
   chapters:chapters.length,words:words.length,mentions:checked.mentionCount,
+  unverifiedNewWords:words.filter(w=>w.vocabularyReviewStatus==="PENDING_CET4_HEADWORD_FORM_AND_SENSE_REVIEW").map(w=>w.headword),
   chaptersLength:chapters.map(ch=>({number:ch.number,
    han:(ch.paragraphs.map(p=>p.segments.map(s=>s.text||s.surface).join("")).join("")
     .match(/\p{Script=Han}/gu)||[]).length})),
@@ -102,6 +103,24 @@ export function buildS82DraftBundles(){
  const allowed=new Set(official.words.filter(w=>
    w.formStatus==="CET4_UNSTARRED_HEADWORD"||w.formStatus==="CET4_PRINTED_VARIANT").map(w=>w.headword));
  if(allowed.size!==172)fail("APPROVED_FORM_SOURCE_CHANGED");
+ // Extra everyday headwords are writing candidates, not syllabus-verified learning metadata.
+ const expanded=JSON.parse(readFileSync(join(root,
+  "content/editorial/s85-high-density-extra-word-candidates-UNVERIFIED.json"),"utf8"));
+ if(expanded.version!==1||expanded.officialCET4Verified!==false||
+    expanded.publicationAllowed!==false||expanded.words?.length!==15||
+    expanded.words.some(w=>w.status!=="PENDING_CET4_HEADWORD_FORM_AND_SENSE_REVIEW"||
+      allowed.has(w.headword)||byWord.has(w.headword)||w.phoneticUk!==null||w.phoneticUs!==null))
+   fail("EXPANDED_VOCABULARY_REQUIRES_SYLLABUS_REVIEW");
+ for(const candidate of expanded.words){
+  allowed.add(candidate.headword);
+  byWord.set(candidate.headword,{
+   id:"s85-candidate-"+candidate.headword,
+   headword:candidate.headword,meaningZh:candidate.meaningZh,
+   partOfSpeech:candidate.partOfSpeech,phoneticUk:null,phoneticUs:null,
+   exampleEn:null,exampleZh:null,collocations:[],
+   vocabularyReviewStatus:candidate.status
+  });
+ }
  return S82_BOOK_IDS.map(id=>parseS82Markdown(id,readFileSync(join(root,
   "content/drafts/season-cet4-v1/"+id+".md"),"utf8"),byWord,allowed));
 }

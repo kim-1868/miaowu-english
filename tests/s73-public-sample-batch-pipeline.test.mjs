@@ -64,14 +64,14 @@ test("S73 structure QA accepts sensible chapter draft candidates and fails on fo
  const first=auditStoryChapter(plan,clean,"plain");
  assert.equal(first.anchors,0);
  const word=plan.vocabulary[0].headword;
- const embedded=clean.map(p=>p+"[["+word+"]][["+word+"]]");
+ const embedded=clean.map(p=>p+("[["+word+"]]").repeat(5));
  const result=auditStoryChapter(plan,embedded,"embedded",clean);
- assert.equal(result.anchors,32);
+ assert.equal(result.anchors,80);
  assert.ok(result.occurrencesPer100Han>=2.2);
  assert.ok(result.flags.includes("UNREVIEWED_POS_AND_SENSE"));
  assert.throws(()=>auditStoryChapter(plan,embedded,"embedded",clean.slice(1)),/EMBEDDED_PARAGRAPH_MISMATCH/);
  assert.throws(()=>auditStoryChapter(plan,clean.map((p,i)=>i===0?p+"[[notinlist]]":p),"embedded",clean),/EMBEDDING_DENSITY_INVALID|UNLISTED_VOCABULARY/);
- const tooDense=clean.map((p,i)=>i===0?p+"[["+word+"]]".repeat(6):p);
+ const tooDense=clean.map((p,i)=>i===0?p+"[["+word+"]]".repeat(9):p);
  assert.throws(()=>auditStoryChapter(plan,tooDense,"embedded",clean),/EMBEDDING_DENSITY_INVALID|DENSE_VOCABULARY/);
 });
 test("S73 Responses request uses explicit schema and store:false, never contacts network in tests",async()=>{

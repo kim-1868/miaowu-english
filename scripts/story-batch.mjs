@@ -46,13 +46,20 @@ export function buildStoryBatchPlans(){
  if(approvedForm.length!==172||official.sourceSha256.length!==64)
   fail("OFFICIAL_FORM_AUDIT_DRIFT");
  return presets.map((p,ix)=>{
-  const selected=Array.from({length:64},(_,i)=>approvedForm[(ix*19+i*7)%approvedForm.length]);
+  const selected=Array.from({length:49},(_,i)=>approvedForm[(ix*19+i*7)%approvedForm.length]);
   const vocabulary=selected.map(form=>{
    const w=byWord.get(form.headword);
    if(!w)fail("MISSING_WORD_SENSE_CANDIDATE");
    return {headword:w.headword,meaningZh:w.meaningZh,partOfSpeech:w.partOfSpeech,
     formSource:"OFFICIAL_2016_UNSTARRED_OR_VARIANT",senseReviewed:false,ipaReviewed:false};
   });
+  const extra=JSON.parse(readFileSync(new URL("../content/editorial/s85-high-density-extra-word-candidates-UNVERIFIED.json",import.meta.url),"utf8"));
+  if(extra.officialCET4Verified!==false||extra.publicationAllowed!==false||extra.words?.length!==15||
+    extra.words.some(w=>w.status!=="PENDING_CET4_HEADWORD_FORM_AND_SENSE_REVIEW"||
+      vocabulary.some(v=>v.headword===w.headword)))fail("PROVISIONAL_VOCABULARY_SOURCE_CHANGED");
+  vocabulary.push(...extra.words.map(w=>({headword:w.headword,meaningZh:w.meaningZh,
+    partOfSpeech:w.partOfSpeech,formSource:"PENDING_OFFICIAL_2016_SYLLABUS_CHECK",
+    senseReviewed:false,ipaReviewed:false})));
   if(new Set(vocabulary.map(x=>x.headword)).size!==64)fail("DUPLICATE_VOCAB_CANDIDATES");
   return {schemaVersion:"MIAOWU_STORY_BATCH_V1",id:p.id,title:p.title,genre:p.genre,
    premise:p.premise,beats:p.beats.map((brief,i)=>({number:i+1,brief})),
@@ -85,17 +92,19 @@ export function auditStoryChapter(plan,paragraphs,mode="plain",original=null){
  const uses=[...joined.matchAll(WORD)].map(m=>m[1]);
  const count=uses.length;
  const density=count/han*100;
- if(count<8||count>100||density<2.2||density>4.3)
+ if(count<20||count>200||density<5||density>12)
   fail("EMBEDDING_DENSITY_INVALID");
  if(uses.some(w=>!approved.has(w)))fail("UNLISTED_VOCABULARY_IN_MANUSCRIPT");
- if(paragraphs.some(p=>(p.match(/\[\[[a-z]+\]\]/g)||[]).length>5))
+ const perParagraph=paragraphs.map(p=>(p.match(/\[\[[a-z]+\]\]/g)||[]).length);
+ const mean=count/paragraphs.length;
+ if(mean<3||mean>6||perParagraph.some(n=>n>8))
   fail("DENSE_VOCABULARY_PARAGRAPH");
  const removed=joined.replace(WORD,"");
  if(removed.includes("[[")||removed.includes("]]"))fail("MALFORMED_WORD_ANCHOR");
  const originalHan=(original.join("").match(/\p{Script=Han}/gu)||[]).length;
  if(han<originalHan*.55||han>originalHan*1.50)fail("EMBEDDING_ALTERED_SOURCE_TOO_MUCH");
  return {paragraphs:paragraphs.length,han,anchors:count,occurrencesPer100Han:Number(density.toFixed(2)),
-  uniqueWords:new Set(uses).size,
+  averagePerParagraph:Number(mean.toFixed(2)),uniqueWords:new Set(uses).size,
   flags:["UNREVIEWED_POS_AND_SENSE","UNREVIEWED_STORY_CONTINUITY","UNREVIEWED_IPA_AND_RIGHTS"]};
 }
 const schema={type:"object",properties:{paragraphs:{type:"array",items:{type:"string"}}},
@@ -152,7 +161,7 @@ export async function produce(id,phase){
   const allowed=plan.vocabulary.map(v=>v.headword+"("+v.partOfSpeech+" "+v.meaningZh+")").join("、");
   const instructions=phase==="write"?
    "你是原创中文短篇网文作者。只写中文，剧情清晰、强钩子、情绪自然、反转有因果。绝不改写已有作品，不引用知名IP。不得出现英语锚点。严格返回 JSON 对象，其中 paragraphs 为10到32段、总字数尽量1200-1900字。不要写词汇教学。":
-   "你是中英混排编辑。逐段保留原小说事件与对话，自然用[[english]]替换符合当前语境的中文词。**高频要求**：以汉字数为分母，每100个汉字出现约2.2至3.6处英文词汇（每500汉字约11至18处），每段最多5处。熟悉词跨章节自然复现2至4次优先，不能连续堆积陌生词。必须返回严格 JSON paragraphs，段落数与原文相同。只选候选表内词并遵守所给词性、语境义项；不自然的用法需改写附近中文使其流畅，不能硬插英语、杜撰音标或词卡。";
+   "你是中英混排编辑。自然用[[english]]替换符合语境的中文词；医院、消息、财产、银行、凌晨、手机等生活词优先，不限于抽象词。实质内容句子目标2–5处英文，平均每段3–6处，短促对话可少些，整章每100汉字6–9处，最高12处。熟悉词跨章自然复现；尽量用名词，动词须符合词性和语法，不能硬塞英文。严格返回与原始段落数相同的JSON paragraphs，保留事件与对话逻辑，不能杜撰音标、审核状态或词义。";
   const prompt=phase==="write"?
    JSON.stringify({title:plan.title,genre:plan.genre,premise:plan.premise,
     chapter:beat.number,chapterBeat:beat.brief,
