@@ -5,13 +5,14 @@ import {copyFileSync,mkdirSync,rmSync,readdirSync,readFileSync,writeFileSync} fr
 import {resolve,dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {buildRainyNightPublicSample} from "./build-rainy-night-public-sample.mjs";
+import {buildS86FreeChapter} from "./build-s86-free-first-chapter.mjs";
 const root=resolve(dirname(fileURLToPath(import.meta.url)),"..");
 const source=join(root,"public"),out=join(root,"dist-production","public");
 export const PRODUCTION_ASSET_ALLOWLIST=Object.freeze([
  "index.html","styles.css","app.js","chapter-words.js","echo-cloud.js",
  "live.html","live-reader.js","live-reader.css",
  "ops.html","ops-console.js","ops-console.css","rainy-night.html",
- "rainy-night-cover.webp"
+ "rainy-night-cover.webp", "rejected-family-second-life.html"
 ]);
 const forbidden=/^(?:account-test|reading-test|editor|design-reference)/i;
 export function auditProductionAssets(){
@@ -22,7 +23,7 @@ export function auditProductionAssets(){
  for(const file of files){
   if(forbidden.test(file))throw Error("QA_ASSET_IN_PRODUCTION_"+file);
  }
- for(const entry of ["index.html","live.html","ops.html","rainy-night.html"]){
+ for(const entry of ["index.html","live.html","ops.html","rainy-night.html","rejected-family-second-life.html"]){
   const body=readFileSync(join(out,entry),"utf8");
   const refs=[...body.matchAll(/(?:src|href)=["'](\/[a-zA-Z][^"'?#]*)["']/g)]
     .map(x=>x[1].slice(1));
@@ -37,7 +38,9 @@ export function buildProductionAssets(){
  rmSync(out,{recursive:true,force:true});
  mkdirSync(out,{recursive:true});
  for(const name of PRODUCTION_ASSET_ALLOWLIST){
-  if(name==="rainy-night.html"){
+  if(name==="rejected-family-second-life.html"){
+   writeFileSync(join(out,name),buildS86FreeChapter());
+  }else if(name==="rainy-night.html"){
    writeFileSync(join(out,name),buildRainyNightPublicSample());
   }else copyFileSync(join(source,name),join(out,name));
  }
