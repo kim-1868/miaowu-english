@@ -41,7 +41,7 @@ test("S80 bounded concurrency never exceeds two simultaneous independent story b
  assert.equal(result.status,"PRIVATE_BATCH_STAGE_COMPLETE");
  assert.equal(result.publicationAllowed,false);
  assert.deepEqual(new Set(calls),new Set(ids.map(x=>x+":write")));
- assert.rejects(()=>runBatchedPhase(ids,"write",{concurrency:4}),/CONCURRENCY_MUST_BE/);
+ await assert.rejects(()=>runBatchedPhase(ids,"write",{concurrency:4}),/CONCURRENCY_MUST_BE/);
 });
 test("S80 an independent failed story does not erase successful private drafts",async()=>{
  const ids=buildStoryBatchPlans().slice(0,2).map(p=>p.id);
