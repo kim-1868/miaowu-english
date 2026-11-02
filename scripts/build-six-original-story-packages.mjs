@@ -91,8 +91,8 @@ export function parseS82Markdown(id,source,byWord,allowed){
  return {bundle,summary:{id,title:meta.title,internalGenre:meta.genre_internal,
   chapters:chapters.length,words:words.length,mentions:checked.mentionCount,
   chaptersLength:chapters.map(ch=>({number:ch.number,
-   han:ch.paragraphs.reduce((n,p)=>n+p.segments.reduce((x,s)=>x+
-    (s.text||s.surface||"").match(/\p{Script=Han}/gu)?.length||0,0),0)})),
+   han:(ch.paragraphs.map(p=>p.segments.map(s=>s.text||s.surface).join("")).join("")
+    .match(/\p{Script=Han}/gu)||[]).length})),
   publicationAllowed:false,firstChapterPreviewOnly:true}};
 }
 export function buildS82DraftBundles(){
