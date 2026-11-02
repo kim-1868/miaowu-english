@@ -47,7 +47,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 温予宁按下回复：我来。
 
-她知道前路未必顺利，也不[[expect]]谁立刻支持她。但这一次，她想认真为自己的[[future]]负责。
+她知道前路未必顺利，也不指望谁立刻支持她。但这一次，她想认真为自己的[[future]]负责。
 
 ## 第2章　被退回的方案
 
