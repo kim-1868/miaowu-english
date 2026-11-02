@@ -107,9 +107,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          curl --fail --silent --show-error --max-time 30 \
+          curl --fail --location --silent --show-error --retry 4 --retry-all-errors --retry-delay 2 --max-time 30 \
             "https://miaowu-english-pages.pages.dev/rainy-night.html" -o /tmp/miaowu-free-sample.html
-          curl --fail --silent --show-error --max-time 30 "https://miaowu-english-pages.pages.dev/rainy-night-cover.webp" -o /tmp/miaowu-cover.webp
+          curl --fail --location --silent --show-error --retry 4 --retry-all-errors --retry-delay 2 --max-time 30 "https://miaowu-english-pages.pages.dev/rainy-night-cover.webp" -o /tmp/miaowu-cover.webp
           test "$(wc -c < /tmp/miaowu-cover.webp)" -eq 7618
           node --input-type=module -e '
             import {readFileSync} from "node:fs";
