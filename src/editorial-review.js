@@ -79,7 +79,8 @@ export async function reviewDraft(env,bookId){
   if(!nonempty(book.cover_key))flag(warnings,"MISSING_COVER","尚未配置书籍封面");
   if(/示例|测试|sample|demo/i.test(book.title))flag(warnings,"DEMO_BOOK","书名含测试或示例标记");
   const previews=chapters.filter(x=>x.is_preview===1).length;
-  if(chapters.length&&!previews)flag(blockers,"NO_FREE_PREVIEW","没有免费试读章节");
+  // Entirely paid CET4 books are valid: the category entitlement still guards every chapter.
+  // A book may intentionally have zero free preview chapters.
   if(chapters.length&&previews===chapters.length)flag(blockers,"NO_PAID_CHAPTER","没有非试读章节");
   if(chapters.some(x=>x.published_at!==null))flag(blockers,"PARTIALLY_PUBLISHED","书目存在已发布章节");
   for(let i=0;i<chapters.length;i++){
