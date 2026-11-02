@@ -389,3 +389,11 @@ html[data-theme="dark"] .echo-cloud-empty{border-color:var(--line);color:var(--m
 html[data-theme="dark"] .account-demo-section{background:var(--paper);color:var(--ink);border-color:var(--line)}
 html[data-theme="dark"] .account-demo-heading h3,html[data-theme="dark"] .account-demo-stat strong{color:#f1d3dc}
 html[data-theme="dark"] .account-demo-stat{background:#3c3440;border-color:var(--line)}
+
+/* S75: the approved original Rainy Night poster is real book artwork, not an emoji mock cover. */
+.rainy-night-sample-book-item .book-cover{padding:0;height:auto;min-height:223px;aspect-ratio:3/4;background:#241d2a;box-shadow:0 8px 22px rgba(35,24,32,.2)}
+.rainy-night-sample-book-item .book-cover::before,.rainy-night-sample-book-item .book-cover::after{display:none}
+.rainy-night-sample-book-item .rainy-night-cover-image{display:block;width:100%;height:100%;position:absolute;inset:0;object-fit:cover;object-position:center top;z-index:0}
+.rainy-night-sample-book-item .book-tag{z-index:2;top:10px;right:10px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+.rainy-night-sample-book-item .book-cover:focus-within{outline:2px solid var(--wine)}
+@media(max-width:760px){.rainy-night-sample-book-item .book-cover{min-height:0}}
