@@ -8,7 +8,7 @@ test("S22 production bundle contains only explicit reviewed assets and no test l
  const report=buildProductionAssets();
  assert.equal(report.status,"REVIEWED_STATIC_ASSETS_ONLY");
  assert.deepEqual(report.assets,[...PRODUCTION_ASSET_ALLOWLIST].sort());
- assert.equal(report.assets.length,13);
+ assert.equal(report.assets.length,14);
  const names=readdirSync(new URL("../dist-production/public/",import.meta.url));
  assert.deepEqual(names.sort(),[...PRODUCTION_ASSET_ALLOWLIST].sort());
  for(const prohibited of ["account-test.html","account-test.js","reading-test.html",
