@@ -87,7 +87,16 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
-          npx wrangler d1 execute miaowu-english-prod --config deploy/production.wrangler.jsonc --remote --json --command             "SELECT (SELECT COUNT(*) FROM categories WHERE id='cet4') AS category_count, (SELECT COUNT(*) FROM books WHERE id='rainy-night-archives-cet4-v1') AS book_count, (SELECT COALESCE(MAX(status),'') FROM books WHERE id='rainy-night-archives-cet4-v1') AS book_status, (SELECT COUNT(*) FROM chapters WHERE book_id='rainy-night-archives-cet4-v1') AS chapter_count" > /tmp/rainy-private-before.json
+          if ! npx wrangler d1 execute miaowu-english-prod --config deploy/production.wrangler.jsonc --remote --json --command             "SELECT (SELECT COUNT(*) FROM categories WHERE id='cet4') AS category_count, (SELECT COUNT(*) FROM books WHERE id='rainy-night-archives-cet4-v1') AS book_count, (SELECT COALESCE(MAX(status),'') FROM books WHERE id='rainy-night-archives-cet4-v1') AS book_status, (SELECT COUNT(*) FROM chapters WHERE book_id='rainy-night-archives-cet4-v1') AS chapter_count" > /tmp/rainy-private-before.json 2>&1; then
+            echo "Cloudflare D1 readonly preflight failed; sanitized diagnostic follows:"
+            node --input-type=module -e '
+              import {readFileSync} from "node:fs";
+              const s=readFileSync("/tmp/rainy-private-before.json","utf8");
+              console.log(s.replace(/Bearer\s+\S+/gi,"Bearer [redacted]")
+                .replace(/[A-Za-z0-9_-]{32,}/g,"[token-redacted]").slice(-1200));
+            '
+            exit 1
+          fi
           node --input-type=module -e '
             import {readFileSync} from "node:fs";
             import assert from "node:assert/strict";
