@@ -2,7 +2,7 @@
 # The production source remains on the separate, release-reviewed branch.
 # No automatic push/PR deploy, no database writes, no private manuscript assets.
 name: Deploy Miaowu free preview (production Worker)
-run-name: Free preview Worker · pinned S80 · ${{ github.actor }}
+run-name: Free preview Worker · pinned S86 · ${{ github.actor }}
 
 on:
   workflow_dispatch:
@@ -28,14 +28,14 @@ jobs:
       - name: Checkout fixed, reviewed release (not default main)
         uses: actions/checkout@v4
         with:
-          ref: e1ff3ac4d46abb2c9e97bc07136643b5bc7e26d3
+          ref: 4edf9341571217c73d864fcd0cfb3de09c2c2770
           persist-credentials: false
 
       - name: Guard exact release SHA and target config
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "e1ff3ac4d46abb2c9e97bc07136643b5bc7e26d3"
+          test "$(git rev-parse HEAD)" = "4edf9341571217c73d864fcd0cfb3de09c2c2770"
           grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
           grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
           test ! -e private-output
@@ -62,6 +62,7 @@ jobs:
           npm run assets:production:build
           test -f dist-production/public/rainy-night.html
           test -s dist-production/public/rainy-night-cover.webp
+          test -f dist-production/public/rejected-family-second-life.html
           test ! -e dist-production/public/rainy-night-s1-OWNER-FULL-READING-PREVIEW-20261102.md
           node --input-type=module -e '
             import {readFileSync} from "node:fs";
@@ -71,6 +72,9 @@ jobs:
             assert.equal((x.match(/<article id="chapter">/g)||[]).length,1);
             assert.match(x,/第 1 章免费试读/);
             assert.doesNotMatch(x,/第十二章/);
+            const y=readFileSync("dist-production/public/rejected-family-second-life.html","utf8");
+            assert.equal((y.match(/<strong lang="en">/g)||[]).length,77);
+            assert.doesNotMatch(y,/被退回的方案/);
           '
           npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/dryrun-production
 
@@ -119,4 +123,19 @@ jobs:
             assert.match(x,/第一章 · 最后一位借阅者/);
             assert.equal((x.match(/<strong lang="en">/g)||[]).length,64);
             assert.doesNotMatch(x,/第十二章/);
+          '
+
+      - name: Verify second anonymous original novel sample through actual Pages host
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --silent --show-error --retry 4 --retry-all-errors --retry-delay 2 --max-time 30 \
+            "https://miaowu-english-pages.pages.dev/rejected-family-second-life.html" -o /tmp/miaowu-second-sample.html
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            import assert from "node:assert/strict";
+            const s=readFileSync("/tmp/miaowu-second-sample.html","utf8");
+            assert.equal((s.match(/<strong lang="en">/g)||[]).length,77);
+            assert.match(s,/重生后我不再讨好他们/);
+            assert.doesNotMatch(s,/被退回的方案/);
           '
