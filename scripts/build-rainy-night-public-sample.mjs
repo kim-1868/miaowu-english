@@ -48,7 +48,7 @@ export function buildRainyNightPublicSample(){
   '<nav aria-label="阅读导航"><a href="/">探索书架</a><a href="#chapter">阅读第一章</a><a href="#preview-note">试读说明</a></nav></header><main>'+
   '<section class="story-hero" aria-labelledby="story-title"><img class="hero-cover" src="/rainy-night-cover.webp" alt="《雨夜档案》封面：雨夜书店中的神秘来信" width="260" height="347" fetchpriority="high">'+
   '<div class="hero-copy"><span class="eyebrow">WORDLETTER · ORIGINAL STORY · FREE CHAPTER</span>'+
-  '<h1 id="story-title">雨夜档案</h1><p class="eyebrow">原创轻悬疑 · 正文混合英语词汇阅读</p>'+
+  '<h1 id="story-title">雨夜档案</h1><p class="eyebrow">原创故事 · 正文混合英语词汇阅读</p>'+
   '<p class="hero-desc">一封来自失踪姐姐的神秘来信，让旧书店里平静的雨夜突然变得危险。跟随故事，认识出现在情节中的英语词汇。</p>'+
   '<a href="#chapter" class="start-reading">开始阅读第一章 →</a></div></section>'+
   '<div id="preview-note" class="notice">第 1 章免费试读。完整版筹备中。完整 12 章、词卡音标、练习及购买入口尚未正式开放；本页不需要注册或激活码。英语词汇仅为正文展示，不代表词义与考试级别已经全部审核。</div>'+
