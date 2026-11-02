@@ -19,9 +19,9 @@ export function auditChapterDensity(chapter){
  const overConcentrated=paragraphCounts.filter(n=>n>8).length;
  // Chinese full stops, questions, and exclamations delimit narration sentences.
  // Short standalone dialogue and fragments have a lower word density by design.
- const text=paragraphs.map(p=>p.segments.map(s=>s.wordId?"[["+s.surface+"]]":s.text).join("")).join("\\n");
- const sentences=text.split(/[。！？\\n]/).filter(x=>x.trim());
- const substantial=sentences.map(x=>({han:hanCount(x),words:(x.match(/\\[\\[[a-z]+\\]\\]/g)||[]).length}))
+ const text=paragraphs.map(p=>p.segments.map(s=>s.wordId?"[["+s.surface+"]]":s.text).join("")).join("。");
+ const sentences=text.split(/[。！？]/).filter(x=>x.trim());
+ const substantial=sentences.map(x=>({han:hanCount(x),words:(x.match(/\[\[[a-z]+\]\]/g)||[]).length}))
   .filter(x=>x.han>=DENSITY.longSentenceMinHan);
  const sentenceViolations=substantial.filter(s=>s.words<DENSITY.longSentenceMinAnchors||
    s.words>DENSITY.longSentenceMaxAnchors).length;
