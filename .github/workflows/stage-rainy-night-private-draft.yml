@@ -27,14 +27,14 @@ jobs:
       - name: Checkout EXACT reviewed full-story release
         uses: actions/checkout@v4
         with:
-          ref: 90bc127b9fec334cbf0e7d56cdeaae3d26e26c71
+          ref: fd7564384ade09cd820874277c159566ca4b9f70
           persist-credentials: false
 
       - name: Verify pinned source and Cloudflare D1 binding
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "90bc127b9fec334cbf0e7d56cdeaae3d26e26c71"
+          test "$(git rev-parse HEAD)" = "fd7564384ade09cd820874277c159566ca4b9f70"
           grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
           grep -Fq '"database_id": "649c71b3-340c-49bf-b806-3d39256851d3"' deploy/production.wrangler.jsonc
           test ! -e private-output
@@ -127,7 +127,7 @@ jobs:
             const data=JSON.parse(readFileSync("/tmp/rainy-private-after.json","utf8"));
             const row=(Array.isArray(data)?data:[data]).flatMap(x=>x.results||[])[0];
             assert.ok(row,"Missing D1 verification row");
-            for(const [key,value] of Object.entries({draft_count:1,chapter_count:12,preview_count:1,released_count:0,word_occurrences:733}))
+            for(const [key,value] of Object.entries({draft_count:1,chapter_count:12,preview_count:0,released_count:0,word_occurrences:733}))
               assert.equal(Number(row[key]),value,"Unexpected private import status "+key);
             console.log("12 chapters safely staged as a PRIVATE DRAFT; 0 chapters published. Editorial signoff remains required.");
           '
