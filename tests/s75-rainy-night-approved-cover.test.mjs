@@ -1,0 +1,41 @@
+import {test} from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {createHash} from "node:crypto";
+import {buildRainyNightPublicSample} from "../scripts/build-rainy-night-public-sample.mjs";
+import {buildProductionAssets,PRODUCTION_ASSET_ALLOWLIST} from "../scripts/build-production-assets.mjs";
+import {evaluateRainyNightPublicationGate} from "../scripts/check-rainy-night-publishing-gate.mjs";
+import {composeRainyNightSeasonDraft} from "../scripts/compose-rainy-night-s1-full.mjs";
+
+const local=new URL("../public/rainy-night-cover.webp",import.meta.url);
+const released=new URL("../dist-production/public/rainy-night-cover.webp",import.meta.url);
+const sha1GitBlob=b=>createHash("sha1").update(Buffer.from("blob "+b.length,"ascii")).update(Buffer.from([0])).update(b).digest("hex");
+test("S75 original approved art is a real WebP binary, not an external or temporary source",()=>{
+ const buffer=readFileSync(local);
+ assert.equal(buffer.length,7618);
+ assert.equal(buffer.subarray(0,4).toString("ascii"),"RIFF");
+ assert.equal(buffer.subarray(8,12).toString("ascii"),"WEBP");
+ assert.equal(sha1GitBlob(buffer),"71c76a514dfa6c43e801a6cea9aac4ae6f40da2a");
+});
+test("S75 cover ships in audited production bundle and displays in real shelf and sample hero",()=>{
+ const built=buildProductionAssets();
+ assert.ok(PRODUCTION_ASSET_ALLOWLIST.includes("rainy-night-cover.webp"));
+ assert.ok(built.assets.includes("rainy-night-cover.webp"));
+ assert.deepEqual(readFileSync(released),readFileSync(local));
+ const app=readFileSync(new URL("../public/app.js",import.meta.url),"utf8");
+ assert.match(app,/class="rainy-night-cover-image" src="\/rainy-night-cover.webp"/);
+ assert.match(app,/alt="《雨夜档案》原创小说封面/);
+ const css=readFileSync(new URL("../public/styles.css",import.meta.url),"utf8");
+ assert.match(css,/rainy-night-sample-book-item \.rainy-night-cover-image/);
+ const html=buildRainyNightPublicSample();
+ assert.match(html,/class="hero-cover" src="\/rainy-night-cover.webp"/);
+ assert.match(html,/content="\/rainy-night-cover.webp"/);
+ assert.match(html,/class="site-nav"/);
+ assert.match(html,/href="#chapter"/);
+ assert.match(html,/href="\/"[^>]*>探索书架<\/a>/);
+ assert.equal((html.match(/<article id="chapter">/g)||[]).length,1);
+ assert.equal((html.match(/<strong lang="en">/g)||[]).length,64);
+ assert.doesNotMatch(html,/第十二章/);
+ const {bundle}=composeRainyNightSeasonDraft();
+ assert.equal(evaluateRainyNightPublicationGate(bundle).publicationAllowed,false);
+});

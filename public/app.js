@@ -208,10 +208,8 @@
           const sample=document.createElement('div');
           sample.className='book-item rainy-night-sample-book-item';
           sample.innerHTML='<div class="book-cover three" aria-label="雨夜档案 免费第一章">'+
-            '<span class="book-tag">免费试读 · 第一章</span>'+
-            '<span class="edition">THE STORY EDITION / PREVIEW</span>'+
-            '<span class="illustration">☂</span>'+
-            '<h3>雨夜档案</h3><span class="edition-bottom">ORIGINAL STORY · SUSPENSE</span></div>'+
+            '<img class="rainy-night-cover-image" src="/rainy-night-cover.webp" alt="《雨夜档案》原创小说封面：雨夜旧书店与神秘信封" loading="lazy" decoding="async">'+
+            '<span class="book-tag">免费试读 · 第一章</span></div>'+
             '<div class="book-info"><div class="line1"><h3>雨夜档案</h3>'+
             '<span class="eyebrow">NEW</span></div>'+
             '<p>深夜书店里突然出现一封没有署名的信，失踪两年的姐姐或许留下了线索。</p>'+

@@ -10,7 +10,8 @@ const source=join(root,"public"),out=join(root,"dist-production","public");
 export const PRODUCTION_ASSET_ALLOWLIST=Object.freeze([
  "index.html","styles.css","app.js","chapter-words.js","echo-cloud.js",
  "live.html","live-reader.js","live-reader.css",
- "ops.html","ops-console.js","ops-console.css","rainy-night.html"
+ "ops.html","ops-console.js","ops-console.css","rainy-night.html",
+ "rainy-night-cover.webp"
 ]);
 const forbidden=/^(?:account-test|reading-test|editor|design-reference)/i;
 export function auditProductionAssets(){
@@ -21,7 +22,7 @@ export function auditProductionAssets(){
  for(const file of files){
   if(forbidden.test(file))throw Error("QA_ASSET_IN_PRODUCTION_"+file);
  }
- for(const entry of ["index.html","live.html","ops.html"]){
+ for(const entry of ["index.html","live.html","ops.html","rainy-night.html"]){
   const body=readFileSync(join(out,entry),"utf8");
   const refs=[...body.matchAll(/(?:src|href)=["'](\/[a-zA-Z][^"'?#]*)["']/g)]
     .map(x=>x[1].slice(1));
