@@ -9,7 +9,7 @@ import {composeRainyNightSeasonDraft} from "../scripts/compose-rainy-night-s1-fu
 
 const local=new URL("../public/rainy-night-cover.webp",import.meta.url);
 const released=new URL("../dist-production/public/rainy-night-cover.webp",import.meta.url);
-const sha1GitBlob=b=>createHash("sha1").update("blob "+b.length+"\\0").update(b).digest("hex");
+const sha1GitBlob=b=>createHash("sha1").update(Buffer.from("blob "+b.length,"ascii")).update(Buffer.from([0])).update(b).digest("hex");
 test("S75 original approved art is a real WebP binary, not an external or temporary source",()=>{
  const buffer=readFileSync(local);
  assert.equal(buffer.length,7618);
