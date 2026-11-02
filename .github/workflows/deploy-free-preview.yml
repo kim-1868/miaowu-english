@@ -1,0 +1,119 @@
+# Operational dispatcher intentionally lives on repository default main branch.
+# The production source remains on the separate, release-reviewed branch.
+# No automatic push/PR deploy, no database writes, no private manuscript assets.
+name: Deploy Miaowu free preview (production Worker)
+run-name: Free preview Worker · pinned S73 · ${{ github.actor }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Type DEPLOY_FREE_PREVIEW to confirm production Worker code rollout only"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy-preview:
+    if: ${{ inputs.confirmation == 'DEPLOY_FREE_PREVIEW' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout fixed, reviewed release (not default main)
+        uses: actions/checkout@v4
+        with:
+          ref: 7538a730fe693240b1d396be87814b8199e7783d
+          persist-credentials: false
+
+      - name: Guard exact release SHA and target config
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "7538a730fe693240b1d396be87814b8199e7783d"
+          grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
+          test ! -e private-output
+          test ! -e private-input
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Wrangler without application hooks
+        run: npm install --no-save --ignore-scripts wrangler@^4
+
+      - name: Run syntax and full unit / integration test suite
+        run: |
+          npm run check
+          npm test
+
+      - name: Confirm production bindings and single free first chapter
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm run assets:production:build
+          test -f dist-production/public/rainy-night.html
+          test ! -e dist-production/public/rainy-night-s1-OWNER-FULL-READING-PREVIEW-20261102.md
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            import assert from "node:assert/strict";
+            const x=readFileSync("dist-production/public/rainy-night.html","utf8");
+            assert.equal((x.match(/<strong lang="en">/g)||[]).length,64);
+            assert.equal((x.match(/<article>/g)||[]).length,1);
+            assert.match(x,/第 1 章免费试读/);
+            assert.doesNotMatch(x,/第十二章/);
+          '
+          npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/dryrun-production
+
+      - name: Verify pre-existing production Pages → Worker proxy is responsive
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 25 \
+            "https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe" -o /tmp/miaowu-edge.json
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            import assert from "node:assert/strict";
+            const d=JSON.parse(readFileSync("/tmp/miaowu-edge.json","utf8"));
+            assert.equal(d.ok,true);
+            assert.equal(d.productionBindingPresent,true);
+          '
+
+      - name: Fail closed if Cloudflare deployment credentials are not configured
+        shell: bash
+        env:
+          TOKEN_PRESENT: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          ACCOUNT_PRESENT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          test "$TOKEN_PRESENT" = "true" || { echo "Missing repo secret CLOUDFLARE_API_TOKEN"; exit 1; }
+          test "$ACCOUNT_PRESENT" = "true" || { echo "Missing repo secret CLOUDFLARE_ACCOUNT_ID"; exit 1; }
+
+      - name: Deploy reviewed production Worker and first-chapter asset only
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc
+
+      - name: Verify anonymous story sample through actual Pages host
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 30 \
+            "https://miaowu-english-pages.pages.dev/rainy-night.html" -o /tmp/miaowu-free-sample.html
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            import assert from "node:assert/strict";
+            const x=readFileSync("/tmp/miaowu-free-sample.html","utf8");
+            assert.match(x,/《雨夜档案》第一章免费试读/);
+            assert.match(x,/第一章 · 最后一位借阅者/);
+            assert.equal((x.match(/<strong lang="en">/g)||[]).length,64);
+            assert.doesNotMatch(x,/第十二章/);
+          '
