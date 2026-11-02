@@ -34,7 +34,7 @@ test("S73 production generated assets do not disclose any Rainy Night free previ
  assert.equal(html,buildRainyNightPublicSample());
  const app=readFileSync(new URL("../public/app.js",import.meta.url),"utf8");
  assert.match(app,/四级会员专享/);
- assert.doesNotMatch(app,/href="\\/rainy-night.html"/);
+ assert.equal(app.includes('href="/rainy-night.html"'),false);
  assert.doesNotMatch(html,/第十二章/);
  assert.doesNotMatch(html,/第 1 章免费试读/);
 });
