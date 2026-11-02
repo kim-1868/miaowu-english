@@ -86,6 +86,6 @@ test("S80 front-end cards omit story genre badge while preserving product owners
  assert.match(app,/<span class="pill">完整版筹备中 · 不出售<\/span>/);
  assert.match(app,/<span class="pill">'\+safe\(slug\.toUpperCase\(\)\)\+'/);
  const html=buildRainyNightPublicSample();
- assert.match(html,/原创故事 · 正文混合英语词汇阅读/);
- assert.doesNotMatch(html,/原创轻悬疑 · 正文混合英语词汇阅读/);
+ assert.match(html,/四级会员专享/);
+ assert.equal((html.match(/<article id="chapter">/g)||[]).length,0);
 });
