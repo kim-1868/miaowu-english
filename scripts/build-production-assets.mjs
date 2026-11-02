@@ -1,15 +1,16 @@
 // Build ONLY the reviewed customer and operator assets for production.
 // Staging keeps its full public/ directory and its QA laboratories unchanged.
 // This script never contacts Cloudflare and cannot publish any site.
-import {copyFileSync,mkdirSync,rmSync,readdirSync,readFileSync} from "node:fs";
+import {copyFileSync,mkdirSync,rmSync,readdirSync,readFileSync,writeFileSync} from "node:fs";
 import {resolve,dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
+import {buildRainyNightPublicSample} from "./build-rainy-night-public-sample.mjs";
 const root=resolve(dirname(fileURLToPath(import.meta.url)),"..");
 const source=join(root,"public"),out=join(root,"dist-production","public");
 export const PRODUCTION_ASSET_ALLOWLIST=Object.freeze([
  "index.html","styles.css","app.js","chapter-words.js","echo-cloud.js",
  "live.html","live-reader.js","live-reader.css",
- "ops.html","ops-console.js","ops-console.css"
+ "ops.html","ops-console.js","ops-console.css","rainy-night.html"
 ]);
 const forbidden=/^(?:account-test|reading-test|editor|design-reference)/i;
 export function auditProductionAssets(){
@@ -34,7 +35,11 @@ export function auditProductionAssets(){
 export function buildProductionAssets(){
  rmSync(out,{recursive:true,force:true});
  mkdirSync(out,{recursive:true});
- for(const name of PRODUCTION_ASSET_ALLOWLIST)copyFileSync(join(source,name),join(out,name));
+ for(const name of PRODUCTION_ASSET_ALLOWLIST){
+  if(name==="rainy-night.html"){
+   writeFileSync(join(out,name),buildRainyNightPublicSample());
+  }else copyFileSync(join(source,name),join(out,name));
+ }
  return auditProductionAssets();
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
