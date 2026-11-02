@@ -121,6 +121,29 @@ test("S9-B only typed, separately approved, version-locked content can publish",
   assert.notEqual(paid.status,200);
   assert.equal(JSON.stringify(await paid.json()).includes("hesitate"),false);
 });
+test("S9-B fully paid CET4 books may publish without any free preview, while all chapters remain protected",async()=>{
+  const {env,sqlite}=fixture();
+  await operator(sqlite);
+  sqlite.prepare("UPDATE chapters SET is_preview=0 WHERE book_id=?").run(BOOK);
+  const r=await ready(env);
+  assert.equal(r.metrics.chapters,2);
+  assert.equal(r.metrics.previewChapters,0);
+  assert.equal(r.metrics.paidChapters,2);
+  assert.equal(r.technicalCheckPassed,true);
+  assert.equal(r.blockers.some(item=>item.code==="NO_FREE_PREVIEW"),false);
+  const a=await approve(env,r);
+  assert.equal(a.status,201,await a.clone().text());
+  const data=await a.json();
+  const published=await call(env,base(BOOK)+"/publish","POST",confirmation(r,data.approvalId));
+  assert.equal(published.status,201,await published.clone().text());
+  assert.equal(sqlite.prepare("SELECT status FROM books WHERE id=?").get(BOOK).status,"published");
+  for(const chapterId of ["original-letter-ch-1","original-letter-ch-2"]){
+    const denied=await call(env,"/api/chapters/"+chapterId,"GET",undefined,null);
+    assert.notEqual(denied.status,200,"Anonymous reader must not see "+chapterId);
+  }
+  sqlite.close();
+});
+
 test("S9-B revised chapters and global words invalidate approvals even if text is restored",async()=>{
   const {env,sqlite}=fixture();await operator(sqlite);
   const r=await ready(env);
