@@ -73,7 +73,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 律师核对完 [[contract]]，发现姜家所谓“必须联姻才能获得的投资”，实际只是一份附条件的意向 [[document]]，没有生效的付款 [[promise]]。一旦仓促签字，姜知意可能反而卷入不属于自己的财务 [[risk]]。
 
-姜知意把调查 [[result]] 带到家庭 [[meeting]]。她没有录音威胁谁，只要求父亲说明那笔 [[loan]] 和实际资金流向，并表示涉及责任争议会交由专业人员处理。
+姜知意把调查 [[result]] 与完整 [[record]] 带到家庭 [[meeting]]。她没有录音威胁谁，只要求父亲说明那笔 [[loan]] 和实际资金流向，并表示涉及责任争议会交由专业人员处理。
 
 姐姐姜予乔也回来了。她打开 [[phone]]，展示自己过去一个月的 [[message]]：她一直明确说不愿意结婚，父母却向两家人宣称已经获得她的 [[confirm]]。
 
