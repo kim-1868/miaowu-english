@@ -23,10 +23,10 @@ export function prepareRainyNightMemberCandidate(){
    description:"一封深夜来信，让林予安再次追寻失踪姐姐留下的秘密。跟随十二章原创轻悬疑故事，在人物的选择与线索中接触英语词汇。",
    coverKey:"rainy-night-cover.webp"
  };
- candidate.chapters.forEach((ch,i)=>{ch.preview=i===0;});
+ candidate.chapters.forEach((ch,i)=>{ch.preview=false;});
  const validated=validatePackage(candidate);
  if(candidate.chapters.length!==12||validated.mentionCount!==733||
-    candidate.words.length!==188||candidate.chapters.filter(ch=>ch.preview).length!==1)
+    candidate.words.length!==188||candidate.chapters.filter(ch=>ch.preview).length!==0)
    throw Error("MEMBER_CANDIDATE_MANUSCRIPT_DRIFT");
  // Test import shape; SQL is an offline DRAFT-only staging artifact.
  const importShape=generateSql(candidate);
@@ -37,7 +37,7 @@ export function prepareRainyNightMemberCandidate(){
  const report={
   stage:"PRIVATE_MEMBER_READER_CANDIDATE_NOT_APPROVED",
   bookId:MEMBER_BOOK_ID,commercialReleaseAllowed:false,d1Touched:false,
-  chapterCount:12,freePreviewChapters:[1],entitledChapterNumbers:[2,3,4,5,6,7,8,9,10,11,12],
+  chapterCount:12,freePreviewChapters:[],entitledChapterNumbers:[1,2,3,4,5,6,7,8,9,10,11,12],
   targetWordCount:188,wordReferences:733,
   existingReaderEndpoints:["/api/categories/:slug/books","/api/books/:bookId/chapters",
     "/api/chapters/:chapterId","/api/chapters/:chapterId/words","/api/me/progress","/api/me/words"],
@@ -46,7 +46,7 @@ export function prepareRainyNightMemberCandidate(){
    pendingOccurrences:sourceGate.review.pendingOccurrences,
    pendingEcho:sourceGate.review.pendingEcho,
    missingPronunciationApproval:true},
-  note:"Do not import or release to production. No source IPAs were reviewed or invented. Preview first; 11 chapters must require CET4 entitlement after a separate approved publication."
+  note:"Do not import or release to production. No source IPAs were reviewed or invented. No preview; all 12 chapters require CET4 entitlement after a separate approved publication."
  };
  return {candidate,report};
 }
