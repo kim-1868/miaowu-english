@@ -201,6 +201,27 @@
           item.querySelector('.book-actions button').onclick=()=>openCloudBook(book,slug);
           list.append(item);
         });
+        // Editorially accepted story: free chapter-one reading page, NOT a
+        // D1-published / purchasable book. Do not render a duplicate if a
+        // formally published D1 book with the same title already exists.
+        if(slug==='cet4'&&!books.some(b=>b.title==='雨夜档案')){
+          const sample=document.createElement('div');
+          sample.className='book-item rainy-night-sample-book-item';
+          sample.innerHTML='<div class="book-cover three" aria-label="雨夜档案 免费第一章">'+
+            '<span class="book-tag">免费试读 · 第一章</span>'+
+            '<span class="edition">THE STORY EDITION / PREVIEW</span>'+
+            '<span class="illustration">☂</span>'+
+            '<h3>雨夜档案</h3><span class="edition-bottom">ORIGINAL STORY · SUSPENSE</span></div>'+
+            '<div class="book-info"><div class="line1"><h3>雨夜档案</h3>'+
+            '<span class="eyebrow">NEW</span></div>'+
+            '<p>深夜书店里突然出现一封没有署名的信，失踪两年的姐姐或许留下了线索。</p>'+
+            '<div class="book-meta"><span class="pill">都市轻悬疑</span>'+
+            '<span class="pill">完整版筹备中 · 不出售</span></div>'+
+            '<div class="shelf-progress"><div class="progress-text">'+
+            '<span>第一章公开试读</span><span>无需激活</span></div></div>'+
+            '<div class="book-actions"><a class="secondary-btn" href="/rainy-night.html">免费读第一章 →</a></div></div>';
+          list.append(sample);
+        }
         // Preserve the user's approved original two-chapter local demo as a
         // clearly labelled teaching/interaction sample. D1 is still the ONLY
         // source for published and paid books. Never double-render a D1 book.
