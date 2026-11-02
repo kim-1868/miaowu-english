@@ -27,14 +27,14 @@ jobs:
       - name: Checkout EXACT reviewed full-story release
         uses: actions/checkout@v4
         with:
-          ref: fd7564384ade09cd820874277c159566ca4b9f70
+          ref: 981b6ea9ecbcbb78a5365f810052d2ed15f19396
           persist-credentials: false
 
       - name: Verify pinned source and Cloudflare D1 binding
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "fd7564384ade09cd820874277c159566ca4b9f70"
+          test "$(git rev-parse HEAD)" = "981b6ea9ecbcbb78a5365f810052d2ed15f19396"
           grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
           grep -Fq '"database_id": "649c71b3-340c-49bf-b806-3d39256851d3"' deploy/production.wrangler.jsonc
           test ! -e private-output
