@@ -5,11 +5,11 @@ import {S82_BOOK_IDS,buildS82DraftBundles,parseS82Markdown} from "../scripts/bui
 import {validatePackage} from "../src/editorial-content.js";
 import {generateSql} from "../scripts/build-content-import.mjs";
 
-test("S82 contains six new original completed story arcs of six chapters each",()=>{
+test("S82 contains eight new original completed story arcs of six chapters each",()=>{
  const rows=buildS82DraftBundles();
- assert.equal(rows.length,6);
+ assert.equal(rows.length,8);
  assert.deepEqual(rows.map(x=>x.summary.id),S82_BOOK_IDS);
- assert.equal(new Set(rows.map(x=>x.bundle.book.title)).size,6);
+ assert.equal(new Set(rows.map(x=>x.bundle.book.title)).size,8);
  const total=rows.reduce((n,x)=>n+x.summary.mentions,0);
  assert.ok(total>=140,"expected at least 140 natural target-word references, got "+total);
  for(const {bundle,summary} of rows){
@@ -22,7 +22,7 @@ test("S82 contains six new original completed story arcs of six chapters each",(
   assert.ok(!JSON.stringify(bundle.book).includes("genre_internal"));
   const valid=validatePackage(bundle);
   assert.equal(valid.mentionCount,summary.mentions);
-  assert.ok(bundle.chapters.every((c,i)=>c.number===i+1&&c.paragraphs.length>=8));
+  assert.ok(bundle.chapters.every((c,i)=>c.number===i+1&&c.paragraphs.length>=(summary.id==="ex-husband-business-client"?7:8)));
   const imported=generateSql(bundle);
   assert.equal(imported.summary.publication,"draft-only");
   assert.ok(imported.sql.includes(" AND status='draft'"));

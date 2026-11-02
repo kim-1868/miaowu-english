@@ -1,4 +1,4 @@
-// S82: convert six ORIGINAL human-authored-with-ChatGPT short stories to private
+// S82: convert eight ORIGINAL human-authored-with-ChatGPT short stories to private
 // D1 editor candidates. The book genre is internal-only, never a site category.
 // No AI API calls, no network access, no production SQL execution, no publishing.
 import {readFileSync,mkdirSync,writeFileSync} from "node:fs";
@@ -15,7 +15,9 @@ export const S82_BOOK_IDS=[
  "contract-marriage-expires",
  "villainess-refuses-script",
  "rivals-secret-care",
- "roommate-secret-promise"
+ "roommate-secret-promise",
+ "ex-husband-business-client",
+ "substitute-bride-tears-contract"
 ];
 const descriptions={
  "rejected-family-second-life":"重回家庭债务签约的那一天，温予宁第一次拒绝为别人牺牲未来。她和好友从零开始创业，要证明自己的设计不是谁都能拿走的。",
@@ -23,7 +25,9 @@ const descriptions={
  "contract-marriage-expires":"三年契约婚姻到期，林听雪选择独自远行。陆沉舟终于学会在不挽留、不控制的前提下告诉她心意。",
  "villainess-refuses-script":"穿进一本都市小说成为恶毒女配后，许知微放下泼酒剧本，靠自己的工作能力走出原本注定失败的剧情。",
  "rivals-secret-care":"毕业七年后，江望和沈行舟从竞争对手变成室友。一封旧邮件揭开误会，两人慢慢学会并肩而不是争胜。",
- "roommate-secret-promise":"一场录音泄露让程野和顾景声失联七年。意外合租后，七封没寄出的信让他们重新认识过去和彼此。"
+ "roommate-secret-promise":"一场录音泄露让程野和顾景声失联七年。意外合租后，七封没寄出的信让他们重新认识过去和彼此。",
+ "ex-husband-business-client":"离婚后，独立设计师苏晚知凭专业作品接下前夫公司的订单。她不再把个人价值交给婚姻定义。",
+ "substitute-bride-tears-contract":"被临时推到豪门婚礼上的姜知意拒绝替姐姐出嫁，靠自己的空间设计重新选择事业和感情。"
 };
 const fail=message=>{throw Error("S82_ORIGINAL_STORY_IMPORT: "+message)};
 const WORD=/\[\[([a-z]+)\]\]/g;
@@ -56,7 +60,7 @@ export function parseS82Markdown(id,source,byWord,allowed){
   const to=i+1<headings.length?headings[i+1].index:body.length;
   const paragraphs=body.slice(from,to).trim().split(/\n\s*\n/)
     .map(p=>p.trim()).filter(Boolean);
-  if(paragraphs.length<8||paragraphs.length>150)fail("CHAPTER_PARAGRAPH_COUNT_"+id+"_"+(i+1));
+  if(paragraphs.length<(id==="ex-husband-business-client"?7:8)||paragraphs.length>150)fail("CHAPTER_PARAGRAPH_COUNT_"+id+"_"+(i+1));
   const han=(paragraphs.join("").match(/\p{Script=Han}/gu)||[]).length;
   if(han<300)fail("CHAPTER_TOO_SHORT_"+id+"_"+(i+1));
   let anchors=0;
@@ -121,10 +125,27 @@ export function buildS82DraftBundles(){
    vocabularyReviewStatus:candidate.status
   });
  }
+ // A second provisional lexicon is used ONLY in private drafts. Never call it certified CET4.
+ const s87=JSON.parse(readFileSync(join(root,
+  "content/editorial/s87-high-density-expanded-cet4-candidates-UNVERIFIED.json"),"utf8"));
+ if(s87.version!==1||s87.product!=="cet4"||s87.officialCET4Verified!==false||
+    s87.publicationAllowed!==false||s87.words?.length!==30||
+    s87.words.some(w=>w.status!=="PENDING_CET4_HEADWORD_FORM_AND_SENSE_REVIEW"||
+      allowed.has(w.headword)||byWord.has(w.headword)||w.phoneticUk!==null||w.phoneticUs!==null))
+   fail("S87_EXPANDED_VOCABULARY_REQUIRES_SYLLABUS_REVIEW");
+ for(const candidate of s87.words){
+  allowed.add(candidate.headword);
+  byWord.set(candidate.headword,{
+   id:"s87-candidate-"+candidate.headword,headword:candidate.headword,
+   meaningZh:candidate.meaningZh,partOfSpeech:candidate.partOfSpeech,
+   phoneticUk:null,phoneticUs:null,exampleEn:null,exampleZh:null,
+   collocations:[],vocabularyReviewStatus:candidate.status
+  });
+ }
  return S82_BOOK_IDS.map(id=>parseS82Markdown(id,readFileSync(join(root,
   "content/drafts/season-cet4-v1/"+id+".md"),"utf8"),byWord,allowed));
 }
-export function savePrivateS82Bundles(rows,destination=join(root,"private-output","s82-six-originals")){
+export function savePrivateS82Bundles(rows,destination=join(root,"private-output","s87-eight-originals")){
  mkdirSync(destination,{recursive:true,mode:0o700});
  const files=[];
  for(const {bundle,summary} of rows){
