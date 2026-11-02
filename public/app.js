@@ -219,6 +219,43 @@
             '<div class="book-actions"><a class="secondary-btn" href="/rainy-night.html">免费读第一章 →</a></div></div>';
           list.append(sample);
         }
+        // Original CET4 content queue. Internal writing genres are NEVER presented
+        // to buyers. No unreviewed full chapters are bundled as public assets.
+        if(slug==='cet4'){
+          const newNovels=[
+            {title:'重生后我不再讨好他们',desc:'重回改变命运的那一天，她第一次拒绝替全家背债。',sample:'/rejected-family-second-life.html'},
+            {title:'被赶出豪门后我成了继承人',desc:'离开家族修复馆后，她意外找回祖母留给她的一份使命。'},
+            {title:'契约婚姻到期那天',desc:'三年婚约到期后，两个人开始学会真正尊重彼此。'},
+            {title:'穿成恶毒女配后，我不演了',desc:'不再扮演原剧情里的坏人，她决定自己选择未来。'},
+            {title:'死对头突然开始对我好',desc:'毕业七年后再相遇，旧日的竞争对手成了意外室友。'},
+            {title:'合租室友藏了七年的秘密',desc:'一场旧录音风波，七封没寄出的信，让两个人再次靠近。'}
+          ];
+          newNovels.forEach((n,i)=>{
+            if(books.some(b=>b.title===n.title))return;
+            const item=document.createElement('div');
+            item.className='book-item original-coming-book-item';
+            const kind=['one','two','three'][i%3];
+            const available=!!n.sample;
+            item.innerHTML='<div class="book-cover '+kind+'" aria-label="'+safe(n.title)+'">'+
+              '<span class="book-tag">'+(available?'第一章试读':'内容校对中')+'</span>'+
+              '<span class="edition">WORDLETTER / '+String(i+1).padStart(2,'0')+'</span>'+
+              '<span class="illustration">'+['❦','✧','♧'][i%3]+'</span>'+
+              '<h3>'+safe(n.title)+'</h3><span class="edition-bottom">ORIGINAL CET4 STORY</span></div>'+
+              '<div class="book-info"><div class="line1"><h3>'+safe(n.title)+'</h3>'+
+              '<span class="eyebrow">'+(available?'NEW':'SOON')+'</span></div>'+
+              '<p>'+safe(n.desc)+'</p>'+
+              '<div class="book-meta"><span class="pill">'+
+              (available?'第一章可免费阅读':'完整版校对中 · 暂不出售')+'</span></div>'+
+              '<div class="shelf-progress"><div class="progress-text"><span>'+
+              (available?'免费阅读 · 无需激活':'已完成故事初稿')+'</span><span>'+
+              (available?'第一章':'待审核')+'</span></div></div>'+
+              '<div class="book-actions">'+(available?
+                '<a class="secondary-btn" href="'+n.sample+'">读第一章 →</a>':
+                '<button class="secondary-btn" disabled type="button">暂未开放</button>')+
+              '</div></div>';
+            list.append(item);
+          });
+        }
         // Preserve the user's approved original two-chapter local demo as a
         // clearly labelled teaching/interaction sample. D1 is still the ONLY
         // source for published and paid books. Never double-render a D1 book.
