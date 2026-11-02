@@ -9,8 +9,8 @@ test("S83 complete Rainy Night is a safe private D1 draft SQL package, not a pai
  assert.equal(summary.wordOccurrences,733);
  assert.equal(summary.publication,"draft-only");
  assert.equal(summary.readiness,"REVIEW_REQUIRED_NOT_FOR_SALE");
- assert.equal(summary.publicPreviewChapter,1);
- assert.equal(summary.categoryEntitlementForChapters,"2-12");
+ assert.equal(summary.publicPreviewChapter,null);
+ assert.equal(summary.categoryEntitlementForChapters,"1-12");
  assert.equal(summary.publisherCanRelease,false);
  assert.equal(summary.productionDbTouched,false);
  assert.equal(summary.sourceGateStatus,"BLOCKED");
