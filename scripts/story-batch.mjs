@@ -11,7 +11,7 @@ const official=JSON.parse(readFileSync(new URL(
  "../content/editorial/rainy-night-s1-official-2016-pdf-form-audit.json",import.meta.url),"utf8"));
 const WORD=/\[\[([a-z]+)\]\]/g;
 const idOK=/^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const presets=[
+export const presets=[
  {id:"heartbreak-mistaken-love",genre:"虐恋",title:"他认错白月光的那一年",
   premise:"成年男女之间一次救命恩情被误认；女主有清晰目标，拒绝无条件原谅；追悔要有现实代价。",
   beats:["误认与伤害","女主决定离开","失去后的错觉","证据逐步出现","真相与补偿","女主自主选择结局"]},
@@ -23,7 +23,19 @@ const presets=[
   beats:["被轻视的新人","意外得到能力","秘密试炼","同门误会升级","宗门大比反转","付出代价并开启新路"]},
  {id:"rivals-secret-care",genre:"BL",title:"死对头突然开始对我好",
   premise:"两位成年男性从校园竞争走到职场再次重逢，因合租看见对方真实一面；自愿、平等的双向关系。",
-  beats:["重逢与不得不合租","旧误会","照顾中出现新线索","冲突升级与和解","坦白少年旧事","双方主动选择同行"]}
+  beats:["重逢与不得不合租","旧误会","照顾中出现新线索","冲突升级与和解","坦白少年旧事","双方主动选择同行"]},
+ {id:"revenge-heiress-returns",genre:"逆袭",title:"被赶出豪门后我成了继承人",
+  premise:"成年女主被家族利用后独立创业，凭能力重新获得属于自己的财产；拒绝用失忆和巧合解决冲突。",
+  beats:["被误解并逐出家门","发现旧合同漏洞","靠工作结识伙伴","拿回第一个客户","对手伪造证据失败","公开真相和新人生"]},
+ {id:"contract-marriage-expires",genre:"霸总",title:"契约婚姻到期那天",
+  premise:"两位事业独立的成年人协议结婚；到期后必须用坦诚选择，而非强制控制，处理误解。",
+  beats:["到期前的最后晚餐","两人各自想离开","误会源自一封信","男主尝试真诚道歉","女主独立完成计划","平等重新确认关系"]},
+ {id:"rejected-family-second-life",genre:"逆袭",title:"重生后我不再讨好他们",
+  premise:"成年女主在另一条人生选择线上拒绝家人情感勒索，投入自己热爱的事业；反转必须建立在前因后果上。",
+  beats:["重回抉择前夜","拒绝第一项不合理请求","主动找回专业机会","家人关系出现裂缝","误会解开但不必和好","重新定义自己的成功"]},
+ {id:"roommate-secret-promise",genre:"BL",title:"合租室友藏了七年的秘密",
+  premise:"两位成年男性因租房临时合住；从微小关怀中辨认彼此心意，避免无故误解和不平等关系。",
+  beats:["陌生人重逢合租","被意外记住的习惯","旧照片上的秘密","主动坦白而非猜测","工作压力检验感情","两人共同作出新承诺"]}
 ];
 const fail=(msg)=>{throw Error("STORY_BATCH: "+msg)};
 export function buildStoryBatchPlans(){
@@ -102,18 +114,33 @@ export async function requestStoryChapter(instructions,prompt,{fetchImpl=fetch,a
  if(!result||Object.keys(result).join("|")!=="paragraphs")fail("INVALID_SCHEMA_RESPONSE");
  return result.paragraphs;
 }
-function planAll(only){
+export function planAll(only){
  const selected=buildStoryBatchPlans().filter(x=>!only||x.id===only);
  if(!selected.length)fail("NO_MATCHING_PLAN");
- return selected.map(p=>({id:p.id,file:put(p.id,"plan.json",p)}));
+ return selected.map(p=>{
+  if(existsSync(pathFor(p.id,"plan.json"))){
+   const previous=read(p.id,"plan.json");
+   if(JSON.stringify(previous)!==JSON.stringify(p))fail("PLAN_CHANGED_REQUIRES_EXPLICIT_REVIEW_"+p.id);
+   return {id:p.id,status:"already",file:pathFor(p.id,"plan.json")};
+  }
+  return {id:p.id,status:"created",file:put(p.id,"plan.json",p)};
+ });
 }
-async function produce(id,phase){
+export async function produce(id,phase){
  const plan=read(id,"plan.json");
  if(!presets.some(p=>p.id===plan.id&&p.title===plan.title))fail("PLAN_DOES_NOT_MATCH_SEED");
  const done=[];
  for(const beat of plan.beats){
   const name=(phase==="write"?"plain":"embedded")+"-ch"+String(beat.number).padStart(2,"0")+".json";
-  if(existsSync(pathFor(id,name))){done.push("already "+name);continue;}
+  if(existsSync(pathFor(id,name))){
+   const existing=read(id,name);
+   if(existing.storyId!==id||existing.chapter!==beat.number||existing.stage!==phase||
+      existing.reviewed!==false||existing.published!==false)
+      fail("EXISTING_CHAPTER_HAS_UNVERIFIED_STATE_"+name);
+   const original=phase==="embed"?read(id,"plain-ch"+String(beat.number).padStart(2,"0")+".json").paragraphs:null;
+   auditStoryChapter(plan,existing.paragraphs,phase==="write"?"plain":"embedded",original);
+   done.push("verified-existing "+name);continue;
+  }
   const previous=beat.number===1?"":phase==="write"?
    // The prior chapter must exist: continuity is not guessed.
    read(id,"plain-ch"+String(beat.number-1).padStart(2,"0")+".json")
@@ -139,7 +166,7 @@ async function produce(id,phase){
  }
  return done;
 }
-function review(id){
+export function review(id){
  const plan=read(id,"plan.json"),rows=[];
  for(const beat of plan.beats){
   const ch=String(beat.number).padStart(2,"0");
@@ -155,6 +182,11 @@ function review(id){
   humanReviewRequired:true,publicationAllowed:false,
   totalChapters:rows.length,totalAnchors:rows.reduce((a,x)=>a+x.embedded.anchors,0),
   chapters:rows};
+ if(existsSync(pathFor(id,"qa-report.json"))){
+  const prior=read(id,"qa-report.json");
+  if(JSON.stringify(prior)!==JSON.stringify(report))fail("QA_REPORT_STALE_REVIEW_REQUIRED");
+  return prior;
+ }
  put(id,"qa-report.json",report);return report;
 }
 async function main(){
