@@ -2,7 +2,7 @@
 # The production source remains on the separate, release-reviewed branch.
 # No automatic push/PR deploy, no database writes, no private manuscript assets.
 name: Deploy Miaowu free preview (production Worker)
-run-name: Free preview Worker · pinned S86 · ${{ github.actor }}
+run-name: Free preview Worker · pinned S88 · ${{ github.actor }}
 
 on:
   workflow_dispatch:
@@ -28,14 +28,14 @@ jobs:
       - name: Checkout fixed, reviewed release (not default main)
         uses: actions/checkout@v4
         with:
-          ref: 4edf9341571217c73d864fcd0cfb3de09c2c2770
+          ref: 90bc127b9fec334cbf0e7d56cdeaae3d26e26c71
           persist-credentials: false
 
       - name: Guard exact release SHA and target config
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "4edf9341571217c73d864fcd0cfb3de09c2c2770"
+          test "$(git rev-parse HEAD)" = "90bc127b9fec334cbf0e7d56cdeaae3d26e26c71"
           grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
           grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
           test ! -e private-output
