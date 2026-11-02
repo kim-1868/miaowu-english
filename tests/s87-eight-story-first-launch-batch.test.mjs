@@ -14,7 +14,7 @@ test("S87 two extra original CET4 novels complete all 12 chapters using private 
   assert.equal(one.bundle.chapters.length,6);
   assert.deepEqual(one.bundle.chapters.filter(c=>c.preview).map(c=>c.number),[1]);
   assert.ok(one.summary.mentions>=150,"high density counts");
-  assert.ok(one.summary.words.length>=35);
+  assert.ok(one.summary.words>=35);
   assert.ok(one.bundle.chapters.every(c=>c.paragraphs.length>=7));
   assert.equal(one.summary.publicationAllowed,false);
   assert.equal(one.bundle.book.category,"cet4");
