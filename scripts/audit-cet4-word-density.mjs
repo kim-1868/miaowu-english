@@ -3,7 +3,9 @@
 import {resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {buildS82DraftBundles} from "./build-six-original-story-packages.mjs";
-export const DENSITY={minimum:2.2,preferredMaximum:3.6,hardMaximum:4.3};
+export const DENSITY={minimum:5,preferredMinimum:6,preferredMaximum:9,hardMaximum:12,
+ paragraphAverageMin:3,paragraphAverageMax:6,longSentenceMinHan:25,longSentenceMinAnchors:2,
+ longSentenceMaxAnchors:5};
 const hanCount=value=>(value.match(/\p{Script=Han}/gu)||[]).length;
 export function auditChapterDensity(chapter){
  const paragraphs=chapter.paragraphs;
@@ -12,11 +14,26 @@ export function auditChapterDensity(chapter){
  const occurrences=uses.length,distinct=new Set(uses).size;
  const ratio=han?occurrences/han*100:0;
  const targetMin=Math.ceil(han*DENSITY.minimum/100);
- const overConcentrated=paragraphs.filter(p=>p.segments.filter(s=>s.wordId).length>5).length;
+ const paragraphCounts=paragraphs.map(p=>p.segments.filter(s=>s.wordId).length);
+ const averagePerParagraph=paragraphs.length?occurrences/paragraphs.length:0;
+ const overConcentrated=paragraphCounts.filter(n=>n>8).length;
+ // Chinese full stops, questions, and exclamations delimit narration sentences.
+ // Short standalone dialogue and fragments have a lower word density by design.
+ const text=paragraphs.map(p=>p.segments.map(s=>s.wordId?"[["+s.surface+"]]":s.text).join("")).join("\\n");
+ const sentences=text.split(/[。！？\\n]/).filter(x=>x.trim());
+ const substantial=sentences.map(x=>({han:hanCount(x),words:(x.match(/\\[\\[[a-z]+\\]\\]/g)||[]).length}))
+  .filter(x=>x.han>=DENSITY.longSentenceMinHan);
+ const sentenceViolations=substantial.filter(s=>s.words<DENSITY.longSentenceMinAnchors||
+   s.words>DENSITY.longSentenceMaxAnchors).length;
+ const meetsParagraphAverage=averagePerParagraph>=DENSITY.paragraphAverageMin&&
+   averagePerParagraph<=DENSITY.paragraphAverageMax;
  return {number:chapter.number,han,occurrences,distinctWords:distinct,
   occurrencesPer100Han:Number(ratio.toFixed(2)),targetMin,
+  averagePerParagraph:Number(averagePerParagraph.toFixed(2)),
+  substantialSentences:substantial.length,sentenceViolations,
   additionalOccurrencesNeeded:Math.max(0,targetMin-occurrences),
-  passedDensity:han>=300&&ratio>=DENSITY.minimum&&ratio<=DENSITY.hardMaximum&&overConcentrated===0,
+  passedDensity:han>=300&&ratio>=DENSITY.minimum&&ratio<=DENSITY.hardMaximum&&
+   meetsParagraphAverage&&overConcentrated===0&&sentenceViolations===0,
   overConcentrated,readingQualityReviewRequired:true};
 }
 export function buildDensityReport(rows){
