@@ -11,8 +11,8 @@ export function buildRainyNightMemberDraftImport(){
  const {sql,summary}=generateSql(candidate);
  if(summary.publication!=="draft-only"||report.commercialReleaseAllowed||
    report.d1Touched||report.chapterCount!==12||
-   report.freePreviewChapters.join(",")!=="1"||
-   report.entitledChapterNumbers.join(",")!=="2,3,4,5,6,7,8,9,10,11,12"||
+   report.freePreviewChapters.length!==0||
+   report.entitledChapterNumbers.join(",")!=="1,2,3,4,5,6,7,8,9,10,11,12"||
    summary.wordOccurrences!==733||summary.words!==188||
    sql.includes("UPDATE books SET status=")||
    sql.includes("INSERT INTO entitlements")||
@@ -20,7 +20,7 @@ export function buildRainyNightMemberDraftImport(){
    throw Error("S83: PRIVATE_DRAFT_IMPORT_SAFETY_CHECK_FAILED");
  return {sql,summary:{
   ...summary,readiness:"REVIEW_REQUIRED_NOT_FOR_SALE",
-  publicPreviewChapter:1,categoryEntitlementForChapters:"2-12",
+  publicPreviewChapter:null,categoryEntitlementForChapters:"1-12",
   publisherCanRelease:false,productionDbTouched:false,
   remainingEditorial:report.review,sourceGateStatus:report.sourceGateStatus
  }};
