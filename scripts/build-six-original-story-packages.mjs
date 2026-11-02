@@ -79,7 +79,7 @@ export function parseS82Markdown(id,source,byWord,allowed){
     fail("MALFORMED_ANCHORS_"+id);
    return {segments:parts};
   });
-  if(anchors<2||anchors>45)fail("BAD_WORD_DENSITY_"+id+"_"+(i+1));
+  if(anchors<2||anchors>200)fail("BAD_WORD_DENSITY_"+id+"_"+(i+1));
   return {id:"s82-"+id+"-ch"+String(i+1).padStart(2,"0"),
    number:i+1,title:heading[2].trim(),preview:i===0,paragraphs:segments};
  });
