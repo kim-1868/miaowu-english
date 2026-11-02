@@ -55,7 +55,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 其他团队不断强调自己的 [[company]] 资源，姜知意则邀请大家看居民 [[interview]] 的文字 [[record]]。“有位老人说，只想再找到过去那个能安静看书的 [[room]]。”她指着入口的 [[plan]]，“我们需要保留这种体验。”
 
-散会后，陆砚深问她能不能一起喝杯咖啡。她先 [[confirm]] 这不是项目 [[meeting]]，才点头：“如果只谈你我，不讨论招标 [[result]]，可以。”
+散会后，陆砚深看了看那份详细的 [[record]]，问她能不能一起喝杯咖啡。她先 [[confirm]] 这不是项目 [[meeting]]，才点头：“如果只谈你我，不讨论招标 [[result]]，可以。”
 
 他把一份旧 [[report]] 放在桌上：原来取消婚礼以前，他就在调查两家公司之间异常的资金 [[record]]，发现有人试图以“联姻”为名，把一笔有争议的 [[loan]] 转进新成立的空壳公司。
 
