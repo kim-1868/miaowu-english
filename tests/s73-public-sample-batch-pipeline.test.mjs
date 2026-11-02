@@ -12,8 +12,8 @@ test("S73 public sample is exactly first 36 paragraphs, 64 highlighted word anch
  const html=buildRainyNightPublicSample();
  assert.match(html,/<title>《雨夜档案》第一章免费试读/);
  assert.equal((html.match(/<strong lang="en">/g)||[]).length,64);
- assert.equal((html.match(/<article(?:\\s[^>]*)?>/g)||[]).length,1);
- assert.equal((html.match(/<article>.*?<\/article>/gs)||[]).length,1);
+ assert.equal((html.match(/<article id="chapter">/g)||[]).length,1);
+ assert.equal((html.match(/<article id="chapter">.*?<\/article>/gs)||[]).length,1);
  assert.match(html,/第一章 · 最后一位借阅者/);
  for(const paragraph of bundle.chapters[0].paragraphs){
   for(const segment of paragraph.segments){
