@@ -42,6 +42,16 @@ test("private CET4 bundles contain full paid chapters, aligned text and full can
  }
 });
 
+test("2016 syllabus-derived crosscheck finds 45 candidate forms without marking editorial approval",()=>{
+ const checked=json("../content/editorial/20261104-shared-45-CET4-SOURCE-CROSSCHECK-NOT-APPROVED.json");
+ assert.equal(checked.items.length,45);
+ assert.equal(checked.summary.sourceCET4Matches,45);
+ assert.equal(checked.summary.secondIndependentMatches,38);
+ assert.equal(checked.summary.notStandaloneInSecond.length,7);
+ assert.equal(checked.status,"SOURCE_DERIVED_CET4_MEMBERSHIP_CROSSCHECK_NOT_HUMAN_SIGNED");
+ assert.ok(checked.items.every(x=>x.firstExtract==="CET4_FORM_MATCH"));
+});
+
 test("release review keeps unapproved exam-headword status visible; noun pronunciations are disambiguated",()=>{
  const pending=ledger.words.filter(w=>w.examHeadwordStatus==="2016_PDF_FORM_NOT_YET_CHECKED");
  assert.equal(pending.length,45);
