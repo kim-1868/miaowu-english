@@ -70,7 +70,9 @@ async function available(env,user,url){
   const rows=await exec(env,"SELECT ch.id chapter_id,ch.chapter_no,ch.book_id,b.title book_title,"+
     "cw.context_sentence,w.id word_id,w.headword,w.phonetic_uk,w.phonetic_us,"+
     "w.meaning_zh,w.part_of_speech,w.example_en,w.example_zh "+scoped+
-    " ORDER BY p.updated_at DESC,ch.chapter_no DESC,cw.context_anchor ASC LIMIT 600",
+    (scope==="chapter"?
+      " ORDER BY ch.chapter_no DESC,cw.context_anchor ASC LIMIT 600":
+      " ORDER BY p.updated_at DESC,ch.chapter_no DESC,cw.context_anchor ASC LIMIT 600"),
     ...binds).all();
   let data=rows.results||[];
   if(scope==="recent"){
