@@ -47,6 +47,10 @@ function button(id,fn){
 }
 function syncButtons(){
   $("checkNovel").disabled=!connected()||!$("uploadNovel").files?.length;
+  $("useSelectedDraft").disabled=!connected()||chosen?.status!=="draft";
+  $("reviseNovel").disabled=!(connected()&&pendingNovel&&chosen?.status==="draft"&&
+    pendingNovel.book?.id===chosen.id&&pendingNovel.book?.title===chosen.title&&
+    readiness?.contentFingerprint);
   $("refresh").disabled=!connected();
   if(!readiness){$("approve").disabled=true;$("publish").disabled=true;$("withdraw").disabled=true;return}
   if(chosen?.status==="draft"){
@@ -184,7 +188,7 @@ async function doWithdraw(){
 let pendingNovel=null;
 const uploadMsg=message=>{$("uploadStatus").textContent=message;};
 function resetNovel(){
- pendingNovel=null;$("importNovel").disabled=true;
+ pendingNovel=null;$("importNovel").disabled=true;$("reviseNovel").disabled=true;
  $("uploadReport").hidden=true;$("uploadPreview").hidden=true;
 }
 function uploadedTitle(name){
@@ -282,6 +286,7 @@ async function examineNovel(){
  if(report.metadataIncomplete.length)uploadMsg("预检发现"+report.metadataIncomplete.length+"个词卡缺少音标/例句。可以导入草稿，但必须补齐后才能正式上架。");
  else uploadMsg("文件识别成功。预览报告如下，确认后点击“导入为新草稿”。");
  pendingNovel=pkg;$("importNovel").disabled=false;
+ syncButtons();
  const lines=[
   "书籍："+pkg.book.title+"（"+pkg.book.category+"）",
   "章节："+report.chapters+"；付费章节："+report.paid,
@@ -315,6 +320,30 @@ button("importNovel",async()=>{
  uploadMsg("草稿导入成功：《"+result.title+"》，"+result.chapters+"章、"+
   result.wordCards+"词卡。未发布；请在书籍目录中完成审核和上架。");
  resetNovel();await loadBooks(result.bookId);
+});
+
+button("useSelectedDraft",async()=>{
+ if(!chosen||chosen.status!=="draft")throw Error("请先选择一部未发布草稿");
+ $("uploadBookTitle").value=chosen.title;
+ $("uploadBookId").value=chosen.id;
+ $("uploadCategory").value=chosen.category_id;
+ resetNovel();syncButtons();
+ uploadMsg("已填入《"+chosen.title+"》的书籍信息。选择修订稿并预览，然后点击“替换当前未发布草稿”。");
+});
+button("reviseNovel",async()=>{
+ if(!chosen||chosen.status!=="draft"||!pendingNovel||
+  pendingNovel.book?.id!==chosen.id||pendingNovel.book?.title!==chosen.title)
+  throw Error("修订稿编号/书名必须与当前选中的未发布草稿一致");
+ if(!readiness?.contentFingerprint)throw Error("无法取得草稿版本，请重新选择书籍");
+ if(!window.confirm("确认用刚才预览的文件更新《"+chosen.title+
+  "》的未发布正文和词卡？系统将保留书籍编号、用户购买权益与已有学习记录；原版本审核会失效。"))return;
+ const changed=await api("/api/ops/import/revise","POST",{
+  package:pendingNovel,expectedFingerprint:readiness.contentFingerprint,
+  confirmTitle:chosen.title,requestId:requestId()
+ });
+ uploadMsg("已安全更新未发布草稿《"+chosen.title+"》，"+
+  changed.chapters+"章、"+changed.newAnchors+"处词汇标注。请重新审核最新版后再发布。");
+ resetNovel();await loadBooks(chosen.id);
 });
 
 button("connect",verify);button("refresh",()=>loadBooks());button("approve",doApprove);
