@@ -365,90 +365,29 @@ test("S14 invalid new password does not revoke any sessions or overwrite passwor
 });
 
 
-test("S18 paid-category account recovers with a single-use code and rejects old devices",async()=>{
+test("Manual recovery: no self-service code is issued and the old endpoint stays closed",async()=>{
  const db=new LocalD1();
- await db.voucher(codeA,"recovery-a","cet4");
+ await db.voucher(codeA,"manual-recovery","cet4");
  const app=env(db);
  const signup=await worker.fetch(request("/api/auth/register","POST",{
-   username:"recover-owner",password:pass,activationCode:codeA
+   username:"manual-owner",password:pass,activationCode:codeA
  }),app);
  assert.equal(signup.status,201);
- const signed=await signup.json();
- assert.match(signed.recoveryCode,/^[0-9a-f]{8}(?:-[0-9a-f]{8}){7}$/);
- const previousCookie=session(signup);
- const otherDevice=await worker.fetch(request("/api/auth/login","POST",{
-  username:"recover-owner",password:pass
+ assert.equal((await signup.json()).recoveryCode,undefined);
+ assert.equal(db.db.prepare("SELECT COUNT(*) AS n FROM account_recovery").get().n,0);
+ const cookie=session(signup);
+ const denied=await worker.fetch(request("/api/auth/recover","POST",{
+   username:"manual-owner",recoveryCode:"a".repeat(64),newPassword:"new-password-2026"
  }),app);
- assert.equal(otherDevice.status,200);
- const oldSecond=session(otherDevice);
- const records=db.db.prepare("SELECT code_hash FROM account_recovery").all();
- assert.equal(records.length,1);
- assert.ok(!records[0].code_hash.includes(signed.recoveryCode.replaceAll("-","")));
- const wrong=await worker.fetch(request("/api/auth/recover","POST",{
-  username:"recover-owner",recoveryCode:"A".repeat(64),newPassword:"new-recovery-password-2026"
- }),app);
- assert.equal(wrong.status,401);
- assert.equal((await wrong.json()).error,"INVALID_RECOVERY_CREDENTIALS");
- const reset=await worker.fetch(request("/api/auth/recover","POST",{
-  username:"recover-owner",recoveryCode:signed.recoveryCode,
-  newPassword:"new-recovery-password-2026"
- }),app);
- assert.equal(reset.status,200);
- const outcome=await reset.json();
- assert.equal(outcome.oldSessionsRevoked,true);
- assert.notEqual(outcome.recoveryCode,signed.recoveryCode);
- assert.deepEqual(outcome.categories.map(x=>x.slug),["cet4"]);
- const fresh=session(reset);
- assert.equal(db.db.prepare("SELECT COUNT(*) AS n FROM sessions").get().n,1);
- for(const cookie of [previousCookie,oldSecond]){
-  const stale=await worker.fetch(request("/api/auth/me","GET",undefined,cookie),app);
-  assert.equal(stale.status,401);
- }
- assert.equal((await worker.fetch(request("/api/auth/me","GET",undefined,fresh),app)).status,200);
- assert.equal((await worker.fetch(request("/api/chapters/chapter-cet4","GET",undefined,fresh),app)).status,200);
- const replay=await worker.fetch(request("/api/auth/recover","POST",{
-  username:"recover-owner",recoveryCode:signed.recoveryCode,
-  newPassword:"account-stolen-password-2026"
- }),app);
- assert.equal(replay.status,401);
- const oldLogin=await worker.fetch(request("/api/auth/login","POST",{
-  username:"recover-owner",password:pass
- }),app);
- assert.equal(oldLogin.status,401);
- const currentLogin=await worker.fetch(request("/api/auth/login","POST",{
-  username:"recover-owner",password:"new-recovery-password-2026"
- }),app);
- assert.equal(currentLogin.status,200);
- db.db.close();
-});
-
-test("S18 logged-in password change invalidates the former offline recovery credential",async()=>{
- const db=new LocalD1();
- await db.voucher(codeA,"recovery-b","cet4");
- const app=env(db);
- const signup=await worker.fetch(request("/api/auth/register","POST",{
-  username:"recover-rotator",password:pass,activationCode:codeA
- }),app);
- const oldCode=(await signup.json()).recoveryCode;
- const previousCookie=session(signup);
+ assert.equal(denied.status,403);
+ assert.equal((await denied.json()).error,"MANUAL_RECOVERY_REQUIRED");
+ assert.equal((await worker.fetch(request("/api/auth/me","GET",undefined,cookie),app)).status,200);
  const change=await worker.fetch(request("/api/auth/change-password","POST",{
-  currentPassword:pass,newPassword:"after-change-only-password-2026"
- },previousCookie),app);
+   currentPassword:pass,newPassword:"after-change-only-password-2026"
+ },cookie),app);
  assert.equal(change.status,200);
- const changed=await change.json();
- assert.match(changed.recoveryCode,/^[0-9a-f]{8}(?:-[0-9a-f]{8}){7}$/);
- assert.notEqual(changed.recoveryCode,oldCode);
- const failed=await worker.fetch(request("/api/auth/recover","POST",{
-  username:"recover-rotator",recoveryCode:oldCode,
-  newPassword:"BAD_ACTOR_PASSWORD_2026"
- }),app);
- assert.equal(failed.status,401);
- const works=await worker.fetch(request("/api/auth/recover","POST",{
-  username:"recover-rotator",recoveryCode:changed.recoveryCode,
-  newPassword:"legit-final-password-2026"
- }),app);
- assert.equal(works.status,200);
- assert.equal((await works.json()).categories[0].slug,"cet4");
+ assert.equal((await change.json()).recoveryCode,undefined);
+ assert.equal(db.db.prepare("SELECT COUNT(*) AS n FROM account_recovery").get().n,0);
  db.db.close();
 });
 
