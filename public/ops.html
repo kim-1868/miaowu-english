@@ -24,20 +24,17 @@
   </section>
   <section class="panel" aria-label="人工订单发货">
     <div class="panel-heading"><h2>② 人工订单发码</h2><span class="soft">仅限正式环境 · 发布者操作</span></div>
-    <p class="hint">在小红书后台确认订单已收款后，选择已发布商品类别，生成一次性激活码与独立找回凭证。两项会同时写入正式数据库，生成后仅显示一次。</p>
+    <p class="hint">选择商品、输入真实订单号，一键生成对应分类的激活码和找回凭证。使用前请自行在小红书核对订单已付款；凭证仅显示一次。</p>
     <div class="row">
       <label class="stretch" for="saleCategory">商品分类
         <select id="saleCategory" disabled><option value="">请先验证运营身份</option></select></label>
       <label class="stretch" for="saleOrder">小红书订单编号
         <input id="saleOrder" maxlength="64" autocomplete="off" placeholder="输入真实订单编号"></label>
     </div>
+    <p class="hint">仅对小红书中已确认付款的真实订单使用；点击生成后立即写入数据库，同一个订单只能发一次码。</p>
     <div class="row">
-      <label class="checkline"><input type="checkbox" id="salePaid"> 我已在小红书官方订单后台确认实际收款</label>
-      <label class="checkline"><input type="checkbox" id="saleContent"> 我已确认该分类有可以履行的已发布内容</label>
-    </div>
-    <div class="row">
-      <button id="saleStatusButton" class="secondary" type="button" disabled>查询订单是否已发码</button>
-      <button id="saleIssueButton" type="button" disabled>确认并生成一枚激活码</button>
+      <button id="saleIssueButton" type="button" disabled>生成激活码 →</button>
+      <button id="saleStatusButton" class="secondary" type="button" disabled>查询订单状态</button>
     </div>
     <div id="saleStatus" class="status" role="status" aria-live="polite">请先验证运营身份。</div>
     <div id="saleReceipt" hidden>
