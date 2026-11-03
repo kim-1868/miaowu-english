@@ -66,6 +66,7 @@ $("chapterVocabToggle").onclick=()=>{
   $("chapterVocabToggle").textContent=folded?"展开":"收起";
 };
 $("mobileVocabOpen").onclick=()=>{
+  $("readerLayout").classList.remove("chapter-drawer-open");
   $("readerLayout").classList.add("vocab-drawer-open");
   $("mobileVocabOpen").setAttribute("aria-expanded","true");
 };
