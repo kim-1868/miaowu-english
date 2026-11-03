@@ -34,7 +34,7 @@ test("S5 production UI is cloud-first, without public QA notices or manual progr
  }
  assert.match(script,/\/api\/me\/progress/);
  assert.match(script,/\/api\/me\/words/);
- assert.match(markup,/script src="\/echo-cloud\.js"/);
+ assert.ok(markup.includes('src="/echo-cloud.js?v=20261103-v12-review-cover"'));
 });
 test("S5 chapter navigation shows protected chapter first, glossary loads independently",()=>{
  const js=app();
