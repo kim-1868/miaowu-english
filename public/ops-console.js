@@ -185,7 +185,7 @@ let pendingNovel=null;
 const uploadMsg=message=>{$("uploadStatus").textContent=message;};
 function resetNovel(){
  pendingNovel=null;$("importNovel").disabled=true;
- $("uploadReport").hidden=true;
+ $("uploadReport").hidden=true;$("uploadPreview").hidden=true;
 }
 function uploadedTitle(name){
  return name.replace(/\.(json|md|markdown|txt)$/i,"").replace(/[_-]+/g," ").trim();
@@ -207,6 +207,37 @@ function localReport(pkg,external){
  return {chapters,words,anchors,paid:(pkg.chapters||[]).filter(c=>!c.preview).length,
   metadataIncomplete:metadata.map(w=>w.headword),
   warnings,warningsCount:warnings.length,avgPerParagraph:external?.avgPerParagraph??null};
+}
+function previewNovelPackage(pkg){
+ const wrap=$("uploadPreviewSample");wrap.replaceChildren();
+ const cards=new Map((pkg.words||[]).map(w=>[w.id,w]));
+ for(const ch of (pkg.chapters||[]).slice(0,2)){
+  const heading=document.createElement("strong");heading.textContent="第"+ch.number+"章 · "+ch.title;wrap.append(heading);
+  for(const paragraph of (ch.paragraphs||[]).slice(0,3)){
+   const line=document.createElement("p");
+   for(const seg of paragraph.segments||[]){
+    if(!seg.wordId){line.append(document.createTextNode(seg.text||""));continue}
+    const word=cards.get(seg.wordId);
+    const b=document.createElement("button");
+    b.type="button";b.className="secondary";b.style.margin="0 3px";
+    b.style.padding="1px 5px";b.textContent=seg.surface;
+    b.title=(word?.meaningZh||seg.gloss||"")+" · "+(word?.phoneticUs||word?.phoneticUk||"");
+    b.addEventListener("click",()=>{
+     $("uploadPreviewWord").textContent=(word?.headword||seg.surface)+" · "+
+      (word?.phoneticUk||"")+" / "+(word?.phoneticUs||"")+" · "+
+      (word?.meaningZh||seg.gloss||"")+"；"+(word?.exampleEn||"");
+     if("speechSynthesis" in window){
+      speechSynthesis.cancel();
+      const utterance=new SpeechSynthesisUtterance(word?.headword||seg.surface);
+      utterance.lang="en-US";utterance.rate=.85;speechSynthesis.speak(utterance);
+     }
+    });
+    line.append(b);
+   }
+   wrap.append(line);
+  }
+ }
+ $("uploadPreview").hidden=false;
 }
 async function examineNovel(){
  if(!connected())throw Error("请先验证运营身份");
@@ -263,6 +294,7 @@ async function examineNovel(){
  if(report.warningsCount)lines.push("示例提示："+report.warnings.slice(0,12).map(x=>
   "第"+x.chapter+"章"+x.paragraph+"段 "+x.kind+" "+(x.word||"")).join("；"));
  $("uploadReport").hidden=false;$("uploadReport").textContent=lines.join("\n");
+ previewNovelPackage(pkg);
 }
 $("uploadNovel").addEventListener("change",()=>{
  resetNovel();const file=$("uploadNovel").files?.[0];
