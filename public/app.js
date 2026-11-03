@@ -46,12 +46,13 @@
         due?'这些词已经到复习时间。去剧情回声找回故事里的单词吧。':
         '打开记忆藏书票，继续复习你在小说中遇见的单词。';
       area.innerHTML='<div class="reminder-cat" aria-hidden="true">'+
-        '<svg viewBox="0 0 48 48" width="30" height="30" fill="currentColor">'+
-        '<ellipse cx="12" cy="15" rx="4.1" ry="5.6" transform="rotate(-24 12 15)"/>'+
-        '<ellipse cx="23" cy="10" rx="4.1" ry="5.6"/>'+
-        '<ellipse cx="34" cy="15" rx="4.1" ry="5.6" transform="rotate(24 34 15)"/>'+
-        '<ellipse cx="41" cy="25" rx="3.4" ry="4.6" transform="rotate(30 41 25)"/>'+
-        '<path d="M23 23c-6.2 0-9.6 5-13 9.4-2.2 3-1 8.6 3.7 9.1 3.9.5 6.2-2.2 9.3-2.2 3.2 0 5.5 2.7 9.4 2.2 4.7-.5 5.9-6.1 3.7-9.1C32.6 28 29.2 23 23 23Z"/></svg></div>'+
+        '<svg viewBox="0 0 48 48" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">'+
+        '<ellipse cx="11" cy="16" rx="3.3" ry="4.6" transform="rotate(-21 11 16)"/>'+
+        '<ellipse cx="21" cy="10.5" rx="3.1" ry="4.8"/>'+
+        '<ellipse cx="31" cy="12" rx="3.1" ry="4.7" transform="rotate(14 31 12)"/>'+
+        '<ellipse cx="39" cy="20" rx="2.8" ry="4.1" transform="rotate(32 39 20)"/>'+
+        '<path d="M23 22c-5.3 0-9.5 5.2-12.1 10.2-1.7 3.5-.3 8.3 4.7 8.3 3 0 5.3-2 7.4-2s4.4 2 7.4 2c5 0 6.5-4.8 4.7-8.3C33 27.2 28.3 22 23 22Z"/>'+
+        '<path d="M35.5 3v4M33.5 5h4" stroke-width="1.1"/></svg></div>'+
         '<div class="reminder-content"><strong>'+safe(title)+'</strong><small>'+safe(hint)+'</small></div>'+
         '<button class="primary reminder-btn" id="reviewReminderBtn">'+
         (user?'查看记忆藏书票 →':'登录后同步 →')+'</button>';
@@ -383,6 +384,7 @@
       const selected=book.chapters.find(ch=>ch.id===id);
       if(!selected)return;
       const chosen=++cloudChapterSequence;
+      $('readerLayout').classList.remove('chapter-drawer-open','vocab-drawer-open');
       closeModal();
       navigate('reader');
       $('chapterNo').textContent='CHAPTER '+String(selected.chapterNo).padStart(2,'0');
@@ -1149,7 +1151,17 @@
       $('playerState').textContent='朗读中 · 第'+(current+1)+'段';
       window.speechSynthesis.speak(u);
     }
-    document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=openFirstCloudBook;$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{echoMode='cloud';if(activeCloud?.chapterId)window.MiaowuCloudEcho?.useChapter(activeCloud.chapterId);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);applyReadingPrefs()};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);applyReadingPrefs()};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=()=>{rememberSpeechPosition(0);stopReading()};
+    document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=openFirstCloudBook;$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');
+    $('mobileChapterOpen').onclick=()=>{
+      $('readerLayout').classList.remove('vocab-drawer-open');
+      $('readerLayout').classList.add('chapter-drawer-open');
+      $('mobileChapterOpen').setAttribute('aria-expanded','true');
+    };
+    $('mobileChapterClose').onclick=()=>{$('readerLayout').classList.remove('chapter-drawer-open')};
+    $('readerDrawerOverlay').onclick=()=>{
+      $('readerLayout').classList.remove('chapter-drawer-open','vocab-drawer-open');
+      $('mobileChapterOpen').setAttribute('aria-expanded','false');
+    };$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{echoMode='cloud';if(activeCloud?.chapterId)window.MiaowuCloudEcho?.useChapter(activeCloud.chapterId);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);applyReadingPrefs()};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);applyReadingPrefs()};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=()=>{rememberSpeechPosition(0);stopReading()};
     $('playerPrevious').onclick=()=>{if(speaking)seekSpeech(speakIndex-2);else startReading()};
     $('playerNext').onclick=()=>{if(speaking)seekSpeech(speakIndex);else startReading()};
     $('playerSeek').addEventListener('input',e=>{
