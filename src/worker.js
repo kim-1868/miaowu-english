@@ -580,7 +580,8 @@ async function api(req, env) {
   }
   if (path === "/api/auth/register" && req.method === "POST") return register(req, env);
   if (path === "/api/auth/login" && req.method === "POST") return login(req, env);
-  if (path === "/api/auth/recover" && req.method === "POST") return recoverAccount(req,env);
+  // Password recovery is handled by verified staff; the legacy recovery-code endpoint is disabled.
+  if (path === "/api/auth/recover" && req.method === "POST") return reject("MANUAL_RECOVERY_REQUIRED", 403);
   if (path === "/api/auth/logout" && req.method === "POST") return logout(req, env);
   if (path === "/api/auth/change-password" && req.method === "POST") return changePassword(req, env, user);
   if (path === "/api/auth/me" && req.method === "GET") {
