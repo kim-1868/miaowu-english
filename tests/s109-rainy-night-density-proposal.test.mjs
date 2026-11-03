@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {buildHighDensityChapterOneProposal} from "../scripts/rewrite-rainy-night-ch01-density-proposal.mjs";
+import {auditChapterDensity} from "../scripts/audit-cet4-word-density.mjs";
 test("S109 chapter-one revised draft has 36 fully-anchored bilingual paragraphs without production writes",()=>{
  const {chapter,report}=buildHighDensityChapterOneProposal();
  assert.equal(chapter.id,"rns1-ch01");
@@ -12,6 +13,8 @@ test("S109 chapter-one revised draft has 36 fully-anchored bilingual paragraphs 
  assert.equal(report.productionD1Touched,false);
  assert.ok(report.privateReviewRequired);
  console.log("RAINY_NIGHT_CH01_DENSITY_PROPOSAL "+JSON.stringify(report));
+ const sentenceAudit=auditChapterDensity(chapter);
+ console.log("RAINY_NIGHT_CH01_SENTENCE_AUDIT "+JSON.stringify({sentences:sentenceAudit.substantialSentences,violations:sentenceAudit.sentenceViolations,overConcentrated:sentenceAudit.overConcentrated,passed:sentenceAudit.passedDensity}));
  for(const p of chapter.paragraphs){
   const text=p.segments.map(s=>s.text??s.surface).join("");
   assert.ok(text.length>30);
