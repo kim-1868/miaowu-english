@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "sourceLabel": "cet4-private-review-package-20261104-unapproved",
+  "sourceLabel": "cet4-2book-ipa-sourced-editorial-recheck-required",
   "book": {
     "id": "s82-ex-husband-business-client",
     "category": "cet4",
@@ -14,8 +14,8 @@
       "headword": "agreement",
       "meaningZh": "协议；约定",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/əˈɡriːmənt/",
+      "phoneticUs": "/əˈɡɹimənt/",
       "exampleEn": "Both teams reached an agreement after the meeting.",
       "exampleZh": "双方团队在会议后达成了协议。",
       "collocations": [
@@ -32,8 +32,8 @@
       "meaningZh": "计算",
       "exampleEn": "She calculated the time difference.",
       "exampleZh": "她计算了时间差。",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈkælkjʊleɪt/",
+      "phoneticUs": "/ˈkæɫkjəˌɫeɪt/",
       "collocations": [
         {
           "en": "calculate the cost",
@@ -44,8 +44,8 @@
     {
       "id": "rns1-choice",
       "headword": "choice",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈtʃɔɪs/",
+      "phoneticUs": "/ˈtʃɔɪs/",
       "partOfSpeech": "n.",
       "meaningZh": "选择",
       "exampleEn": "It was her choice to stay.",
@@ -66,8 +66,8 @@
       "headword": "client",
       "meaningZh": "客户；委托方",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈklaɪənt/",
+      "phoneticUs": "/ˈkɫaɪənt/",
       "exampleEn": "The client asked for a written progress report.",
       "exampleZh": "客户要求提交一份书面进度报告。",
       "collocations": [
@@ -82,8 +82,8 @@
       "headword": "company",
       "meaningZh": "公司",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈkʌmpəni/",
+      "phoneticUs": "/ˈkəmpəˌni/",
       "exampleEn": "The company agreed to review the proposal.",
       "exampleZh": "公司同意重新审核这份提案。",
       "collocations": [
@@ -96,8 +96,8 @@
     {
       "id": "rns1-confirm",
       "headword": "confirm",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/kənˈfɜːm/",
+      "phoneticUs": "/kənˈfɝm/",
       "partOfSpeech": "v.",
       "meaningZh": "确认",
       "exampleEn": "The security footage could confirm when he entered the shop.",
@@ -118,8 +118,8 @@
       "headword": "contract",
       "meaningZh": "合同；契约",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈkɒntrækt/",
+      "phoneticUs": "/ˈkɑnˌtɹækt/",
       "exampleEn": "She read every clause of the contract before signing.",
       "exampleZh": "她签字前阅读了合同的每一项条款。",
       "collocations": [
@@ -134,8 +134,8 @@
       "headword": "customer",
       "meaningZh": "顾客",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈkʌstəmə/",
+      "phoneticUs": "/ˈkəstəmɝ/",
       "exampleEn": "Every customer could return the empty bottle.",
       "exampleZh": "每位顾客都可以归还空瓶。",
       "collocations": [
@@ -152,8 +152,8 @@
       "meaningZh": "日期",
       "exampleEn": "Check the date at the top of the receipt.",
       "exampleZh": "核对收据顶部的日期。",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈdeɪt/",
+      "phoneticUs": "/ˈdeɪt/",
       "collocations": [
         {
           "en": "a delivery date",
@@ -168,8 +168,8 @@
       "meaningZh": "决定",
       "exampleEn": "She made a careful decision.",
       "exampleZh": "她作出了慎重的决定。",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/dɪˈsɪʒən/",
+      "phoneticUs": "/dɪˈsɪʒən/",
       "collocations": [
         {
           "en": "make a decision",
@@ -182,8 +182,8 @@
       "headword": "design",
       "meaningZh": "设计；设计作品",
       "partOfSpeech": "n./v.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/dɪˈzaɪn/",
+      "phoneticUs": "/dɪˈzaɪn/",
       "exampleEn": "Her design made the package easier to recycle.",
       "exampleZh": "她的设计让包装更容易回收。",
       "collocations": [
@@ -196,8 +196,8 @@
     {
       "id": "rns1-document",
       "headword": "document",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈdɒkjʊmənt/",
+      "phoneticUs": "/ˈdɑkjəmɛnt/",
       "partOfSpeech": "n.",
       "meaningZh": "文件；文档",
       "exampleEn": "The document was dated two years earlier.",
@@ -216,8 +216,8 @@
     {
       "id": "rns1-evidence",
       "headword": "evidence",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈevɪdəns/",
+      "phoneticUs": "/ˈɛvədəns/",
       "partOfSpeech": "n.",
       "meaningZh": "证据",
       "exampleEn": "We need evidence, not a guess.",
@@ -240,8 +240,8 @@
       "meaningZh": "解释",
       "exampleEn": "She tried to explain her decision.",
       "exampleZh": "她试着解释自己的决定。",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ɪkˈspleɪn/",
+      "phoneticUs": "/ɪksˈpɫeɪn/",
       "collocations": [
         {
           "en": "explain clearly",
@@ -256,8 +256,8 @@
       "meaningZh": "未来",
       "exampleEn": "For the first time in two years, she could imagine a future with her sister.",
       "exampleZh": "两年来，她第一次能想象和姐姐共度未来的生活。",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈfjuːtʃə/",
+      "phoneticUs": "/ˈfjutʃɝ/",
       "collocations": [
         {
           "en": "in the future",
@@ -268,8 +268,8 @@
     {
       "id": "rns1-identity",
       "headword": "identity",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/aɪˈdentɪti/",
+      "phoneticUs": "/aɪˈdɛntɪˌti/",
       "partOfSpeech": "n.",
       "meaningZh": "身份",
       "exampleEn": "She wanted to know the visitor's identity.",
@@ -290,8 +290,8 @@
       "headword": "information",
       "meaningZh": "信息",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˌɪnfəˈmeɪʃən/",
+      "phoneticUs": "/ˌɪnfɝˈmeɪʃən/",
       "exampleEn": "The report contained important information.",
       "exampleZh": "报告中包含重要信息。",
       "collocations": [
@@ -306,8 +306,8 @@
       "headword": "manager",
       "meaningZh": "经理；负责人",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈmænɪdʒə/",
+      "phoneticUs": "/ˈmænɪdʒɝ/",
       "exampleEn": "The manager asked for another safety test.",
       "exampleZh": "经理要求再进行一次安全测试。",
       "collocations": [
@@ -322,8 +322,8 @@
       "headword": "market",
       "meaningZh": "市场",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈmɑːkɪt/",
+      "phoneticUs": "/ˈmɑɹkɪt/",
       "exampleEn": "The product entered the market in autumn.",
       "exampleZh": "这款产品于秋季进入市场。",
       "collocations": [
@@ -338,8 +338,8 @@
       "headword": "meeting",
       "meaningZh": "会议",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈmiːtɪŋ/",
+      "phoneticUs": "/ˈmitɪŋ/",
       "exampleEn": "The meeting began at ten o'clock.",
       "exampleZh": "会议在十点开始。",
       "collocations": [
@@ -354,8 +354,8 @@
       "headword": "message",
       "meaningZh": "消息；信息",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈmesɪdʒ/",
+      "phoneticUs": "/ˈmɛsɪdʒ/",
       "exampleEn": "A new message appeared on her phone.",
       "exampleZh": "她的手机收到一条新消息。",
       "collocations": [
@@ -370,8 +370,8 @@
       "headword": "model",
       "meaningZh": "模型",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈmɒdəl/",
+      "phoneticUs": "/ˈmɑdəɫ/",
       "exampleEn": "The team built a small model before production.",
       "exampleZh": "团队在生产前制作了一个小模型。",
       "collocations": [
@@ -386,8 +386,8 @@
       "headword": "money",
       "meaningZh": "钱；款项",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈmʌni/",
+      "phoneticUs": "/ˈməni/",
       "exampleEn": "The money belonged to the company, not to him.",
       "exampleZh": "这笔钱属于公司，而不是他个人。",
       "collocations": [
@@ -400,8 +400,8 @@
     {
       "id": "rns1-notice",
       "headword": "notice",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈnəʊtɪs/",
+      "phoneticUs": "/ˈnoʊtɪs/",
       "partOfSpeech": "v.",
       "meaningZh": "注意到",
       "exampleEn": "I noticed a letter on the desk.",
@@ -422,8 +422,8 @@
       "headword": "office",
       "meaningZh": "办公室",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈɒfɪs/",
+      "phoneticUs": "/ˈɔfɪs/",
       "exampleEn": "She arrived at the office before everyone else.",
       "exampleZh": "她比其他人都早到办公室。",
       "collocations": [
@@ -440,8 +440,8 @@
       "meaningZh": "选择；选项",
       "exampleEn": "They considered another option.",
       "exampleZh": "他们考虑了另一种选择。",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈɒpʃən/",
+      "phoneticUs": "/ˈɑpʃən/",
       "collocations": [
         {
           "en": "another option",
@@ -454,8 +454,8 @@
       "headword": "partner",
       "meaningZh": "合伙人；伙伴",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈpɑːtnə/",
+      "phoneticUs": "/ˈpɑɹtnɝ/",
       "exampleEn": "Her business partner checked the budget.",
       "exampleZh": "她的生意合伙人核对了预算。",
       "collocations": [
@@ -470,8 +470,8 @@
       "headword": "pen",
       "meaningZh": "钢笔；笔",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈpen/",
+      "phoneticUs": "/ˈpɛn/",
       "exampleEn": "She signed the final page with a black pen.",
       "exampleZh": "她用一支黑色钢笔签署了最后一页。",
       "collocations": [
@@ -486,8 +486,8 @@
       "headword": "phone",
       "meaningZh": "手机；电话",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈfəʊn/",
+      "phoneticUs": "/ˈfoʊn/",
       "exampleEn": "Her phone rang during the meeting.",
       "exampleZh": "她的手机在会议期间响了。",
       "collocations": [
@@ -502,8 +502,8 @@
       "headword": "picture",
       "meaningZh": "图片",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈpɪktʃə/",
+      "phoneticUs": "/ˈpɪktʃɝ/",
       "exampleEn": "She sent a picture of the completed project.",
       "exampleZh": "她发了一张已完成项目的照片。",
       "collocations": [
@@ -518,8 +518,8 @@
       "headword": "plan",
       "meaningZh": "计划；方案",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈplæn/",
+      "phoneticUs": "/ˈpɫæn/",
       "exampleEn": "They prepared a new plan for the project.",
       "exampleZh": "他们为这个项目准备了新计划。",
       "collocations": [
@@ -534,8 +534,8 @@
       "headword": "price",
       "meaningZh": "价格",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈpraɪs/",
+      "phoneticUs": "/ˈpɹaɪs/",
       "exampleEn": "The new material increased the price.",
       "exampleZh": "新材料提高了价格。",
       "collocations": [
@@ -550,8 +550,8 @@
       "headword": "problem",
       "meaningZh": "问题",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈprɒbləm/",
+      "phoneticUs": "/ˈpɹɑbɫəm/",
       "exampleEn": "They found a problem with the first sample.",
       "exampleZh": "他们发现第一份样品存在问题。",
       "collocations": [
@@ -566,8 +566,8 @@
       "headword": "project",
       "meaningZh": "项目",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈprɒdʒekt/",
+      "phoneticUs": "/ˈpɹɑdʒɛkt/",
       "exampleEn": "The project required two more weeks.",
       "exampleZh": "这个项目还需要两周时间。",
       "collocations": [
@@ -584,8 +584,8 @@
       "meaningZh": "承诺",
       "exampleEn": "She kept her promise to her sister.",
       "exampleZh": "她信守了对姐姐的承诺。",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈprɒmɪs/",
+      "phoneticUs": "/ˈpɹɑməs/",
       "collocations": [
         {
           "en": "make a promise",
@@ -596,8 +596,8 @@
     {
       "id": "rns1-record",
       "headword": "record",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈrekɔːd/",
+      "phoneticUs": "/ˈɹɛkɝd/",
       "partOfSpeech": "n.",
       "meaningZh": "记录",
       "exampleEn": "The old record showed a different name.",
@@ -620,8 +620,8 @@
       "meaningZh": "遗憾；后悔",
       "exampleEn": "She regretted her angry words.",
       "exampleZh": "她后悔自己说过的气话。",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/rɪˈɡret/",
+      "phoneticUs": "/ɹəˈɡɹɛt/",
       "collocations": [
         {
           "en": "feel regret",
@@ -634,8 +634,8 @@
       "headword": "report",
       "meaningZh": "报告",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/rɪˈpɔːt/",
+      "phoneticUs": "/ɹɪˈpɔɹt/",
       "exampleEn": "The engineer submitted a report on the test.",
       "exampleZh": "工程师提交了一份测试报告。",
       "collocations": [
@@ -652,8 +652,8 @@
       "meaningZh": "请求；申请",
       "exampleEn": "She submitted a written request.",
       "exampleZh": "她提交了一份书面申请。",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/rɪˈkwest/",
+      "phoneticUs": "/ɹɪˈkwɛst/",
       "collocations": [
         {
           "en": "submit a request",
@@ -664,8 +664,8 @@
     {
       "id": "rns1-respond",
       "headword": "respond",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/rɪˈspɒnd/",
+      "phoneticUs": "/ɹɪˈspɑnd/",
       "partOfSpeech": "v.",
       "meaningZh": "回应；回答",
       "exampleEn": "He refused to respond to her question.",
@@ -686,8 +686,8 @@
       "headword": "result",
       "meaningZh": "结果",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/rɪˈzʌlt/",
+      "phoneticUs": "/ɹɪˈzəɫt/",
       "exampleEn": "The final result surprised the judges.",
       "exampleZh": "最终结果让评委们感到意外。",
       "collocations": [
@@ -700,8 +700,8 @@
     {
       "id": "rns1-risk",
       "headword": "risk",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈrɪsk/",
+      "phoneticUs": "/ˈɹɪsk/",
       "partOfSpeech": "n.",
       "meaningZh": "风险",
       "exampleEn": "She knew the risk of trusting him.",
@@ -724,8 +724,8 @@
       "meaningZh": "时间表",
       "exampleEn": "She checked the maintenance schedule.",
       "exampleZh": "她核对了维护时间表。",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈʃedjuːl/",
+      "phoneticUs": "/ˈskɛdʒuɫ/",
       "collocations": [
         {
           "en": "a daily schedule",
@@ -738,8 +738,8 @@
       "headword": "screen",
       "meaningZh": "屏幕",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈskriːn/",
+      "phoneticUs": "/ˈskɹin/",
       "exampleEn": "The results appeared on the large screen.",
       "exampleZh": "结果显示在大屏幕上。",
       "collocations": [
@@ -756,8 +756,8 @@
       "meaningZh": "签名",
       "exampleEn": "The signature was not hers.",
       "exampleZh": "那个签名不是她的。",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈsɪɡnətʃə/",
+      "phoneticUs": "/ˈsɪɡnətʃɝ/",
       "collocations": [
         {
           "en": "handwritten signature",
@@ -770,8 +770,8 @@
       "headword": "structure",
       "meaningZh": "结构",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈstrʌktʃə/",
+      "phoneticUs": "/ˈstɹəktʃɝ/",
       "exampleEn": "The new structure made the package stronger.",
       "exampleZh": "新结构使包装更加结实。",
       "collocations": [
@@ -786,8 +786,8 @@
       "headword": "team",
       "meaningZh": "团队",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈtiːm/",
+      "phoneticUs": "/ˈtim/",
       "exampleEn": "The team discussed the risks together.",
       "exampleZh": "团队一起讨论了风险。",
       "collocations": [
@@ -802,8 +802,8 @@
       "headword": "time",
       "meaningZh": "时间",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈtaɪm/",
+      "phoneticUs": "/ˈtaɪm/",
       "exampleEn": "She needed more time to review the document.",
       "exampleZh": "她需要更多时间审核文件。",
       "collocations": [
@@ -820,8 +820,8 @@
       "meaningZh": "信任",
       "exampleEn": "It was difficult to trust him again.",
       "exampleZh": "再次信任他很困难。",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈtrʌst/",
+      "phoneticUs": "/ˈtɹəst/",
       "collocations": [
         {
           "en": "earn trust",
@@ -1027,15 +1027,15 @@
         {
           "segments": [
             {
-              "text": "苏晚知却打开 "
+              "text": "苏晚知的 "
             },
             {
               "wordId": "s85-candidate-phone",
               "surface": "phone",
-              "gloss": "电话"
+              "gloss": "手机"
             },
             {
-              "text": "，向律师展示了一条 "
+              "text": " 亮起，她向律师展示了一条 "
             },
             {
               "wordId": "s85-candidate-message",
@@ -1118,7 +1118,7 @@
             {
               "wordId": "s85-candidate-phone",
               "surface": "phone",
-              "gloss": "电话"
+              "gloss": "手机"
             },
             {
               "text": "：“我们接到的那个大项目，下周就要开第一次 "
@@ -1199,15 +1199,7 @@
               "gloss": "公司"
             },
             {
-              "text": " 的采购平台，报名采用匿名 "
-            },
-            {
-              "wordId": "s87-candidate-design",
-              "surface": "design",
-              "gloss": "设计"
-            },
-            {
-              "text": " 方案评审。"
+              "text": " 的采购平台，报名采用匿名设计方案评审。"
             }
           ]
         },
@@ -1608,7 +1600,7 @@
             {
               "wordId": "s85-candidate-phone",
               "surface": "phone",
-              "gloss": "电话"
+              "gloss": "手机"
             },
             {
               "text": " 很久，想起婚后那几年，苏晚知总在客厅桌上画 "
@@ -1658,7 +1650,7 @@
               "gloss": "合同"
             },
             {
-              "text": "。合规小组在揭开匿名信息前再次检查，确认关联披露已完整 "
+              "text": "。合规小组在揭开匿名信息前再次检查，确认关联披露的 "
             },
             {
               "wordId": "rns1-record",
@@ -1666,7 +1658,7 @@
               "gloss": "记录"
             },
             {
-              "text": "，没有发现异常干预。"
+              "text": " 已完整保存，没有发现异常干预。"
             }
           ]
         },
@@ -1678,7 +1670,7 @@
             {
               "wordId": "s85-candidate-phone",
               "surface": "phone",
-              "gloss": "电话"
+              "gloss": "手机"
             },
             {
               "text": "，第一句话是：“我想为过去道歉。”她没有立刻 "
@@ -2322,7 +2314,7 @@
               "gloss": "办公室"
             },
             {
-              "text": "，增加了两位年轻的 "
+              "text": "，增加了两位年轻的设计师，新的 "
             },
             {
               "wordId": "s87-candidate-design",
@@ -2330,7 +2322,7 @@
               "gloss": "设计"
             },
             {
-              "text": " 师。墙上挂着所有员工的作品 "
+              "text": " 项目也逐渐多了起来。墙上挂着所有员工的作品 "
             },
             {
               "wordId": "s87-candidate-picture",
@@ -2423,7 +2415,38 @@
         {
           "segments": [
             {
-              "text": "顾氏项目的最后一次 "
+              "text": "顾氏项目收尾前，微光与律师终于核清了她当年的作品授权范围。顾氏同意依据原始创作 "
+            },
+            {
+              "wordId": "rns1-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": " 和委托文件签署补充 "
+            },
+            {
+              "wordId": "s87-candidate-agreement",
+              "surface": "agreement",
+              "gloss": "协议"
+            },
+            {
+              "text": "，明确旧版包装的使用边界；新项目的知识产权则以独立 "
+            },
+            {
+              "wordId": "s85-candidate-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": " 写清。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "最后一次 "
             },
             {
               "wordId": "s87-candidate-meeting",
