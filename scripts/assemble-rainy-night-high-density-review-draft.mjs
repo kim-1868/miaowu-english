@@ -19,6 +19,11 @@ export function buildRainyNightFullDensityReviewDraft(){
  if(draft.chapters.map(c=>c.number).join(",")!=="1,2,3,4,5,6,7,8,9,10,11,12"||
     draft.chapters.some(c=>c.preview)||draft.book.category!=="cet4")
   throw Error("ALL_ENTITLED_CHAPTER_ORDER_OR_SCOPE_DRIFT");
+ for(const ch of draft.chapters)for(const [pi,p] of ch.paragraphs.entries())
+  for(const [si,seg] of p.segments.entries()){
+   if(seg.text!==undefined&&!seg.text.trim())
+    throw Error("EMPTY_SEGMENT_IN_CANDIDATE:chapter="+ch.number+":paragraph="+(pi+1)+":segment="+si);
+  }
  const verified=validatePackage(draft);
  const density=draft.chapters.map(auditChapterDensity);
  const totalHan=density.reduce((n,c)=>n+c.han,0);
