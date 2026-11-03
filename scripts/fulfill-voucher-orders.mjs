@@ -40,6 +40,14 @@ export function makeVoucher(categoryId,pepper){
  const codeHash=createHmac("sha256",pepper).update("code:"+normalized).digest("hex");
  return {activationCode,codeHash};
 }
+export function makeOrderRecoveryKey(pepper){
+ if(typeof pepper!=="string"||pepper.length<32)throw Error("STRONG_PEPPER_REQUIRED");
+ const raw=randomBytes(20).toString("hex").toUpperCase();
+ const recoveryKey="MW-REC-"+(raw.match(/.{8}/g)||[]).join("-");
+ const secretHash=createHmac("sha256",pepper)
+  .update("order-recovery:v1:"+recoveryKey.replaceAll("-","")).digest("hex");
+ return {recoveryKey,secretHash};
+}
 function safeLedger(obj){
  if(!isObject(obj)||obj.version!==1||!Array.isArray(obj.entries))throw Error("INVALID_FULFILLMENT_LEDGER");
  const seen=new Set();
@@ -88,7 +96,8 @@ export async function fulfillOrders({ordersCsv,pepper,outputDir,categoryRows=loa
   const runId=randomUUID();
   const issued=orders.map(order=>{
    const {activationCode,codeHash}=makeVoucher(order.categoryId,pepper);
-   return {...order,activationCode,codeHash,codeId:randomUUID(),runId};
+   const {recoveryKey,secretHash}=makeOrderRecoveryKey(pepper);
+   return {...order,activationCode,codeHash,recoveryKey,secretHash,codeId:randomUUID(),runId};
   });
   const hashSet=new Set(ledger.entries.map(x=>x.codeHash));
   for(const row of issued){
@@ -105,13 +114,18 @@ export async function fulfillOrders({ordersCsv,pepper,outputDir,categoryRows=loa
   await atomicLedger(ledgerPath,ledger);
   const inventoryName="voucher-inventory-"+runId+".csv";
   const importName="voucher-d1-import-"+runId+".sql";
-  const inventory=[TITLE.replace("payment_confirmed","activation_code"),
-   ...issued.map(x=>[x.orderReference,x.categoryId,x.activationCode].join(","))].join("\n")+"\n";
+  const inventory=["order_reference,category_id,activation_code,recovery_key",
+   ...issued.map(x=>[x.orderReference,x.categoryId,x.activationCode,x.recoveryKey].join(","))].join("\n")+"\n";
   const sql=[
    "-- PRIVATE IMPORT: after manual payment checks, new production D1 schema and UNIQUE order_reference index.",
+   "-- Requires db/production/003_paid_order_recovery.sql on production D1.",
    "-- Never upload this file or the private inventory to GitHub/public Pages.",
-   ...issued.map(x=>"INSERT INTO activation_codes(id,code_hash,category_id,status,order_reference) VALUES ("+
-    [x.codeId,x.codeHash,x.categoryId,"unused",x.orderReference].map(sqlQuoted).join(",")+");")
+   ...issued.flatMap(x=>[
+    "INSERT INTO activation_codes(id,code_hash,category_id,status,order_reference) VALUES ("+
+      [x.codeId,x.codeHash,x.categoryId,"unused",x.orderReference].map(sqlQuoted).join(",")+");",
+    "INSERT INTO order_recovery_credentials(code_id,secret_hash) VALUES ("+
+      [x.codeId,x.secretHash].map(sqlQuoted).join(",")+");"
+   ])
   ].join("\n")+"\n";
   await writePrivate(join(dir,inventoryName),inventory);
   await writePrivate(join(dir,importName),sql);
