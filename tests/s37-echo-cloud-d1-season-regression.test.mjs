@@ -59,7 +59,7 @@ test("S37 real draft never becomes eligible for Echo even with a completed chapt
   assert.equal(stats.data.due,0);
  }finally{h.db.close();}
 });
-test("S37 public preview only permits completed chapter 1, not paid chapter 12",async()=>{
+test("S37 preview chapter review needs only chapter access, while paid chapters still require entitlement",async()=>{
  const h=harness();
  try{
   h.db.prepare("UPDATE books SET status='published' WHERE id=?").run(h.bundle.book.id);
@@ -74,6 +74,33 @@ test("S37 public preview only permits completed chapter 1, not paid chapter 12",
   h.grant();
   const unlocked=await h.action("/api/me/echo/available?scope=chapter&chapterId="+h.last.id);
   assert.ok(unlocked.data.distinctWords>3);
+ }finally{h.db.close();}
+});
+test("S37 chapter review immediately works without progress or bookmarks, gated by category entitlement",async()=>{
+ const h=harness();
+ try{
+  h.db.prepare("UPDATE books SET status='published'").run();
+  h.db.prepare("UPDATE chapters SET published_at=CURRENT_TIMESTAMP").run();
+  // New reader has only opened a chapter: there is no saved progress/bookmark.
+  let immediate=await h.action("/api/me/echo/available?scope=chapter&chapterId="+h.one.id);
+  assert.equal(immediate.status,200);
+  assert.ok(immediate.data.distinctWords>3);
+  assert.equal(h.db.prepare("SELECT COUNT(*) n FROM reading_progress").get().n,0);
+  assert.equal(h.db.prepare("SELECT COUNT(*) n FROM user_words").get().n,0);
+  const paidBefore=await h.action("/api/me/echo/available?scope=chapter&chapterId="+h.last.id);
+  assert.equal(paidBefore.data.distinctWords,0);
+  h.grant();
+  immediate=await h.action("/api/me/echo/available?scope=chapter&chapterId="+h.last.id);
+  assert.ok(immediate.data.distinctWords>3);
+  const word=immediate.data.words[0];
+  const args={wordId:word.word_id,chapterId:word.chapter_id,gameType:"spell",
+    answer:word.headword,hinted:false};
+  const saved=await h.action("/api/me/echo/answer",args);
+  assert.equal(saved.status,200);
+  assert.equal(saved.data.saved,true);
+  assert.equal(h.db.prepare("SELECT COUNT(*) n FROM review_events").get().n,1);
+  const recent=await h.action("/api/me/echo/available?scope=recent");
+  assert.equal(recent.data.distinctWords,0);
  }finally{h.db.close();}
 });
 test("S37 chapter 1 remains reviewable with all twelve chapters completed despite 733 raw annotations and 600-row cap",async()=>{
