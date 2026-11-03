@@ -618,7 +618,7 @@
       const cat=$('categories');
       cat.innerHTML=CATS.map(c=>{
         const art=['cet4','cet6','postgrad','ielts'].includes(c.id)?
-          '<img src="/shelf-'+c.id+'-watercolor.webp?v=20261103-watercolor" class="category-illustration" alt="" aria-hidden="true" width="210" height="165" loading="lazy">':
+          '<img src="/shelf-'+c.id+'.svg?v=20261103-lineart" class="category-illustration" alt="" aria-hidden="true" width="160" height="128" loading="lazy">':
           '<span class="category-icon">'+safe(c.icon)+'</span>';
         return '<button class="category '+(c.id===category?'selected':'')+
           ' available" data-category="'+safe(c.id)+'"><span class="category-en">'+safe(c.en)+
