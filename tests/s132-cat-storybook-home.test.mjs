@@ -42,7 +42,7 @@ test("S132 visual: a unique sleepy cat banner and a cat-shaped bookmark clip are
   assert.ok(image.includes("<svg"));
   assert.doesNotMatch(image,/<script\b|foreignObject|onload=|xlink:href=/i);
  }
- assert.ok(html.includes('src="/cat-reading-window.svg"'));
+ assert.ok(html.includes('src="/cat-reading-window.svg?v=20261103-watercolor"'));
  assert.ok(html.includes('src="/cat-bookmark-clip.svg"'));
  assert.ok(html.includes('class="home-study-card"'));
  assert.ok(css.includes("html[data-theme=\"dark\"] #view-library .story-home-hero"));
