@@ -22,6 +22,32 @@
     </div>
     <div id="status" class="status" role="status" aria-live="polite">请使用独立运营账号验证身份。</div>
   </section>
+  <section class="panel" aria-label="人工订单发货">
+    <div class="panel-heading"><h2>② 人工订单发码</h2><span class="soft">仅限正式环境 · 发布者操作</span></div>
+    <p class="hint">在小红书后台确认订单已收款后，选择已发布商品类别，生成一次性激活码与独立找回凭证。两项会同时写入正式数据库，生成后仅显示一次。</p>
+    <div class="row">
+      <label class="stretch" for="saleCategory">商品分类
+        <select id="saleCategory" disabled><option value="">请先验证运营身份</option></select></label>
+      <label class="stretch" for="saleOrder">小红书订单编号
+        <input id="saleOrder" maxlength="64" autocomplete="off" placeholder="输入真实订单编号"></label>
+    </div>
+    <div class="row">
+      <label class="checkline"><input type="checkbox" id="salePaid"> 我已在小红书官方订单后台确认实际收款</label>
+      <label class="checkline"><input type="checkbox" id="saleContent"> 我已确认该分类有可以履行的已发布内容</label>
+    </div>
+    <div class="row">
+      <button id="saleStatusButton" class="secondary" type="button" disabled>查询订单是否已发码</button>
+      <button id="saleIssueButton" type="button" disabled>确认并生成一枚激活码</button>
+    </div>
+    <div id="saleStatus" class="status" role="status" aria-live="polite">请先验证运营身份。</div>
+    <div id="saleReceipt" hidden>
+      <p class="notice mini"><strong>仅展示一次：</strong>立即复制并私下交付；关闭或刷新页面后无法找回明文。切勿截图公开。</p>
+      <label for="saleDelivery">本笔订单发货内容</label>
+      <textarea id="saleDelivery" readonly rows="9" spellcheck="false"></textarea>
+      <div class="row"><button type="button" class="secondary" id="saleCopy">复制本笔订单发货内容</button>
+        <button type="button" id="saleClear" class="secondary">清除页面中的凭证</button></div>
+    </div>
+  </section>
   <div class="cols">
     <section class="panel"><div class="panel-heading"><h2>② 书籍目录</h2><button id="refresh" class="secondary" disabled>刷新</button></div>
       <p class="hint">仅显示草稿和已发布书籍；不会包含付费正文。</p>
