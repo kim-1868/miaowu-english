@@ -28,7 +28,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node --test tests/s115-rainy-night-ipa-ai-working-copy.test.mjs tests/s116-ipa-review-handoff.test.mjs tests/s113-rainy-night-sentence-review-queue.test.mjs
+          node --test tests/s115-rainy-night-ipa-ai-working-copy.test.mjs tests/s116-ipa-review-handoff.test.mjs tests/s113-rainy-night-sentence-review-queue.test.mjs tests/s117-offline-review-tools.test.mjs
           node scripts/prepare-rainy-night-ipa-ai-working-copy.mjs --write-private
           node scripts/prepare-rainy-night-ipa-review-handoff.mjs private-output/rainy-night-188-IPA-AI-DRAFT-NEEDS-REVIEW.json
           node scripts/assemble-rainy-night-high-density-review-draft.mjs --write-private
