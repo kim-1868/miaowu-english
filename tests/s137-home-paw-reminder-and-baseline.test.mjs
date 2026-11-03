@@ -41,7 +41,7 @@ test("S137 category illustration is minimal monochrome vintage SVG line art",()=
   assert.ok(art.includes('viewBox="0 0 160 128"'));
   assert.ok(art.includes('stroke="#855247"'));
   assert.ok(art.length<900,"should remain an uncluttered sketch: "+slug);
-  assert.doesNotMatch(art,/<script\b|<foreignObject\b|<image\b|data:image|http:\/\//i);
+  assert.doesNotMatch(art,/<script\b|<foreignObject\b|<image\b|data:image|xlink:href=/i);
  }
  assert.match(app,/shelf-'\+c\.id\+'\.svg\?v=20261103-home-v17/);
 });
