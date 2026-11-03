@@ -9,7 +9,7 @@
     Object.keys(WORD_EXTRAS).forEach(k=>Object.assign(WORDS[k],WORD_EXTRAS[k]));
     const CHAPTERS=[{title:'一纸协议',parts:['这只是一个用于测试阅读功能的场景片段，并非正式小说正文。窗外的雨敲打玻璃，客厅里只亮着一盏灯。','她将那份 [[contract]]（合同）轻轻推到桌面中央。对面的男人看上去依旧 [[indifferent]]（冷淡的），仿佛这不过是一次寻常的会面。','“我只想 [[confirm]]（确认）一件事。”她望着他，“这真的是你的决定吗？”','他没有回答。她也没有 [[hesitate]]（犹豫），拿起笔，在最后一页留下自己的 [[signature]]（签名）。','离开前，她发现文件下压着一张旧照片。也许，那会是一份重要的 [[evidence]]（证据）。']},{title:'藏在照片里的名字',parts:['这一章同样是临时交互文案，仅用于体验付费章节解锁与词汇功能。','照片背面的名字让她重新思考自己的 [[identity]]（身份）。那是一段不曾向任何人提起的往事。','律师寄来的邮件提到了股份 [[transfer]]（转让）。事情比她想象的复杂。','她将信纸折好，决定先不 [[reveal]]（透露）真相。某个遥远的 [[promise]]（承诺），仍然留在她的记忆里。','门外的脚步声逐渐 [[approach]]（接近）。她突然明白，每个决定都可能带来新的 [[consequence]]（后果）。']}];
     const QUIZ=[{q:'她把哪一种文件推到桌面中央？',hint:'提示：一份正式的书面约定。',choices:['contract','evidence','identity','promise'],correct:'contract',detail:'contract = 合同；契约。想起桌上的那份协议。'},{q:'她在文件最后一页留下了什么？',hint:'提示：这是签署协议时的一个动作。',choices:['approach','signature','transfer','reveal'],correct:'signature',detail:'signature = 签名。把词义和“落笔签字”的画面连在一起。'},{q:'他看上去冷淡的，哪个英文词更贴近？',hint:'提示：描述人物的态度。',choices:['indifferent','hesitate','confirm','consequence'],correct:'indifferent',detail:'indifferent = 冷淡的；漠不关心的。再次想起故事人物的神情。'}];
-    const $=id=>document.getElementById(id);let view='library',category='cet4',chapter=0,gloss=true,night=(function(){try{return localStorage.getItem('miaowu_theme')==='dark'}catch(e){return false}})(),fontSize=18,wordFilter='all',popWord=null,user=null,grants=new Set(),quizIndex=0,quizScore=0,quizAnswer=null,utterances=[],speakIndex=0,speaking=false,paused=false;
+    const $=id=>document.getElementById(id);let view='library',category='cet4',chapter=0,gloss=true,night=(function(){try{return localStorage.getItem('miaowu_theme')==='dark'}catch(e){return false}})(),fontSize=(()=>{try{return Math.min(25,Math.max(15,Number(localStorage.getItem('miaowu_reader_font'))||18))}catch{return 18}})(),wordFilter='all',popWord=null,user=null,grants=new Set(),quizIndex=0,quizScore=0,quizAnswer=null,utterances=[],speakIndex=0,speaking=false,paused=false;
     const stored=(key)=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch(e){return []}};const saved=new Set(stored('miaowu_demo_words').filter(w=>WORDS[w]));const mastered=new Set(stored('miaowu_demo_mastered').filter(w=>WORDS[w]));
     const safe=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     function applyTheme(){
@@ -106,6 +106,72 @@
     let cloudListSequence=0;
     let activeCloud=null;
     let cloudBooks=[],cloudSaved=new Map(),cloudProgress=[],cloudSessionKey=null,cloudLearningSequence=0;
+    const glossaryCache=new Map();
+    let readingSaveTimer=0,readingLastSave=0,readingSavePending=null;
+    const readingPrefs={
+      tone:(()=>{try{return localStorage.getItem('miaowu_reader_tone')||'paper'}catch{return 'paper'}})(),
+      line:(()=>{try{return localStorage.getItem('miaowu_reader_line')||'2.15'}catch{return '2.15'}})()
+    };
+    function applyReadingPrefs(){
+      const tone=['paper','white','night'].includes(readingPrefs.tone)?readingPrefs.tone:'paper';
+      const line=['1.85','2.15','2.4'].includes(readingPrefs.line)?readingPrefs.line:'2.15';
+      $('readerLayout')?.setAttribute('data-reader-tone',tone);
+      if($('readerTone'))$('readerTone').value=tone;
+      if($('readerLine'))$('readerLine').value=line;
+      $('storyText')?.style.setProperty('line-height',line);
+      $('storyText')?.style.setProperty('font-size',fontSize+'px');
+      try{
+        localStorage.setItem('miaowu_reader_font',String(fontSize));
+        localStorage.setItem('miaowu_reader_tone',tone);
+        localStorage.setItem('miaowu_reader_line',line);
+      }catch{}
+    }
+    function readingFraction(){
+      const content=$('storyText');
+      if(!activeCloud?.chapterId||!content?.offsetHeight)return 0;
+      const start=window.scrollY+content.getBoundingClientRect().top;
+      const viewport=window.scrollY+innerHeight*.45;
+      const fraction=(viewport-start)/Math.max(1,content.offsetHeight-innerHeight*.4);
+      return Math.min(.995,Math.max(.01,fraction));
+    }
+    async function saveReadingProgress({complete=false,quiet=true}={}){
+      if(!user||!activeCloud?.chapterId)return true;
+      const id=activeCloud.chapterId,amount=complete?1:readingFraction();
+      if(!complete&&amount<=.015)return true;
+      try{
+        if(readingSavePending)await readingSavePending;
+        const job=serverRequest('/api/me/progress','POST',{chapterId:id,progress:amount});
+        readingSavePending=job;
+        await job;readingLastSave=Date.now();readingSavePending=null;
+        if(complete){
+          const row=cloudProgress.find(x=>x.chapter_id===id);
+          if(row){row.progress=1;row.completed_at=row.completed_at||new Date().toISOString()}
+          else cloudProgress.unshift({chapter_id:id,book_id:activeCloud.bookId,chapter_no:
+            activeCloud.chapters.find(x=>x.id===id)?.chapterNo||0,progress:1,completed_at:new Date().toISOString()});
+          showCloudProgress(id);updateCloudShelfProgress();
+          await refreshCloudLearning();
+        }
+        return true;
+      }catch(error){
+        readingSavePending=null;
+        if(!quiet)toast('阅读进度未能同步：'+error.message+'；请重试');
+        return false;
+      }
+    }
+    function queuePartialProgress(){
+      if(view!=='reader'||!user||!activeCloud?.chapterId)return;
+      clearTimeout(readingSaveTimer);
+      if(Date.now()-readingLastSave<6000)return;
+      readingSaveTimer=setTimeout(()=>{saveReadingProgress({quiet:true})},900);
+    }
+    window.addEventListener('scroll',queuePartialProgress,{passive:true});
+    window.addEventListener('pagehide',()=>{
+      if(!user||!activeCloud?.chapterId)return;
+      const fraction=readingFraction();if(fraction<=.015)return;
+      try{navigator.sendBeacon('/api/me/progress',new Blob([JSON.stringify({
+        chapterId:activeCloud.chapterId,progress:fraction})],{type:'application/json'}))}catch{}
+    });
+
     let cloudReviewDue=0;
     const cloudDue=()=>cloudReviewDue;
     async function refreshCloudLearning(){
@@ -302,24 +368,17 @@
       $('savedCount').textContent=cloudSaved.size;
       $('readerUnseen').textContent=String(Array.from(activeCloud.words?.keys()||[]).filter(id=>!cloudSaved.has(id)).length);
       $('readerDue').textContent=String(cloudDue());
-      const finish=$('cloudFinishReading');
-      if(finish){finish.hidden=false;finish.disabled=!user;finish.textContent=savedProgress?.completed_at?'✓ 本章已读完（已同步）':'✓ 标记本章读完并同步';}
-    }
-    async function finishCloudChapter(){
-      if(!activeCloud?.chapterId)return;
-      if(!user){showLogin();return}
-      const id=activeCloud.chapterId,button=$('cloudFinishReading');
-      button.disabled=true;
-      try{
-        await serverRequest('/api/me/progress','POST',{chapterId:id,progress:1});
-        await refreshCloudLearning();
-        showCloudProgress(id);toast('阅读进度已保存到你的云端账号');
-      }catch(error){toast(error.message);button.disabled=false}
+      // Completed chapters are automatically recorded when the reader chooses 下一章.
     }
     let cloudChapterSequence=0;
-    async function openCloudChapter(id){
+    async function openCloudChapter(id,{finishPrevious=false}={}){
       if(!activeCloud)return;
+      if(activeCloud.chapterId&&activeCloud.chapterId!==id&&view==='reader'){
+        clearTimeout(readingSaveTimer);
+        if(!(await saveReadingProgress({complete:finishPrevious,quiet:false})))return;
+      }
       const book=activeCloud;
+      stopReading();
       // A chapter-list click must visibly respond before any network request.
       const selected=book.chapters.find(ch=>ch.id===id);
       if(!selected)return;
@@ -330,11 +389,15 @@
       $('chapterTitle').textContent=selected.title;
       $('readerCrumb').textContent=(book.slug||'STORY').toUpperCase()+' / '+book.title;
       $('storyText').innerHTML='<p class="cloud-reader-loading" role="status">正在打开章节，读取云端正文……</p>';
-      $('cloudFinishReading').hidden=true;
       $('nextChapter').disabled=true;
       $('doEcho').disabled=true;
       book.chapterId=null;
       window.MiaowuChapterWords?.openChapter(id);
+      const key=(user?.name||'guest')+'::'+id;
+      const glossaryPromise=glossaryCache.has(key)?
+        Promise.resolve({ok:true,data:glossaryCache.get(key)}):
+        serverRequest('/api/chapters/'+encodeURIComponent(id)+'/words')
+          .then(data=>({ok:true,data}),error=>({ok:false,error}));
       // Always fetch D1, even for previously visited chapters. Never trust
       // local entitlement flags when deciding access to protected text.
       let page;
@@ -371,7 +434,17 @@
       $('chapterTitle').textContent=page.title;
       $('storyText').innerHTML=parts.map(renderD1Paragraph).join('')||'<p>本章内容暂时无法显示，请稍后重试。</p>';
       $('storyText').querySelectorAll('[data-cloud-word]').forEach(btn=>btn.onclick=()=>showCloudWord(btn.dataset.cloudWord));
-      $('storyText').style.fontSize=fontSize+'px';
+      applyReadingPrefs();
+      const savedAt=cloudProgress.find(x=>x.chapter_id===id);
+      if(savedAt?.progress>0.025&&savedAt.progress<1){
+        requestAnimationFrame(()=>{
+          if(activeCloud===book&&book.chapterId===id&&view==='reader'){
+            const body=$('storyText'),top=window.scrollY+body.getBoundingClientRect().top;
+            window.scrollTo({top:top+Math.min(1,Number(savedAt.progress))*Math.max(0,body.offsetHeight-innerHeight*.4),
+              behavior:'instant'});
+          }
+        });
+      }
       $('readerCrumb').textContent=book.slug.toUpperCase()+' / '+book.title;
       const sideHeading=$('chapterList').parentElement.querySelector('h3');
       if(sideHeading)sideHeading.textContent=book.title+' · 目录';
@@ -388,26 +461,27 @@
       $('doEcho').title='练习本章已读单词并同步云端复习记录';
       $('nextChapter').textContent=next?'下一章 →':'返回书架 →';
       $('nextChapter').disabled=false;
-      $('nextChapter').onclick=()=>next?openCloudChapter(next.id):navigate('library');
+      $('nextChapter').onclick=async()=>{
+        if(next)return openCloudChapter(next.id,{finishPrevious:true});
+        if(await saveReadingProgress({complete:true,quiet:false}))navigate('library');
+      };
       const study=$('readerLayout').querySelector('#readerLearningStats');
       if(study)study.hidden=true;
-      try{
-        const glossary=await serverRequest('/api/chapters/'+encodeURIComponent(id)+'/words');
-        if(activeCloud!==book||chosen!==cloudChapterSequence||book.chapterId!==id)return;
-        for(const row of (glossary.words||[])){
+      const glossary=await glossaryPromise;
+      if(activeCloud!==book||chosen!==cloudChapterSequence||book.chapterId!==id)return;
+      if(glossary.ok){
+        if(!glossaryCache.has(key))glossaryCache.set(key,glossary.data);
+        for(const row of (glossary.data.words||[])){
           if(row?.word_id&&!book.words.has(row.word_id))book.words.set(row.word_id,row);
         }
         window.MiaowuChapterWords?.setWords([...book.words.values()]);
         showCloudProgress(id);
-      }catch{
-        if(activeCloud===book&&chosen===cloudChapterSequence&&book.chapterId===id){
-          toast('正文已打开，但词汇详情暂未加载；稍后切换章节可重试');
-        }
+      }else{
+        toast('正文已打开，词汇列表暂未加载，请稍后重新打开章节。');
       }
     }
     function resetDemoReadingUI(){
       activeCloud=null;
-      $('cloudFinishReading').hidden=true;
       const heading=$('chapterList').parentElement.querySelector('h3');
       if(heading)heading.textContent='《玫瑰未落幕》 · 目录';
       const caption=$('chapterList').parentElement.querySelector('.side-caption');
@@ -646,7 +720,7 @@
         activeCloud=null;
         if(view==='reader'){navigate('library');$('storyText').textContent='';}
       }
-      cloudSaved=new Map();cloudProgress=[];cloudSessionKey=user?.name||null;
+      cloudSaved=new Map();cloudProgress=[];glossaryCache.clear();cloudSessionKey=user?.name||null;
       renderLibrary();renderAccount();renderReminder();
       refreshCloudLearning();
       if(view==='echo')renderQuiz();
@@ -998,7 +1072,7 @@
     }
     function speakNext(){if(!speaking)return;if(speakIndex>=utterances.length){stopReading();toast('本章朗读结束');return}const seg=utterances[speakIndex++],u=new SpeechSynthesisUtterance(seg.text);u.lang=seg.lang;u.rate=seg.lang==='en-US'?.86:.94;u.onend=()=>{if(speaking)speakNext()};u.onerror=(e)=>{if(speaking&&e.error!=='interrupted')speakNext()};window.speechSynthesis.speak(u)}
     document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=openFirstCloudBook;$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{if(activeCloud?.chapterId){echoMode='cloud';window.MiaowuCloudEcho?.useChapter(activeCloud.chapterId)}else{echoMode='demo';echoScope='chapter'}navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);$('storyText').style.fontSize=fontSize+'px'};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);$('storyText').style.fontSize=fontSize+'px'};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=stopReading;$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
-    $('cloudFinishReading').onclick=finishCloudChapter;
+    // Cloud reading progress is saved automatically on scroll and chapter navigation.
     window.MiaowuChapterWords?.configure({
       request:serverRequest,refresh:refreshCloudLearning,
       user:()=>!!user,login:showLogin,toast,speak:speakWord,showWord:showCloudWord
