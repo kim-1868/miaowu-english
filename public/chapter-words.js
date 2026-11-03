@@ -66,9 +66,18 @@ $("chapterVocabToggle").onclick=()=>{
   $("chapterVocabToggle").textContent=folded?"展开":"收起";
 };
 $("mobileVocabOpen").onclick=()=>{
-  $("readerLayout").classList.remove("chapter-drawer-open");
-  $("readerLayout").classList.add("vocab-drawer-open");
-  $("mobileVocabOpen").setAttribute("aria-expanded","true");
+  const layout=$("readerLayout");
+  const opening=!layout.classList.contains("vocab-drawer-open");
+  layout.classList.remove("chapter-drawer-open");
+  layout.classList.toggle("vocab-drawer-open",opening);
+  $("mobileChapterOpen").setAttribute("aria-expanded","false");
+  $("mobileVocabOpen").setAttribute("aria-expanded",String(opening));
+  // Keep the study list expanded when requested from the toolbar.
+  if(opening){
+    $("chapterVocabBody").hidden=false;
+    $("chapterVocabToggle").setAttribute("aria-expanded","true");
+    $("chapterVocabToggle").textContent="收起";
+  }
 };
 $("mobileVocabClose").onclick=()=>{
   $("readerLayout").classList.remove("vocab-drawer-open");
