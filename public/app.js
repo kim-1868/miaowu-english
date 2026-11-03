@@ -99,7 +99,7 @@
     function asMeaning(c){return WORDS[c]?`${safe(c)}：${safe(WORDS[c].meaning)}`:safe(c)}
     function reportExamResult(q,ans,hint=false){if(quizAnswer!==null)return;quizAnswer=ans;const ok=ans.toLowerCase().trim()===q.word; if(ok)quizScore++;recordAnswer(q.word,ok,hint);renderQuiz()}
 
-    function navigate(to){if(view==='echo'&&echoMode==='cloud'&&window.MiaowuCloudEcho?.running()){window.MiaowuCloudEcho.leave(to);return}if(view==='echo'&&echoMode==='demo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='reader'&&to!=='reader')stopReading();view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words')renderWords();if(to==='echo')renderQuiz();if(to==='account')renderAccount();$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
+    function navigate(to){if(view==='echo'&&echoMode==='cloud'&&window.MiaowuCloudEcho?.running()){window.MiaowuCloudEcho.leave(to);return}if(view==='echo'&&echoMode==='demo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='reader'&&to!=='reader'){clearTimeout(readingSaveTimer);void saveReadingProgress({quiet:true});stopReading();}view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words')renderWords();if(to==='echo')renderQuiz();if(to==='account')renderAccount();$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
 
     // D1 is the primary reader source. Legacy chapter sample stays unreachable from default book cards.
     // No paid chapter bodies are bundled into app.js or held in a client-side book constant.
@@ -299,8 +299,8 @@
         });
       }catch(error){toast(error.message||'章节目录加载失败');}
     }
-    function renderD1Paragraph(paragraph){
-      if(typeof paragraph==='string')return '<p>'+safe(paragraph)+'</p>';
+    function renderD1Paragraph(paragraph,index){
+      if(typeof paragraph==='string')return '<p data-audio-paragraph="'+index+'">'+safe(paragraph)+'</p>';
       const segments=Array.isArray(paragraph?.segments)?paragraph.segments:[];
       const html=segments.map(segment=>{
         if(typeof segment?.text==='string')return safe(segment.text);
@@ -310,7 +310,7 @@
         }
         return '';
       }).join('');
-      return '<p>'+html+'</p>';
+      return '<p data-audio-paragraph="'+index+'">'+html+'</p>';
     }
     function cloudPlainText(paragraph){
       if(typeof paragraph==='string')return paragraph;
@@ -1036,42 +1036,136 @@
     }
     function formError(s){$('formMessage').innerHTML=`<div class="form-message">${safe(s)}</div>`}
     function explain(){showModal(`<span class="eyebrow">HOW IT WORKS</span><h2 id="modalTitle">一部小说，一段词汇记忆</h2><p>这是一款将阅读、听书、词汇收藏与情节回忆组合在一起的互动阅读器。</p><div class="onboarding" style="padding:15px;margin:12px 0"><h3>01 · 先读故事</h3><p>打开已解锁的章节，点击酒红色英文词查义、听发音。</p><h3>02 · 收下藏书票</h3><p>收藏之后，你可以在「记忆藏书票」里复习。</p><h3>03 · 听见剧情回声</h3><p>可选不同玩法、章节范围，通过选择与拼写练习回忆词汇。</p><h3>04 · 解锁完整书架</h3><p>注册账号后使用一次性分类激活码解锁更多作品，实际开放内容以书架为准。</p></div><button class="primary" id="explainRead" style="width:100%">去书架看看 →</button>`);$('explainRead').onclick=()=>{closeModal();openFirstCloudBook()}}
-    function speakWord(w){if(!('speechSynthesis' in window)){toast('此浏览器暂不支持语音朗读');return}window.speechSynthesis.cancel();speaking=false;$('player').classList.remove('show');let u=new SpeechSynthesisUtterance(w);u.lang='en-US';u.rate=.82;window.speechSynthesis.speak(u)}
-    function stopReading(){if('speechSynthesis' in window)window.speechSynthesis.cancel();speaking=false;paused=false;utterances=[];$('player').classList.remove('show')}
-    function startReading(){
-      if(!('speechSynthesis' in window)){toast('此浏览器暂不支持朗读');return}
-      if(activeCloud&&!activeCloud.chapterId){toast('请先打开一个可阅读的章节');return}
+    // Device TTS remains unchanged. The player now supports paragraph/segment
+    // navigation without pretending that speechSynthesis has audio timestamps.
+    let speechGeneration=0;
+    function speechStorageKey(){
+      return 'miaowu_audio_position_'+(user?.name||'guest')+'_'+
+        (activeCloud?.bookId||'story')+'_'+(activeCloud?.chapterId||'0');
+    }
+    function rememberSpeechPosition(index){
+      try{localStorage.setItem(speechStorageKey(),String(index))}catch{}
+    }
+    function showSpeechPosition(index){
+      const seek=$('playerSeek'),position=$('playerPosition');
+      if(seek){
+        seek.max=Math.max(0,utterances.length-1);
+        seek.value=Math.min(Math.max(0,index),Math.max(0,utterances.length-1));
+      }
+      if(position)position.textContent=Math.min(index+1,utterances.length)+' / '+utterances.length+' 段';
+    }
+    function highlightSpeechParagraph(index){
+      const paras=$('storyText')?.querySelectorAll('[data-audio-paragraph]')||[];
+      paras.forEach(p=>p.classList.toggle('reading-current',
+        Number(p.dataset.audioParagraph)===index));
+    }
+    function speakWord(w){
+      if(!('speechSynthesis' in window)){toast('此浏览器暂不支持语音朗读');return}
       stopReading();
-      const segments=[];
+      const u=new SpeechSynthesisUtterance(w);u.lang='en-US';u.rate=.82;
+      window.speechSynthesis.speak(u);
+    }
+    function stopReading(){
+      speechGeneration++;
+      if('speechSynthesis' in window)window.speechSynthesis.cancel();
+      speaking=false;paused=false;utterances=[];
+      $('player').classList.remove('show');
+      highlightSpeechParagraph(-1);
+    }
+    function buildSpeechSegments(){
+      const items=[];
+      const add=(text,lang,p)=>{
+        if(typeof text!=='string'||!text.trim())return;
+        // Chinese chunks are split at natural sentence stops; inline English
+        // words remain separate to preserve their existing en-US voice.
+        const fragments=lang==='zh-CN'?
+          (text.match(/[^。！？!?]+[。！？!?]?/gu)||[text]):[text];
+        for(const frag of fragments)if(frag.trim())items.push({text:frag,lang,paragraph:p});
+      };
       if(activeCloud?.chapterId&&Array.isArray(activeCloud.rawParagraphs)){
-        // D1 token boundaries preserve the English pronunciation rather than
-        // speaking inline English words with the Chinese synthetic voice.
-        for(const p of activeCloud.rawParagraphs){
-          if(typeof p==='string'){if(p.trim())segments.push({text:p,lang:'zh-CN'});continue}
-          for(const token of p.segments||[]){
-            if(typeof token.text==='string'&&token.text.trim())
-              segments.push({text:token.text,lang:'zh-CN'});
-            else if(typeof token.surface==='string'&&token.surface.trim())
-              segments.push({text:token.surface,lang:'en-US'});
+        activeCloud.rawParagraphs.forEach((paragraph,index)=>{
+          if(typeof paragraph==='string'){add(paragraph,'zh-CN',index);return}
+          for(const token of paragraph.segments||[]){
+            if(typeof token.text==='string')add(token.text,'zh-CN',index);
+            else if(typeof token.surface==='string')add(token.surface,'en-US',index);
           }
-        }
+        });
       }else{
-        for(const line of CHAPTERS[chapter].parts){
+        CHAPTERS[chapter].parts.forEach((line,index)=>{
           const pieces=line.split(/(\[\[[a-z]+\]\]（[^）]+）)/g).filter(Boolean);
           for(const piece of pieces){
             const match=piece.match(/^\[\[([a-z]+)\]\]（[^）]+）$/);
-            segments.push({text:match?match[1]:piece,lang:match?'en-US':'zh-CN'});
+            add(match?match[1]:piece,match?'en-US':'zh-CN',index);
           }
-        }
+        });
       }
-      if(!segments.length){toast('本章没有可朗读的内容');return}
-      utterances=segments;speakIndex=0;speaking=true;paused=false;
-      $('player').classList.add('show');
-      $('playerState').textContent='章节正文朗读 · 中文与英文分段发音';
-      $('playerPause').textContent='Ⅱ';speakNext();
+      return items;
     }
-    function speakNext(){if(!speaking)return;if(speakIndex>=utterances.length){stopReading();toast('本章朗读结束');return}const seg=utterances[speakIndex++],u=new SpeechSynthesisUtterance(seg.text);u.lang=seg.lang;u.rate=seg.lang==='en-US'?.86:.94;u.onend=()=>{if(speaking)speakNext()};u.onerror=(e)=>{if(speaking&&e.error!=='interrupted')speakNext()};window.speechSynthesis.speak(u)}
-    document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=openFirstCloudBook;$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{if(activeCloud?.chapterId){echoMode='cloud';window.MiaowuCloudEcho?.useChapter(activeCloud.chapterId)}else{echoMode='demo';echoScope='chapter'}navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);$('storyText').style.fontSize=fontSize+'px'};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);$('storyText').style.fontSize=fontSize+'px'};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=stopReading;$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
+    function seekSpeech(index){
+      if(!utterances.length)return;
+      speechGeneration++;
+      window.speechSynthesis.cancel();
+      speaking=true;paused=false;
+      speakIndex=Math.max(0,Math.min(utterances.length-1,Math.floor(index)));
+      $('player').classList.add('show');
+      $('playerPause').textContent='Ⅱ';
+      speakNext();
+    }
+    function startReading(fromParagraph=null){
+      if(!('speechSynthesis' in window)){toast('此浏览器暂不支持朗读');return}
+      if(activeCloud&&!activeCloud.chapterId){toast('请先打开一个可阅读的章节');return}
+      const next=buildSpeechSegments();
+      if(!next.length){toast('本章没有可朗读的内容');return}
+      stopReading();
+      utterances=next;speaking=true;paused=false;
+      let first=0;
+      if(Number.isInteger(fromParagraph)){
+        const target=utterances.findIndex(t=>t.paragraph>=fromParagraph);
+        first=target<0?0:target;
+      }else{
+        try{first=Math.max(0,Math.min(next.length-1,Number(localStorage.getItem(speechStorageKey()))||0))}
+        catch{first=0}
+      }
+      speakIndex=first;
+      $('player').classList.add('show');
+      $('playerPause').textContent='Ⅱ';
+      $('playerState').textContent='朗读中 · 可拖动调整位置';
+      showSpeechPosition(speakIndex);
+      speakNext();
+    }
+    function speakNext(){
+      if(!speaking)return;
+      if(speakIndex>=utterances.length){
+        rememberSpeechPosition(0);stopReading();toast('本章朗读结束');return;
+      }
+      const current=speakIndex,seg=utterances[speakIndex++];
+      const gen=speechGeneration,u=new SpeechSynthesisUtterance(seg.text);
+      showSpeechPosition(current);
+      highlightSpeechParagraph(seg.paragraph);
+      rememberSpeechPosition(current);
+      u.lang=seg.lang;u.rate=seg.lang==='en-US'?.86:.94;
+      u.onend=()=>{if(speaking&&gen===speechGeneration)speakNext()};
+      u.onerror=e=>{if(speaking&&gen===speechGeneration&&e.error!=='interrupted')speakNext()};
+      $('playerState').textContent='朗读中 · 第'+(current+1)+'段';
+      window.speechSynthesis.speak(u);
+    }
+    document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=openFirstCloudBook;$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{echoMode='cloud';if(activeCloud?.chapterId)window.MiaowuCloudEcho?.useChapter(activeCloud.chapterId);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);applyReadingPrefs()};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);applyReadingPrefs()};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=()=>{rememberSpeechPosition(0);stopReading()};
+    $('playerPrevious').onclick=()=>{if(speaking)seekSpeech(speakIndex-2);else startReading()};
+    $('playerNext').onclick=()=>{if(speaking)seekSpeech(speakIndex);else startReading()};
+    $('playerSeek').addEventListener('input',e=>{
+      $('playerPosition').textContent=(Number(e.target.value)+1)+' / '+utterances.length+' 段';
+    });
+    $('playerSeek').addEventListener('change',e=>{
+      if(speaking)seekSpeech(Number(e.target.value));
+      else startReading();
+    });
+    $('storyText').addEventListener('click',e=>{
+      if(e.target.closest('button,a,[role=button]'))return;
+      const p=e.target.closest('[data-audio-paragraph]');
+      if(activeCloud?.chapterId&&p)startReading(Number(p.dataset.audioParagraph));
+    });
+    $('readerTone').onchange=e=>{readingPrefs.tone=e.target.value;applyReadingPrefs()};
+    $('readerLine').onchange=e=>{readingPrefs.line=e.target.value;applyReadingPrefs()};$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
     // Cloud reading progress is saved automatically on scroll and chapter navigation.
     window.MiaowuChapterWords?.configure({
       request:serverRequest,refresh:refreshCloudLearning,
@@ -1081,6 +1175,6 @@
       request:serverRequest,refresh:refreshCloudLearning,progress:()=>cloudProgress,
       showModal,closeModal,navigate,toast,speak:speakWord
     });
-    applyTheme();renderLibrary();renderReminder();renderWords();renderQuiz();renderAccount();loadServerSession();refreshCloudCategories();
+    applyTheme();applyReadingPrefs();renderLibrary();renderReminder();renderWords();renderQuiz();renderAccount();loadServerSession();refreshCloudCategories();
   })();
   
