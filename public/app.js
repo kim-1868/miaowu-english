@@ -357,9 +357,40 @@
         '<button id="wordSave" type="button" '+(loading?'disabled':'')+'>'+(current?'✓ 已收藏 · 移除':'♡ 收藏藏书票')+'</button>'+
         '<button id="cloudMaster" type="button" '+(loading?'disabled':'')+'>'+
         (current?.status==='mastered'?'↻ 继续学习':'✓ 标记已掌握')+'</button></div>';
-      $('wordPop').classList.add('on');
-      $('wordBackdrop').classList.add('on');
+      const mobileStudyTray=window.matchMedia('(max-width:700px)').matches;
+      const tray=$('wordPop'),backdrop=$('wordBackdrop');
       document.documentElement.classList.add('study-tray-open');
+      tray.classList.add('on');
+      // Do not create a blocking full-screen overlay on iOS. On older cached
+      // stylesheets the backdrop used to dim the page without a visible card.
+      backdrop.classList.toggle('on',!mobileStudyTray);
+      if(mobileStudyTray){
+        backdrop.style.setProperty('display','none','important');
+        backdrop.style.setProperty('pointer-events','none','important');
+        tray.style.setProperty('position','fixed','important');
+        tray.style.setProperty('display','block','important');
+        tray.style.setProperty('visibility','visible','important');
+        tray.style.setProperty('z-index','2147483000','important');
+        tray.style.setProperty('top','auto','important');
+        tray.style.setProperty('bottom','0','important');
+        tray.style.setProperty('left','0','important');
+        tray.style.setProperty('right','0','important');
+        tray.style.setProperty('width','100%','important');
+        tray.style.setProperty('max-width','100vw','important');
+        tray.style.setProperty('max-height','65dvh','important');
+        tray.style.setProperty('overflow-y','auto','important');
+        tray.style.setProperty('background','var(--paper,#fffdfa)','important');
+        tray.style.setProperty('color','var(--ink,#382b30)','important');
+        tray.style.setProperty('border-radius','20px 20px 0 0','important');
+        tray.style.setProperty('box-shadow','0 -12px 44px rgba(0,0,0,.24)','important');
+        tray.style.setProperty('padding','18px 17px calc(18px + env(safe-area-inset-bottom))','important');
+      }else{
+        backdrop.style.removeProperty('display');
+        backdrop.style.removeProperty('pointer-events');
+        ['position','display','visibility','z-index','top','bottom','left','right',
+          'width','max-width','max-height','overflow-y','background','color',
+          'border-radius','box-shadow','padding'].forEach(prop=>tray.style.removeProperty(prop));
+      }
       $('storyText').querySelectorAll('[data-cloud-word]').forEach(el=>{
         el.classList.toggle('study-word-active',el.dataset.cloudWord===wordId);
       });
@@ -571,7 +602,13 @@
     function openWord(w){if(!WORDS[w])return;popWord=w;touchWord(w);const info=WORDS[w];$('wordPop').innerHTML=`<button class="modal-close" id="wordClose" aria-label="关闭">×</button><div class="eyebrow">MIAOWU · WORD IN STORY</div><h3>${safe(w)}</h3><div class="pron">${safe(info.phonetic)} · ${safe(info.part)}</div><div class="meaning">${safe(info.meaning)}</div><div class="context">故事原句：<br>${safe(info.context)}</div><div class="word-extra"><strong>额外例句</strong><br>${safe(info.example)}<br><span style="color:var(--muted)">${safe(info.translation)}</span></div><div class="word-extra"><strong>常用搭配</strong><br>${info.collocations.map(x=>safe(x[0])+' · '+safe(x[1])).join('<br>')}</div><div class="word-actions"><button id="wordSpeak">♫ 听发音</button><button id="wordSave">${saved.has(w)?'✓ 已收藏':'♡ 收藏藏书票'}</button></div>`;$('wordPop').classList.add('on');$('wordBackdrop').classList.add('on');$('wordClose').onclick=closeWord;$('wordSpeak').onclick=()=>speakWord(w);$('wordSave').onclick=()=>toggleWord(w)}
     function closeWord(){
       ++studyRequestSequence;selectedStudyWordId=null;
-      $('wordPop').classList.remove('on');$('wordBackdrop').classList.remove('on');
+      const tray=$('wordPop'),backdrop=$('wordBackdrop');
+      tray.classList.remove('on');backdrop.classList.remove('on');
+      backdrop.style.removeProperty('display');
+      backdrop.style.removeProperty('pointer-events');
+      ['position','display','visibility','z-index','top','bottom','left','right',
+        'width','max-width','max-height','overflow-y','background','color',
+        'border-radius','box-shadow','padding'].forEach(prop=>tray.style.removeProperty(prop));
       document.documentElement.classList.remove('study-tray-open');
       $('storyText').querySelectorAll('[data-cloud-word]').forEach(el=>el.classList.remove('study-word-active'));
       popWord=null;
