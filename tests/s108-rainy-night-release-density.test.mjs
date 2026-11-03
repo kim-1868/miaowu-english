@@ -13,4 +13,5 @@ test("S108 Rainy Night launch density audit is grounded in the actual imported b
  assert.equal(x.productionD1Touched,false);
  assert.equal(x.publishingAllowed,false);
  assert.equal(x.meetsConfirmedLearningDensity,false,"This draft still needs high-density language revision.");
+ console.log("RAINY_NIGHT_DENSITY_REPORT "+JSON.stringify({totalHan:x.totalHan,totalOccurrences:x.totalOccurrences,paragraphs:x.paragraphs,occurrencesPer100Han:x.occurrencesPer100Han,meanWordsPerParagraph:x.meanWordsPerParagraph,additionalOccurrencesNeeded:x.additionalOccurrencesNeeded,chapterPasses:x.chapterPasses,chapterDetails:x.chapterDetails.map(({number,occurrences,occurrencesPer100Han,averagePerParagraph,additionalOccurrencesNeeded})=>({number,occurrences,occurrencesPer100Han,averagePerParagraph,additionalOccurrencesNeeded}))}));
 });
