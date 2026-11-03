@@ -45,12 +45,25 @@
         <button type="button" id="saleClear" class="secondary">清除页面中的凭证</button></div>
     </div>
   </section>
+  <section class="panel" aria-label="学习商品分类管理">
+    <div class="panel-heading"><h2>③ 分类管理 · 内容与售卖分开</h2><span class="soft">发布者专用 · 数据库实时同步</span></div>
+    <p class="hint">分类先建立，再上传对应小说。新分类默认隐藏，不会显示给读者，也不能销售。只有正式发布内容后，才可单独开放书架和售卖。四级权益不会自动解锁其他分类。</p>
+    <div id="categoryCatalog" class="books"><p class="soft">验证运营身份后显示全部已配置的分类。</p></div>
+    <div class="row">
+      <label class="stretch" for="categoryName">新增分类名称
+        <input id="categoryName" maxlength="40" autocomplete="off" placeholder="例如：高中英语"></label>
+      <label class="stretch" for="categorySlug">分类标识（英文小写）
+        <input id="categorySlug" maxlength="30" autocomplete="off" placeholder="例如：high-school"></label>
+      <button type="button" id="categoryCreateButton" class="secondary" disabled>添加隐藏分类</button>
+    </div>
+    <div id="categoryManageStatus" class="status" role="status" aria-live="polite">创建分类不会自动上架或发码。</div>
+  </section>
   <div class="cols">
-    <section class="panel"><div class="panel-heading"><h2>② 书籍目录</h2><button id="refresh" class="secondary" disabled>刷新</button></div>
+    <section class="panel"><div class="panel-heading"><h2>④ 书籍目录</h2><button id="refresh" class="secondary" disabled>刷新</button></div>
       <p class="hint">仅显示草稿和已发布书籍；不会包含付费正文。</p>
       <div id="books" class="books"><p class="soft">连接后显示书目。</p></div>
     </section>
-    <section class="panel"><h2>③ 操作与审核</h2>
+    <section class="panel"><h2>⑤ 操作与审核</h2>
       <div id="selected" class="book-title">请选择左侧一本书</div>
       <div id="bookSummary" class="hint"></div>
       <div id="draftActions" hidden>
@@ -83,7 +96,7 @@
     </section>
   </div>
   <section class="panel" aria-label="上传新小说">
-    <div class="panel-heading"><h2>④ 上传新小说（保存为草稿）</h2><span class="soft">仅限已验证发布者</span></div>
+    <div class="panel-heading"><h2>⑥ 上传新小说（保存为草稿）</h2><span class="soft">仅限已验证发布者</span></div>
     <p class="hint">支持现有完整书籍 JSON 内容包，或 Markdown/TXT 小说。自动匹配已收录词卡；缺失音标、词义、例句的内容会提示修正。导入不会自动发布，也不会更改用户购买权益。</p>
     <div class="row">
       <label class="stretch" for="uploadNovel">选择小说文件（JSON / Markdown / TXT）
@@ -120,7 +133,7 @@
     </div>
     <p class="hint">单词发音继续使用浏览器语音合成；英美音标、释义和例句须随词卡保存。创建草稿后请在上方完成真实内容审核，再独立确认上架。</p>
   </section>
-  <section class="panel"><h2>⑤ 操作审计</h2><p class="hint">最近最多30条操作；审核和上架动作分别留痕，日志不会记录原始密钥或小说正文。</p>
+  <section class="panel"><h2>⑦ 操作审计</h2><p class="hint">最近最多30条操作；审核和上架动作分别留痕，日志不会记录原始密钥或小说正文。</p>
     <div id="audit" class="audit"><p class="soft">请选择书目查看。</p></div></section>
   <footer>妙屋英语 · 版本受控出版工具 · 正式销售前需完成生产配置、恢复演练及售后政策</footer>
 </main></body></html>
