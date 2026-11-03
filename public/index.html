@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f8f3ec" />
   <title>妙屋英语 · THE STORY & WORD LIBRARY｜故事阅读与词汇记忆</title>
-  <link rel="stylesheet" href="/styles.css?v=20261103-v12-review-cover" />
+  <link rel="stylesheet" href="/styles.css?v=20261103-cat-home-v1" />
 </head>
 <body>
   <div class="app-shell">
@@ -25,10 +25,46 @@
   </div>
   <main class="app-shell">
     <section id="view-library" class="view active">
-      <div class="hero"><div class="hero-copy"><span class="eyebrow">WELCOME TO MIAOWU · THE STORY & WORD LIBRARY</span><h1>让每一次心动，<br><i>都成为词汇的回响。</i></h1><p>读一本舍不得合上的小说，收藏一个不想忘记的单词。<br>在故事里相遇，在情节中记住。</p><div class="hero-actions"><button class="primary" id="heroRead">开启云端阅读 <span aria-hidden="true">→</span></button><button class="secondary-btn" id="heroExplain">查看如何使用</button></div></div><div class="hero-art" aria-hidden="true"><div class="halo"></div><div class="flower-left">❦</div><div class="flower-right">❦</div><div class="hero-book"><span class="mini">THE STORY COLLECTION</span><span class="rose">✦</span><h3>藏在故事里的<br>英语单词</h3><small>READ · FEEL · REMEMBER</small></div><div class="hero-seal">VOL. 01<br>✦</div><div class="hero-strip">Every word has a story.</div></div></div>
+      <div class="hero story-home-hero">
+        <div class="hero-copy">
+          <span class="eyebrow">MIAOWU · YOUR COZY WORD LIBRARY</span>
+          <h1>把故事读下去，<br><i>把喜欢的单词留下来。</i></h1>
+          <p>书香、雨声，还有一点猫咪的陪伴。<br>打开喜欢的故事，在情节里慢慢记住英语。</p>
+          <div id="reviewReminder" class="review-reminder" aria-live="polite"></div>
+          <div class="hero-actions">
+            <button class="secondary-btn" id="heroRead">去故事书架 <span aria-hidden="true">→</span></button>
+            <button class="ghost-btn" id="heroExplain">如何使用妙屋英语</button>
+          </div>
+        </div>
+        <div class="hero-art story-home-art" aria-hidden="true">
+          <img src="/cat-reading-window.svg" alt="" width="1000" height="520" decoding="async">
+        </div>
+      </div>
       <section class="section"><div class="section-heading"><div><span class="eyebrow">CHOOSE YOUR SHELF</span><h2>探索你的故事书架</h2></div><p>一个账号，多个学习分类。购买哪个，就解锁哪个。</p></div>
-      <div id="reviewReminder" class="review-reminder" aria-live="polite"></div><div class="category-row" id="categories"></div>
-      <div class="section-heading shelf-heading"><div><span class="eyebrow" id="selectedCategoryEn">CET-4 COLLECTION</span><h2 id="selectedCategoryTitle">四级核心词 · 故事精选</h2></div><div class="shelf-tabs"><button class="tiny-action" id="openActivation">已有激活码？去兑换 ↗</button></div></div><div id="bookGrid" class="book-grid"></div>
+      <div class="category-row" id="categories"></div>
+      <div class="section-heading shelf-heading"><div><span class="eyebrow" id="selectedCategoryEn">CET-4 COLLECTION</span><h2 id="selectedCategoryTitle">四级核心词 · 故事精选</h2></div><div class="shelf-tabs"><button class="tiny-action" id="openActivation">已有激活码？去兑换 ↗</button></div></div><div class="home-shelf-layout">
+        <div id="bookGrid" class="book-grid"></div>
+        <aside class="home-study-card" aria-label="我的今日学习概览">
+          <img class="cat-bookmark-clip" src="/cat-bookmark-clip.svg" alt="" aria-hidden="true" width="124" height="190">
+          <div class="home-study-card-heading">
+            <span class="eyebrow">A LITTLE LEARNING EVERY DAY</span>
+            <h3>今日学习 <span aria-hidden="true">✧</span></h3>
+          </div>
+          <button class="home-stat-row" type="button" id="homeDueStat">
+            <span>待复习单词</span><strong id="homeDueCount">—</strong><span class="home-stat-arrow" aria-hidden="true">›</span>
+          </button>
+          <button class="home-stat-row" type="button" id="homeMasteredStat">
+            <span>已掌握单词</span><strong id="homeMasteredCount">—</strong><span class="home-stat-arrow" aria-hidden="true">›</span>
+          </button>
+          <button class="home-stat-row" type="button" id="homeSavedStat">
+            <span>已收藏单词</span><strong id="homeSavedCount">—</strong><span class="home-stat-arrow" aria-hidden="true">›</span>
+          </button>
+          <button class="home-stat-row" type="button" id="homeChaptersStat">
+            <span>已读完章节</span><strong id="homeChapterCount">—</strong><span class="home-stat-arrow" aria-hidden="true">›</span>
+          </button>
+          <p class="home-stat-foot" id="homeStudyFoot">登录后同步你的真实学习记录。</p>
+        </aside>
+      </div>
       <div class="feature-row"><div class="feature"><b>01</b><div><h4>听得见的故事</h4><p>正文朗读与英文点词发音，让阅读与听觉相互补充。</p></div></div><div class="feature"><b>02</b><div><h4>收藏情节里的单词</h4><p>收藏音标、例句、常用搭配，也收藏它出现的故事。</p></div></div><div class="feature"><b>03</b><div><h4>剧情回声</h4><p>选择剧情填词、情境选择或拼写找回，用自己的方式复习。</p></div></div></div></section>
     </section>
     <section id="view-reader" class="view"><div class="reader-layout" id="readerLayout"><aside class="sidebar"><div class="side-panel"><button id="mobileChapterClose" type="button" class="mobile-chapter-close" aria-label="关闭目录">×</button><h3>故事目录</h3><div id="chapterList"></div><div class="side-caption" style="margin-top:12px">点击任意已解锁章节继续阅读。</div></div></aside>
@@ -53,6 +89,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="/chapter-words.js"></script>
   <script src="/echo-cloud.js?v=20261103-v12-review-cover"></script>
-  <script src="/app.js?v=20261103-v12-review-cover"></script>
+  <script src="/app.js?v=20261103-cat-home-v1"></script>
 </body>
 </html>
