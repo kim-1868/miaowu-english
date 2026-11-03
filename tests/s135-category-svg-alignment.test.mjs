@@ -13,7 +13,7 @@ test("S135: the four categories use independent, crisp vintage SVG line drawings
   assert.match(svg,/stroke=/);
   assert.doesNotMatch(svg,/data:image\/webp|<image\b|<script\b|<foreignObject\b/);
  }
- assert.ok(app.includes("c.id+'.svg?v=20261103-immersive-v18\""));
+ assert.ok(app.includes("c.id+'.svg?v=20261103-home-v17\""));
  assert.ok(!app.includes("'-watercolor.webp?v=20261103-watercolor'"));
  const build=buildProductionAssets();
  for(const id of ["cet4","cet6","postgrad","ielts"])
