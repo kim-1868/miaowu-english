@@ -248,14 +248,16 @@
           const kind=['one','two','three'][i%3];
           const coverTitle=book.title;
           const coverLabel='STORY COLLECTION';
+          const isRainyNight=book.id==='rainy-night-archives-cet4-v1';
           const badge=has(slug)?'已解锁':'会员专享';
           const action=cloudProgress.some(p=>p.book_id===book.id)?'继续阅读 →':
             has(slug)?'开始阅读 →':'查看会员目录 →';
-          item.innerHTML='<div class="book-cover '+kind+'" aria-label="'+safe(book.title)+'">'+
+          item.innerHTML='<div class="book-cover '+kind+(isRainyNight?' rainy-night-published-cover':'')+'" aria-label="'+safe(book.title)+'">'+
+            (isRainyNight?'<img src="/rainy-night-cover.webp" alt="《雨夜档案》小说封面" class="rainy-night-cover-image" loading="lazy" decoding="async">':'')+
             '<span class="book-tag">'+safe(badge)+'</span>'+
-            '<span class="edition">THE STORY EDITION / '+String(i+1).padStart(2,'0')+'</span>'+
+            (isRainyNight?'':('<span class="edition">THE STORY EDITION / '+String(i+1).padStart(2,'0')+'</span>'+
             '<span class="illustration">'+['❦','♧','✥'][i%3]+'</span>'+
-            '<h3>'+safe(coverTitle)+'</h3><span class="edition-bottom">'+safe(coverLabel)+'</span></div>'+
+            '<h3>'+safe(coverTitle)+'</h3><span class="edition-bottom">'+safe(coverLabel)+'</span>'))+'</div>'+
             '<div class="book-info"><div class="line1"><h3 title="'+safe(book.title)+'">'+safe(book.title)+'</h3>'+
             '<span class="eyebrow">'+String(i+1).padStart(2,'0')+'</span></div>'+
             '<p>'+safe(book.description||'读一本舍不得合上的故事。')+'</p>'+
@@ -629,7 +631,7 @@
     }
     function renderEchoModeSwitch(){
       const area=$('echoModeSwitch');
-      if(area)area.replaceChildren();
+      if(area)area.innerHTML='';
     }
     function renderQuiz(){
       const c=$('quizContainer');
