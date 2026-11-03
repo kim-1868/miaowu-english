@@ -1,8 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 165" fill="none" role="img" aria-label="学习书架插画"><defs><linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff5e4"/><stop offset="1" stop-color="#eed5b7"/></linearGradient><linearGradient id="wine" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9b5349"/><stop offset="1" stop-color="#693b41"/></linearGradient></defs><g stroke="#805243" stroke-width="3" stroke-linejoin="round">
-<circle cx="105" cy="69" r="56" fill="#f2d7ad"/><circle cx="105" cy="69" r="47" fill="#fdf0d9"/>
-<path d="M66 45q16-19 33-12 13 6 18 20-10 12-25 11-1 17-20 20l-6-13Z" fill="#bc9072"/>
-<path d="M125 43q21 3 26 18l-14 12q-19 1-19 23-14 9-19-8l11-18Z" fill="#b68b70"/>
-<path d="M106 22v94M58 70h94M78 28q-17 43-1 83M133 28q17 43 0 83M58 49q47 19 94 0M59 91q46-18 92 0" stroke="#9f7a62" stroke-width="1.8"/>
-<path d="M105 126v14M64 140h82m-41 0v17m-34 0h68" stroke="#7e4f42" stroke-width="5" stroke-linecap="round"/>
-<path d="M152 24q-5-12 5-18m-112 118q-12-4-18 6" stroke="#b89163" stroke-width="2"/>
-</g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 128" role="img" aria-label="雅思：线描复古地球仪" fill="none" stroke="#855247" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="80" cy="53" r="36" fill="#fff2df"/>
+  <path d="M44 53h72M80 17q-20 36 0 72 20-36 0-72M50 37q30 14 60 0m-60 32q30-14 60 0" stroke-width="2"/>
+  <path d="M122 35a45 45 0 0 1-68 54M80 90v16m-21 7h42" stroke-width="3"/>
+  <path d="M58 113h44" stroke-width="4"/>
+</svg>
