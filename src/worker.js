@@ -541,7 +541,7 @@ async function api(req, env) {
   if (path.startsWith("/api/ops/")) {
     if (["POST","PUT","PATCH","DELETE"].includes(req.method) && !checkOrigin(req)) return reject("INVALID_ORIGIN",403);
     if(path==="/api/ops/me")return handleOps(req,env,path);
-    if(path==="/api/ops/import")return handleOpsImport(req,env,path);
+    if(path==="/api/ops/import"||path==="/api/ops/lexicon")return handleOpsImport(req,env,path);
     if(path==="/api/ops/books"||path.endsWith("/withdraw-readiness")||
        path.endsWith("/withdraw")||path.endsWith("/audit"))
       return handleOpsConsole(req,env,path);
