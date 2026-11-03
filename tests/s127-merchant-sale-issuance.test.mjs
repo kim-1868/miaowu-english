@@ -103,3 +103,71 @@ test("merchant issue requires a verified publisher; enforces category content, o
   assert.equal(db.db.prepare("SELECT reset_count FROM order_recovery_credentials").get().reset_count,1);
  }finally{db.close()}
 });
+
+test("S129 admin category catalog is separate from reader shelf and paid entitlements",async()=>{
+ const db=new DB();
+ try{
+  const digest=await digestOpsToken(token,opsPepper);
+  db.db.prepare("INSERT INTO ops_operators(id,display_name,role,environment,key_digest) VALUES (?,?,?,?,?)")
+   .run("merchant-owner","Test Owner","publisher","production",digest);
+  const app=env(db),collection="/api/ops/sales/categories";
+  const before=await (await worker.fetch(req(collection),app)).json();
+  assert.deepEqual(before.categories.slice(0,4).map(x=>x.slug),["cet4","cet6","postgrad","ielts"]);
+  assert.ok(before.categories.find(x=>x.slug==="cet4").issuable);
+  assert.equal(before.categories.find(x=>x.slug==="cet6").status,"preparing");
+  const newCategory={slug:"high-school",title:"高中英语"};
+  assert.equal((await worker.fetch(req(collection+"/create","POST",newCategory,null),app)).status,401);
+  assert.equal((await worker.fetch(req(collection+"/create","POST",{
+    slug:"INVALID SLUG",title:"高中英语"
+  }),app)).status,400);
+  const created=await worker.fetch(req(collection+"/create","POST",newCategory),app);
+  assert.equal(created.status,201);
+  assert.equal((await created.json()).issuable,false);
+  assert.equal((await worker.fetch(req(collection+"/create","POST",newCategory),app)).status,409);
+  let catalog=await (await worker.fetch(req(collection),app)).json();
+  assert.equal(catalog.categories.find(c=>c.slug==="high-school").status,"draft");
+  assert.ok(!(await (await worker.fetch(req("/api/categories","GET",undefined,null),app)).json())
+    .categories.some(c=>c.slug==="high-school"));
+  assert.equal((await worker.fetch(req(collection+"/launch","POST",{slug:"high-school"}),app)).status,409);
+  db.db.exec(`INSERT INTO books(id,category_id,title,status)
+   VALUES('book-high-school','high-school','New private learning product','published');
+   INSERT INTO chapters(id,book_id,chapter_no,title,content_json,is_preview,published_at)
+   VALUES('chapter-high-school','book-high-school',1,'English word story',
+     '{"paragraphs":["PRIVATE_HIGHSCHOOL"]}',0,CURRENT_TIMESTAMP);`);
+  assert.equal((await worker.fetch(req("/api/ops/sales/issue","POST",{
+    orderReference:"HS-20261103-PAID999",categoryId:"high-school",
+    paymentConfirmed:true,contentConfirmed:true
+  }),app)).status,400);
+  const sale={orderReference:"20261103-HS999",categoryId:"high-school",
+   paymentConfirmed:true,contentConfirmed:true};
+  assert.equal((await worker.fetch(req("/api/ops/sales/issue","POST",sale),app)).status,409);
+  catalog=await (await worker.fetch(req(collection),app)).json();
+  assert.equal(catalog.categories.find(c=>c.slug==="high-school").status,"draft");
+  assert.equal(catalog.categories.find(c=>c.slug==="high-school").publishedBooks,1);
+  assert.equal((await worker.fetch(req(collection+"/launch","POST",{slug:"high-school"}),app)).status,200);
+  assert.equal((await worker.fetch(req(collection+"/launch","POST",{slug:"high-school"}),app)).status,409);
+  catalog=await (await worker.fetch(req(collection),app)).json();
+  assert.equal(catalog.categories.find(c=>c.slug==="high-school").status,"on_sale");
+  assert.ok((await (await worker.fetch(req("/api/categories","GET",undefined,null),app)).json())
+    .categories.some(c=>c.slug==="high-school"));
+  const issued=await worker.fetch(req("/api/ops/sales/issue","POST",sale),app);
+  assert.equal(issued.status,201);
+  const voucher=(await issued.json()).activationCode;
+  assert.match(voucher,/MW-HIGH-SCHOOL-/);
+  const signed=await worker.fetch(req("/api/auth/register","POST",{
+    username:"school-student",password,activationCode:voucher
+  },null),app);
+  assert.equal(signed.status,201);
+  assert.deepEqual((await signed.json()).categories.map(c=>c.slug),["high-school"]);
+  const cookie=(signed.headers.get("set-cookie")||"").split(";")[0];
+  assert.equal((await worker.fetch(new Request(origin+"/api/chapters/chapter-high-school",{
+    headers:{Origin:origin,Cookie:cookie}
+  }),app)).status,200);
+  const original=await worker.fetch(new Request(origin+"/api/chapters/ch1",{
+    headers:{Origin:origin,Cookie:cookie}
+  }),app);
+  assert.equal(original.status,403);
+  assert.equal(db.db.prepare("SELECT COUNT(*) AS n FROM ops_audit_events WHERE event_type='category.create'").get().n,1);
+  assert.equal(db.db.prepare("SELECT COUNT(*) AS n FROM ops_audit_events WHERE event_type='category.launch'").get().n,1);
+ }finally{db.close();}
+});
