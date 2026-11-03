@@ -103,7 +103,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 苏晚知打开新的 [[contract]]，认真检查交付范围、预算 [[price]] 和保密约定。她仍然谨慎，却不再用“我是不是不够好”来解释任何 [[problem]]。
 
-顾氏项目的最后一次 [[meeting]] 前，微光与律师终于核清了她当年的作品授权范围。顾氏同意依据原始创作 [[record]] 和委托文件签署补充 [[agreement]]，明确旧版包装的使用边界；新项目的知识产权则以独立 [[contract]] 写清。
+顾氏项目收尾前，微光与律师终于核清了她当年的作品授权范围。顾氏同意依据原始创作 [[record]] 和委托文件签署补充 [[agreement]]，明确旧版包装的使用边界；新项目的知识产权则以独立 [[contract]] 写清。
 
 最后一次 [[meeting]] 上，顾承礼正式向微光 [[team]] 道谢。他没有再提婚姻，只说：“这份 [[design]] 为产品带来了真实的价值。”苏晚知微笑着 [[respond]]：“谢谢认可，希望以后也能按照专业标准合作。”
 
