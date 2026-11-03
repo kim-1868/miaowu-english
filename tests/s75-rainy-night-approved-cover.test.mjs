@@ -25,7 +25,7 @@ test("S75 cover ships in audited production bundle and displays in real shelf an
  assert.ok(built.assets.includes("rainy-night-cover-v2.svg"));
  assert.deepEqual(readFileSync(released),readFileSync(local));
  const app=readFileSync(new URL("../public/app.js",import.meta.url),"utf8");
- assert.match(app,/rainy-night-cover-v2\\.svg/);
+ assert.ok(app.includes("rainy-night-cover-v2.svg"));
  assert.match(app,/cover-d1-/);
  const vector=readFileSync(new URL("../public/rainy-night-cover-v2.svg",import.meta.url),"utf8");
  assert.match(vector,/viewBox="0 0 900 1200"/);
@@ -34,10 +34,10 @@ test("S75 cover ships in audited production bundle and displays in real shelf an
  const css=readFileSync(new URL("../public/styles.css",import.meta.url),"utf8");
  assert.match(css,/rainy-night-published-cover/);
  const html=buildRainyNightPublicSample();
- assert.match(html,/class="hero-cover" src="\\/rainy-night-cover-v2\\.svg"/);
- assert.match(html,/content="\\/rainy-night-cover-v2\\.svg"/);
+ assert.ok(html.includes('class="hero-cover" src="/rainy-night-cover-v2.svg"'));
+ assert.ok(html.includes('content="/rainy-night-cover-v2.svg"'));
  assert.match(html,/四级会员专享/);
- assert.match(html,/rainy-night-cover-v2\\.svg/);
+ assert.ok(html.includes("rainy-night-cover-v2.svg"));
  assert.equal((html.match(/<article id="chapter">/g)||[]).length,0);
  assert.equal((html.match(/<strong lang="en">/g)||[]).length,0);
  const {bundle}=composeRainyNightSeasonDraft();
