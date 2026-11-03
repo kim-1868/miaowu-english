@@ -5,6 +5,7 @@ import { handleEditor } from "./editorial-admin.js";
 import { handleOps } from "./ops-access.js";
 import { handleOpsPublication } from "./ops-publication.js";
 import { handleOpsConsole } from "./ops-console.js";
+import { handleOpsImport } from "./ops-import.js";
 import { handleLearningState } from "./reading-library.js";
 import {handleEcho} from "./echo-cloud.js";
 import {
@@ -540,6 +541,7 @@ async function api(req, env) {
   if (path.startsWith("/api/ops/")) {
     if (["POST","PUT","PATCH","DELETE"].includes(req.method) && !checkOrigin(req)) return reject("INVALID_ORIGIN",403);
     if(path==="/api/ops/me")return handleOps(req,env,path);
+    if(path==="/api/ops/import")return handleOpsImport(req,env,path);
     if(path==="/api/ops/books"||path.endsWith("/withdraw-readiness")||
        path.endsWith("/withdraw")||path.endsWith("/audit"))
       return handleOpsConsole(req,env,path);
