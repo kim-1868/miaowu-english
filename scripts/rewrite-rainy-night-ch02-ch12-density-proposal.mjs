@@ -91,6 +91,53 @@ const RULES=[
  ["误会","[[confuse]]"], // skipped if unnatural; audit required
  ["个人信息","个人 [[detail]]"], // skipped if semantically imprecise via excluded below
 ];
+// Chapter-scoped substantive edits: only exact original phrases may match.
+// Each replacement must preserve surrounding story facts and original anchors.
+const EXTRA={
+ 12:{
+  1:[
+   ["她将书店打扫了一遍","她 [[prepare]] 好书店，先打扫了一遍"],
+   ["又把两只杯子放在同一张桌子上","又把两只杯子放在同一张桌子上，像在守着一个 [[promise]]"]
+  ],
+  2:[
+   ["一个瘦了许多的女人缓缓走近","一个瘦了许多的女人缓缓 [[approach]] 书店门口"],
+   ["她没有立刻说话","她 [[hesitate]] 片刻，没有立刻说话"]
+  ],
+  4:[["褪色的深蓝外套","褪色的、款式依然 [[familiar]] 的深蓝外套"]],
+  6:[["予安看见姐姐仍习惯把杯柄朝左，忽然想起小时候争着用同一只杯子的早晨",
+     "予安 [[notice]] 到姐姐依然把杯柄朝左，这个 [[familiar]] 的小 [[detail]] 让她想起小时候争着用同一只杯子的早晨"]],
+  7:[
+   ["明知记录不对","明知那份 [[record]] 不对"],
+   ["希望通过正式渠道","希望通过 [[official]] 渠道"],
+   ["没有凭据的指责","缺少 [[evidence]] 的指责"]
+  ],
+  8:[
+   ["她以为切断联系就能让妹妹远离压力","她以为不再 [[contact]] 家人，就能让妹妹远离压力"],
+   ["却没有想到沉默会伤害家人","却没有想到沉默这一 [[decision]] 也会伤害家人"],
+   ["她没有要求妹妹立即原谅","她没有要求妹妹立即 [[forgive]]"]
+  ],
+  9:[["没有再用“为了你好”解释所有决定","没有再用“为了你好”来 [[explain]] 过去的每个 [[decision]]"]],
+  11:[
+   ["为自己的失联表达歉意","为自己的失联表达 [[apology]]"],
+   ["却不要求妹妹立即回应","却不要求妹妹立即 [[respond]]"]
+  ],
+  13:[
+   ["重新建立关系不是故事里的一次拥抱","重新建立 [[connection]] 不是故事里的一次拥抱"],
+   ["需要时间兑现的承诺","需要时间兑现的 [[promise]]"]
+  ],
+  28:[
+   ["书店依旧照常迎客","书店依旧保持过去的 [[routine]]，照常迎客"],
+   ["未来不必再把每个疑问变成 [[secret]]","往后的 [[future]] 不必再把每个疑问变成 [[secret]]"]
+  ],
+  29:[
+   ["她开始计划为书店建立一个清晰的借阅登记系统","她开始为书店 [[prepare]] 一套清晰的借阅 [[register]] 系统"],
+   ["让每一次借出和归还都有完整的时间与凭证","让每一次借出和 [[return]] 都留下可以核对的 [[record]] 与凭证"]
+  ],
+  30:[["把故障和维修历史也如实记录","把故障和 [[repair]] 历史也如实记录"]],
+  32:[["明确标记每张纸件的收到时间和归还人","用 [[accurate]] 的 [[record]] 标明每张纸件的收到时间和归还人"]],
+  37:[["背面没有姓名","背面没有能 [[identify]] 持有者的姓名"]]
+ }
+};
 const UNUSABLE=new Set(["problem","confuse"]); // no headword or wrong grammatical usage
 const forbidden=new Set(["个人信息"]);
 const TOKEN=/\[\[([a-z]+)\]\]/g;
@@ -137,11 +184,18 @@ export function buildChapters2to12DensityCandidate(){
  for(const original of candidate.chapters.slice(1)){
   let replacements=0,underfilled=0,sourceMentions=0;
   const paragraphs=original.paragraphs.map((p,pi)=>{
-   const source=packText(p);
+   let source=packText(p);
    const originalWords=(source.match(TOKEN)||[]).length;
+   const added=[];
+   for(const [before,after] of (EXTRA[original.number]?.[pi+1]||[])){
+    const candidate=replaceOnlyPlain(source,before,after);
+    if(candidate===source)throw Error("TARGETED_EDITORIAL_PHRASE_CHANGED_CH"+
+      original.number+"_P"+(pi+1)+": "+before);
+    source=candidate;
+    for(const m of after.matchAll(TOKEN))added.push(m[1]);
+   }
    const counts=new Map();
    for(const m of source.matchAll(TOKEN))counts.set(m[1],(counts.get(m[1])||0)+1);
-   const added=[];
    // Spread word exposures across sentences rather than concentrating all in
    // one introductory clause. The review gate still checks human readability.
    const sentences=source.split(/(?<=[。！？])/u);
