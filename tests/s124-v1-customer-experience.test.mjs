@@ -27,7 +27,7 @@ test("V1 controls are fully wired, with no direct payment or unprotected content
  assert.match(js,/saveReadingProgress\(\{complete:finishPrevious,quiet:false\}\)/);
  assert.match(js,/await saveReadingProgress\(\{complete:true,quiet:false\}\)/);
  assert.match(js,/serverRequest\('\/api\/me\/progress','POST'/);
- assert.match(js,/savedAt\.progress>0\.025/);
+ assert.match(js,/savedAt\\?\\.progress>0\\.025/);
  assert.match(js,/seekSpeech/);
  assert.match(js,/speechGeneration/);
  assert.match(js,/highlightSpeechParagraph/);
