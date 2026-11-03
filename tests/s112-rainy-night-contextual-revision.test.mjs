@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {buildChapters2to12DensityCandidate} from "../scripts/rewrite-rainy-night-ch02-ch12-density-proposal.mjs";
 import {buildRainyNightFullDensityReviewDraft} from "../scripts/assemble-rainy-night-high-density-review-draft.mjs";
-test("S112 contextual chapter 2–4 edits retain paid-only books and no unknown substitutions",()=>{
+test("S112 all 12 chapters reach paragraph density floor, preserve paid-only content and keep review gate",()=>{
  const partial=buildChapters2to12DensityCandidate();
  const {draft,report}=buildRainyNightFullDensityReviewDraft();
  assert.equal(partial.report.unappliedExtraCount,0,"All carefully scoped phrase edits must apply");
@@ -10,8 +10,8 @@ test("S112 contextual chapter 2–4 edits retain paid-only books and no unknown 
  assert.equal(report.chapters,12);
  assert.equal(report.words,188);
  assert.equal(report.originalAnchors,733);
- assert.ok(report.proposalAnchors>=1758);
- assert.ok(report.paragraphsBelowThree<69);
+ assert.ok(report.proposalAnchors>=1892);
+ assert.equal(report.paragraphsBelowThree,0,"Every paragraph must contain at least 3 English exposures before review");
  assert.equal(report.allChaptersEntitled,true);
  assert.equal(report.freePreviewCount,0);
  assert.equal(report.productionD1Touched,false);
