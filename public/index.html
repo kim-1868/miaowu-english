@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f8f3ec" />
   <title>妙屋英语 · THE STORY & WORD LIBRARY｜故事阅读与词汇记忆</title>
-  <link rel="stylesheet" href="/styles.css?v=20261103-ios-fix1" />
+  <link rel="stylesheet" href="/styles.css?v=20261103-v123" />
 </head>
 <body>
   <div class="app-shell">
@@ -32,7 +32,7 @@
       <div class="feature-row"><div class="feature"><b>01</b><div><h4>听得见的故事</h4><p>正文朗读与英文点词发音，让阅读与听觉相互补充。</p></div></div><div class="feature"><b>02</b><div><h4>收藏情节里的单词</h4><p>收藏音标、例句、常用搭配，也收藏它出现的故事。</p></div></div><div class="feature"><b>03</b><div><h4>剧情回声</h4><p>选择剧情填词、情境选择或拼写找回，用自己的方式复习。</p></div></div></div></section>
     </section>
     <section id="view-reader" class="view"><div class="reader-layout" id="readerLayout"><aside class="sidebar"><div class="side-panel"><button id="mobileChapterClose" type="button" class="mobile-chapter-close" aria-label="关闭目录">×</button><h3>故事目录</h3><div id="chapterList"></div><div class="side-caption" style="margin-top:12px">点击任意已解锁章节继续阅读。</div></div></aside>
-    <article class="reading-panel"><div class="read-top"><button class="ghost-btn" id="readerBack" style="padding:0">← 返回书架</button><span class="crumb" id="readerCrumb">故事书架 / 阅读</span><div class="tool-row"><button class="icon-btn mobile-chapter-open" id="mobileChapterOpen" title="章节目录" aria-label="打开章节目录">☷ 目录</button><button class="icon-btn mobile-vocab-open" id="mobileVocabOpen" title="本章词汇" aria-label="展开本章词汇">▤ 词汇</button><button class="icon-btn" id="topRead" title="朗读本章" aria-label="朗读本章">♫</button><button class="icon-btn" id="smallerFont" title="缩小字号" aria-label="缩小字号">A−</button><button class="icon-btn" id="biggerFont" title="放大字号" aria-label="放大字号">A+</button><button class="icon-btn" id="toggleGloss" title="隐藏或显示释义" aria-label="切换释义显示">译</button><button class="icon-btn" id="toggleNight" title="夜间模式" aria-label="切换夜间模式">☾</button></div></div><div class="read-body"><div class="chapter-no" id="chapterNo">CHAPTER 01</div><h2 id="chapterTitle">一纸协议</h2><div class="read-decoration">✦</div><div class="story-text" id="storyText"></div><div class="read-end"><span class="eyebrow">THE END OF THIS CHAPTER</span><p>停在这里，故事暂告一段落。<br>你想立刻追下一章，还是留下来记住几个词？</p><div class="hero-actions" style="justify-content:center"><button class="secondary-btn" id="doEcho">剧情回声 ↗</button><button class="secondary-btn" id="nextChapter">下一章 →</button></div></div></div></article>
+    <article class="reading-panel"><div class="read-top"><button class="ghost-btn" id="readerBack" style="padding:0">← 返回书架</button><span class="crumb" id="readerCrumb">故事书架 / 阅读</span><div class="tool-row"><button class="icon-btn mobile-chapter-open" id="mobileChapterOpen" title="章节目录" aria-label="打开章节目录" aria-expanded="false" aria-controls="chapterList">☷ 目录</button><button class="icon-btn mobile-vocab-open" id="mobileVocabOpen" title="本章词汇" aria-label="展开本章词汇" aria-expanded="false" aria-controls="chapterVocabPanel">▤ 词汇</button><button class="icon-btn" id="topRead" title="朗读本章" aria-label="朗读本章">♫ 朗读</button><button class="icon-btn" id="smallerFont" title="缩小字号" aria-label="缩小字号">A−</button><button class="icon-btn" id="biggerFont" title="放大字号" aria-label="放大字号">A+</button><button class="icon-btn" id="toggleGloss" title="隐藏或显示释义" aria-label="切换释义显示">译</button><button class="icon-btn" id="toggleNight" title="夜间模式" aria-label="切换夜间模式">☾</button></div></div><div class="read-body"><div class="chapter-no" id="chapterNo">CHAPTER 01</div><h2 id="chapterTitle">一纸协议</h2><div class="read-decoration">✦</div><div class="story-text" id="storyText"></div><div class="read-end"><span class="eyebrow">THE END OF THIS CHAPTER</span><p>停在这里，故事暂告一段落。<br>你想立刻追下一章，还是留下来记住几个词？</p><div class="hero-actions" style="justify-content:center"><button class="secondary-btn" id="doEcho">剧情回声 ↗</button><button class="secondary-btn" id="nextChapter">下一章 →</button></div></div></div></article>
     <aside class="sidebar"><div class="side-panel chapter-vocab-panel" id="chapterVocabPanel"><button class="mobile-vocab-close" id="mobileVocabClose" aria-label="收起本章词汇">×</button>
     <div class="chapter-vocab-header"><h3 id="chapterVocabTitle">本章词汇</h3><span class="side-caption" id="chapterVocabCount">0 词</span><button id="chapterVocabToggle" class="chapter-vocab-toggle" type="button" aria-expanded="true" aria-controls="chapterVocabBody">收起</button></div>
     <div id="chapterVocabBody"><p class="side-caption">打开章节后查看全部目标词。</p></div>
@@ -53,6 +53,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="/chapter-words.js"></script>
   <script src="/echo-cloud.js"></script>
-  <script src="/app.js?v=20261103-ios-fix1"></script>
+  <script src="/app.js?v=20261103-v123"></script>
 </body>
 </html>
