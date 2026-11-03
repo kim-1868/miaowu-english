@@ -105,8 +105,10 @@ export async function handleOpsImport(req,env,path){
  if(!env.DB)return err("OPS_NOT_CONFIGURED",503);
  if(path==="/api/ops/lexicon"){
   const category=new URL(req.url).searchParams.get("category")||"cet4";
-  if(!["cet4","cet6","postgrad","ielts"].includes(category))return err("INVALID_CATEGORY",400);
+  if(!/^[a-z][a-z0-9-]{2,29}$/.test(category))return err("INVALID_CATEGORY",400);
   try{
+   const exists=await stmt(env.DB,"SELECT id FROM categories WHERE slug=?",category).first();
+   if(!exists)return err("INVALID_CATEGORY",400);
    const result=await stmt(env.DB,
     "SELECT w.id,w.headword,w.phonetic_uk,w.phonetic_us,w.part_of_speech,"+
     "w.meaning_zh,w.example_en,w.example_zh,w.collocations_json FROM words w "+
