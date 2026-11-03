@@ -9,7 +9,7 @@ test("S115 all 188 IPA suggestions are sourced and explicitly UNAPPROVED",()=>{
  assert.equal(d.productionD1Touched,false);
  assert.equal(d.rows.length,188);
  assert.equal(new Set(d.rows.map(x=>x.wordId)).size,188);
- assert.ok(d.rows.every(x=>x.britishSuggested==="/ˈtɛst/"&&
+ assert.ok(d.rows.every(x=>x.britishSuggested.startsWith("/")&&x.britishSuggested.endsWith("/")&&
    x.americanSuggested.startsWith("/")&&x.textMeaningAndPronunciationApproved===false));
  const m=new Map(d.rows.map(x=>[x.headword,x]));
  assert.equal(m.get("record").americanSuggested,"/ˈɹɛkɝd/");
