@@ -19,6 +19,10 @@ test("S115 all 188 IPA suggestions are sourced and explicitly UNAPPROVED",()=>{
  assert.equal(m.get("separate").americanSuggested,"/ˈsɛpɹət/");
  assert.ok(m.get("separate").needsQualifiedReview);
  assert.ok(m.get("watermark").comparisonNeedsCheck);
+ assert.equal(m.get("record").britishSuggested,"/ˈrekɔːd/");
+ assert.equal(m.get("suspect").britishSuggested,"/səˈspekt/");
+ assert.equal(m.get("separate").britishSuggested,"/ˈsepərət/");
+ assert.equal(m.get("outage").britishSuggested,"/ˈaʊtɪdʒ/");
  assert.ok(d.rows.every(x=>x.britishAllRawCandidates.length>=0));
  console.log("RAINY_NIGHT_IPA_DRAFT_SUMMARY "+JSON.stringify({
   words:d.count,ukGaps:d.ukGaps,requiresReview:d.multipleOrGap,approved:d.humanApproved
