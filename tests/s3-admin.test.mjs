@@ -551,7 +551,7 @@ test("S5 staging QA wordbook fixture enables real cloud word cards without chang
   assert.equal((await call({...env,APP_ENV:"production"},"/api/staging/seed-wordbook-fixture","POST",{})).status,404);
 });
 
-test("S6 cloud Echo derives only completed published chapter words and logs graded review",async()=>{
+test("S6 cloud Echo immediately reviews opened chapters and logs graded answers",async()=>{
   const env=fixture();
   assert.equal((await call(env,"/api/staging/seed-chapter-fixtures","POST",{})).status,200);
   assert.equal((await call(env,"/api/staging/seed-echo-fixture","POST",{})).status,200);
@@ -576,8 +576,9 @@ test("S6 cloud Echo derives only completed published chapter words and logs grad
   const headers={Cookie:"mw_session="+token};
   const route="/api/me/echo/available";
   assert.equal((await call(env,route)).status,401);
-  assert.equal((await call(env,"/api/me/echo/answer","POST",{wordId:"qa-echo-confirm",
-    chapterId:"qa-cet4-echo",gameType:"spell",answer:"confirm",hinted:false},{headers})).status,403);
+  const immediate=await (await call(env,route+"?scope=chapter&chapterId=qa-cet4-echo",
+    "GET",undefined,{headers})).json();
+  assert.equal(immediate.distinctWords,4,"本章练习不要求先完成阅读或收藏单词");
   const empty=await (await call(env,route,"GET",undefined,{headers})).json();
   assert.equal(empty.distinctWords,0);
   assert.equal((await call(env,"/api/me/progress","POST",

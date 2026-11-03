@@ -45,7 +45,7 @@ test("S25 real Cloud Echo has a safe empty state without any invented paid progr
   toast:()=>{},speak:()=>{},showModal:()=>{},closeModal:()=>{},navigate:()=>{}});
  window.MiaowuCloudEcho.render();
  const content=elements.get("quizContainer").innerHTML;
- assert.match(content,/目前还没有已读完的正式云端章节/);
+ assert.match(content,/本章复习请从小说阅读页/);
  assert.match(content,/cloudEchoStart" disabled/);
 });
 test("S25 official Story Echo page exposes one container and no explicit demo switching",()=>{

@@ -20,18 +20,24 @@ test("S75 original approved art is a real WebP binary, not an external or tempor
 test("S75 cover ships in audited production bundle and displays in real shelf and sample hero",()=>{
  const built=buildProductionAssets();
  assert.ok(PRODUCTION_ASSET_ALLOWLIST.includes("rainy-night-cover.webp"));
+ assert.ok(PRODUCTION_ASSET_ALLOWLIST.includes("rainy-night-cover-v2.svg"));
  assert.ok(built.assets.includes("rainy-night-cover.webp"));
+ assert.ok(built.assets.includes("rainy-night-cover-v2.svg"));
  assert.deepEqual(readFileSync(released),readFileSync(local));
  const app=readFileSync(new URL("../public/app.js",import.meta.url),"utf8");
- assert.match(app,/src="\/rainy-night-cover.webp" alt="《雨夜档案》小说封面"/);
+ assert.ok(app.includes("rainy-night-cover-v2.svg"));
+ assert.match(app,/cover-d1-/);
+ const vector=readFileSync(new URL("../public/rainy-night-cover-v2.svg",import.meta.url),"utf8");
+ assert.match(vector,/viewBox="0 0 900 1200"/);
+ assert.match(vector,/雨夜档案/);
  assert.match(app,/isRainyNight=book\.id==='rainy-night-archives-cet4-v1'/);
  const css=readFileSync(new URL("../public/styles.css",import.meta.url),"utf8");
  assert.match(css,/rainy-night-published-cover/);
  const html=buildRainyNightPublicSample();
- assert.match(html,/class="hero-cover" src="\/rainy-night-cover.webp"/);
- assert.match(html,/content="\/rainy-night-cover.webp"/);
+ assert.ok(html.includes('class="hero-cover" src="/rainy-night-cover-v2.svg"'));
+ assert.ok(html.includes('content="/rainy-night-cover-v2.svg"'));
  assert.match(html,/四级会员专享/);
- assert.match(html,/rainy-night-cover.webp/);
+ assert.ok(html.includes("rainy-night-cover-v2.svg"));
  assert.equal((html.match(/<article id="chapter">/g)||[]).length,0);
  assert.equal((html.match(/<strong lang="en">/g)||[]).length,0);
  const {bundle}=composeRainyNightSeasonDraft();

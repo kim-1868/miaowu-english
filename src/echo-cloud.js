@@ -22,6 +22,23 @@ const core=[
 "SELECT 1 FROM entitlements e WHERE e.user_id=p.user_id",
 "AND e.category_id=b.category_id AND e.revoked_at IS NULL))"
 ].join(" ");
+// "本章复习" is immediate practice for the chapter the reader has OPENED.
+// It never depends on bookmarking a word or on completed_at. Long-term
+// scopes continue to require finished chapters and per-account entitlements.
+function chapterCore(){
+ return [
+ "FROM chapters ch",
+ "JOIN books b ON b.id=ch.book_id",
+ "JOIN categories c ON c.id=b.category_id",
+ "JOIN chapter_words cw ON cw.chapter_id=ch.id",
+ "JOIN words w ON w.id=cw.word_id",
+ "WHERE ch.id=? AND b.status='published' AND c.is_visible=1",
+ "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP",
+ "AND (ch.is_preview=1 OR EXISTS(",
+ "SELECT 1 FROM entitlements e WHERE e.user_id=?",
+ "AND e.category_id=b.category_id AND e.revoked_at IS NULL))"
+ ].join(" ");
+}
 async function available(env,user,url){
   const scope=url.searchParams.get("scope")||"recent";
   if(!["chapter","recent","custom","due"].includes(scope))return fail("INVALID_SCOPE");
@@ -36,12 +53,10 @@ async function available(env,user,url){
   // Filter in SQL before LIMIT. A completed 12-chapter book already has 733
   // occurrences: filtering in JS *after* LIMIT silently hid older chapters
   // and older due words, even when their owner had legitimate access.
-  const binds=[user.id];
-  let scoped=core;
+  const binds=scope==="chapter"?[chapterId,user.id]:[user.id];
+  let scoped=scope==="chapter"?chapterCore():core;
   if(scope==="chapter"){
     if(!chapterId)return fail("CHAPTER_REQUIRED");
-    scoped+=" AND ch.id=?";
-    binds.push(chapterId);
   }else if(scope==="custom"){
     if(bookId){scoped+=" AND b.id=?";binds.push(bookId)}
     scoped+=" AND ch.chapter_no BETWEEN ? AND ?";
@@ -55,7 +70,9 @@ async function available(env,user,url){
   const rows=await exec(env,"SELECT ch.id chapter_id,ch.chapter_no,ch.book_id,b.title book_title,"+
     "cw.context_sentence,w.id word_id,w.headword,w.phonetic_uk,w.phonetic_us,"+
     "w.meaning_zh,w.part_of_speech,w.example_en,w.example_zh "+scoped+
-    " ORDER BY p.updated_at DESC,ch.chapter_no DESC,cw.context_anchor ASC LIMIT 600",
+    (scope==="chapter"?
+      " ORDER BY ch.chapter_no DESC,cw.context_anchor ASC LIMIT 600":
+      " ORDER BY p.updated_at DESC,ch.chapter_no DESC,cw.context_anchor ASC LIMIT 600"),
     ...binds).all();
   let data=rows.results||[];
   if(scope==="recent"){
@@ -67,7 +84,7 @@ async function available(env,user,url){
   return reply({scope,words:data,availableGames:data.length>=4?
     ["fill","situation","spell"]:data.length?["spell"]:[],
     distinctWords:data.length,manualOnly:false,
-    note:"仅展示当前账号已读完且有权读取的章节目标词。"});
+    note:scope==="chapter"?"当前已打开章节的目标词可立即练习，无需完成阅读或先收藏。":"仅展示已读完且有权读取的章节目标词。"});
 }
 async function stats(env,user){
   const count=await exec(env,"SELECT COUNT(*) n FROM user_words uw WHERE uw.user_id=? "+
@@ -95,8 +112,8 @@ async function answer(req,env,user){
     typeof data.answer!=="string"||data.answer.length>90||!data.answer.trim()||
     typeof data.hinted!=="boolean")return fail("INVALID_ANSWER");
   const q=await exec(env,"SELECT w.id,w.headword,w.meaning_zh,w.phonetic_uk,w.phonetic_us,"+
-    "cw.context_sentence,ch.id chapter_id "+core+
-    " AND ch.id=? AND w.id=? LIMIT 1",user.id,data.chapterId,data.wordId).first();
+    "cw.context_sentence,ch.id chapter_id "+chapterCore()+
+    " AND w.id=? LIMIT 1",data.chapterId,user.id,data.wordId).first();
   if(!q)return fail("REVIEW_WORD_UNAVAILABLE",403);
   const last=await exec(env,"SELECT created_at FROM review_events "+
     "WHERE user_id=? AND word_id=? AND created_at>datetime('now','-5 seconds') "+

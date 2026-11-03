@@ -6,7 +6,7 @@ export function buildRainyNightPublicSample(){
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="no-referrer">
 <meta name="description" content="妙屋英语《雨夜档案》四级会员专享小说。全部12章需激活四级权益后阅读，不设免费试读。">
-<meta property="og:image" content="/rainy-night-cover.webp">
+<meta property="og:image" content="/rainy-night-cover-v2.svg">
 <title>《雨夜档案》· 四级会员专享｜妙屋英语</title>
 <style>
 :root{color-scheme:light dark}
@@ -22,7 +22,7 @@ footer{max-width:820px;margin:0 auto;padding:10px 30px;color:#7f6c72;font-size:1
 @media(max-width:600px){main{margin-top:4vh;grid-template-columns:1fr;text-align:center}img{max-width:180px;margin:auto}h1{font-size:30px}}
 @media(prefers-color-scheme:dark){body{background:#221f24;color:#f1e8ed}small,footer{color:#c3a3b1}}
 </style></head><body>
-<main><img class="hero-cover" src="/rainy-night-cover.webp" alt="《雨夜档案》原创封面" width="180" height="240">
+<main><img class="hero-cover" src="/rainy-night-cover-v2.svg" alt="《雨夜档案》原创封面" width="180" height="240">
 <section><small>WORDLETTER · CET4 MEMBERS</small><h1>雨夜档案</h1>
 <p>一封深夜来信，让林予安再次追寻姐姐留下的秘密。共12章，全部为四级会员专享内容，不提供免费试读。</p>
 <a href="/">返回四级书架，登录后阅读</a></section></main>
