@@ -4,6 +4,7 @@ import {DatabaseSync} from "node:sqlite";
 import {readFileSync} from "node:fs";
 import worker from "../src/worker.js";
 import {hashCode,normalizeCode} from "../src/security.js";
+import {makeOrderRecoveryKey} from "../scripts/fulfill-voucher-orders.mjs";
 
 // All test data is fabricated, local and discarded after execution.
 // This test does not call Cloudflare, generate real saleable activation
@@ -17,6 +18,7 @@ class LocalD1{
   this.db.exec(readFileSync(new URL("../db/002_s1.sql",import.meta.url),"utf8"));
   this.db.exec(readFileSync(new URL("../db/003_public_categories.sql",import.meta.url),"utf8"));
   this.db.exec(readFileSync(new URL("../db/production/002_account_recovery_codes.sql",import.meta.url),"utf8"));
+  this.db.exec(readFileSync(new URL("../db/production/003_paid_order_recovery.sql",import.meta.url),"utf8"));
   this.db.exec(`
     INSERT INTO books(id,category_id,title,status)
     VALUES ('book-cet4','cet4','Private CET4 QA Fixture','published'),
@@ -415,4 +417,51 @@ test("S18 recovery only in production and requires same-origin proof for state-c
  }),env(db));
  assert.equal(malformed.status,403);
  db.db.close();
+});
+
+test("Paid-order recovery is gated, proves both the order and a unique key, rotates once, preserves learning data",async()=>{
+ const db=new LocalD1();
+ try{
+  await db.voucher(codeA,"order-voucher-1","cet4");
+  const recovery=makeOrderRecoveryKey(pepper);
+  db.db.prepare("UPDATE activation_codes SET order_reference=? WHERE id=?").run("ORD-20261103-PAID001","order-voucher-1");
+  db.db.prepare("INSERT INTO order_recovery_credentials(code_id,secret_hash) VALUES (?,?)")
+   .run("order-voucher-1",recovery.secretHash);
+  const config={...env(db),ORDER_RECOVERY_ENABLED:"true"};
+  const signup=await worker.fetch(request("/api/auth/register","POST",{
+   username:"paid-reader",password:pass,activationCode:codeA
+  }),config);
+  assert.equal(signup.status,201);
+  const originalCookie=session(signup);
+  const id=db.db.prepare("SELECT id FROM users WHERE username=?").get("paid-reader").id;
+  db.db.prepare("INSERT INTO reading_progress(user_id,chapter_id,progress) VALUES (?,?,?)")
+   .run(id,"chapter-cet4",0.4);
+  const post=(body,app=config)=>worker.fetch(request("/api/auth/recover-by-order","POST",body),app);
+  const body={username:"paid-reader",orderReference:"20261103-PAID001",
+   recoveryKey:recovery.recoveryKey,newPassword:"changed-by-order-password-2026"};
+  const disabled=await post(body,env(db));
+  assert.equal(disabled.status,503);
+  const badOrder=await post({...body,orderReference:"20261103-WRONG999"});
+  assert.equal(badOrder.status,401);
+  const badKey=await post({...body,recoveryKey:"MW-REC-"+("0".repeat(40))});
+  assert.equal(badKey.status,401);
+  const badUser=await post({...body,username:"different-user"});
+  assert.equal(badUser.status,401);
+  const unauthorized=await post({...body}, {...config,APP_ENV:"staging"});
+  assert.equal(unauthorized.status,503);
+  const success=await post(body);
+  assert.equal(success.status,200);
+  const result=await success.json();
+  assert.match(result.recoveryKey,/^MW-REC-(?:[0-9A-F]{8}-){4}[0-9A-F]{8}$/);
+  assert.notEqual(result.recoveryKey,recovery.recoveryKey);
+  const newCookie=session(success);
+  assert.equal((await worker.fetch(request("/api/auth/me","GET",undefined,originalCookie),config)).status,401);
+  assert.equal((await worker.fetch(request("/api/auth/me","GET",undefined,newCookie),config)).status,200);
+  assert.equal((await post(body)).status,401);
+  assert.equal((await post({...body,recoveryKey:result.recoveryKey,newPassword:"another-new-password-2026"})).status,200);
+  assert.equal(db.codeState("order-voucher-1").status,"redeemed");
+  assert.equal(db.db.prepare("SELECT COUNT(*) AS n FROM entitlements WHERE user_id=? AND revoked_at IS NULL").get(id).n,1);
+  assert.equal(db.db.prepare("SELECT progress FROM reading_progress WHERE user_id=? AND chapter_id=?").get(id,"chapter-cet4").progress,0.4);
+  assert.equal(db.db.prepare("SELECT reset_count FROM order_recovery_credentials WHERE code_id=?").get("order-voucher-1").reset_count,2);
+ }finally{db.db.close();}
 });
