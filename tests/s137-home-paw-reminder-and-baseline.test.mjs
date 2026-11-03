@@ -5,7 +5,7 @@ const read=p=>readFileSync(new URL("../public/"+p,import.meta.url),"utf8");
 const html=read("index.html"),app=read("app.js"),css=read("styles.css");
 
 test("S137 dynamic cat reminder appears after banner and before shelf, never inside the hero",()=>{
- const start=html.indexOf('<div class="hero story-home-hero">');
+ const start=html.indexOf('<div class="hero story-home-hero" id="miaowuHomeScene">');
  const after=html.indexOf('<aside class="home-reminder-strip"');
  const end=html.indexOf('<section class="section">',start);
  const reminder=html.indexOf('id="reviewReminder"');
@@ -43,12 +43,12 @@ test("S137 category illustration is minimal monochrome vintage SVG line art",()=
   assert.ok(art.length<900,"should remain an uncluttered sketch: "+slug);
   assert.doesNotMatch(art,/<script\b|<foreignObject\b|<image\b|data:image|xlink:href=/i);
  }
- assert.match(app,/shelf-'\+c\.id\+'\.svg\?v=20261103-home-v17/);
+ assert.match(app,/shelf-'\+c\.id\+'\.svg\?v=20261103-immersive-v18/);
 });
 
 test("S137 v17 CSS/JS use cache-busted assets without affecting reader or ops",()=>{
- assert.ok(html.includes('href="/styles.css?v=20261103-home-v17"'));
- assert.ok(html.includes('src="/app.js?v=20261103-home-v17"'));
+ assert.ok(html.includes('href="/styles.css?v=20261103-immersive-v18"'));
+ assert.ok(html.includes('src="/app.js?v=20261103-immersive-v18"'));
  assert.ok(html.includes('id="view-reader"'));
  assert.ok(html.includes('id="view-echo"'));
  assert.ok(html.includes('id="bookGrid"'));
