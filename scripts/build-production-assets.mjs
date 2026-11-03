@@ -13,7 +13,7 @@ export const PRODUCTION_ASSET_ALLOWLIST=Object.freeze([
  "live.html","live-reader.js","live-reader.css",
  "ops.html","ops-console.js","ops-console.css","novel-file-parser.js","rainy-night.html",
  "rainy-night-cover.webp","rainy-night-cover-v2.svg",
- "cat-reading-window.svg","cat-reading-watercolor.webp","cat-bookmark-clip.svg",
+ "cat-reading-window.svg","cat-reading-watercolor.webp","cat-reading-hd.avif","cat-bookmark-clip.svg",
  "shelf-cet4.svg","shelf-cet6.svg","shelf-postgrad.svg","shelf-ielts.svg",
  "shelf-cet4-watercolor.webp","shelf-cet6-watercolor.webp",
  "shelf-postgrad-watercolor.webp","shelf-ielts-watercolor.webp",

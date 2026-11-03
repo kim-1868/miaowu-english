@@ -5,7 +5,7 @@ const read=path=>readFileSync(new URL(path,import.meta.url),"utf8");
 test("V1.3 reminder keeps up-to-date Echo copy and approved filled cat paw icon",()=>{
  const app=read("../public/app.js");
  assert.match(app,/reminder-cat/);
- assert.match(app,/class="solid-cat-paw" viewBox="0 0 64 64"/);
+ assert.match(app,/class="solid-cat-paw" viewBox="0 0 80 80"/);
  assert.match(app,/今天有 '\+due\+' 个单词等你复习/);
  assert.match(app,/去剧情回声找回故事里的单词/);
  assert.match(app,/fill="currentColor"/);
