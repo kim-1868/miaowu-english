@@ -20,7 +20,7 @@ test("V1 customer UI is no longer a demo site and no unfinished reading notes ar
 test("V1 controls are fully wired, with no direct payment or unprotected content requests",()=>{
  assert.doesNotThrow(()=>new Script(js,{filename:"app.js"}));
  assert.doesNotThrow(()=>new Script(words,{filename:"chapter-words.js"}));
- for(const key of ["readerLine","playerSeek","playerPosition",
+ for(const key of ["playerSeek","playerPosition",
                    "playerPrevious","playerNext","playerStop",
                    "mobileChapterOpen","mobileChapterClose","readerDrawerOverlay"])
   assert.ok(html.includes('id="'+key+'"'),"missing "+key);
@@ -48,4 +48,31 @@ test("V1 responsive and theme rules cover phone, echo overlap, word overflow and
  assert.match(css,/\.chapter-vocab-header\{display:grid/);
  assert.match(css,/@media\(max-width:760px\)/);
  assert.match(css,/\.player-seek input/);
+});
+
+test("V1.2 wordbook keeps vocabulary examples and collocations without a story sentence block",()=>{
+ const start=js.indexOf("function renderWords(){");
+ const end=js.indexOf("function renderQuiz(",start);
+ assert.ok(start>=0&&end>start);
+ const cards=js.slice(start,end);
+ assert.doesNotMatch(cards,/故事中的原句|w\.context_sentence/);
+ assert.match(cards,/例句 \/ EXAMPLE/);
+ assert.match(cards,/常用搭配 \/ COLLOCATIONS/);
+});
+test("V1.2 removes the reading line-height selector and keeps single global theme",()=>{
+ assert.doesNotMatch(html,/id="readerLine"|紧凑|舒适|舒展/);
+ assert.doesNotMatch(js,/\$\('readerLine'\)/);
+ assert.match(js,/setProperty\('line-height','2\.15'\)/);
+});
+test("V1.2 mobile study tray opens immediately and supports switching and learning",()=>{
+ assert.match(js,/function chapterStudyWordIds\(\)/);
+ assert.match(js,/function showCloudWord\(wordId\)/);
+ assert.match(js,/function showCloudWord\(wordId\)[\s\S]*?studyPrevious[\s\S]*?studyNext/);
+ assert.match(js,/showCloudWord\(word\.dataset\.cloudWord\)/);
+ assert.match(js,/studyRequestSequence/);
+ assert.match(js,/saveCloudWord\(wordId,false\)/);
+ assert.match(js,/saveCloudWord\(wordId,true\)/);
+ assert.match(css,/html\.study-tray-open #wordBackdrop\{display:none!important/);
+ assert.match(css,/html\.study-tray-open \.word-pop\.on/);
+ assert.match(css,/z-index:250!important/);
 });
