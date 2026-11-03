@@ -581,3 +581,11 @@ html,body{max-width:100%;overflow-x:clip}
   .story-text p[data-audio-paragraph]{transition:none}
 }
 
+
+/* V1: Preserve the approved commissioned Rainy Night book cover on the live D1 shelf. */
+.cloud-book-item .book-cover.rainy-night-published-cover{aspect-ratio:3/4;height:auto!important;min-height:0!important;padding:0;display:block;background:#241d2a}
+.cloud-book-item .book-cover.rainy-night-published-cover:before,
+.cloud-book-item .book-cover.rainy-night-published-cover:after{display:none}
+.cloud-book-item .rainy-night-published-cover img.rainy-night-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:0}
+.cloud-book-item .rainy-night-published-cover .book-tag{z-index:2;box-shadow:0 2px 10px #24131b55}
+@media(max-width:760px){.cloud-book-item .rainy-night-published-cover{max-height:none}}
