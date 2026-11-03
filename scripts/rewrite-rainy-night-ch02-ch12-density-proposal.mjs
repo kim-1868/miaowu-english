@@ -114,7 +114,15 @@ function replaceOnlyPlain(text,before,after){
   const p=parts[i];
   const idx=p.indexOf(before);
   if(idx<0)continue;
-  parts[i]=p.slice(0,idx)+after+p.slice(idx+before.length);
+  // Avoid invalid whitespace-only text segments between two English anchors.
+  // If the exact phrase touches a previously-anchored word, decline this
+  // substitution rather than force a misleading connector.
+  const beforeText=p.slice(0,idx),afterText=p.slice(idx+before.length);
+  const prevIsAnchor=i>0&&/^\[\[[a-z]+\]\]$/.test(parts[i-1]);
+  const nextIsAnchor=i+1<parts.length&&/^\[\[[a-z]+\]\]$/.test(parts[i+1]);
+  if(prevIsAnchor&&!beforeText.trim()&&after.startsWith("[["))continue;
+  if(nextIsAnchor&&!afterText.trim()&&after.endsWith("]]"))continue;
+  parts[i]=beforeText+after+afterText;
   used++;break;
  }
  return used?parts.join(""):text;
