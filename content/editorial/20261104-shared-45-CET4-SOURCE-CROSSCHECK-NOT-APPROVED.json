@@ -1,0 +1,347 @@
+{
+  "version": 1,
+  "status": "SOURCE_DERIVED_CET4_MEMBERSHIP_CROSSCHECK_NOT_HUMAN_SIGNED",
+  "sources": [
+    {
+      "name": "ReadLoops official 2016 PDF-derived CET vocab",
+      "url": "https://github.com/pekoqq/ReadLoops/blob/main/app/resources/cet_official_vocab.json",
+      "use": "factual headword membership verification only; extractor normalizes families and variants"
+    },
+    {
+      "name": "exam-data/CETVocabulary 2016-derived independent inventory",
+      "url": "https://github.com/exam-data/CETVocabulary/blob/main/cet_full_list.json",
+      "license": "CC BY-NC-SA 4.0 (dataset)",
+      "use": "membership flags only; no dictionary gloss, data or examples copied into commercial packages"
+    }
+  ],
+  "summary": {
+    "sourceCET4Matches": 45,
+    "secondIndependentMatches": 38,
+    "notStandaloneInSecond": [
+      "agreement",
+      "information",
+      "manager",
+      "marriage",
+      "phone",
+      "relationship",
+      "wedding"
+    ]
+  },
+  "items": [
+    {
+      "headword": "agreement",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "NOT_STANDALONE_IN_SECONDARY_LIST",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "bank",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "card",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "client",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "coat",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "company",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "contract",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "customer",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "dawn",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "debt",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "design",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "discuss",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "dress",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "hospital",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "information",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "NOT_STANDALONE_IN_SECONDARY_LIST",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "job",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "loan",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "manager",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "NOT_STANDALONE_IN_SECONDARY_LIST",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "market",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "marriage",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "NOT_STANDALONE_IN_SECONDARY_LIST",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "meeting",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "message",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "model",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "money",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "office",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "partner",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "pen",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "phone",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "NOT_STANDALONE_IN_SECONDARY_LIST",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "picture",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "plan",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "price",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "problem",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "project",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "property",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "relationship",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "NOT_STANDALONE_IN_SECONDARY_LIST",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "remember",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "report",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "result",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "ring",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "room",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "screen",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "structure",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "team",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "time",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "CET4_UNSTARRED",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    },
+    {
+      "headword": "wedding",
+      "firstExtract": "CET4_FORM_MATCH",
+      "secondExtract": "NOT_STANDALONE_IN_SECONDARY_LIST",
+      "secondExtractCet6": false,
+      "reviewDecision": "SOURCE_DERIVED_MEMBERSHIP_MATCH_NOT_EXAM_EDITOR_SIGNOFF"
+    }
+  ]
+}
