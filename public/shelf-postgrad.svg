@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 165" fill="none" role="img" aria-label="学习书架插画"><defs><linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff5e4"/><stop offset="1" stop-color="#eed5b7"/></linearGradient><linearGradient id="wine" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9b5349"/><stop offset="1" stop-color="#693b41"/></linearGradient></defs><g stroke="#7d4c42" stroke-width="3" stroke-linejoin="round">
+<path d="M37 97q60-13 131 0v26q-72-10-131 0Z" fill="#c08e6d"/><path d="M42 100q57-8 121 0v15q-63-9-121 0Z" fill="#fff0d7"/>
+<path d="M48 76q53-10 119 0v21q-58-10-119 0Z" fill="#80536a"/><path d="M51 80q62-8 113 0v10q-57-8-113 0Z" fill="#f9e4ca"/>
+<path d="m26 50 79-34 79 35-80 32Z" fill="#555567"/><path d="M59 65v22q47 28 92 0V64" fill="#a67e69"/>
+<path d="M105 49v49m79-47v34" stroke="#80514a"/><path d="M184 86q-7 15-1 25 6-15 1-25Z" fill="#c89855"/>
+<circle cx="183" cy="85" r="5" fill="#d6b16c"/>
+</g></svg>

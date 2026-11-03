@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 165" fill="none" role="img" aria-label="学习书架插画"><defs><linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff5e4"/><stop offset="1" stop-color="#eed5b7"/></linearGradient><linearGradient id="wine" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9b5349"/><stop offset="1" stop-color="#693b41"/></linearGradient></defs><g stroke="#7b4a40" stroke-width="3" stroke-linejoin="round">
+<path d="M22 105q55-12 144 0l-2 19q-72-9-141 0Z" fill="#984d48"/><path d="M28 107q74-10 134 1l-1 10q-75-8-136 1Z" fill="#fff0d5"/>
+<path d="M42 82q59-10 127 1l-9 24q-71-9-131 4Z" fill="#d3ad7f"/><path d="M46 85q62-7 116 1l-5 13q-58-8-121 5Z" fill="#f9e7cf"/>
+<path d="M36 59q75-16 150 0l-5 26q-77-11-154 3Z" fill="url(#wine)"/><path d="M40 63q72-11 141-1l-3 14q-75-10-149 5Z" fill="#f6e0b9"/>
+<path d="M84 55q12-31 3-50" stroke="#7c8451" fill="none"/><path d="M85 39q-28-6-27-25 23-2 27 25M88 29q27-11 27-27-23 0-27 27M89 52q28 0 30-18-23-6-30 18" fill="#9baa78" stroke="#75804f"/>
+</g><path d="M22 132q75 8 152 0" stroke="#ba9878" stroke-width="2" stroke-linecap="round"/></svg>
