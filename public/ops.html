@@ -58,6 +58,21 @@
     </div>
     <div id="categoryManageStatus" class="status" role="status" aria-live="polite">创建分类不会自动上架或发码。</div>
   </section>
+  <section class="panel" aria-label="小说封面管理">
+    <div class="panel-heading"><h2>封面管理 · 当前书籍</h2><span class="soft">支持草稿与已发布小说</span></div>
+    <p class="hint">先从书籍目录选择一本书，再上传高清封面。发布中的书会更新书架图片，不影响正文、购买权限和学习记录。推荐 3:4 竖版，900×1200 像素以上。</p>
+    <div class="row">
+      <div class="book-cover-admin-preview"><img id="selectedCoverImage" alt="当前选择小说的封面预览" hidden>
+        <span id="selectedCoverEmpty">选择书籍后显示现有封面</span></div>
+      <div class="stretch">
+        <label for="selectedCoverFile">选择新封面（JPG / PNG / WEBP）</label>
+        <input id="selectedCoverFile" type="file" accept="image/jpeg,image/png,image/webp">
+        <p class="hint">会在本机裁切成 3:4、缩至 900×1200，并压缩后上传。请确保自己拥有图片使用权；原图不会上传。</p>
+        <button id="saveSelectedCover" type="button" disabled>上传 / 替换当前书籍封面</button>
+        <div id="coverUploadStatus" class="status" role="status" aria-live="polite">请先选择书籍。</div>
+      </div>
+    </div>
+  </section>
   <div class="cols">
     <section class="panel"><div class="panel-heading"><h2>④ 书籍目录</h2><button id="refresh" class="secondary" disabled>刷新</button></div>
       <p class="hint">仅显示草稿和已发布书籍；不会包含付费正文。</p>
@@ -103,6 +118,8 @@
         <input id="uploadNovel" type="file" accept=".json,.md,.markdown,.txt,application/json,text/plain,text/markdown"></label>
       <label class="stretch" for="uploadWords">可选：补充词卡 JSON（若使用 Markdown/TXT）
         <input id="uploadWords" type="file" accept=".json,application/json"></label>
+      <label class="stretch" for="uploadCoverWithNovel">可选：同时上传小说封面
+        <input id="uploadCoverWithNovel" type="file" accept="image/jpeg,image/png,image/webp"></label>
     </div>
     <div class="row">
       <label class="stretch" for="uploadBookTitle">书名
