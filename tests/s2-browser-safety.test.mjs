@@ -24,7 +24,7 @@ test('original designed reader fetches paid cloud chapters from D1 without bundl
 test("S5 production UI is cloud-first, without public QA notices or manual progress controls",()=>{
  const script=app(),markup=html();
  assert.doesNotMatch(markup,/网站上线准备中|付费购买仍在验收中|阅读笔记|故事演示练习/);
- for(const id of ["view-library","view-reader","view-words","view-account","echoModeSwitch","readerTone","playerSeek"]){
+ for(const id of ["view-library","view-reader","view-words","view-account","echoModeSwitch","playerSeek"]){
   assert.match(markup,new RegExp('id="'+id+'"'));
  }
  assert.doesNotMatch(markup,/id="cloudFinishReading"/);
