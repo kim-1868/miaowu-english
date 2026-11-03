@@ -290,7 +290,7 @@ test("S14 password change validates current password, rotates current cookie and
  const changedPasswordResponse=await change.json();
  assert.equal(changedPasswordResponse.ok,true);
  assert.equal(changedPasswordResponse.otherSessionsRevoked,true);
- assert.match(changedPasswordResponse.recoveryCode,/^[0-9a-f]{8}(?:-[0-9a-f]{8}){7}$/);
+ assert.equal(changedPasswordResponse.recoveryCode,undefined);
  const freshCookie=session(change);
  assert.notEqual(freshCookie,originalCookie);
  const sessionRows=db.db.prepare("SELECT COUNT(*) AS n FROM sessions").get().n;
@@ -413,6 +413,6 @@ test("S18 recovery only in production and requires same-origin proof for state-c
  const malformed=await worker.fetch(request("/api/auth/recover","POST",{
   username:"guest-user",recoveryCode:"missing",newPassword:"some-test-password-2026"
  }),env(db));
- assert.equal(malformed.status,400);
+ assert.equal(malformed.status,403);
  db.db.close();
 });
