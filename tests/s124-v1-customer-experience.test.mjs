@@ -76,3 +76,14 @@ test("V1.2 mobile study tray opens immediately and supports switching and learni
  assert.match(css,/html\.study-tray-open \.word-pop\.on/);
  assert.match(css,/z-index:250!important/);
 });
+
+test("V1.2.1 iOS study tray never shades the screen without a visible learning card",()=>{
+ assert.match(js,/const mobileStudyTray=window\.matchMedia/);
+ assert.match(js,/backdrop\.classList\.toggle\('on',!mobileStudyTray\)/);
+ assert.match(js,/backdrop\.style\.setProperty\('display','none','important'\)/);
+ assert.match(js,/tray\.style\.setProperty\('z-index','2147483000','important'\)/);
+ assert.match(css,/#wordBackdrop\.on\{display:none!important;pointer-events:none!important\}/);
+ assert.match(css,/#wordPop\.on\{/);
+ assert.match(html,/styles\.css\?v=20261103-ios-fix1/);
+ assert.match(html,/app\.js\?v=20261103-ios-fix1/);
+});
