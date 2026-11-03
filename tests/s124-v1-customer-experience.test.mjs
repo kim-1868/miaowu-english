@@ -84,6 +84,23 @@ test("V1.2.1 iOS study tray never shades the screen without a visible learning c
  assert.match(js,/tray\.style\.setProperty\('z-index','2147483000','important'\)/);
  assert.match(css,/#wordBackdrop\.on\{display:none!important;pointer-events:none!important\}/);
  assert.match(css,/#wordPop\.on\{/);
- assert.match(html,/styles\.css\?v=20261103-ios-fix1/);
- assert.match(html,/app\.js\?v=20261103-ios-fix1/);
+ assert.match(html,/styles\.css\?v=20261103-v123/);
+ assert.match(html,/app\.js\?v=20261103-v123/);
+});
+
+test("V1.2.3 mobile vocabulary drawer targets the aside preceding the overlay",()=>{
+ const wordJs=source("chapter-words.js");
+ assert.match(css,/\.reader-layout\.vocab-drawer-open>\.sidebar:last-of-type/);
+ assert.doesNotMatch(css,/\.reader-layout\.vocab-drawer-open>\.sidebar:last-child/);
+ assert.match(css,/\.reader-layout\.vocab-drawer-open \.reader-drawer-overlay\{z-index:80!important\}/);
+ assert.match(wordJs,/classList\.toggle\("vocab-drawer-open",opening\)/);
+ assert.match(wordJs,/\$\("chapterVocabBody"\)\.hidden=false/);
+ assert.match(html,/id="mobileVocabOpen"[^>]+aria-expanded="false"/);
+ assert.match(html,/id="mobileVocabClose"/);
+});
+test("V1.2.3 mobile reader tools use a uniform four-column grid",()=>{
+ assert.match(css,/\.read-top \.tool-row\{[\s\S]*?grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+ assert.match(css,/height:44px!important;min-height:44px!important/);
+ assert.match(html,/id="topRead"[^>]*>♫ 朗读<\/button>/);
+ assert.match(html,/styles\.css\?v=20261103-v123/);
 });
