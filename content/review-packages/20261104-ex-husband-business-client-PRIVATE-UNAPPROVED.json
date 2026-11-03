@@ -16,9 +16,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "Both teams reached an agreement after the meeting.",
+      "exampleZh": "双方团队在会议后达成了协议。",
+      "collocations": [
+        {
+          "en": "reach an agreement",
+          "zh": "达成协议"
+        }
+      ]
     },
     {
       "id": "rns1-calculate",
@@ -63,9 +68,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "The client asked for a written progress report.",
+      "exampleZh": "客户要求提交一份书面进度报告。",
+      "collocations": [
+        {
+          "en": "meet a client",
+          "zh": "会见客户"
+        }
+      ]
     },
     {
       "id": "s87-candidate-company",
@@ -74,9 +84,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "The company agreed to review the proposal.",
+      "exampleZh": "公司同意重新审核这份提案。",
+      "collocations": [
+        {
+          "en": "start a company",
+          "zh": "创办公司"
+        }
+      ]
     },
     {
       "id": "rns1-confirm",
@@ -105,9 +120,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "She read every clause of the contract before signing.",
+      "exampleZh": "她签字前阅读了合同的每一项条款。",
+      "collocations": [
+        {
+          "en": "sign a contract",
+          "zh": "签署合同"
+        }
+      ]
     },
     {
       "id": "s87-candidate-customer",
@@ -116,9 +136,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "Every customer could return the empty bottle.",
+      "exampleZh": "每位顾客都可以归还空瓶。",
+      "collocations": [
+        {
+          "en": "customer service",
+          "zh": "客户服务"
+        }
+      ]
     },
     {
       "id": "rns1-date",
@@ -159,9 +184,14 @@
       "partOfSpeech": "n./v.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "Her design made the package easier to recycle.",
+      "exampleZh": "她的设计让包装更容易回收。",
+      "collocations": [
+        {
+          "en": "packaging design",
+          "zh": "包装设计"
+        }
+      ]
     },
     {
       "id": "rns1-document",
@@ -262,9 +292,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "The report contained important information.",
+      "exampleZh": "报告中包含重要信息。",
+      "collocations": [
+        {
+          "en": "share information",
+          "zh": "分享信息"
+        }
+      ]
     },
     {
       "id": "s87-candidate-manager",
@@ -273,9 +308,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "The manager asked for another safety test.",
+      "exampleZh": "经理要求再进行一次安全测试。",
+      "collocations": [
+        {
+          "en": "project manager",
+          "zh": "项目经理"
+        }
+      ]
     },
     {
       "id": "s87-candidate-market",
@@ -284,9 +324,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "The product entered the market in autumn.",
+      "exampleZh": "这款产品于秋季进入市场。",
+      "collocations": [
+        {
+          "en": "enter the market",
+          "zh": "进入市场"
+        }
+      ]
     },
     {
       "id": "s87-candidate-meeting",
@@ -295,9 +340,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "The meeting began at ten o'clock.",
+      "exampleZh": "会议在十点开始。",
+      "collocations": [
+        {
+          "en": "attend a meeting",
+          "zh": "参加会议"
+        }
+      ]
     },
     {
       "id": "s85-candidate-message",
@@ -306,9 +356,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "A new message appeared on her phone.",
+      "exampleZh": "她的手机收到一条新消息。",
+      "collocations": [
+        {
+          "en": "send a message",
+          "zh": "发送消息"
+        }
+      ]
     },
     {
       "id": "s87-candidate-model",
@@ -317,9 +372,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "The team built a small model before production.",
+      "exampleZh": "团队在生产前制作了一个小模型。",
+      "collocations": [
+        {
+          "en": "build a model",
+          "zh": "制作模型"
+        }
+      ]
     },
     {
       "id": "s85-candidate-money",
@@ -328,9 +388,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "The money belonged to the company, not to him.",
+      "exampleZh": "这笔钱属于公司，而不是他个人。",
+      "collocations": [
+        {
+          "en": "save money",
+          "zh": "存钱"
+        }
+      ]
     },
     {
       "id": "rns1-notice",
@@ -359,9 +424,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "She arrived at the office before everyone else.",
+      "exampleZh": "她比其他人都早到办公室。",
+      "collocations": [
+        {
+          "en": "leave the office",
+          "zh": "离开办公室"
+        }
+      ]
     },
     {
       "id": "rns1-option",
@@ -386,9 +456,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "Her business partner checked the budget.",
+      "exampleZh": "她的生意合伙人核对了预算。",
+      "collocations": [
+        {
+          "en": "business partner",
+          "zh": "商业合伙人"
+        }
+      ]
     },
     {
       "id": "s85-candidate-pen",
@@ -397,20 +472,30 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "She signed the final page with a black pen.",
+      "exampleZh": "她用一支黑色钢笔签署了最后一页。",
+      "collocations": [
+        {
+          "en": "pick up a pen",
+          "zh": "拿起笔"
+        }
+      ]
     },
     {
       "id": "s85-candidate-phone",
       "headword": "phone",
-      "meaningZh": "电话；手机（语境义待审）",
+      "meaningZh": "手机；电话",
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "Her phone rang during the meeting.",
+      "exampleZh": "她的手机在会议期间响了。",
+      "collocations": [
+        {
+          "en": "answer the phone",
+          "zh": "接电话"
+        }
+      ]
     },
     {
       "id": "s87-candidate-picture",
@@ -419,9 +504,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "She sent a picture of the completed project.",
+      "exampleZh": "她发了一张已完成项目的照片。",
+      "collocations": [
+        {
+          "en": "take a picture",
+          "zh": "拍照片"
+        }
+      ]
     },
     {
       "id": "s85-candidate-plan",
@@ -430,9 +520,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "They prepared a new plan for the project.",
+      "exampleZh": "他们为这个项目准备了新计划。",
+      "collocations": [
+        {
+          "en": "make a plan",
+          "zh": "制订计划"
+        }
+      ]
     },
     {
       "id": "s87-candidate-price",
@@ -441,9 +536,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "The new material increased the price.",
+      "exampleZh": "新材料提高了价格。",
+      "collocations": [
+        {
+          "en": "at a fair price",
+          "zh": "以合理价格"
+        }
+      ]
     },
     {
       "id": "s87-candidate-problem",
@@ -452,9 +552,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "They found a problem with the first sample.",
+      "exampleZh": "他们发现第一份样品存在问题。",
+      "collocations": [
+        {
+          "en": "solve a problem",
+          "zh": "解决问题"
+        }
+      ]
     },
     {
       "id": "s87-candidate-project",
@@ -463,9 +568,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "The project required two more weeks.",
+      "exampleZh": "这个项目还需要两周时间。",
+      "collocations": [
+        {
+          "en": "complete a project",
+          "zh": "完成项目"
+        }
+      ]
     },
     {
       "id": "rns1-promise",
@@ -526,9 +636,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "The engineer submitted a report on the test.",
+      "exampleZh": "工程师提交了一份测试报告。",
+      "collocations": [
+        {
+          "en": "write a report",
+          "zh": "撰写报告"
+        }
+      ]
     },
     {
       "id": "rns1-request",
@@ -573,9 +688,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "The final result surprised the judges.",
+      "exampleZh": "最终结果让评委们感到意外。",
+      "collocations": [
+        {
+          "en": "test result",
+          "zh": "测试结果"
+        }
+      ]
     },
     {
       "id": "rns1-risk",
@@ -620,9 +740,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "The results appeared on the large screen.",
+      "exampleZh": "结果显示在大屏幕上。",
+      "collocations": [
+        {
+          "en": "computer screen",
+          "zh": "电脑屏幕"
+        }
+      ]
     },
     {
       "id": "rns1-signature",
@@ -647,9 +772,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "The new structure made the package stronger.",
+      "exampleZh": "新结构使包装更加结实。",
+      "collocations": [
+        {
+          "en": "a clear structure",
+          "zh": "清晰的结构"
+        }
+      ]
     },
     {
       "id": "s87-candidate-team",
@@ -658,9 +788,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "The team discussed the risks together.",
+      "exampleZh": "团队一起讨论了风险。",
+      "collocations": [
+        {
+          "en": "work as a team",
+          "zh": "作为团队合作"
+        }
+      ]
     },
     {
       "id": "s87-candidate-time",
@@ -669,9 +804,14 @@
       "partOfSpeech": "n.",
       "phoneticUk": null,
       "phoneticUs": null,
-      "exampleEn": null,
-      "exampleZh": null,
-      "collocations": []
+      "exampleEn": "She needed more time to review the document.",
+      "exampleZh": "她需要更多时间审核文件。",
+      "collocations": [
+        {
+          "en": "on time",
+          "zh": "准时"
+        }
+      ]
     },
     {
       "id": "rns1-trust",
