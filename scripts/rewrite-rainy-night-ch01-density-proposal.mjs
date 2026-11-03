@@ -28,7 +28,7 @@ const R={
 21:[["旧猫形镇纸","旧猫形镇纸，姐姐留下的 [[familiar]] 物件"],["信封内侧有一条淡淡的铅笔线。","信封内侧有一条淡淡的 [[trace]]。"],["似乎指向店里某个书架","似乎指向店里某个书架，像要 [[reveal]] 一条路径"]],
 22:[["那人没有立刻走进来","那人没有立刻走进来，似乎在 [[hesitate]]"],["他的目光略过一整面书架","他的目光略过一整面书架，像在寻找某个 [[hidden]] 的东西"],["予安下意识把抽屉向里推了推。","予安 [[notice]] 到他的视线，意识到那本书有被 [[borrow]] 走的 [[risk]]，下意识把抽屉向里推了推。"]],
 23:[["男人问。","男人问，显然已经知道一个 [[secret]]。"],["却不敢露出表情。","却不敢 [[reveal]] 自己的表情。"],["便没有回答。","便没有 [[respond]]，也没让对方 [[confirm]] 自己是否认得这个名字。"]],
-24:[["他说","他说，声音让她觉得 [[familiar]]"],["有人告诉我，它一直在这里。","有人留下过一条 [[clue]]，说它一直在这里。"],["他念出书名时停顿了一下，像是在确认自己说对了每个字。","他念出书名时 [[hesitate]] 了一下，像要 [[confirm]] 自己说对了每个字。"]],
+24:[["他说","他说，声音让她觉得 [[familiar]]，随即补充"],["有人告诉我，它一直在这里。","有人留下过一条 [[clue]]，说它一直在这里。"],["他念出书名时停顿了一下，像是在确认自己说对了每个字。","他念出书名时 [[hesitate]] 了一下，像要 [[confirm]] 自己说对了每个字。"]],
 25:[["如果把书交出去，她可能会失去唯一的 [[clue]]；","如果把书交出去，她可能会失去唯一的 [[clue]]，也失去 [[investigate]] 线索的机会；"],["永远不知道姐姐发生了什么。","永远不知道姐姐 [[disappear]] 前发生了什么。"],["听见窗外雨声忽然变大。","听见窗外雨声忽然变大，像另一声 [[warning]]。"]],
 26:[["与这条商业街的人行道很不相同。","与这条商业街的人行道很不相同，像某条 [[hidden]] 路线留下的 [[trace]]。"],["一栋已经拆除的资料馆。","一栋已经拆除的资料馆，那里或许藏着另一个 [[secret]]。"]],
 27:[["姐姐曾把失踪案件的新闻剪报折在一本厚词典里","姐姐曾把一份旧 [[document]] 折在一本厚词典里，那是关于失踪案件的新闻剪报"],["她决定保留照片原样","她决定保留照片原样，按时间制作 [[record]]"]],
@@ -68,7 +68,7 @@ export function buildHighDensityChapterOneProposal(){
   }
   if(pos<line.length)segments.push({text:line.slice(pos)});
   const words=segments.filter(x=>x.wordId).length;
-  if(words<3||words>7)throw Error("PARAGRAPH_DENSITY_OUT_OF_RANGE_P"+(i+1)+"="+words);
+  if(words<3||words>6)throw Error("PARAGRAPH_DENSITY_OUT_OF_RANGE_P"+(i+1)+"="+words);
   return {segments};
  });
  const occurrences=paragraphs.flatMap(x=>x.segments).filter(x=>x.wordId).length;
