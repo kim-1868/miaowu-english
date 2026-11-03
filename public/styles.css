@@ -1075,3 +1075,75 @@ html[data-theme="dark"] #view-library .home-study-card:before{border-color:#6951
 @media(prefers-reduced-motion:reduce){
   #view-library .category{transition:none}
 }
+
+
+/* Homepage watercolor replacement: artwork is from the user's supplied
+   illustrated style reference, with SVG-wrapped WebP for local asset loading.
+   Only the homepage artwork surface changes; interactive cards remain real. */
+#view-library .story-home-hero {
+  border-color: #e2c2a5;
+  background:
+    radial-gradient(ellipse at 23% 10%, rgba(255,255,251,.72), transparent 61%),
+    linear-gradient(105deg, #fff7ee 0%, #f8eadb 55%, #e9d2bc 100%);
+}
+#view-library .story-home-hero .story-home-art img {
+  filter: none !important;
+  opacity: 1 !important;
+  object-fit: cover;
+  object-position: center 47%;
+  image-rendering: auto;
+}
+#view-library .story-home-hero .story-home-art:before,
+#view-library .story-home-hero .story-home-art:after {
+  display: none !important;
+}
+#view-library .category {
+  position: relative;
+  border-color: #d9ad8d;
+  background:
+    radial-gradient(circle at 92% 10%, rgba(255,255,255,.9), transparent 40%),
+    radial-gradient(circle at 10% 90%, rgba(241,213,185,.23), transparent 46%),
+    linear-gradient(120deg,#fff8ee,#fff0e0);
+  box-shadow: inset 0 0 0 3px rgba(255,250,242,.6),
+              0 5px 18px rgba(106,58,43,.075);
+}
+#view-library .category::before {
+  content: '❧';
+  position: absolute; top: 3px; left: 9px;
+  color: #bf8e67; opacity: .57;
+  font: 18px Georgia,serif; line-height: 1;
+  transform: rotate(-33deg);
+  pointer-events: none;
+}
+#view-library .category-illustration {
+  display: block;
+  max-width: 155px;
+  width: 100%;
+  height: 119px;
+  object-fit: contain;
+  filter: none !important;
+  mix-blend-mode: multiply;
+  -webkit-mask-image: radial-gradient(ellipse 76% 77% at 50% 53%,#000 70%,transparent 100%);
+  mask-image: radial-gradient(ellipse 76% 77% at 50% 53%,#000 70%,transparent 100%);
+}
+#view-library .category strong { color: #713a34; }
+#view-library .category .category-en { color: #965746; }
+#view-library .category:hover { border-color: #a56d55; }
+html[data-theme="dark"] #view-library .category {
+  background: linear-gradient(120deg,#3a2f32,#4a393b);
+  border-color:#83635c;
+}
+html[data-theme="dark"] #view-library .category-illustration {
+  mix-blend-mode: normal;
+  border-radius: 10px;
+}
+@media (max-width:1100px) {
+  #view-library .category-illustration { max-width: 136px; height: 109px; }
+}
+@media (max-width:540px) {
+  #view-library .story-home-hero .story-home-art img {
+    object-position: 46% 50%;
+  }
+  #view-library .category-illustration { max-width: 135px; height: 93px; }
+  #view-library .category::before { font-size: 13px; left: 5px; top: 4px; }
+}
