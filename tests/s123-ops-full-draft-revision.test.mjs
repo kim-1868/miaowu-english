@@ -8,6 +8,8 @@ import {validatePackage} from "../src/editorial-content.js";
 import {planDraftRevision} from "../src/ops-draft-revision.js";
 function prepare(){
  const {db}=createLocalFreshSchema();
+ db.prepare("INSERT INTO ops_operators(id,display_name,role,environment,key_digest) VALUES(?,?,?,?,?)")
+  .run("ops-publisher","Test publisher","publisher","production","a".repeat(64));
  const original=prepareRainyNightMemberCandidate().candidate;
  db.exec(generateSql(original).sql);
  const all=db.prepare("SELECT id,chapter_no,title,content_json,is_preview,published_at FROM chapters ORDER BY chapter_no").all();
