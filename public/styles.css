@@ -312,12 +312,12 @@ html[data-theme="dark"] .cloud-chapter-options .chapter-btn:hover{
 .mobile-vocab-open,.mobile-vocab-close{display:none!important}
 @media(max-width:980px){
   .mobile-vocab-open{display:inline-flex!important;white-space:nowrap}
-  .reader-layout.vocab-drawer-open>.sidebar:last-child{display:block!important;
+  .reader-layout.vocab-drawer-open>.sidebar:last-of-type{display:block!important;
     position:fixed;top:9vh;bottom:6vh;right:12px;left:auto;width:min(370px,calc(100vw - 24px));
     background:var(--paper);border:1px solid var(--line);border-radius:16px;
     z-index:40;padding:14px;overflow:auto;box-shadow:0 20px 70px #24141d66}
-  .reader-layout.vocab-drawer-open>.sidebar:last-child>.side-panel:not(.chapter-vocab-panel),
-  .reader-layout.vocab-drawer-open>.sidebar:last-child>.mini-note{display:none!important}
+  .reader-layout.vocab-drawer-open>.sidebar:last-of-type>.side-panel:not(.chapter-vocab-panel),
+  .reader-layout.vocab-drawer-open>.sidebar:last-of-type>.mini-note{display:none!important}
   .mobile-vocab-close{display:block!important;float:right;background:transparent;
     border:0;color:var(--wine);font-size:24px;cursor:pointer;margin:-10px -7px 0 4px}
   .reader-layout.vocab-drawer-open .chapter-vocab-panel{
@@ -504,7 +504,7 @@ html,body{max-width:100%;overflow-x:clip}
   }
   .mobile-chapter-close{display:block!important;float:right;background:transparent;border:0;
     color:var(--wine);font-size:25px;line-height:1;padding:3px 7px}
-  .reader-layout.vocab-drawer-open>.sidebar:last-child{z-index:41}
+  .reader-layout.vocab-drawer-open>.sidebar:last-of-type{z-index:41}
   .reader-layout.chapter-drawer-open .reader-drawer-overlay,
   .reader-layout.vocab-drawer-open .reader-drawer-overlay{
     display:block;position:fixed;inset:0;background:rgba(36,29,33,.45);z-index:40
@@ -567,7 +567,7 @@ html,body{max-width:100%;overflow-x:clip}
   .wordbook-grid,.account-content{min-width:0}
   .vocab-card{min-width:0}
   .vocab-card .card-tools button{min-width:0}
-  .reader-layout.vocab-drawer-open>.sidebar:last-child{inset:9vh 8px 6vh 8px;width:auto;max-height:none}
+  .reader-layout.vocab-drawer-open>.sidebar:last-of-type{inset:9vh 8px 6vh 8px;width:auto;max-height:none}
 }
 @media(max-width:390px){
   .app-shell{padding-left:10px;padding-right:10px}
@@ -673,4 +673,69 @@ html[data-theme="dark"] .vocab-card.status-mastered .word-status{
     border-radius:20px 20px 0 0!important;
     box-shadow:0 -12px 44px rgba(0,0,0,.24)!important
   }
+}
+
+/* V1.2.3: mobile vocabulary drawer follows the real DOM structure.
+   The backdrop is the last child, not the vocabulary sidebar. */
+@media(max-width:980px){
+  .reader-layout.vocab-drawer-open>.sidebar:last-of-type{
+    display:block!important;
+    position:fixed!important;
+    inset:8vh 12px 7vh auto!important;
+    width:min(390px,calc(100vw - 24px))!important;
+    max-height:85vh!important;
+    overflow-y:auto!important;
+    visibility:visible!important;
+    opacity:1!important;
+    z-index:90!important;
+    background:var(--paper)!important;
+    color:var(--ink)!important;
+    border:1px solid var(--line)!important;
+    border-radius:16px!important;
+    padding:16px!important;
+    box-shadow:0 16px 60px rgba(30,20,30,.25)!important;
+  }
+  .reader-layout.vocab-drawer-open .reader-drawer-overlay{z-index:80!important}
+  .reader-layout.vocab-drawer-open>.sidebar:last-of-type .chapter-vocab-panel{
+    display:block!important;overflow:visible!important;max-height:none!important
+  }
+  .reader-layout.vocab-drawer-open>.sidebar:last-of-type .mobile-vocab-close{
+    display:inline-flex!important;align-items:center;justify-content:center;
+    min-width:42px;min-height:42px;float:right
+  }
+}
+@media(max-width:760px){
+  .reader-layout.vocab-drawer-open>.sidebar:last-of-type{
+    inset:8vh 10px 7vh 10px!important;
+    width:auto!important;
+  }
+  .read-top .tool-row{
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    align-items:stretch!important;
+    justify-content:stretch!important;
+    gap:8px!important;
+    width:100%;
+  }
+  .read-top .tool-row>.icon-btn{
+    box-sizing:border-box;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    min-width:0!important;width:100%!important;
+    height:44px!important;min-height:44px!important;
+    padding:0 4px!important;
+    font-size:13px!important;
+    font-weight:600;
+    line-height:1!important;
+    white-space:nowrap!important;
+    border:1px solid var(--line)!important;
+    border-radius:11px!important;
+    background:var(--paper)!important;
+    color:var(--wine)!important;
+  }
+  .read-top .tool-row>.icon-btn:focus-visible{
+    outline:2px solid var(--wine);outline-offset:2px
+  }
+  .read-top .tool-row>.icon-btn:disabled{opacity:.45}
 }
