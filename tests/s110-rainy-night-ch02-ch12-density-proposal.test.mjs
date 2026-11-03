@@ -29,4 +29,5 @@ test("Rainy Night chapters 2-12 lexical revision preserves all original word anc
   }
  }
  console.log("RAINY_NIGHT_CH02_CH12_DENSITY "+JSON.stringify(x.report));
+ console.log("RAINY_NIGHT_PARAGRAPHS_NEEDING_EDIT "+JSON.stringify(x.audit.filter(p=>p.needsManualRewrite).map(p=>({chapter:p.chapter,paragraph:p.paragraph,words:p.newWords}))));
 });
