@@ -46,12 +46,12 @@
         due?'这些词已经到复习时间。去剧情回声找回故事里的单词吧。':
         '打开记忆藏书票，继续复习你在小说中遇见的单词。';
       area.innerHTML='<div class="reminder-cat reminder-paw" aria-hidden="true">'+
-        '<svg class="solid-cat-paw" viewBox="0 0 64 64" width="52" height="52" fill="currentColor" xmlns="http://www.w3.org/2000/svg">'+
-        '<ellipse cx="14" cy="22" rx="6.5" ry="10" transform="rotate(-28 14 22)"/>'+
-        '<ellipse cx="28" cy="12" rx="6.7" ry="10" transform="rotate(-9 28 12)"/>'+
-        '<ellipse cx="43" cy="15" rx="6.7" ry="10" transform="rotate(17 43 15)"/>'+
-        '<ellipse cx="54" cy="28" rx="6" ry="9.3" transform="rotate(32 54 28)"/>'+
-        '<path d="M31 30c-8 0-12 7-17 13-4.3 5.3-2.2 14.3 4.9 15.2 5.1.7 8.4-3.9 13.4-3.9 5.1 0 8 4.6 13.2 3.9 7.1-1 9.6-9.9 5.1-15-4.6-7.2-9.4-17.2-19.6-17.2Z"/>'+
+        '<svg class="solid-cat-paw" viewBox="0 0 80 80" width="58" height="58" fill="currentColor" xmlns="http://www.w3.org/2000/svg">'+
+        '<ellipse cx="15.5" cy="29" rx="7.7" ry="10.2" transform="rotate(-24 15.5 29)"/>'+
+        '<ellipse cx="30.5" cy="17.5" rx="7.7" ry="11" transform="rotate(-8 30.5 17.5)"/>'+
+        '<ellipse cx="48.5" cy="17.5" rx="7.7" ry="11" transform="rotate(8 48.5 17.5)"/>'+
+        '<ellipse cx="64.5" cy="29" rx="7.7" ry="10.2" transform="rotate(24 64.5 29)"/>'+
+        '<path d="M39.9 35.8c-7.5 0-11.6 5.2-16.1 11.7l-8.4 11.8c-3.4 5.4-2.7 12 2.2 14.2 4.4 2.2 8.6 1.8 14.1-.6 5.2-2.4 9.3-2.4 14.4 0 5.6 2.6 10.4 3.2 15 1.2 5.8-2.5 6.7-9 3.2-14.6l-8.2-11.4C51.7 41.2 47.1 35.8 39.9 35.8Z"/>'+
         '</svg></div>'+
         '<div class="reminder-content"><strong>'+safe(title)+'</strong><small>'+safe(hint)+'</small></div>'+
         '<button class="primary reminder-btn" id="reviewReminderBtn">'+
