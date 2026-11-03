@@ -1302,3 +1302,41 @@ html[data-theme="dark"] #view-library .story-home-hero .reminder-paw .solid-cat-
     height:49px;
   }
 }
+
+/* V1.6: uniform category label baseline and sharp, resolution-independent line art. */
+#view-library .category .category-en {
+  display:block;
+  min-height:0;
+  margin:1px 0 0;
+  padding:0;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:14px;
+  font-weight:500;
+  line-height:20px;
+  letter-spacing:.015em;
+  font-variant-numeric:lining-nums tabular-nums;
+  white-space:nowrap;
+  vertical-align:baseline;
+}
+#view-library .category-illustration {
+  display:block;
+  width:100%;
+  max-width:155px;
+  height:119px;
+  object-fit:contain;
+  mix-blend-mode:normal;
+  -webkit-mask-image:none;
+  mask-image:none;
+  image-rendering:auto;
+}
+html[data-theme="dark"] #view-library .category-illustration {
+  mix-blend-mode:normal;
+  background:transparent;
+}
+@media(max-width:1100px){
+  #view-library .category-illustration{max-width:136px;height:109px}
+}
+@media(max-width:540px){
+  #view-library .category-illustration{max-width:135px;height:93px}
+  #view-library .category .category-en{font-size:12px;line-height:18px;letter-spacing:0}
+}
