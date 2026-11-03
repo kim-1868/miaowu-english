@@ -110,20 +110,17 @@
     const glossaryCache=new Map();
     let readingSaveTimer=0,readingLastSave=0,readingSavePending=null;
     const readingPrefs={
-      tone:(()=>{try{return localStorage.getItem('miaowu_reader_tone')||'paper'}catch{return 'paper'}})(),
       line:(()=>{try{return localStorage.getItem('miaowu_reader_line')||'2.15'}catch{return '2.15'}})()
     };
     function applyReadingPrefs(){
-      const tone=['paper','white','night'].includes(readingPrefs.tone)?readingPrefs.tone:'paper';
       const line=['1.85','2.15','2.4'].includes(readingPrefs.line)?readingPrefs.line:'2.15';
-      $('readerLayout')?.setAttribute('data-reader-tone',tone);
-      if($('readerTone'))$('readerTone').value=tone;
+      $('readerLayout')?.removeAttribute('data-reader-tone');
       if($('readerLine'))$('readerLine').value=line;
       $('storyText')?.style.setProperty('line-height',line);
       $('storyText')?.style.setProperty('font-size',fontSize+'px');
       try{
         localStorage.setItem('miaowu_reader_font',String(fontSize));
-        localStorage.setItem('miaowu_reader_tone',tone);
+        localStorage.removeItem('miaowu_reader_tone');
         localStorage.setItem('miaowu_reader_line',line);
       }catch{}
     }
@@ -437,7 +434,7 @@
       $('chapterNo').textContent='CHAPTER '+String(page.chapterNo).padStart(2,'0')+(thisChapter?.isPreview?' · FREE PREVIEW':'');
       $('chapterTitle').textContent=page.title;
       $('storyText').innerHTML=parts.map(renderD1Paragraph).join('')||'<p>本章内容暂时无法显示，请稍后重试。</p>';
-      $('storyText').querySelectorAll('[data-cloud-word]').forEach(btn=>btn.onclick=()=>showCloudWord(btn.dataset.cloudWord));
+      // Delegated activation is shared by touch, mouse and keyboard and survives chapter rerenders.
       applyReadingPrefs();
       const savedAt=cloudProgress.find(x=>x.chapter_id===id);
       if(savedAt?.progress>0.025&&savedAt.progress<1){
@@ -809,8 +806,7 @@
             $('rPass').value='';
             closeModal();
             applyServerAccount(result,true);
-            if(result.recoveryCode)showRecoveryNotice(result.recoveryCode);
-            else toast('书房创建成功，分类已开通');
+            toast('书房创建成功，分类已开通');
           });
       };
     }
@@ -828,10 +824,10 @@
           '<div id="formMessage"></div>',
         '</form>',
         '<div style="margin-top:16px"><button class="tiny-action" id="switchRegister">还没有账号？去注册激活</button>'+
-        '<button class="tiny-action" id="forgotPassword" style="margin-left:12px">忘记密码？使用恢复码</button></div>'
+        '<button class="tiny-action" id="forgotPassword" style="margin-left:12px">忘记密码？人工找回</button></div>'
       ].join(''));
       $('switchRegister').onclick=()=>showRegister();
-      $('forgotPassword').onclick=showRecoverAccount;
+      $('forgotPassword').onclick=showManualRecovery;
       $('loginForm').onsubmit=e=>{
         e.preventDefault();const form=e.currentTarget;
         const btn=form.querySelector('button[type=submit]');
@@ -865,6 +861,16 @@
         catch{toast('复制失败，请手动选择并保存恢复码')}
       };
       $('recoveryDone').onclick=closeModal;
+    }
+    function showManualRecovery(){
+      showModal([
+        '<span class="eyebrow">ACCOUNT SUPPORT</span>',
+        '<h2 id="modalTitle">人工找回账号</h2>',
+        '<p>忘记密码后，请联系妙屋英语官方售后，提供注册用户名和购买凭证申请人工核实。无需邮箱、手机或恢复码。</p>',
+        '<p class="helper">请勿向任何人提供旧密码、验证码或完整激活码。订单凭证仅用于核实购买关系，不能单独证明账号归属；核实通过后由管理员以一次性方式安全重置。</p>',
+        '<div class="form-actions"><button class="primary" type="button" id="manualRecoveryDone">我知道了</button></div>'
+      ].join(''));
+      $('manualRecoveryDone').onclick=closeModal;
     }
     function showRecoverAccount(){
       showModal([
@@ -938,8 +944,7 @@
           result=>{
             for(const id of ['passwordCurrent','passwordNext','passwordConfirm'])$(id).value='';
             closeModal();
-            if(result.recoveryCode)showRecoveryNotice(result.recoveryCode);
-            else toast('密码已更新，其他设备需要重新登录');
+            toast('密码已更新，其他设备需要重新登录');
           });
       };
     }
@@ -1104,11 +1109,12 @@
       else startReading();
     });
     $('storyText').addEventListener('click',e=>{
+      const word=e.target.closest('[data-cloud-word]');
+      if(word){e.preventDefault();e.stopPropagation();showCloudWord(word.dataset.cloudWord);return;}
       if(e.target.closest('button,a,[role=button]'))return;
       const p=e.target.closest('[data-audio-paragraph]');
       if(activeCloud?.chapterId&&p)startReading(Number(p.dataset.audioParagraph));
     });
-    $('readerTone').onchange=e=>{readingPrefs.tone=e.target.value;applyReadingPrefs()};
     $('readerLine').onchange=e=>{readingPrefs.line=e.target.value;applyReadingPrefs()};$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
     // Cloud reading progress is saved automatically on scroll and chapter navigation.
     window.MiaowuChapterWords?.configure({
