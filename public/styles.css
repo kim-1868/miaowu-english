@@ -622,3 +622,40 @@ html[data-theme="dark"] .vocab-card.status-mastered .word-status{
   .word-pop .modal-close{min-width:40px;min-height:40px}
   .word-backdrop.on,#wordBackdrop.on{z-index:100}
 }
+
+/* V1.2: persistent, tappable mobile study tray; reading and bookplate simplification */
+.reader-line-control{display:none!important}
+.story-text [data-cloud-word]{touch-action:manipulation;position:relative;z-index:1}
+.story-text [data-cloud-word].study-word-active{background:var(--pink);border-radius:4px}
+.study-navigation,.study-switch{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.study-navigation{padding-right:42px}
+.study-position{white-space:nowrap;font-size:12px;color:var(--muted)}
+.study-switch{margin-top:15px}
+.study-switch button{flex:1;min-height:40px;border-radius:11px;border:1px solid var(--line);background:var(--paper);color:var(--wine);cursor:pointer;font-size:12px}
+.study-switch button:disabled{opacity:.38;cursor:not-allowed}
+.study-translation{color:var(--muted)}
+.study-loading{font-size:13px;color:var(--muted)}
+@media(max-width:700px){
+  /* On phones the tray never places a backdrop over the story: tapping other
+     words while it stays open updates the same panel instead of being blocked. */
+  html.study-tray-open #wordBackdrop{display:none!important;pointer-events:none!important}
+  html.study-tray-open .word-pop.on{
+    position:fixed!important;inset:auto 0 0 0!important;
+    width:100%!important;max-width:100vw!important;min-width:0;
+    z-index:250!important;display:block!important;visibility:visible!important;
+    max-height:min(67dvh,530px)!important;overflow-y:auto!important;
+    padding:15px 16px calc(18px + env(safe-area-inset-bottom))!important;
+    background:var(--paper)!important;color:var(--ink)!important;
+    border-radius:20px 20px 0 0!important;border:1px solid var(--line)!important;
+    box-shadow:0 -14px 45px rgba(0,0,0,.23)!important;
+  }
+  html.study-tray-open .word-pop .word-actions{
+    position:sticky;bottom:-1px;background:var(--paper);padding-top:10px;
+    display:flex;flex-wrap:wrap;gap:8px;z-index:1
+  }
+  html.study-tray-open .word-pop .word-actions button{min-height:40px;flex:1 1 92px}
+  html.study-tray-open .word-pop h3{font-size:25px}
+  html.study-tray-open .word-pop .meaning{margin:8px 0;font-size:16px}
+  html.study-tray-open .word-pop .word-extra{font-size:12px;line-height:1.7;padding:7px 0}
+  html.study-tray-open .bottom-tabs{z-index:18}
+}
