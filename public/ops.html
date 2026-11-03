@@ -59,7 +59,38 @@
       </div>
     </section>
   </div>
-  <section class="panel"><h2>④ 操作审计</h2><p class="hint">最近最多30条操作；审核和上架动作分别留痕，日志不会记录原始密钥或小说正文。</p>
+  <section class="panel" aria-label="上传新小说">
+    <div class="panel-heading"><h2>④ 上传新小说（保存为草稿）</h2><span class="soft">仅限已验证发布者</span></div>
+    <p class="hint">支持现有完整书籍 JSON 内容包，或 Markdown/TXT 小说。自动匹配已收录词卡；缺失音标、词义、例句的内容会提示修正。导入不会自动发布，也不会更改用户购买权益。</p>
+    <div class="row">
+      <label class="stretch" for="uploadNovel">选择小说文件（JSON / Markdown / TXT）
+        <input id="uploadNovel" type="file" accept=".json,.md,.markdown,.txt,application/json,text/plain,text/markdown"></label>
+      <label class="stretch" for="uploadWords">可选：补充词卡 JSON（若使用 Markdown/TXT）
+        <input id="uploadWords" type="file" accept=".json,application/json"></label>
+    </div>
+    <div class="row">
+      <label class="stretch" for="uploadBookTitle">书名
+        <input id="uploadBookTitle" maxlength="120" placeholder="例如：雨夜档案"></label>
+      <label class="stretch" for="uploadBookId">内部书籍编号
+        <input id="uploadBookId" maxlength="65" autocomplete="off" placeholder="例如：rainy-night-cet4"></label>
+    </div>
+    <div class="row">
+      <label class="stretch" for="uploadCategory">词汇商品等级
+        <select id="uploadCategory"><option value="cet4">大学英语四级</option><option value="cet6">大学英语六级</option><option value="postgrad">考研英语</option><option value="ielts">雅思英语</option></select></label>
+      <label class="stretch" for="uploadPreviewCount">免费章节数（默认零）
+        <input id="uploadPreviewCount" type="number" min="0" max="59" value="0"></label>
+    </div>
+    <label for="uploadBookDescription">小说简介</label>
+    <textarea id="uploadBookDescription" rows="2" maxlength="2000" placeholder="输入书籍简介，用于书架卡片"></textarea>
+    <div class="row">
+      <button id="checkNovel" class="secondary" disabled type="button">识别文件并检查内容</button>
+      <button id="importNovel" disabled type="button">导入为新草稿（不上架）</button>
+    </div>
+    <div id="uploadStatus" role="status" aria-live="polite" class="status">请先验证运营身份，再选择文件。</div>
+    <pre id="uploadReport" class="report" hidden></pre>
+    <p class="hint">单词发音继续使用浏览器语音合成；英美音标、释义和例句须随词卡保存。创建草稿后请在上方完成真实内容审核，再独立确认上架。</p>
+  </section>
+  <section class="panel"><h2>⑤ 操作审计</h2><p class="hint">最近最多30条操作；审核和上架动作分别留痕，日志不会记录原始密钥或小说正文。</p>
     <div id="audit" class="audit"><p class="soft">请选择书目查看。</p></div></section>
   <footer>妙屋英语 · 版本受控出版工具 · 正式销售前需完成生产配置、恢复演练及售后政策</footer>
 </main></body></html>
