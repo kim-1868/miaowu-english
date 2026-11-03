@@ -1,0 +1,1337 @@
+{
+  "version": 1,
+  "status": "NOT_APPROVED_SOURCE_BACKED_IPA_CANDIDATES",
+  "wordCount": 71,
+  "sources": {
+    "uk": {
+      "name": "Jose Llarena Britfone 3.0.1",
+      "url": "https://github.com/JoseLlarena/Britfone",
+      "file": "britfone.main.3.0.1.csv",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2017 Jose Llarena",
+      "method": "Normalized Britfone word syllable stress and phones to conventional UK IPA, editor-selected"
+    },
+    "us": {
+      "name": "open-dict-data ipa-dict en_US",
+      "url": "https://github.com/open-dict-data/ipa-dict",
+      "file": "data/en_US.txt",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2016 dohliam",
+      "method": "Selected corresponding source dialect IPA variants"
+    },
+    "exam": {
+      "name": "User-provided National CET 2016 document",
+      "note": "26 earlier target words have stored source-form checks; 45 extra words require full standalone headword and sense-level crosscheck"
+    }
+  },
+  "summary": {
+    "total": 71,
+    "extraFormReviewRequired": 45,
+    "neverAutoApprove": true
+  },
+  "words": [
+    {
+      "headword": "account",
+      "wordId": "rns1-account",
+      "partOfSpeech": "n.",
+      "meaningZh": "账号；账户",
+      "phoneticUkCandidate": "/əˈkaʊnt/",
+      "phoneticUsCandidate": "/əˈkaʊnt/",
+      "rawUkVariants": [
+        "ə k ˈaʊ n t"
+      ],
+      "rawUsVariants": [
+        "/əˈkaʊnt/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "agreement",
+      "wordId": "s87-candidate-agreement",
+      "partOfSpeech": "n.",
+      "meaningZh": "协议；约定",
+      "phoneticUkCandidate": "/əˈɡriːmənt/",
+      "phoneticUsCandidate": "/əˈɡɹimənt/",
+      "rawUkVariants": [
+        "ə g ɹ ˈiː m ə n t"
+      ],
+      "rawUsVariants": [
+        "/əˈɡɹimənt/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "bank",
+      "wordId": "s85-candidate-bank",
+      "partOfSpeech": "n.",
+      "meaningZh": "银行",
+      "phoneticUkCandidate": "/ˈbæŋk/",
+      "phoneticUsCandidate": "/ˈbæŋk/",
+      "rawUkVariants": [
+        "b ˈæ ŋ k"
+      ],
+      "rawUsVariants": [
+        "/ˈbæŋk/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "calculate",
+      "wordId": "rns1-calculate",
+      "partOfSpeech": "v.",
+      "meaningZh": "计算",
+      "phoneticUkCandidate": "/ˈkælkjʊleɪt/",
+      "phoneticUsCandidate": "/ˈkæɫkjəˌɫeɪt/",
+      "rawUkVariants": [
+        "k ˈæ l k j ʊ l ˌeɪ t"
+      ],
+      "rawUsVariants": [
+        "/ˈkæɫkjəˌɫeɪt/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "card",
+      "wordId": "s87-candidate-card",
+      "partOfSpeech": "n.",
+      "meaningZh": "卡片；银行卡",
+      "phoneticUkCandidate": "/ˈkɑːd/",
+      "phoneticUsCandidate": "/ˈkɑɹd/",
+      "rawUkVariants": [
+        "k ˈɑː d"
+      ],
+      "rawUsVariants": [
+        "/ˈkɑɹd/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "choice",
+      "wordId": "rns1-choice",
+      "partOfSpeech": "n.",
+      "meaningZh": "选择",
+      "phoneticUkCandidate": "/ˈtʃɔɪs/",
+      "phoneticUsCandidate": "/ˈtʃɔɪs/",
+      "rawUkVariants": [
+        "tʃ ˈɔɪ s"
+      ],
+      "rawUsVariants": [
+        "/ˈtʃɔɪs/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "client",
+      "wordId": "s87-candidate-client",
+      "partOfSpeech": "n.",
+      "meaningZh": "客户；委托方",
+      "phoneticUkCandidate": "/ˈklaɪənt/",
+      "phoneticUsCandidate": "/ˈkɫaɪənt/",
+      "rawUkVariants": [
+        "k l ˈaɪ ə n t"
+      ],
+      "rawUsVariants": [
+        "/ˈkɫaɪənt/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "coat",
+      "wordId": "s87-candidate-coat",
+      "partOfSpeech": "n.",
+      "meaningZh": "外套",
+      "phoneticUkCandidate": "/ˈkəʊt/",
+      "phoneticUsCandidate": "/ˈkoʊt/",
+      "rawUkVariants": [
+        "k ˈəʊ t"
+      ],
+      "rawUsVariants": [
+        "/ˈkoʊt/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "company",
+      "wordId": "s87-candidate-company",
+      "partOfSpeech": "n.",
+      "meaningZh": "公司",
+      "phoneticUkCandidate": "/ˈkʌmpəni/",
+      "phoneticUsCandidate": "/ˈkəmpəˌni/",
+      "rawUkVariants": [
+        "k ˈɐ m p ə n i"
+      ],
+      "rawUsVariants": [
+        "/ˈkəmpəˌni/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "confirm",
+      "wordId": "rns1-confirm",
+      "partOfSpeech": "v.",
+      "meaningZh": "确认",
+      "phoneticUkCandidate": "/kənˈfɜːm/",
+      "phoneticUsCandidate": "/kənˈfɝm/",
+      "rawUkVariants": [
+        "k ə n f ˈɜː m"
+      ],
+      "rawUsVariants": [
+        "/kənˈfɝm/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "contract",
+      "wordId": "s85-candidate-contract",
+      "partOfSpeech": "n.",
+      "meaningZh": "合同；契约",
+      "phoneticUkCandidate": "/ˈkɒntrækt/",
+      "phoneticUsCandidate": "/ˈkɑnˌtɹækt/",
+      "rawUkVariants": [
+        "k ə n t ɹ ˈæ k t",
+        "k ˈɒ n t ɹ ˌæ k t"
+      ],
+      "rawUsVariants": [
+        "/ˈkɑnˌtɹækt/",
+        "/kənˈtɹækt/"
+      ],
+      "selectionRationale": "Noun stress chosen for these two stories",
+      "reviewStatus": "MANY_PRONUNCIATIONS_REVIEW_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "customer",
+      "wordId": "s87-candidate-customer",
+      "partOfSpeech": "n.",
+      "meaningZh": "顾客",
+      "phoneticUkCandidate": "/ˈkʌstəmə/",
+      "phoneticUsCandidate": "/ˈkəstəmɝ/",
+      "rawUkVariants": [
+        "k ˈɐ s t ə m ə"
+      ],
+      "rawUsVariants": [
+        "/ˈkəstəmɝ/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "date",
+      "wordId": "rns1-date",
+      "partOfSpeech": "n.",
+      "meaningZh": "日期",
+      "phoneticUkCandidate": "/ˈdeɪt/",
+      "phoneticUsCandidate": "/ˈdeɪt/",
+      "rawUkVariants": [
+        "d ˈeɪ t"
+      ],
+      "rawUsVariants": [
+        "/ˈdeɪt/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "dawn",
+      "wordId": "s85-candidate-dawn",
+      "partOfSpeech": "n.",
+      "meaningZh": "黎明；破晓时分",
+      "phoneticUkCandidate": "/ˈdɔːn/",
+      "phoneticUsCandidate": "/ˈdɔn/",
+      "rawUkVariants": [
+        "d ˈɔː n"
+      ],
+      "rawUsVariants": [
+        "/ˈdɔn/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "debt",
+      "wordId": "s85-candidate-debt",
+      "partOfSpeech": "n.",
+      "meaningZh": "债务；欠款",
+      "phoneticUkCandidate": "/ˈdet/",
+      "phoneticUsCandidate": "/ˈdɛt/",
+      "rawUkVariants": [
+        "d ˈɛ t"
+      ],
+      "rawUsVariants": [
+        "/ˈdɛt/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "decision",
+      "wordId": "rns1-decision",
+      "partOfSpeech": "n.",
+      "meaningZh": "决定",
+      "phoneticUkCandidate": "/dɪˈsɪʒən/",
+      "phoneticUsCandidate": "/dɪˈsɪʒən/",
+      "rawUkVariants": [
+        "d ɪ s ˈɪ ʒ ə n"
+      ],
+      "rawUsVariants": [
+        "/dɪˈsɪʒən/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "design",
+      "wordId": "s87-candidate-design",
+      "partOfSpeech": "n./v.",
+      "meaningZh": "设计；设计作品",
+      "phoneticUkCandidate": "/dɪˈzaɪn/",
+      "phoneticUsCandidate": "/dɪˈzaɪn/",
+      "rawUkVariants": [
+        "d ɪ z ˈaɪ n"
+      ],
+      "rawUsVariants": [
+        "/dɪˈzaɪn/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "discuss",
+      "wordId": "s85-candidate-discuss",
+      "partOfSpeech": "v.",
+      "meaningZh": "讨论；商议",
+      "phoneticUkCandidate": "/dɪˈskʌs/",
+      "phoneticUsCandidate": "/dɪˈskəs/",
+      "rawUkVariants": [
+        "d ɪ s k ˈɐ s"
+      ],
+      "rawUsVariants": [
+        "/dɪˈskəs/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "document",
+      "wordId": "rns1-document",
+      "partOfSpeech": "n.",
+      "meaningZh": "文件；文档",
+      "phoneticUkCandidate": "/ˈdɒkjʊmənt/",
+      "phoneticUsCandidate": "/ˈdɑkjəmɛnt/",
+      "rawUkVariants": [
+        "d ˈɒ k j ʊ m ɛ n t",
+        "d ˈɒ k j ʊ m ə n t"
+      ],
+      "rawUsVariants": [
+        "/ˈdɑkjəmɛnt/",
+        "/ˈdɑkjumɛnt/"
+      ],
+      "selectionRationale": "Noun stress chosen for these two stories",
+      "reviewStatus": "MANY_PRONUNCIATIONS_REVIEW_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "dress",
+      "wordId": "s87-candidate-dress",
+      "partOfSpeech": "n.",
+      "meaningZh": "连衣裙；礼服",
+      "phoneticUkCandidate": "/ˈdres/",
+      "phoneticUsCandidate": "/ˈdɹɛs/",
+      "rawUkVariants": [
+        "d ɹ ˈɛ s"
+      ],
+      "rawUsVariants": [
+        "/ˈdɹɛs/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "evidence",
+      "wordId": "rns1-evidence",
+      "partOfSpeech": "n.",
+      "meaningZh": "证据",
+      "phoneticUkCandidate": "/ˈevɪdəns/",
+      "phoneticUsCandidate": "/ˈɛvədəns/",
+      "rawUkVariants": [
+        "ˈɛ v ɪ d ə n s"
+      ],
+      "rawUsVariants": [
+        "/ˈɛvədəns/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "explain",
+      "wordId": "rns1-explain",
+      "partOfSpeech": "v.",
+      "meaningZh": "解释",
+      "phoneticUkCandidate": "/ɪkˈspleɪn/",
+      "phoneticUsCandidate": "/ɪksˈpɫeɪn/",
+      "rawUkVariants": [
+        "ɪ k s p l ˈeɪ n"
+      ],
+      "rawUsVariants": [
+        "/ɪksˈpɫeɪn/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "future",
+      "wordId": "rns1-future",
+      "partOfSpeech": "n.",
+      "meaningZh": "未来",
+      "phoneticUkCandidate": "/ˈfjuːtʃə/",
+      "phoneticUsCandidate": "/ˈfjutʃɝ/",
+      "rawUkVariants": [
+        "f j ˈuː tʃ ə"
+      ],
+      "rawUsVariants": [
+        "/ˈfjutʃɝ/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "hesitate",
+      "wordId": "rns1-hesitate",
+      "partOfSpeech": "v.",
+      "meaningZh": "犹豫",
+      "phoneticUkCandidate": "/ˈhezɪteɪt/",
+      "phoneticUsCandidate": "/ˈhɛzəˌteɪt/",
+      "rawUkVariants": [
+        "h ˈɛ z ɪ t ˌeɪ t"
+      ],
+      "rawUsVariants": [
+        "/ˈhɛzəˌteɪt/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "hospital",
+      "wordId": "s85-candidate-hospital",
+      "partOfSpeech": "n.",
+      "meaningZh": "医院",
+      "phoneticUkCandidate": "/ˈhɒspɪtəl/",
+      "phoneticUsCandidate": "/ˈhɑˌspɪtəɫ/",
+      "rawUkVariants": [
+        "h ˈɒ s p ˌɪ t ə l"
+      ],
+      "rawUsVariants": [
+        "/ˈhɑˌspɪtəɫ/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "identity",
+      "wordId": "rns1-identity",
+      "partOfSpeech": "n.",
+      "meaningZh": "身份",
+      "phoneticUkCandidate": "/aɪˈdentɪti/",
+      "phoneticUsCandidate": "/aɪˈdɛntɪˌti/",
+      "rawUkVariants": [
+        "aɪ d ˈɛ n t ɪ t i"
+      ],
+      "rawUsVariants": [
+        "/aɪˈdɛntɪˌti/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "information",
+      "wordId": "s87-candidate-information",
+      "partOfSpeech": "n.",
+      "meaningZh": "信息",
+      "phoneticUkCandidate": "/ˌɪnfəˈmeɪʃən/",
+      "phoneticUsCandidate": "/ˌɪnfɝˈmeɪʃən/",
+      "rawUkVariants": [
+        "ˌɪ n f ə m ˈeɪ ʃ ə n"
+      ],
+      "rawUsVariants": [
+        "/ˌɪnfɝˈmeɪʃən/",
+        "/ɪnˈfɔɹˈmeɪʃən/"
+      ],
+      "selectionRationale": "One widespread pronunciation selected from listed alternatives",
+      "reviewStatus": "MANY_PRONUNCIATIONS_REVIEW_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "interview",
+      "wordId": "rns1-interview",
+      "partOfSpeech": "n.",
+      "meaningZh": "访谈；采访",
+      "phoneticUkCandidate": "/ˈɪntəvjuː/",
+      "phoneticUsCandidate": "/ˈɪntɝvˌju/",
+      "rawUkVariants": [
+        "ˈɪ n t ə v j ˌuː"
+      ],
+      "rawUsVariants": [
+        "/ˈɪntɝvˌju/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "job",
+      "wordId": "s87-candidate-job",
+      "partOfSpeech": "n.",
+      "meaningZh": "工作；职位",
+      "phoneticUkCandidate": "/ˈdʒɒb/",
+      "phoneticUsCandidate": "/ˈdʒɑb/",
+      "rawUkVariants": [
+        "dʒ ˈɒ b",
+        "dʒ ˈəʊ b"
+      ],
+      "rawUsVariants": [
+        "/ˈdʒɑb/",
+        "/ˈdʒoʊb/"
+      ],
+      "selectionRationale": "Common noun job chosen, not the proper name Job",
+      "reviewStatus": "MANY_PRONUNCIATIONS_REVIEW_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "loan",
+      "wordId": "s85-candidate-loan",
+      "partOfSpeech": "n.",
+      "meaningZh": "贷款；借款",
+      "phoneticUkCandidate": "/ˈləʊn/",
+      "phoneticUsCandidate": "/ˈɫoʊn/",
+      "rawUkVariants": [
+        "l ˈəʊ n"
+      ],
+      "rawUsVariants": [
+        "/ˈɫoʊn/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "manager",
+      "wordId": "s87-candidate-manager",
+      "partOfSpeech": "n.",
+      "meaningZh": "经理；负责人",
+      "phoneticUkCandidate": "/ˈmænɪdʒə/",
+      "phoneticUsCandidate": "/ˈmænɪdʒɝ/",
+      "rawUkVariants": [
+        "m ˈæ n ɪ dʒ ə"
+      ],
+      "rawUsVariants": [
+        "/ˈmænədʒɝ/",
+        "/ˈmænɪdʒɝ/"
+      ],
+      "selectionRationale": "One widespread pronunciation selected from listed alternatives",
+      "reviewStatus": "MANY_PRONUNCIATIONS_REVIEW_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "market",
+      "wordId": "s87-candidate-market",
+      "partOfSpeech": "n.",
+      "meaningZh": "市场",
+      "phoneticUkCandidate": "/ˈmɑːkɪt/",
+      "phoneticUsCandidate": "/ˈmɑɹkɪt/",
+      "rawUkVariants": [
+        "m ˈɑː k ɪ t"
+      ],
+      "rawUsVariants": [
+        "/ˈmɑɹkət/",
+        "/ˈmɑɹkɪt/"
+      ],
+      "selectionRationale": "One widespread pronunciation selected from listed alternatives",
+      "reviewStatus": "MANY_PRONUNCIATIONS_REVIEW_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "marriage",
+      "wordId": "s87-candidate-marriage",
+      "partOfSpeech": "n.",
+      "meaningZh": "婚姻",
+      "phoneticUkCandidate": "/ˈmærɪdʒ/",
+      "phoneticUsCandidate": "/ˈmɛɹɪdʒ/",
+      "rawUkVariants": [
+        "m ˈæ ɹ ɪ dʒ"
+      ],
+      "rawUsVariants": [
+        "/ˈmɛɹɪdʒ/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "meeting",
+      "wordId": "s87-candidate-meeting",
+      "partOfSpeech": "n.",
+      "meaningZh": "会议",
+      "phoneticUkCandidate": "/ˈmiːtɪŋ/",
+      "phoneticUsCandidate": "/ˈmitɪŋ/",
+      "rawUkVariants": [
+        "m ˈiː t ɪ ŋ"
+      ],
+      "rawUsVariants": [
+        "/ˈmitɪŋ/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "message",
+      "wordId": "s85-candidate-message",
+      "partOfSpeech": "n.",
+      "meaningZh": "消息；信息",
+      "phoneticUkCandidate": "/ˈmesɪdʒ/",
+      "phoneticUsCandidate": "/ˈmɛsɪdʒ/",
+      "rawUkVariants": [
+        "m ˈɛ s ɪ dʒ"
+      ],
+      "rawUsVariants": [
+        "/ˈmɛsədʒ/",
+        "/ˈmɛsɪdʒ/"
+      ],
+      "selectionRationale": "One widespread pronunciation selected from listed alternatives",
+      "reviewStatus": "MANY_PRONUNCIATIONS_REVIEW_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "model",
+      "wordId": "s87-candidate-model",
+      "partOfSpeech": "n.",
+      "meaningZh": "模型",
+      "phoneticUkCandidate": "/ˈmɒdəl/",
+      "phoneticUsCandidate": "/ˈmɑdəɫ/",
+      "rawUkVariants": [
+        "m ˈɒ d ə l"
+      ],
+      "rawUsVariants": [
+        "/ˈmɑdəɫ/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "money",
+      "wordId": "s85-candidate-money",
+      "partOfSpeech": "n.",
+      "meaningZh": "钱；款项",
+      "phoneticUkCandidate": "/ˈmʌni/",
+      "phoneticUsCandidate": "/ˈməni/",
+      "rawUkVariants": [
+        "m ˈɐ n i"
+      ],
+      "rawUsVariants": [
+        "/ˈməni/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "notice",
+      "wordId": "rns1-notice",
+      "partOfSpeech": "v.",
+      "meaningZh": "注意到",
+      "phoneticUkCandidate": "/ˈnəʊtɪs/",
+      "phoneticUsCandidate": "/ˈnoʊtɪs/",
+      "rawUkVariants": [
+        "n ˈəʊ t ɪ s"
+      ],
+      "rawUsVariants": [
+        "/ˈnoʊtəs/",
+        "/ˈnoʊtɪs/"
+      ],
+      "selectionRationale": "One widespread pronunciation selected from listed alternatives",
+      "reviewStatus": "MANY_PRONUNCIATIONS_REVIEW_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "office",
+      "wordId": "s87-candidate-office",
+      "partOfSpeech": "n.",
+      "meaningZh": "办公室",
+      "phoneticUkCandidate": "/ˈɒfɪs/",
+      "phoneticUsCandidate": "/ˈɔfɪs/",
+      "rawUkVariants": [
+        "ˈɒ f ɪ s"
+      ],
+      "rawUsVariants": [
+        "/ˈɔfɪs/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "option",
+      "wordId": "rns1-option",
+      "partOfSpeech": "n.",
+      "meaningZh": "选择；选项",
+      "phoneticUkCandidate": "/ˈɒpʃən/",
+      "phoneticUsCandidate": "/ˈɑpʃən/",
+      "rawUkVariants": [
+        "ˈɒ p ʃ ə n"
+      ],
+      "rawUsVariants": [
+        "/ˈɑpʃən/",
+        "/ˈɔpʃən/"
+      ],
+      "selectionRationale": "One widespread pronunciation selected from listed alternatives",
+      "reviewStatus": "MANY_PRONUNCIATIONS_REVIEW_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "partner",
+      "wordId": "s87-candidate-partner",
+      "partOfSpeech": "n.",
+      "meaningZh": "合伙人；伙伴",
+      "phoneticUkCandidate": "/ˈpɑːtnə/",
+      "phoneticUsCandidate": "/ˈpɑɹtnɝ/",
+      "rawUkVariants": [
+        "p ˈɑː t n ə"
+      ],
+      "rawUsVariants": [
+        "/ˈpɑɹtnɝ/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "pen",
+      "wordId": "s85-candidate-pen",
+      "partOfSpeech": "n.",
+      "meaningZh": "钢笔；笔",
+      "phoneticUkCandidate": "/ˈpen/",
+      "phoneticUsCandidate": "/ˈpɛn/",
+      "rawUkVariants": [
+        "p ˈɛ n"
+      ],
+      "rawUsVariants": [
+        "/ˈpɛn/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "phone",
+      "wordId": "s85-candidate-phone",
+      "partOfSpeech": "n.",
+      "meaningZh": "手机；电话",
+      "phoneticUkCandidate": "/ˈfəʊn/",
+      "phoneticUsCandidate": "/ˈfoʊn/",
+      "rawUkVariants": [
+        "f ˈəʊ n"
+      ],
+      "rawUsVariants": [
+        "/ˈfoʊn/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "picture",
+      "wordId": "s87-candidate-picture",
+      "partOfSpeech": "n.",
+      "meaningZh": "图片",
+      "phoneticUkCandidate": "/ˈpɪktʃə/",
+      "phoneticUsCandidate": "/ˈpɪktʃɝ/",
+      "rawUkVariants": [
+        "p ˈɪ k tʃ ə"
+      ],
+      "rawUsVariants": [
+        "/ˈpɪktʃɝ/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "plan",
+      "wordId": "s85-candidate-plan",
+      "partOfSpeech": "n.",
+      "meaningZh": "计划；方案",
+      "phoneticUkCandidate": "/ˈplæn/",
+      "phoneticUsCandidate": "/ˈpɫæn/",
+      "rawUkVariants": [
+        "p l ˈæ n"
+      ],
+      "rawUsVariants": [
+        "/ˈpɫæn/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "price",
+      "wordId": "s87-candidate-price",
+      "partOfSpeech": "n.",
+      "meaningZh": "价格",
+      "phoneticUkCandidate": "/ˈpraɪs/",
+      "phoneticUsCandidate": "/ˈpɹaɪs/",
+      "rawUkVariants": [
+        "p ɹ ˈaɪ s"
+      ],
+      "rawUsVariants": [
+        "/ˈpɹaɪs/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "problem",
+      "wordId": "s87-candidate-problem",
+      "partOfSpeech": "n.",
+      "meaningZh": "问题",
+      "phoneticUkCandidate": "/ˈprɒbləm/",
+      "phoneticUsCandidate": "/ˈpɹɑbɫəm/",
+      "rawUkVariants": [
+        "p ɹ ˈɒ b l ə m"
+      ],
+      "rawUsVariants": [
+        "/ˈpɹɑbɫəm/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "project",
+      "wordId": "s87-candidate-project",
+      "partOfSpeech": "n.",
+      "meaningZh": "项目",
+      "phoneticUkCandidate": "/ˈprɒdʒekt/",
+      "phoneticUsCandidate": "/ˈpɹɑdʒɛkt/",
+      "rawUkVariants": [
+        "p ɹ ˈɒ dʒ ɛ k t",
+        "p ɹ ə dʒ ˈɛ k t"
+      ],
+      "rawUsVariants": [
+        "/ˈpɹɑdʒɛkt/",
+        "/pɹəˈdʒɛkt/"
+      ],
+      "selectionRationale": "Noun stress chosen for these two stories",
+      "reviewStatus": "MANY_PRONUNCIATIONS_REVIEW_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "promise",
+      "wordId": "rns1-promise",
+      "partOfSpeech": "n.",
+      "meaningZh": "承诺",
+      "phoneticUkCandidate": "/ˈprɒmɪs/",
+      "phoneticUsCandidate": "/ˈpɹɑməs/",
+      "rawUkVariants": [
+        "p ɹ ˈɒ m ɪ s"
+      ],
+      "rawUsVariants": [
+        "/ˈpɹɑməs/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "property",
+      "wordId": "s85-candidate-property",
+      "partOfSpeech": "n.",
+      "meaningZh": "财产；资产",
+      "phoneticUkCandidate": "/ˈprɒpəti/",
+      "phoneticUsCandidate": "/ˈpɹɑpɝti/",
+      "rawUkVariants": [
+        "p ɹ ˈɒ p ə t i"
+      ],
+      "rawUsVariants": [
+        "/ˈpɹɑpɝti/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "record",
+      "wordId": "rns1-record",
+      "partOfSpeech": "n.",
+      "meaningZh": "记录",
+      "phoneticUkCandidate": "/ˈrekɔːd/",
+      "phoneticUsCandidate": "/ˈɹɛkɝd/",
+      "rawUkVariants": [
+        "ɹ ˈɛ k ɔː d",
+        "ɹ ɪ k ˈɔː d"
+      ],
+      "rawUsVariants": [
+        "/ˈɹɛkɝd/",
+        "/ɹəˈkɔɹd/",
+        "/ɹɪˈkɔɹd/"
+      ],
+      "selectionRationale": "Noun stress chosen for these two stories",
+      "reviewStatus": "MANY_PRONUNCIATIONS_REVIEW_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "regret",
+      "wordId": "rns1-regret",
+      "partOfSpeech": "n./v.",
+      "meaningZh": "遗憾；后悔",
+      "phoneticUkCandidate": "/rɪˈɡret/",
+      "phoneticUsCandidate": "/ɹəˈɡɹɛt/",
+      "rawUkVariants": [
+        "ɹ ɪ g ɹ ˈɛ t"
+      ],
+      "rawUsVariants": [
+        "/ɹəˈɡɹɛt/",
+        "/ɹɪˈɡɹɛt/"
+      ],
+      "selectionRationale": "One widespread pronunciation selected from listed alternatives",
+      "reviewStatus": "MANY_PRONUNCIATIONS_REVIEW_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "relationship",
+      "wordId": "s87-candidate-relationship",
+      "partOfSpeech": "n.",
+      "meaningZh": "关系",
+      "phoneticUkCandidate": "/rɪˈleɪʃənʃɪp/",
+      "phoneticUsCandidate": "/ɹiˈɫeɪʃənˌʃɪp/",
+      "rawUkVariants": [
+        "ɹ ɪ l ˈeɪ ʃ ə n ʃ ˌɪ p"
+      ],
+      "rawUsVariants": [
+        "/ɹiˈɫeɪʃənˌʃɪp/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "remember",
+      "wordId": "s85-candidate-remember",
+      "partOfSpeech": "v.",
+      "meaningZh": "记得；记住",
+      "phoneticUkCandidate": "/rɪˈmembə/",
+      "phoneticUsCandidate": "/ɹɪˈmɛmbɝ/",
+      "rawUkVariants": [
+        "ɹ ɪ m ˈɛ m b ə"
+      ],
+      "rawUsVariants": [
+        "/ɹiˈmɛmbɝ/",
+        "/ɹɪˈmɛmbɝ/"
+      ],
+      "selectionRationale": "One widespread pronunciation selected from listed alternatives",
+      "reviewStatus": "MANY_PRONUNCIATIONS_REVIEW_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "report",
+      "wordId": "s87-candidate-report",
+      "partOfSpeech": "n.",
+      "meaningZh": "报告",
+      "phoneticUkCandidate": "/rɪˈpɔːt/",
+      "phoneticUsCandidate": "/ɹɪˈpɔɹt/",
+      "rawUkVariants": [
+        "ɹ ɪ p ˈɔː t"
+      ],
+      "rawUsVariants": [
+        "/ɹiˈpɔɹt/",
+        "/ɹɪˈpɔɹt/"
+      ],
+      "selectionRationale": "One widespread pronunciation selected from listed alternatives",
+      "reviewStatus": "MANY_PRONUNCIATIONS_REVIEW_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "request",
+      "wordId": "rns1-request",
+      "partOfSpeech": "n.",
+      "meaningZh": "请求；申请",
+      "phoneticUkCandidate": "/rɪˈkwest/",
+      "phoneticUsCandidate": "/ɹɪˈkwɛst/",
+      "rawUkVariants": [
+        "ɹ ɪ k w ˈɛ s t"
+      ],
+      "rawUsVariants": [
+        "/ɹiˈkwɛst/",
+        "/ɹɪˈkwɛst/"
+      ],
+      "selectionRationale": "One widespread pronunciation selected from listed alternatives",
+      "reviewStatus": "MANY_PRONUNCIATIONS_REVIEW_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "respond",
+      "wordId": "rns1-respond",
+      "partOfSpeech": "v.",
+      "meaningZh": "回应；回答",
+      "phoneticUkCandidate": "/rɪˈspɒnd/",
+      "phoneticUsCandidate": "/ɹɪˈspɑnd/",
+      "rawUkVariants": [
+        "ɹ ɪ s p ˈɒ n d"
+      ],
+      "rawUsVariants": [
+        "/ɹiˈspɑnd/",
+        "/ɹɪˈspɑnd/"
+      ],
+      "selectionRationale": "One widespread pronunciation selected from listed alternatives",
+      "reviewStatus": "MANY_PRONUNCIATIONS_REVIEW_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "responsibility",
+      "wordId": "rns1-responsibility",
+      "partOfSpeech": "n.",
+      "meaningZh": "责任",
+      "phoneticUkCandidate": "/rɪˌspɒnsəˈbɪləti/",
+      "phoneticUsCandidate": "/ɹiˌspɑnsəˈbɪɫəti/",
+      "rawUkVariants": [
+        "ɹ ɪ s p ˌɒ n s ɪ b ˈɪ l ɪ t i"
+      ],
+      "rawUsVariants": [
+        "/ɹiˌspɑnsəˈbɪɫəti/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "result",
+      "wordId": "s87-candidate-result",
+      "partOfSpeech": "n.",
+      "meaningZh": "结果",
+      "phoneticUkCandidate": "/rɪˈzʌlt/",
+      "phoneticUsCandidate": "/ɹɪˈzəɫt/",
+      "rawUkVariants": [
+        "ɹ ɪ z ˈɐ l t"
+      ],
+      "rawUsVariants": [
+        "/ɹiˈzəɫt/",
+        "/ɹɪˈzəɫt/"
+      ],
+      "selectionRationale": "One widespread pronunciation selected from listed alternatives",
+      "reviewStatus": "MANY_PRONUNCIATIONS_REVIEW_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "ring",
+      "wordId": "s87-candidate-ring",
+      "partOfSpeech": "n.",
+      "meaningZh": "戒指",
+      "phoneticUkCandidate": "/ˈrɪŋ/",
+      "phoneticUsCandidate": "/ˈɹɪŋ/",
+      "rawUkVariants": [
+        "ɹ ˈɪ ŋ"
+      ],
+      "rawUsVariants": [
+        "/ˈɹɪŋ/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "risk",
+      "wordId": "rns1-risk",
+      "partOfSpeech": "n.",
+      "meaningZh": "风险",
+      "phoneticUkCandidate": "/ˈrɪsk/",
+      "phoneticUsCandidate": "/ˈɹɪsk/",
+      "rawUkVariants": [
+        "ɹ ˈɪ s k"
+      ],
+      "rawUsVariants": [
+        "/ˈɹɪsk/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "room",
+      "wordId": "s87-candidate-room",
+      "partOfSpeech": "n.",
+      "meaningZh": "房间",
+      "phoneticUkCandidate": "/ˈruːm/",
+      "phoneticUsCandidate": "/ˈɹum/",
+      "rawUkVariants": [
+        "ɹ ˈuː m"
+      ],
+      "rawUsVariants": [
+        "/ˈɹum/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "schedule",
+      "wordId": "rns1-schedule",
+      "partOfSpeech": "n.",
+      "meaningZh": "时间表",
+      "phoneticUkCandidate": "/ˈʃedjuːl/",
+      "phoneticUsCandidate": "/ˈskɛdʒuɫ/",
+      "rawUkVariants": [
+        "ʃ ˈɛ dʒ uː l",
+        "s k ˈɛ dʒ uː l"
+      ],
+      "rawUsVariants": [
+        "/ˈskɛdʒuɫ/",
+        "/ˈskɛdʒʊɫ/"
+      ],
+      "selectionRationale": "One widespread pronunciation selected from listed alternatives",
+      "reviewStatus": "MANY_PRONUNCIATIONS_REVIEW_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "screen",
+      "wordId": "s85-candidate-screen",
+      "partOfSpeech": "n.",
+      "meaningZh": "屏幕",
+      "phoneticUkCandidate": "/ˈskriːn/",
+      "phoneticUsCandidate": "/ˈskɹin/",
+      "rawUkVariants": [
+        "s k ɹ ˈiː n"
+      ],
+      "rawUsVariants": [
+        "/ˈskɹin/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "signature",
+      "wordId": "rns1-signature",
+      "partOfSpeech": "n.",
+      "meaningZh": "签名",
+      "phoneticUkCandidate": "/ˈsɪɡnətʃə/",
+      "phoneticUsCandidate": "/ˈsɪɡnətʃɝ/",
+      "rawUkVariants": [
+        "s ˈɪ g n ə tʃ ə"
+      ],
+      "rawUsVariants": [
+        "/ˈsɪɡnətʃɝ/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "structure",
+      "wordId": "s87-candidate-structure",
+      "partOfSpeech": "n.",
+      "meaningZh": "结构",
+      "phoneticUkCandidate": "/ˈstrʌktʃə/",
+      "phoneticUsCandidate": "/ˈstɹəktʃɝ/",
+      "rawUkVariants": [
+        "s t ɹ ˈɐ k tʃ ə"
+      ],
+      "rawUsVariants": [
+        "/ˈstɹəktʃɝ/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "team",
+      "wordId": "s87-candidate-team",
+      "partOfSpeech": "n.",
+      "meaningZh": "团队",
+      "phoneticUkCandidate": "/ˈtiːm/",
+      "phoneticUsCandidate": "/ˈtim/",
+      "rawUkVariants": [
+        "t ˈiː m"
+      ],
+      "rawUsVariants": [
+        "/ˈtim/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "time",
+      "wordId": "s87-candidate-time",
+      "partOfSpeech": "n.",
+      "meaningZh": "时间",
+      "phoneticUkCandidate": "/ˈtaɪm/",
+      "phoneticUsCandidate": "/ˈtaɪm/",
+      "rawUkVariants": [
+        "t ˈaɪ m"
+      ],
+      "rawUsVariants": [
+        "/ˈtaɪm/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    },
+    {
+      "headword": "trust",
+      "wordId": "rns1-trust",
+      "partOfSpeech": "v./n.",
+      "meaningZh": "信任",
+      "phoneticUkCandidate": "/ˈtrʌst/",
+      "phoneticUsCandidate": "/ˈtɹəst/",
+      "rawUkVariants": [
+        "t ɹ ˈɐ s t"
+      ],
+      "rawUsVariants": [
+        "/ˈtɹəst/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "verify",
+      "wordId": "rns1-verify",
+      "partOfSpeech": "v.",
+      "meaningZh": "核实",
+      "phoneticUkCandidate": "/ˈverɪfaɪ/",
+      "phoneticUsCandidate": "/ˈvɛɹəˌfaɪ/",
+      "rawUkVariants": [
+        "v ˈɛ ɹ ɪ f ˌaɪ"
+      ],
+      "rawUsVariants": [
+        "/ˈvɛɹəˌfaɪ/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_SOURCE_CHECKED_CONTEXT_NOT_APPROVED",
+      "humanApproved": false
+    },
+    {
+      "headword": "wedding",
+      "wordId": "s87-candidate-wedding",
+      "partOfSpeech": "n.",
+      "meaningZh": "婚礼",
+      "phoneticUkCandidate": "/ˈwedɪŋ/",
+      "phoneticUsCandidate": "/ˈwɛdɪŋ/",
+      "rawUkVariants": [
+        "w ˈɛ d ɪ ŋ"
+      ],
+      "rawUsVariants": [
+        "/ˈwɛdɪŋ/"
+      ],
+      "selectionRationale": "Single recorded US form, UK normalized from source",
+      "reviewStatus": "REFERENCE_SELECTED_EDITORIAL_SIGNOFF_REQUIRED",
+      "examHeadwordStatus": "2016_PDF_FORM_NOT_YET_CHECKED",
+      "humanApproved": false
+    }
+  ]
+}
