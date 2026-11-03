@@ -94,6 +94,94 @@ const RULES=[
 // Chapter-scoped substantive edits: only exact original phrases may match.
 // Each replacement must preserve surrounding story facts and original anchors.
 const EXTRA={
+ 2:{
+  1:[["予安没有动。","予安没有动。男人的 [[identity]] 仍是个谜，她不愿把信箱的一声轻响当成 [[evidence]]。"],["“先别碰那只箱子。”他说。","“先别碰那只箱子。”他说，语气像一句 [[warning]]。"]],
+  6:[["予安不打算凭一张旧证件相信他。","予安不打算仅凭一张旧证件就确认他的 [[identity]]，还需要独立的 [[proof]]。"]],
+  7:[["借阅日期","借阅 [[date]]"],["予安发现他的字不像信上那样右倾","予安发现他的 [[handwriting]] 不像信上那样右倾"],["她暗暗松了口气","这个 [[detail]] 让她暗暗松了口气"]],
+  10:[["借阅档案","借阅 [[archive]]"],["而是更早的一个冬天","而是更早的一个冬天，这段时间差可能是新的 [[clue]]"]],
+  14:[["每张背面都盖有日期","每张背面都写着 [[date]]"],["第47号卡的正面记录完好","第47号卡的正面是一份完整的借阅 [[record]]"]],
+  15:[["“你一直知道这里有问题？”她问。","“你一直知道这里有问题？”她问，想追查这处 [[discrepancy]] 的 [[source]]。"]],
+  21:[["“这个表是谁填的？”予安问。","“这份 [[record]] 是谁填的？”予安问。"],["所有日期都对得上","所有 [[date]] 都对得上"]],
+  36:[["第二封信的封面","第二只 [[envelope]] 上"],["周砚看见这行字，缓缓后退。","周砚看见这行字，缓缓后退。予安觉得他的反应是一条新的 [[clue]]。"]],
+  38:[["她正想问个明白，书店灯突然熄灭。","她正想弄清这条 [[clue]]，书店却再次发生 [[outage]]，灯突然熄灭。"],["那张归还单编号的前半段","那份 [[record]] 上编号的前半段"]],
+ },
+ 3:{
+  1:[["灯熄灭的瞬间","突然 [[outage]] 的瞬间"],["归还单编号的前半段","归还 [[record]] 上编号的前半段"]],
+  2:[["统一使用的数字前缀","统一使用的编号 [[pattern]]"],["他只说得出前缀，不能说出整张单据的内容。","他只说得出前缀，不能 [[confirm]] 整张单据的其他 [[detail]]。"]],
+  19:[["一片可活动的隔板","一片可活动的隔板，这处 [[detail]] 提示信箱还有旧 [[mechanism]]"],["还不知道隔板何时会松开","还无法 [[predict]] 隔板何时会松开"]],
+  21:[["上面把每天二十三点四十七分标为旧馆门禁切换时间","上面标着旧馆门禁的 [[timing]]：每天二十三点四十七分"],["匿名信中那句","那封 [[anonymous]] 信里那句"]],
+  26:[["有人知道箱子会在那时掉下一封信","有人知道信箱的 [[mechanism]] 会在那时掉下一封信"],["分清巧合和经过安排的事情","分清巧合与刻意安排的 [[pattern]]"]],
+  35:[["信中的笔迹比第一封更凌乱","信中的 [[handwriting]] 比第一封更凌乱"],["墨迹尚未完全干透","墨迹尚未完全干透，这个 [[detail]] 让她心头一紧"],["它警告她，下一次停电不会是意外","那条 [[warning]] 提醒她，下一次 [[outage]] 可能不是意外"]],
+ },
+ 4:{
+  2:[["备用电源会保留系统时间","备用电源能够 [[retain]] 系统时间"],["那部分访问记录","那部分访问 [[record]]"]],
+  8:[["两个日期接近的事件","两个 [[date]] 接近的事件"],["予安决定先去申请查看可以公开的历史维护说明","予安准备提交一份 [[request]]，查阅可以公开的历史维护说明"]],
+  20:[["家属关系、申请目的和所需时间段","家属 [[identity]]、申请目的和需要查阅的 [[date]] 范围"],["带受理编号的小票","带受理编号的 [[receipt]]"]],
+  21:[["她决定先通过公开联系方式留下请求，得到同意后再谈","她决定通过 [[official]] 联系方式提出 [[request]]，得到对方的 [[consent]] 后再谈"]],
+  22:[["予安把小票放进书包","予安把那张 [[receipt]] 放进书包"],["拒绝也应该有理由","正式的 [[decision]] 也应该有理由"],["我知道自己问的是什么问题","我能 [[confirm]] 自己问了什么问题"]],
+  30:[["那份申请批下来","那份 [[request]] 获得批准"],["仍在街区生活的人","仍在街区生活的 [[resident]]"]],
+  35:[["可公开复印件","可公开的 [[document]] 副本"],["一条陌生短信","一条来自未知 [[source]] 的短信"]],
+  36:[["一张监控屏幕照片","一张监控屏幕的 [[photograph]]"],["一叠资料装进纸箱","一叠 [[document]] 装进纸箱"],["帽檐压得很低","帽檐压得很低，难以辨认他的 [[identity]]"]],
+ },
+ 5:{
+  1:[["陌生短信里的照片","陌生短信里的 [[photograph]]"],["没有证明周砚说谎","还不足以成为周砚说谎的 [[evidence]]"],["只有在灯光斜照时才看得见","这个 [[detail]] 只有在灯光斜照时才看得见"]],
+  11:[["她渐渐学会了不把愿意帮助自己的人置于麻烦之中。","她逐渐 [[recognize]] 到打探 [[privacy]] 的界限，不愿让好心人惹上麻烦。"]],
+  16:[["失踪前姐姐把一本旧词典托付给自己保管","姐姐 [[disappear]] 前，曾把一本旧词典托付给她保管"],["普通嘱咐","普通的 [[warning]]"]],
+  27:[["整理证据","整理 [[evidence]]"],["那张合影","那张 [[photograph]]"]],
+  28:[["第47号借书卡","第47号借书 [[record]]"],["她终于想明白","这条 [[clue]] 让她想到"]],
+  29:[["她把相同的信息分别写在两张卡上","她把同一条 [[record]] 分别写在两张卡上"],["把这个发现告诉所有人","向所有人 [[reveal]] 这个发现"],["证据只留在自己手中","[[evidence]] 只留在自己手中"]],
+  36:[["书脊与封面之间","[[spine]] 与封面之间"],["里面确实藏着一层额外的纸","里面确实有一层 [[hidden]] 的额外纸页"],["纸上写着一个名字，恰好是她童年老师的姓","纸上写着一个名字，这个 [[detail]] 恰好是她童年老师的姓"]],
+ },
+ 6:{
+  1:[["她不敢自行剪断","她想 [[preserve]] 原貌，因此不敢自行剪断"],["封面与破损处的照片","封面与破损处的 [[photograph]]"]],
+  10:[["第三人手上却是浅色布手套","第三人的 [[identity]] 仍无法核实，手上却是浅色布手套"],["予安想起童年时曾有一位老师","这个 [[detail]] 让予安想起童年时的一位老师"]],
+  18:[["邱老师总能记住每个学生喜欢的书","邱老师的 [[memory]] 很好，总能记住每个学生喜欢的书"],["第三人的身形让予安想起","第三人那 [[familiar]] 的身形让予安想起"]],
+  22:[["那个名字和邱老师的名字太像了","那个名字和邱老师的名字太像了，这处 [[detail]] 让她警觉"],["签名不应该混为一谈","[[signature]] 不应该混为一谈"]],
+  29:[["与借阅卡编号再次重合","与借阅 [[record]] 的编号再次重合"],["又怕有人正等着她行动","但这个 [[detail]] 也让她担心有人正等着她行动"]],
+  30:[["照片中的轮廓","[[photograph]] 中的轮廓"],["旧箱的存放记录","旧箱的存放 [[record]]"]],
+  32:[["姐姐在学生时代的合影","姐姐在学生时代的 [[photograph]]"]],
+  37:[["既然明天能当面核对","既然明天能当面 [[verify]]"],["把对方这句话原样记下","把对方这句话存为一条 [[record]]"]],
+ },
+ 7:{
+  1:[["她害怕自己会在见到邱老师时忘记要问什么","她怕自己的 [[memory]] 不可靠，见到邱老师就忘了要问什么"]],
+  20:[["他曾想把这件事交给成年人处理，却没想到拖延本身也会造成伤害","他以为交给成年人就能 [[protect]] 学生家庭，却没想到自己的 [[delay]] 也让人受了伤"]],
+  26:[["比任何一张照片都复杂","比任何一张 [[photograph]] 都复杂"],["负责发放的人接连换班","负责 [[distribute]] 物资的人接连换班"]],
+  35:[["不保证对方一定回复","也不能 [[confirm]] 对方一定会 [[respond]]"]],
+ },
+ 8:{
+  2:[["维护记录","维护 [[record]]"],["延迟槽里的纸件","延迟 [[storage]] 槽里的纸件"],["旧信箱每晚二十三点四十七分会释放","旧信箱按照 [[schedule]]，每晚二十三点四十七分会释放"]],
+  6:[["旧馆下班时间","旧馆当年的 [[schedule]]"],["整条时间线","整条事件 [[sequence]]"]],
+  10:[["旧箱说明书","旧 [[device]] 的说明书"],["没有打开线路，也没有擅自拆掉信箱","没有擅自 [[remove]] 线路，也没有拆掉信箱"]],
+  11:[["收纸本归还单","收纸本归还 [[record]]"],["在固定时间松开","按预设 [[schedule]] 松开"]],
+  12:[["第一封信不是预知了灰大衣男人的到来","第一封信不可能 [[predict]] 灰大衣男人何时到来"],["把时钟写进了警告","把时钟写进了 [[warning]]"]],
+  17:[["检查记录","检查 [[record]]"],["那条维修记录","那份维修 [[document]]"]],
+  24:[["登记延迟","登记 [[delay]]"],["原始纸件","[[original]] 纸件"]],
+  30:[["一句道歉","一句 [[apology]]"],["实质性的纠错","有实际效果的 [[correction]]"]],
+  38:[["姐姐留给她的短句","姐姐留给她的 [[warning]]"],["那些一直没有拿到物资的人","那些一直没有拿到 [[supply]] 的人"],["信箱的规律","信箱的 [[pattern]]"]],
+ },
+ 9:{
+  2:[["名单显示他们已经领取","系统 [[record]] 显示他们已经领取"],["签收单却一片空白","[[receipt]] 却一片空白"]],
+  8:[["苏阿姨在录音前","苏阿姨在 [[recording]] 前"],["只希望准确写下","只希望留下 [[accurate]] 的 [[record]]"]],
+  20:[["没人留下完整的交接说明","没人留下完整的交接 [[record]]"],["但公开日志中至少保留了搬运车辆的到达时间","但那份公开 [[document]] 至少记载了搬运车辆的到达时间"]],
+  26:[["清单上记录着","[[inventory]] 上列着"],["最紧张的是干净饮水","最担心的是饮水 [[shortage]]，连干净的水都难找"]],
+  35:[["姐姐的话顿了一下","姐姐的 [[voice]] 停顿了一下"],["这些人不能再被当成表格里的空格","这些 [[resident]] 不能再被当成表格里的空格"]],
+ },
+ 10:{
+  6:[["而不是逼自己选择一种","而不是逼自己只做一种 [[choice]]"]],
+  10:[["公布居民名单","公开居民 [[identity]] 名单"],["尚未证实的信息","尚未 [[verify]] 的信息"]],
+  11:[["姐姐却主动走开了两年","姐姐却主动 [[disappear]] 了两年"],["这种矛盾让她生气","这种 [[conflict]] 让她生气"]],
+  20:[["没有早点问清楚那场雨夜到底发生过什么","没有早点 [[verify]] 那场 [[emergency]] 到底发生了什么"]],
+  31:[["立即公开所有材料","立刻 [[disclose]] 所有材料"],["真正生活在街区里的人","真正生活在街区里的 [[resident]]"]],
+  32:[["补齐自己当年参与登记的那部分记录","补齐自己当年参与登记的那部分 [[record]]"],["予安第一次没有反驳他","予安 [[accept]] 了这一点，没有再反驳"]],
+  39:[["书脊里取出的索引","[[spine]] 里取出的索引"],["谁在当年借走了那一页","谁在当年借走了那份 [[document]] 的那一页"],["最简单的问题","最需要 [[verify]] 的问题"]],
+ },
+ 11:{
+  2:[["四个安置点","四个 [[shelter]]"],["数字本身并不惊人，却和苏阿姨当年实际领到的东西差了一大截","数字本身并不惊人，但那条 [[record]] 与苏阿姨实际领到的东西存在明显 [[discrepancy]]"]],
+  5:[["事实认定不是现场讨论能完成的","要有 [[evidence]] 才能作出事实认定，不能只在现场讨论"]],
+  28:[["个人姓名","居民的 [[identity]]"],["通过可追溯的手续寄存进资料馆","凭可追溯的 [[record]] 寄存进资料馆"]],
+  37:[["姐姐留下的最后一张借阅证","姐姐留下的最后一张借阅 [[record]]"],["上面写着一个地点和一个时间","上面留着两条 [[clue]]：一个地点和一个时间"],["予安刚要问姐姐是否真的会来","予安还不能 [[confirm]] 姐姐是否真的会来"]],
+  38:[["正式查阅回执","正式查阅 [[receipt]]"],["姐姐已经到来的证明","姐姐已经到来的 [[proof]]"],["上面画着小小的星星","上面画着她很 [[familiar]] 的小星星"]],
+ },
  12:{
   1:[
    ["她将书店打扫了一遍","她 [[prepare]] 好书店，先打扫了一遍"],
@@ -121,6 +209,7 @@ const EXTRA={
    ["为自己的失联表达歉意","为自己的失联表达 [[apology]]"],
    ["却不要求妹妹立即回应","却不要求妹妹立即 [[respond]]"]
   ],
+  13:[["那顿早餐并没有神奇地消除隔阂","那顿早餐并没有神奇地 [[remove]] 隔阂"],["最后都笑了","最后都笑了，像终于找到一点 [[relief]]"]],
   28:[
    ["书店依旧照常迎客","书店依旧保持过去的 [[routine]]，照常迎客"],
    ["姐姐说，未来不必再把每个疑问变成 ","姐姐说，往后的 [[future]] 不必再把每个疑问变成 "]
@@ -194,15 +283,20 @@ export function buildChapters2to12DensityCandidate(){
    // Spread word exposures across sentences rather than concentrating all in
    // one introductory clause. The review gate still checks human readability.
    const sentences=source.split(/(?<=[。！？])/u);
+   // The user's 3–6 goal is a paragraph AVERAGE, not an absolute cap.
+   // Four substantive sentences can legitimately require 8 exposures to
+   // satisfy 2/sentence; S84 already marks >8 as overconcentrated.
+   const longSentences=sentences.filter(t=>hanCount(t)>=25).length;
+   const paragraphCap=longSentences>=4?8:6;
    const countIn=t=>(t.match(TOKEN)||[]).length;
    const total=()=>sentences.reduce((n,t)=>n+countIn(t),0);
    const insertIn=(i)=>{
-    if(total()>=6)return false;
+    if(total()>=paragraphCap)return false;
     for(const [from,to] of rules){
      const inserted=[...to.matchAll(TOKEN)].map(m=>m[1]);
      const currentSentenceWords=new Set([...sentences[i].matchAll(TOKEN)].map(m=>m[1]));
      if(inserted.some(w=>(counts.get(w)||0)>=2||currentSentenceWords.has(w))||
-        total()+inserted.length>6)continue;
+        total()+inserted.length>paragraphCap)continue;
      const next=replaceOnlyPlain(sentences[i],from,to);
      if(next===sentences[i])continue;
      sentences[i]=next;replacements+=inserted.length;
@@ -215,7 +309,7 @@ export function buildChapters2to12DensityCandidate(){
    // one word exposure (at least 25 Chinese characters each).
    for(let i=0;i<sentences.length;i++){
     if(hanCount(sentences[i])<25)continue;
-    while(countIn(sentences[i])<2&&total()<6&&insertIn(i)){}
+    while(countIn(sentences[i])<2&&total()<paragraphCap&&insertIn(i)){}
    }
    // Then fill paragraph minimum; prefer long underexposed sentences.
    for(let attempt=0;attempt<7&&total()<5;attempt++){
@@ -231,7 +325,7 @@ export function buildChapters2to12DensityCandidate(){
    const next=segmentize(draft,byName);
    const wordCount=next.segments.filter(x=>x.wordId).length;
    if(wordCount<3)underfilled++;
-   if(wordCount>6)throw Error("TOO_MANY_WORDS_"+original.number+"_"+pi);
+   if(wordCount>paragraphCap)throw Error("TOO_MANY_WORDS_"+original.number+"_"+pi);
    if(originalWords>wordCount)throw Error("ORIGINAL_ANCHOR_LOST");
    // Check every original annotation is preserved and in original order.
    const oldIds=p.segments.filter(x=>x.wordId).map(x=>x.wordId);

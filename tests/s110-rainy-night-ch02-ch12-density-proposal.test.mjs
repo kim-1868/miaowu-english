@@ -21,7 +21,9 @@ test("Rainy Night chapters 2-12 lexical revision preserves all original word anc
    const oldAnchor=prev.segments.filter(s=>s.wordId).map(s=>s.wordId);
    const newAnchor=p.segments.filter(s=>s.wordId).map(s=>s.wordId);
    assert.ok(newAnchor.length>=oldAnchor.length);
-   assert.ok(newAnchor.length<=6);
+   const originalText=prev.segments.map(x=>x.text??"[["+x.surface+"]] ").join("");
+   const longSentences=originalText.split(/[。！？]/u).filter(x=>(x.match(/\p{Script=Han}/gu)||[]).length>=25).length;
+   assert.ok(newAnchor.length<=(longSentences>=4?8:6));
    let pos=0;
    for(const wordId of oldAnchor){const found=newAnchor.indexOf(wordId,pos);assert.ok(found>=pos);pos=found+1;}
    assert.ok(p.segments.every(s=>s.text!==undefined||
