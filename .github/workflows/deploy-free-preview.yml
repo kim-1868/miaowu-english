@@ -29,14 +29,14 @@ jobs:
       - name: Checkout fixed, reviewed release (not default main)
         uses: actions/checkout@v4
         with:
-          ref: 658485fb4554e21505f8b109db39ec0f7d8a0d17
+          ref: 9640166aa9e1655672679f1c7815db2aab04fdc2
           persist-credentials: false
 
       - name: Guard exact release SHA and target config
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "658485fb4554e21505f8b109db39ec0f7d8a0d17"
+          test "$(git rev-parse HEAD)" = "9640166aa9e1655672679f1c7815db2aab04fdc2"
           grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
           grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
           test ! -e private-output
