@@ -30,6 +30,19 @@ const selectedUK={
  duplicate:0,enlarge:0,insert:0,privacy:1,record:0,
  schedule:0,separate:1,suspect:0,transfer:1
 };
+const specificallyReviewedBritishSenseDRAFT={
+ record:"/ˈrekɔːd/",suspect:"/səˈspekt/",conflict:"/ˈkɒnflɪkt/",
+ contrast:"/ˈkɒntrɑːst/",transfer:"/ˈtrænsfɜː/",insert:"/ɪnˈsɜːt/",
+ duplicate:"/ˈdjuːplɪkət/",separate:"/ˈsepərət/",
+ contact:"/ˈkɒntækt/",address:"/əˈdres/",document:"/ˈdɒkjʊmənt/",
+ schedule:"/ˈʃedjuːl/",privacy:"/ˈprɪvəsi/",direct:"/dɪˈrekt/",
+ blurred:"/blɜːd/",discrepancy:"/dɪˈskrepənsi/",falsify:"/ˈfɔːlsɪfaɪ/",
+ handwriting:"/ˈhændraɪtɪŋ/",outage:"/ˈaʊtɪdʒ/",
+ reunite:"/ˌriːjuːˈnaɪt/",watermark:"/ˈwɔːtəmɑːk/"
+};
+// Independently written editorial phonetic suggestions from the model,
+// NOT verified by an accredited proofreader. Do not assign commercial rights
+// or approval on this basis.
 const splitPhrases=["duplicate","separate","damage","emergency","regret"];
 const multiSenseWordNotes={
  record:"noun: record (not verb re-CORD)",
@@ -61,7 +74,7 @@ export function pronunciationDraft({britishRead}={}){
   const index=selectedUS[w.headword]??0;
   if(index>=us.usIpaCandidates.length)throw Error("SENSE_VARIANT_INVALID_"+w.headword);
   const selectedUs=us.usIpaCandidates[index];
-  const british=britishRead(w.headword);
+  const british=specificallyReviewedBritishSenseDRAFT[w.headword]||britishRead(w.headword);
   if(!checkShape(selectedUs)||!checkShape(british))throw Error("IPA_NOT_WELLFORMED_"+w.headword);
   const manualSense=splitPhrases.includes(w.headword);
   proposed.push({
