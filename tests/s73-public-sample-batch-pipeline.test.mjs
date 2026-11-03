@@ -33,8 +33,9 @@ test("S73 production generated assets do not disclose any Rainy Night free previ
  const html=readFileSync(new URL("../dist-production/public/rainy-night.html",import.meta.url),"utf8");
  assert.equal(html,buildRainyNightPublicSample());
  const app=readFileSync(new URL("../public/app.js",import.meta.url),"utf8");
- assert.match(app,/四级会员专享/);
+ assert.match(app,/isRainyNight=book\.id==='rainy-night-archives-cet4-v1'/);
  assert.equal(app.includes('href="/rainy-night.html"'),false);
+ assert.doesNotMatch(app,/book-item rainy-night-sample-book-item/);
  assert.doesNotMatch(html,/第十二章/);
  assert.doesNotMatch(html,/第 1 章免费试读/);
 });
