@@ -11,6 +11,7 @@ test("S109 chapter-one revised draft has 36 fully-anchored bilingual paragraphs 
  assert.ok(report.per100Han>=5);
  assert.equal(report.productionD1Touched,false);
  assert.ok(report.privateReviewRequired);
+ console.log("RAINY_NIGHT_CH01_DENSITY_PROPOSAL "+JSON.stringify(report));
  for(const p of chapter.paragraphs){
   const text=p.segments.map(s=>s.text??s.surface).join("");
   assert.ok(text.length>30);
