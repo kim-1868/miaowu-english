@@ -1,15 +1,11 @@
 # Operational dispatcher intentionally lives on repository default main branch.
 # The production source remains on the separate, release-reviewed branch.
-# One-time guarded push deployment of the fully tested self-service release.
-# No database writes, no private manuscript assets. Revert push trigger after rollout.
+# Manual production deployment only; the one-time push rollout succeeded.
+# No database writes and no private manuscript assets.
 name: Deploy Miaowu CET4 members-only site (production Worker)
 run-name: CET4 protected Worker · self-service publisher import · ${{ github.actor }}
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - .github/workflows/deploy-free-preview.yml
   workflow_dispatch:
     inputs:
       confirmation:
@@ -26,7 +22,7 @@ concurrency:
 
 jobs:
   deploy-preview:
-    if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || inputs.confirmation == 'DEPLOY_CET4_PROTECTED_SITE' }}
+    if: ${{ inputs.confirmation == 'DEPLOY_CET4_PROTECTED_SITE' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
