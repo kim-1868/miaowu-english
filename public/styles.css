@@ -942,10 +942,10 @@ html[data-theme="dark"] .vocab-card.status-mastered .word-status{
   font:700 24px 'Songti SC','STSong',serif;
   color:#843a42;font-variant-numeric:tabular-nums;
 }
-#view-library .home-stat-row strong:not(:empty):after{
+#view-library .home-stat-row strong[data-ready="true"]:after{
   content:' 个';font:11px 'Songti SC',serif;color:#996f5d;
 }
-#view-library #homeChapterCount:after{content:' 章'}
+#view-library #homeChapterCount[data-ready="true"]:after{content:' 章'}
 #view-library .home-stat-arrow{font-size:20px;color:#aa795e}
 #view-library .home-stat-row:hover{background:rgba(160,87,63,.045)}
 #view-library .home-stat-row:focus-visible{outline:2px solid #96534d;outline-offset:2px}
