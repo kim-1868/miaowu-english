@@ -43,7 +43,7 @@ test("S137 category illustration is minimal monochrome vintage SVG line art",()=
   assert.ok(art.length<900,"should remain an uncluttered sketch: "+slug);
   assert.doesNotMatch(art,/<script\b|<foreignObject\b|<image\b|data:image|xlink:href=/i);
  }
- assert.match(app,/shelf-'\+c\.id\+'\.svg\?v=20261103-immersive-v18/);
+ assert.match(app,/shelf-'\+c\.id\+'\.svg\?v=20261103-home-v17/);
 });
 
 test("S137 v17 CSS/JS use cache-busted assets without affecting reader or ops",()=>{
