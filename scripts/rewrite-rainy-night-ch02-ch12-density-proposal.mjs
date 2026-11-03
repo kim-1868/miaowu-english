@@ -13,7 +13,7 @@ const RULES=[
  ["旧档案","旧 [[archive]]"],["档案馆","[[archive]] 馆"],["图书管理员","[[librarian]]"],
  ["目击证人","[[witness]]"],["目击者","[[witness]]"],["一份证词","一份 [[testimony]]"],
  ["证人证言","[[testimony]]"],["证言","[[testimony]]"],
- ["临时安置点","临时 [[shelter]]"],["社区居民","[[community]] [[resident]]"],
+ ["临时安置点","临时 [[shelter]]"],["社区居民","[[community]] 的 [[resident]]"],
  ["居民","[[resident]]"],["社区","[[community]]"],["物资清单","物资 [[inventory]]"],
  ["物资供应","[[supply]]"],["物资","[[supply]]"],
  ["借阅记录","借阅 [[record]]"],["登记记录","登记 [[record]]"],["通话记录","通话 [[record]]"],
@@ -86,7 +86,7 @@ const RULES=[
  ["公开透明的","[[transparent]]"],["最近的","[[recent]]"],
  ["可疑的","[[suspicious]]"],["失踪的","[[missing]]"],
  ["隐藏的","[[hidden]]"],["以前的","[[former]]"],
- ["承认错误","[[admit]] [[mistake]]"],["签署申请","签署 [[request]]"],
+ ["承认错误","[[admit]] 这一 [[mistake]]"],["签署申请","签署 [[request]]"],
  ["一封道歉信","一封 [[apology]] 信"],
  ["误会","[[confuse]]"], // skipped if unnatural; audit required
  ["个人信息","个人 [[detail]]"], // skipped if semantically imprecise via excluded below
