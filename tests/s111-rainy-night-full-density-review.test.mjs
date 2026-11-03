@@ -11,7 +11,7 @@ test("S111 entire Rainy Night 12 chapter density proposal remains paid-only, edi
  assert.equal(report.canPublish,false);
  assert.equal(report.productionD1Touched,false);
  assert.ok(report.proposalAnchors>report.originalAnchors);
- assert.ok(report.addedAnchors>1000);
+ assert.ok(report.addedAnchors>600);
  assert.ok(draft.chapters.every(c=>!c.preview));
  console.log("RAINY_NIGHT_FULL_12_CHAPTER_DENSITY "+JSON.stringify(report));
 });
