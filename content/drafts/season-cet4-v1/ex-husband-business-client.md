@@ -17,7 +17,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 苏晚知没有碰那张支票。她先 [[notice]] 到一个熟悉的图案：几年前由她设计的品牌包装，竟然被列在顾氏 [[company]] 的“独立资产”清单里。相关原始 [[design]] 文件和创作 [[date]]，她一直保存在个人电脑上。
 
-“婚姻可以结束，作品归属却不能由你一句话作 [[decision]]。”她把资料推回去，“我的 [[signature]] 只会出现在核对完成的离婚文件上，不会出现在未经 [[confirm]] 的权利转让书上。”
+“婚姻可以结束，但作品归属不能凭你一句话就作出 [[decision]]。”她把资料推回去，“我的 [[signature]] 只会出现在核对完成的离婚文件上，不会出现在一份未经审核的权利转让 [[agreement]] 上。”
 
 顾承礼脸色一冷。“你以为离开我，还能接到这么大的 [[project]]？”他看向自己的助理，示意结束这场 [[meeting]]，仿佛苏晚知的 [[future]] 早已被写好。
 
@@ -43,7 +43,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 “我们不是在卖一张好看的 [[picture]]。”她把旧瓶子放在桌上，“要让真实 [[customer]] 愿意用，先解决如何拆开、清洗和再次灌装。这个 [[design]] 才能长久。”
 
-小组先做了两个 [[model]]，再把成本 [[calculate]] 清楚。提交前一晚，有同事问苏晚知怕不怕输给大 [[company]] 的关系网。她看着电脑 [[screen]]，回答：“正因为我曾是那个人的妻子，我才更要让 [[evidence]] 说话。”
+小组先做了两个 [[model]]，又重新 [[calculate]] 了材料、运输和回收成本。提交前一晚，有同事问苏晚知怕不怕输给大 [[company]] 的关系网。她看着电脑 [[screen]]，回答：“正因为我曾是那个人的妻子，我才更要让 [[evidence]] 说话。”
 
 方案发送成功的 [[message]] 弹出时，苏晚知没有给顾承礼打电话。她对唐音说：“先去睡觉，明天还有自己的 [[project]] 要做。”
 
@@ -57,7 +57,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 晚上，顾承礼收到前妻的 [[message]]：离婚财务部分的确认文件已发律师，请按 [[schedule]] 回复。他突然问：“你现在还在做包装 [[design]] 吗？”苏晚知只回复：“我的工作不用再向你 [[report]]。”
 
-他盯着 [[phone]] 很久，想起婚后那几年，苏晚知总在客厅桌上画 [[plan]]，他却以为那只是消遣。她提出 [[request]] 想参加一次重要的设计 [[meeting]]，他还说家里的晚宴比什么工作都重要。
+他盯着 [[phone]] 很久，想起婚后那几年，苏晚知总在客厅桌上画 [[plan]]，他却以为那只是消遣。她曾请求参加一次重要的设计 [[meeting]]，还正式提交过 [[request]]，他却说家里的晚宴比什么工作都重要。
 
 最终评审 [[result]] 出来，微光排名第一，顾氏采购部准备发正式合作 [[contract]]。合规小组在揭开匿名信息前再次检查，确认关联披露已完整 [[record]]，没有发现异常干预。
 
@@ -73,9 +73,9 @@ authoring: Original story written directly for Miaowu; no model API used
 
 顾承礼沉默片刻，终于翻到正式合作 [[document]]。他的 [[team]] 提出不合理的无限修改条款，唐音立即解释风险，并给出分阶段评审的 [[option]]。苏晚知则把额外修改的 [[price]] 和验收 [[record]] 写明。
 
-“你变得很会谈 [[contract]] 了。”散会后，顾承礼轻声说。苏晚知看着他，回答：“我一直会。只是以前你不 [[notice]]，也从不真正听我的 [[explain]]。”
+“你变得很会谈 [[contract]] 了。”散会后，顾承礼轻声说。苏晚知看着他，回答：“我一直会。只是以前你不 [[notice]]。每次我想 [[explain]]，你都没有认真听。”
 
-回到工作室，几位同事担心她的私人关系影响业务 [[result]]。苏晚知主动提出，由唐音担任客户的日常 [[manager]]，自己只负责技术 [[design]] 与最终质量审核。她把决定 [[confirm]] 给公司。
+回到工作室，几位同事担心她的私人关系影响业务 [[result]]。苏晚知主动提出，由唐音担任客户的日常 [[manager]]，自己只负责技术 [[design]] 与最终质量审核。她把分工决定发给双方 [[team]]，请所有负责人 [[confirm]]。
 
 唐音端来两杯热茶：“你真的一点都不 [[regret]]？”苏晚知望着桌上的新 [[project]] 计划，笑了一下：“离婚不是我的失败。放弃自己的 [[future]] 才是。”
 
@@ -93,13 +93,13 @@ authoring: Original story written directly for Miaowu; no model API used
 
 最终新材料顺利通过验收，第一批产品按修订 [[schedule]] 投入 [[market]]。用户试用 [[report]] 显示，回收操作比旧版简单得多。微光终于拥有一个可以独立展示的成功 [[project]]。
 
-产品发布后的那个晚上，顾承礼送来一束花，说愿意重新开始。苏晚知把花礼貌地留在 [[office]] 前台：“谢谢。但我们可以把合作完成，并不 [[confirm]] 我应该回到过去。”
+产品发布后的那个晚上，顾承礼送来一束花，说愿意重新开始。苏晚知把花礼貌地留在 [[office]] 前台：“谢谢。我们已经 [[confirm]] 了合作的交付，但这不意味着我应该回到过去。”
 
 ## 第6章　她不再是任何人的附属品
 
 半年后，微光搬进新的 [[office]]，增加了两位年轻的 [[design]] 师。墙上挂着所有员工的作品 [[picture]]，没有一张把客户的 [[company]] 名称写在创作者前面。
 
-唐音拿着季度 [[report]] 冲进会议室：“我们有新 [[client]] 了！不是别人介绍的，是看了我们公开的产品 [[record]]，主动发来合作 [[message]]。”
+唐音拿着季度 [[report]] 快步走进会议室：“我们有新 [[client]] 了！不是别人介绍的，是看了我们公开的产品 [[record]]，主动发来合作 [[message]]。”
 
 苏晚知打开新的 [[contract]]，认真检查交付范围、预算 [[price]] 和保密约定。她仍然谨慎，却不再用“我是不是不够好”来解释任何 [[problem]]。
 
