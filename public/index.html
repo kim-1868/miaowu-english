@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f8f3ec" />
   <title>妙屋英语 · THE STORY & WORD LIBRARY｜故事阅读与词汇记忆</title>
-  <link rel="stylesheet" href="/styles.css?v=20261103-line-v16" />
+  <link rel="stylesheet" href="/styles.css?v=20261103-home-v17" />
 </head>
 <body>
   <div class="app-shell">
@@ -30,7 +30,6 @@
           <span class="eyebrow">MIAOWU · YOUR COZY WORD LIBRARY</span>
           <h1>把故事读下去，<br><i>把喜欢的单词留下来。</i></h1>
           <p>书香、雨声，还有一点猫咪的陪伴。<br>打开喜欢的故事，在情节里慢慢记住英语。</p>
-          <div id="reviewReminder" class="review-reminder" aria-live="polite"></div>
           <div class="hero-actions">
             <button class="secondary-btn" id="heroRead">开启故事阅读 <span aria-hidden="true">→</span></button>
             <button class="ghost-btn" id="heroExplain">如何使用妙屋英语</button>
@@ -40,6 +39,9 @@
           <picture><source srcset="/cat-reading-hd.avif?v=20261103-hd-v15" type="image/avif"><img src="/cat-reading-watercolor.webp?v=20261103-watercolor" alt="" width="1400" height="512" decoding="async" fetchpriority="high"></picture>
         </div>
       </div>
+      <aside class="home-reminder-strip" aria-label="词汇复习提醒">
+        <div id="reviewReminder" class="review-reminder" aria-live="polite"></div>
+      </aside>
       <section class="section"><div class="section-heading"><div><span class="eyebrow">CHOOSE YOUR SHELF</span><h2>探索你的故事书架</h2></div><p>一个账号，多个学习分类。购买哪个，就解锁哪个。</p></div>
       <div class="category-row" id="categories"></div>
       <div class="section-heading shelf-heading"><div><span class="eyebrow" id="selectedCategoryEn">CET-4 COLLECTION</span><h2 id="selectedCategoryTitle">四级核心词 · 故事精选</h2></div><div class="shelf-tabs"><button class="tiny-action" id="openActivation">已有激活码？去兑换 ↗</button></div></div><div class="home-shelf-layout">
@@ -89,6 +91,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="/chapter-words.js"></script>
   <script src="/echo-cloud.js?v=20261103-v12-review-cover"></script>
-  <script src="/app.js?v=20261103-line-v16"></script>
+  <script src="/app.js?v=20261103-home-v17"></script>
 </body>
 </html>
