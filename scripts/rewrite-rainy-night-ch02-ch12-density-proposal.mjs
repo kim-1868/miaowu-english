@@ -131,7 +131,8 @@ export function buildChapters2to12DensityCandidate(){
   const paragraphs=original.paragraphs.map((p,pi)=>{
    const source=packText(p);
    const originalWords=(source.match(TOKEN)||[]).length;
-   const seen=new Set([...source.matchAll(TOKEN)].map(m=>m[1]));
+   const counts=new Map();
+   for(const m of source.matchAll(TOKEN))counts.set(m[1],(counts.get(m[1])||0)+1);
    const added=[];
    // Spread word exposures across sentences rather than concentrating all in
    // one introductory clause. The review gate still checks human readability.
@@ -142,11 +143,13 @@ export function buildChapters2to12DensityCandidate(){
     if(total()>=6)return false;
     for(const [from,to] of rules){
      const inserted=[...to.matchAll(TOKEN)].map(m=>m[1]);
-     if(inserted.some(w=>seen.has(w))||total()+inserted.length>6)continue;
+     const currentSentenceWords=new Set([...sentences[i].matchAll(TOKEN)].map(m=>m[1]));
+     if(inserted.some(w=>(counts.get(w)||0)>=2||currentSentenceWords.has(w))||
+        total()+inserted.length>6)continue;
      const next=replaceOnlyPlain(sentences[i],from,to);
      if(next===sentences[i])continue;
      sentences[i]=next;replacements+=inserted.length;
-     inserted.forEach(w=>{seen.add(w);added.push(w)});
+     inserted.forEach(w=>{counts.set(w,(counts.get(w)||0)+1);added.push(w)});
      return true;
     }
     return false;
@@ -158,7 +161,7 @@ export function buildChapters2to12DensityCandidate(){
     while(countIn(sentences[i])<2&&total()<6&&insertIn(i)){}
    }
    // Then fill paragraph minimum; prefer long underexposed sentences.
-   for(let attempt=0;attempt<6&&total()<4;attempt++){
+   for(let attempt=0;attempt<7&&total()<5;attempt++){
     const order=sentences.map((t,i)=>({i,words:countIn(t),han:hanCount(t)}))
      .sort((a,b)=>(a.words-b.words)||(b.han-a.han));
     let changed=false;
