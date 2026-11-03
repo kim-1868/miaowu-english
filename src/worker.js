@@ -86,7 +86,7 @@ async function register(req, env) {
   const userId = crypto.randomUUID();
   const { hash, salt } = await atStage("register.password_hash", () => newPasswordHash(body.password, env));
   const session = await atStage("register.session_token", () => sessionData(userId));
-  const recovery=env.APP_ENV==="production"?await createRecoveryCode(env):null;
+  const recovery=null; // Manual account recovery only: do not issue end-user recovery codes.
   try {
     // D1.batch is transactional: an invalid or used code causes the NOT NULL
     // entitlement insert to fail, rolling back user and session creation.
@@ -174,7 +174,7 @@ async function changePassword(req, env, user) {
     ()=>newPasswordHash(nextPassword,env));
   const nextSession=await atStage("password_change.next_session",
     ()=>sessionData(user.id));
-  const recovery=env.APP_ENV==="production"?await createRecoveryCode(env):null;
+  const recovery=null; // Manual account recovery only: do not issue end-user recovery codes.
   try {
     // Atomic D1.batch:
     // 1) Compare-and-set password prevents stale concurrent requests.
@@ -580,7 +580,8 @@ async function api(req, env) {
   }
   if (path === "/api/auth/register" && req.method === "POST") return register(req, env);
   if (path === "/api/auth/login" && req.method === "POST") return login(req, env);
-  if (path === "/api/auth/recover" && req.method === "POST") return recoverAccount(req,env);
+  // Password recovery is handled by verified staff; the legacy recovery-code endpoint is disabled.
+  if (path === "/api/auth/recover" && req.method === "POST") return reject("MANUAL_RECOVERY_REQUIRED", 403);
   if (path === "/api/auth/logout" && req.method === "POST") return logout(req, env);
   if (path === "/api/auth/change-password" && req.method === "POST") return changePassword(req, env, user);
   if (path === "/api/auth/me" && req.method === "GET") {

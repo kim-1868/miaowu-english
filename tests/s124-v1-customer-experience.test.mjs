@@ -20,7 +20,7 @@ test("V1 customer UI is no longer a demo site and no unfinished reading notes ar
 test("V1 controls are fully wired, with no direct payment or unprotected content requests",()=>{
  assert.doesNotThrow(()=>new Script(js,{filename:"app.js"}));
  assert.doesNotThrow(()=>new Script(words,{filename:"chapter-words.js"}));
- for(const key of ["readerTone","readerLine","playerSeek","playerPosition",
+ for(const key of ["readerLine","playerSeek","playerPosition",
                    "playerPrevious","playerNext","playerStop",
                    "mobileChapterOpen","mobileChapterClose","readerDrawerOverlay"])
   assert.ok(html.includes('id="'+key+'"'),"missing "+key);
@@ -40,7 +40,10 @@ test("V1 controls are fully wired, with no direct payment or unprotected content
 test("V1 responsive and theme rules cover phone, echo overlap, word overflow and night reader",()=>{
  assert.match(css,/Miaowu V1 production polish/);
  assert.match(css,/\.echo-banner h2\{line-height:1\.3/);
- assert.match(css,/\.reader-layout\[data-reader-tone="night"\]/);
+ assert.doesNotMatch(html,/id="readerTone"|暖纸|纯白|夜读/);
+ assert.match(js,/showManualRecovery/);
+ assert.match(css,/html\[data-theme="dark"\] \.vocab-card\.status-mastered/);
+ assert.match(css,/\.wordbook-grid\{grid-template-columns:minmax\(0,1fr\)!important/);
  assert.match(css,/\.reader-layout\.chapter-drawer-open/);
  assert.match(css,/\.chapter-vocab-header\{display:grid/);
  assert.match(css,/@media\(max-width:760px\)/);
