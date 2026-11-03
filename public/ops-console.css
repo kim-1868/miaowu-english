@@ -36,3 +36,14 @@ button:hover:not(:disabled){filter:brightness(.95)}
 input:not([type=checkbox]),textarea{background:#29252b;border-color:#78606b;color:#fff}fieldset{border-color:#644d58}
 button.secondary{background:#5c4852;color:#f9e8eb}hr{border-color:#674d5a}.audit-entry{border-color:#624a59}footer{color:#c2aaa9}
 }
+/* Publisher-owned, responsive visual cover editor. */
+.book-cover-admin-preview{
+ width:184px;aspect-ratio:3/4;max-width:100%;flex:none;overflow:hidden;
+ display:flex;justify-content:center;align-items:center;
+ background:linear-gradient(155deg,#273048,#794454);border:1px solid #cfbca8;
+ border-radius:11px;box-shadow:0 7px 22px rgba(31,21,29,.15);
+ color:#f8ebe2;text-align:center;padding:5px;
+}
+.book-cover-admin-preview img{height:100%;width:100%;object-fit:cover;display:block;border-radius:6px}
+.book-cover-admin-preview #selectedCoverEmpty{font-size:12px;line-height:1.65;padding:10px}
+@media(max-width:640px){.book-cover-admin-preview{width:130px}.book-cover-admin-preview+.stretch{min-width:190px;flex:1}}
