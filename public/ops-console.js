@@ -53,6 +53,7 @@ function syncButtons(){
     pendingNovel.book?.id===chosen.id&&pendingNovel.book?.title===chosen.title&&
     readiness?.contentFingerprint);
   $("refresh").disabled=!connected();
+  $("saveSelectedCover").disabled=!connected()||!chosen||!$("selectedCoverFile").files?.length;
   syncCategoryCreateButton();
   if(!readiness){$("approve").disabled=true;$("publish").disabled=true;$("withdraw").disabled=true;return}
   if(chosen?.status==="draft"){
@@ -111,6 +112,8 @@ async function loadBooks(keepId=chosen?.id){
 }
 async function openBook(book){
   chosen=book;clearActions();
+  $("selectedCoverFile").value="";
+  void loadCurrentCover(book);
   $("selected").textContent="《"+book.title+"》";
   $("bookSummary").textContent=book.category_id+" · "+book.chapter_count+"章 · "+
     (book.status==="published"?"已发布":"未发布");
@@ -188,6 +191,114 @@ async function doWithdraw(){
   status("已撤回公开访问。"+(result.supportActionRequired?"该分类存在有效权益，请依售后政策处理已购用户。":""));
   await loadBooks(chosen.id);
 }
+// Upload images are browser-resized and converted to safe raster formats.
+// No raw image filename or bytes are stored in cookies or persistent storage.
+let coverPreviewUrl=null;
+function showCoverPreview(url,statusText){
+ const image=$("selectedCoverImage"),empty=$("selectedCoverEmpty");
+ if(coverPreviewUrl){URL.revokeObjectURL(coverPreviewUrl);coverPreviewUrl=null}
+ if(url){image.src=url;image.hidden=false;empty.hidden=true;}
+ else{image.removeAttribute("src");image.hidden=true;empty.hidden=false;
+  empty.textContent="尚未上传封面，可在此添加";}
+ $("coverUploadStatus").textContent=statusText||"";
+}
+async function loadCurrentCover(book){
+ if(!connected()||!book)return;
+ const id=book.id;
+ const fallback=id==="rainy-night-archives-cet4-v1"?"/rainy-night-cover-v2.svg":"";
+ try{
+  const response=await fetch("/api/ops/books/"+encodeURIComponent(id)+"/cover",{
+   headers:{"X-Mw-Ops-Key":key},cache:"no-store",credentials:"same-origin"
+  });
+  if(chosen?.id!==id)return;
+  if(!response.ok){
+   showCoverPreview(fallback,"尚未上传自定义封面；可以选择图片进行替换。");
+   return;
+  }
+  const blob=await response.blob();
+  if(chosen?.id!==id)return;
+  const url=URL.createObjectURL(blob);
+  showCoverPreview(url,"已读取当前书籍封面，可选择新图替换。");
+  coverPreviewUrl=url;
+ }catch{
+  if(chosen?.id===id)showCoverPreview(fallback,"封面预览暂时不可用，可以重新选择书籍或尝试上传。");
+ }
+}
+function makeCoverBlob(file){
+ return new Promise(async(resolve,reject)=>{
+  if(!file||!["image/jpeg","image/png","image/webp"].includes(file.type))
+   return reject(Error("只接受 JPG、PNG 或 WEBP 图片"));
+  if(file.size>15_000_000||file.size<100)return reject(Error("原图片大小须在15MB以内"));
+  const src=URL.createObjectURL(file);
+  const image=new Image();
+  image.onerror=()=>{URL.revokeObjectURL(src);reject(Error("图片无法读取或格式损坏"))};
+  image.onload=async()=>{
+   URL.revokeObjectURL(src);
+   if(image.naturalWidth<600||image.naturalHeight<800)
+    return reject(Error("图片清晰度不足，请选择至少600×800像素的原图，推荐900×1200以上"));
+   try{
+    const canvas=document.createElement("canvas");
+    canvas.width=900;canvas.height=1200;
+    const ctx=canvas.getContext("2d");
+    if(!ctx)throw Error("浏览器不支持处理封面图片");
+    // Center-crop to a consistent portrait cover. Never upscale tiny images.
+    const scale=Math.max(canvas.width/image.naturalWidth,canvas.height/image.naturalHeight);
+    const w=image.naturalWidth*scale,h=image.naturalHeight*scale;
+    ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
+    ctx.drawImage(image,(canvas.width-w)/2,(canvas.height-h)/2,w,h);
+    const toBlob=(mime,quality)=>new Promise(done=>canvas.toBlob(done,mime,quality));
+    let output=null;
+    for(const quality of [.84,.76,.66,.54]){
+      const trial=await toBlob("image/webp",quality);
+      if(trial?.type==="image/webp"&&trial.size<=768000){output=trial;break}
+      const jpg=await toBlob("image/jpeg",quality);
+      if(jpg?.size<=768000){output=jpg;break}
+    }
+    if(!output)throw Error("图片压缩后仍然太大，请换用更简洁的封面图片");
+    resolve(output);
+   }catch(e){reject(e)}
+  };
+  image.src=src;
+ });
+}
+async function uploadCoverForBook(bookId,file){
+ const raster=await makeCoverBlob(file);
+ const form=new FormData();
+ form.append("cover",raster,raster.type==="image/webp"?"cover.webp":"cover.jpg");
+ const result=await fetch("/api/ops/books/"+encodeURIComponent(bookId)+"/cover",{
+  method:"POST",headers:{"X-Mw-Ops-Key":key,"Accept":"application/json"},
+  credentials:"same-origin",cache:"no-store",body:form,referrerPolicy:"same-origin"
+ });
+ let data;try{data=await result.json()}catch{throw Error("封面上传失败：服务器未返回有效响应")}
+ if(!result.ok)throw Error("封面上传失败："+(data.error||"UNKNOWN")+
+  "（HTTP "+result.status+"）；请确认生产D1已执行004封面表迁移。");
+ return data;
+}
+$("selectedCoverFile").addEventListener("change",()=>{
+ const file=$("selectedCoverFile").files?.[0];
+ syncButtons();
+ if(!file)return;
+ if(!["image/jpeg","image/png","image/webp"].includes(file.type)){
+  $("coverUploadStatus").textContent="格式不支持，请选择 JPG、PNG、WEBP";
+  return;
+ }
+ const url=URL.createObjectURL(file);
+ showCoverPreview(url,"正在预览选中的本地图片，尚未保存到网站。");
+ coverPreviewUrl=url;
+});
+button("saveSelectedCover",async()=>{
+ if(!chosen)throw Error("请先选择一本书");
+ const id=chosen.id,file=$("selectedCoverFile").files?.[0];
+ if(!file)throw Error("请先选择封面图片");
+ $("coverUploadStatus").textContent="正在压缩并上传封面……";
+ const uploaded=await uploadCoverForBook(id,file);
+ $("selectedCoverFile").value="";
+ if(chosen?.id===id){
+  chosen.cover_key=uploaded.coverKey;
+  await loadCurrentCover(chosen);
+  $("coverUploadStatus").textContent="封面已保存，书架重新打开后会展示高清图片。";
+ }
+});
 let pendingNovel=null;
 const uploadMsg=message=>{$("uploadStatus").textContent=message;};
 function resetNovel(){
@@ -319,9 +430,20 @@ button("checkNovel",async()=>{
 });
 button("importNovel",async()=>{
  if(!pendingNovel)throw Error("请先点击文件检查");
+ const coverFile=$("uploadCoverWithNovel").files?.[0];
  const result=await api("/api/ops/import","POST",{package:pendingNovel});
+ let coverNote="";
+ if(coverFile){
+  try{
+   await uploadCoverForBook(result.bookId,coverFile);
+   coverNote="；封面已上传";
+   $("uploadCoverWithNovel").value="";
+  }catch(e){
+   coverNote="；注意：草稿已导入，但封面上传失败（"+e.message+"）。请在「封面管理」重试";
+  }
+ }
  uploadMsg("草稿导入成功：《"+result.title+"》，"+result.chapters+"章、"+
-  result.wordCards+"词卡。未发布；请在书籍目录中完成审核和上架。");
+  result.wordCards+"词卡"+coverNote+"。未发布；请在书籍目录中完成审核和上架。");
  resetNovel();await loadBooks(result.bookId);
 });
 
