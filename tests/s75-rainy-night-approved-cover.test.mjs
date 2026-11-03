@@ -23,10 +23,10 @@ test("S75 cover ships in audited production bundle and displays in real shelf an
  assert.ok(built.assets.includes("rainy-night-cover.webp"));
  assert.deepEqual(readFileSync(released),readFileSync(local));
  const app=readFileSync(new URL("../public/app.js",import.meta.url),"utf8");
- assert.match(app,/class="rainy-night-cover-image" src="\/rainy-night-cover.webp"/);
- assert.match(app,/alt="《雨夜档案》原创小说封面/);
+ assert.match(app,/src="\/rainy-night-cover.webp" alt="《雨夜档案》小说封面"/);
+ assert.match(app,/isRainyNight=book\.id==='rainy-night-archives-cet4-v1'/);
  const css=readFileSync(new URL("../public/styles.css",import.meta.url),"utf8");
- assert.match(css,/rainy-night-sample-book-item \.rainy-night-cover-image/);
+ assert.match(css,/rainy-night-published-cover/);
  const html=buildRainyNightPublicSample();
  assert.match(html,/class="hero-cover" src="\/rainy-night-cover.webp"/);
  assert.match(html,/content="\/rainy-night-cover.webp"/);
