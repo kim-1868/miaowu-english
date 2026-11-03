@@ -33,7 +33,11 @@ test("S138 art dissolves into the background, rather than ending at a fixed 2-co
  assert.match(css,/\.home-scene-lamp\{/);
  assert.match(css,/@keyframes mw-rain-drift/);
  assert.match(css,/@keyframes mw-lamp-breathe/);
- assert.match(css,/min-height:585px!important/);
+ // Mobile hero height is fluid: keep both tablet and phone sizing bounded
+ // while preserving the original immersive fade and illustration.
+ assert.match(css,/min-height:clamp\\(490px,73vw,585px\\)!important/);
+ assert.match(css,/min-height:clamp\\(430px,108vw,478px\\)!important/);
+ assert.match(css,/height:54%!important/);
  assert.match(css,/mask-image:linear-gradient\(180deg/);
  assert.match(css,/html\[data-theme="dark"\] #view-library \.story-home-hero/);
 });
