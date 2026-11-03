@@ -752,6 +752,9 @@
       PASSWORD_REUSE_NOT_ALLOWED:'新密码不能与原密码相同',
       INVALID_CURRENT_PASSWORD:'原密码不正确',
       PASSWORD_CHANGE_RETRY:'密码更新遇到并发变更，请重新登录后重试',
+      ORDER_RECOVERY_UNAVAILABLE:'订单自助找回暂未开通，请联系官方售后人工处理',
+      INVALID_ORDER_RECOVERY_INPUT:'请填写用户名、订单号、专属找回凭证和符合要求的新密码',
+      INVALID_ORDER_RECOVERY_CREDENTIALS:'身份核验未通过，请检查订单号、账号和找回凭证',
       INVALID_RECOVERY_INPUT:'请填写用户名、完整恢复码和符合要求的新密码',
       INVALID_RECOVERY_CREDENTIALS:'用户名或恢复码错误，或恢复码已经使用',
       INTERNAL_ERROR:'服务暂时出错，请稍后重试'
@@ -922,10 +925,10 @@
           '<div id="formMessage"></div>',
         '</form>',
         '<div style="margin-top:16px"><button class="tiny-action" id="switchRegister">还没有账号？去注册激活</button>'+
-        '<button class="tiny-action" id="forgotPassword" style="margin-left:12px">忘记密码？人工找回</button></div>'
+        '<button class="tiny-action" id="forgotPassword" style="margin-left:12px">忘记密码？订单找回</button></div>'
       ].join(''));
       $('switchRegister').onclick=()=>showRegister();
-      $('forgotPassword').onclick=showManualRecovery;
+      $('forgotPassword').onclick=showOrderRecovery;
       $('loginForm').onsubmit=e=>{
         e.preventDefault();const form=e.currentTarget;
         const btn=form.querySelector('button[type=submit]');
@@ -940,11 +943,75 @@
           });
       };
     }
+    // Recovery credentials must NOT be embedded in URLs or localStorage.
+    // The order number alone cannot authorize a password reset.
+    function showOrderRecovery(){
+      showModal([
+        '<span class="eyebrow">ORDER ACCOUNT RECOVERY</span>',
+        '<h2 id="modalTitle">通过购买订单找回密码</h2>',
+        '<p>适用于收到「订单专属找回凭证」的新订单。无需邮箱或手机号。</p>',
+        '<form id="orderRecoveryForm">',
+          '<div class="form-field"><label for="recoverUsername">注册用户名</label>',
+          '<input id="recoverUsername" autocomplete="username" required maxlength="24"></div>',
+          '<div class="form-field"><label for="recoverOrder">小红书订单编号</label>',
+          '<input id="recoverOrder" autocomplete="off" required maxlength="64" placeholder="粘贴小红书订单号"></div>',
+          '<div class="form-field"><label for="recoverKey">订单专属找回凭证</label>',
+          '<input id="recoverKey" type="password" autocomplete="off" required placeholder="MW-REC- 开头的独立凭证"></div>',
+          '<div class="form-field"><label for="recoverNext">新登录密码</label>',
+          '<input id="recoverNext" type="password" autocomplete="new-password" minlength="10" maxlength="128" required></div>',
+          '<div class="form-field"><label for="recoverConfirm">确认新密码</label>',
+          '<input id="recoverConfirm" type="password" autocomplete="new-password" minlength="10" maxlength="128" required></div>',
+          '<div class="form-actions"><button class="primary" type="submit">验证订单凭证并重置密码</button></div>',
+          '<div id="formMessage" role="alert"></div>',
+        '</form>',
+        '<p class="helper">订单号不是密码，必须同时提供订单专属找回凭证。成功后旧凭证失效，需重新保存新凭证。</p>',
+        '<button class="tiny-action" id="orderRecoverManual">旧订单没有凭证？申请人工找回</button>'
+      ].join(''));
+      $('orderRecoverManual').onclick=showManualRecovery;
+      $('orderRecoveryForm').onsubmit=e=>{
+        e.preventDefault();
+        const form=e.currentTarget;
+        const next=$('recoverNext').value;
+        if(next!==$('recoverConfirm').value){
+          formError('两次输入的新密码不一致');return;
+        }
+        const btn=form.querySelector('button[type=submit]');
+        btn.dataset.original=btn.textContent;
+        submitServerForm(form,
+          ()=>serverRequest('/api/auth/recover-by-order','POST',{
+            username:$('recoverUsername').value.trim(),
+            orderReference:$('recoverOrder').value.trim(),
+            recoveryKey:$('recoverKey').value.trim(),
+            newPassword:next
+          }),
+          result=>{
+            $('recoverKey').value='';$('recoverNext').value='';$('recoverConfirm').value='';
+            applyServerAccount(result,true);
+            showModal([
+              '<span class="eyebrow">ACCOUNT RESTORED</span>',
+              '<h2 id="modalTitle">密码修改成功</h2>',
+              '<p>原找回凭证已作废，其他设备已退出登录。下面是新的一次性找回凭证，请立即保存。</p>',
+              '<div class="form-field"><label for="replacementRecoveryKey">新找回凭证</label>',
+              '<textarea readonly id="replacementRecoveryKey" rows="3"></textarea></div>',
+              '<p class="helper">请妥善保存；关闭后网站无法再次展示，也不会保存在本机浏览器。</p>',
+              '<div class="form-actions"><button type="button" class="secondary-btn" id="copyReplacement">复制凭证</button>',
+              '<button type="button" class="primary" id="finishRecovery">完成</button></div>'
+            ].join(''));
+            $('replacementRecoveryKey').value=result.recoveryKey||'';
+            $('copyReplacement').onclick=async()=>{
+              try{await navigator.clipboard.writeText($('replacementRecoveryKey').value);
+                toast('找回凭证已复制，请安全保存');
+              }catch{$('replacementRecoveryKey').select();toast('请长按选择并复制找回凭证');}
+            };
+            $('finishRecovery').onclick=closeModal;
+          });
+      };
+    }
     function showManualRecovery(){
       showModal([
         '<span class="eyebrow">ACCOUNT SUPPORT</span>',
         '<h2 id="modalTitle">人工找回账号</h2>',
-        '<p>忘记密码后，请联系妙屋英语官方售后，提供注册用户名和购买凭证申请人工核实。无需邮箱、手机或恢复码。</p>',
+        '<p>旧订单未提供独立找回凭证，或凭证已遗失时，请联系妙屋英语官方售后，提供注册用户名和订单信息申请人工核验。无需邮箱、手机号。</p>',
         '<p class="helper">请勿向任何人提供旧密码、验证码或完整激活码。订单凭证仅用于核实购买关系，不能单独证明账号归属；核实通过后由管理员以一次性方式安全重置。</p>',
         '<div class="form-actions"><button class="primary" type="button" id="manualRecoveryDone">我知道了</button></div>'
       ].join(''));
@@ -966,7 +1033,7 @@
           '<div class="form-actions"><button class="primary" type="submit">更新密码并注销旧设备</button></div>',
           '<div id="formMessage" role="alert"></div>',
         '</form>',
-        '<p class="helper">正式环境改密后会签发新恢复码，请及时保存。仅凭购买激活码不能重置密码。</p>'
+        '<p class="helper">若忘记旧密码，可在登录页使用订单编号及独立找回凭证自行重置。仅凭订单号不能重置。</p>'
       ].join(''));
       $('passwordChangeForm').onsubmit=e=>{
         e.preventDefault();const form=e.currentTarget;
