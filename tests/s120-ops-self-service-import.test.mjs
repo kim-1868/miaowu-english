@@ -18,7 +18,7 @@ test("S120 full 12 chapter 1892-anchor manuscripts fit production draft importer
  assert.ok(statements.length<1200);
  assert.equal(statements.filter(s=>s.sql.startsWith("INSERT INTO chapters")).length,12);
  assert.ok(statements.every(s=>!/\bUPDATE\b|\bDELETE\b|\bDROP\b|\bALTER\b/i.test(s.sql)));
- assert.ok(statements.every(s=>s.params.length<=400));
+ assert.ok(statements.every(s=>s.params.length<=100));
  const allAnchors=statements.filter(s=>s.sql.startsWith("INSERT INTO chapter_words"));
  assert.equal(allAnchors.reduce((n,s)=>n+s.params.length/4,0),1892);
  const allWordIds=new Set(draft.words.map(w=>w.id));
