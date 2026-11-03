@@ -96,12 +96,30 @@ async function existingWordConflicts(db,words){
  return null;
 }
 export async function handleOpsImport(req,env,path){
- if(path!=="/api/ops/import"||req.method!=="POST")return err("NOT_FOUND",404);
+ if(!(path==="/api/ops/import"&&req.method==="POST")&&
+    !(path==="/api/ops/lexicon"&&req.method==="GET"))return err("NOT_FOUND",404);
  if(env.APP_ENV!=="production"&&env.APP_ENV!=="staging")return err("NOT_FOUND",404);
  const auth=await authenticateOperator(req,env);
  if(auth.response)return auth.response;
  if(!hasOpsRole(auth.operator,"publisher"))return err("OPS_ROLE_FORBIDDEN",403);
  if(!env.DB)return err("OPS_NOT_CONFIGURED",503);
+ if(path==="/api/ops/lexicon"){
+  const category=new URL(req.url).searchParams.get("category")||"cet4";
+  if(!["cet4","cet6","postgrad","ielts"].includes(category))return err("INVALID_CATEGORY",400);
+  try{
+   const result=await stmt(env.DB,
+    "SELECT w.id,w.headword,w.phonetic_uk,w.phonetic_us,w.part_of_speech,"+
+    "w.meaning_zh,w.example_en,w.example_zh,w.collocations_json FROM words w "+
+    "JOIN word_categories wc ON wc.word_id=w.id WHERE wc.category_id=? "+
+    "ORDER BY w.headword,w.id LIMIT 5000",category).all();
+   return json({category,words:(result.results||[]).map(w=>({
+    id:w.id,headword:w.headword,phoneticUk:w.phonetic_uk,phoneticUs:w.phonetic_us,
+    partOfSpeech:w.part_of_speech,meaningZh:w.meaning_zh,
+    exampleEn:w.example_en,exampleZh:w.example_zh,
+    collocations:(()=>{try{return JSON.parse(w.collocations_json||"[]")}catch{return []}})()
+   }))});
+  }catch{return err("VOCABULARY_UNAVAILABLE",503)}
+ }
  let checked;
  try{checked=await readPackage(req)}
  catch(e){return err(/^(PACKAGE_|INVALID_CONTENT_TYPE|INVALID_JSON|CHAPTERS_MUST_BE_ORDERED_FROM_ONE)/.test(e.message)?
