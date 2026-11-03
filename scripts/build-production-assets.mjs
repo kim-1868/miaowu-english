@@ -11,7 +11,7 @@ const source=join(root,"public"),out=join(root,"dist-production","public");
 export const PRODUCTION_ASSET_ALLOWLIST=Object.freeze([
  "index.html","styles.css","app.js","chapter-words.js","echo-cloud.js",
  "live.html","live-reader.js","live-reader.css",
- "ops.html","ops-console.js","ops-console.css","rainy-night.html",
+ "ops.html","ops-console.js","ops-console.css","novel-file-parser.js","rainy-night.html",
  "rainy-night-cover.webp", "rejected-family-second-life.html"
 ]);
 const forbidden=/^(?:account-test|reading-test|editor|design-reference)/i;
