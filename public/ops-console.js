@@ -355,10 +355,14 @@ let saleReady=false;
 function saleStatus(message){$("saleStatus").textContent=message;}
 function syncSaleButtons(){
  const ok=connected()&&saleReady;
+ const orderEntered=Boolean($("saleOrder").value.trim());
+ const receiptOpen=!$("saleReceipt").hidden;
  $("saleCategory").disabled=!ok;
- $("saleStatusButton").disabled=!ok||!$("saleOrder").value.trim();
+ // Never replace an unrecoverable one-time code display before the merchant
+ // copies it. Clear the receipt after delivery to unlock the next order.
+ $("saleStatusButton").disabled=!ok||!orderEntered||receiptOpen;
  $("saleIssueButton").disabled=!ok||!$("saleCategory").value||
-  !$("saleOrder").value.trim()||!$("salePaid").checked||!$("saleContent").checked;
+  !orderEntered||receiptOpen;
 }
 async function loadSaleCategories(){
  saleReady=false;syncSaleButtons();
@@ -379,7 +383,7 @@ async function loadSaleCategories(){
 function clearSaleReceipt(){
  $("saleDelivery").value="";$("saleReceipt").hidden=true;
 }
-for(const id of ["saleCategory","saleOrder","salePaid","saleContent"])
+for(const id of ["saleCategory","saleOrder"])
  $(id).addEventListener("input",syncSaleButtons);
 button("saleStatusButton",async()=>{
  clearSaleReceipt();
@@ -394,13 +398,13 @@ button("saleStatusButton",async()=>{
 });
 button("saleIssueButton",async()=>{
  if(!connected()||!saleReady)throw Error("请先验证发布者身份");
- if(!$("salePaid").checked||!$("saleContent").checked)
-  throw Error("必须确认收款并核对可交付内容");
+ if(!$("saleReceipt").hidden)throw Error("请先复制上一笔订单的发货内容并清除凭证");
  const order=$("saleOrder").value.trim();
  const category=$("saleCategory").value;
- if(!window.confirm("确认这个订单已收款、商品已可交付，并且只生成一次？\n订单："+order))
-  return;
- clearSaleReceipt();
+ if(!order||!category)throw Error("请先选择商品并填写订单号");
+ // Clicking "生成激活码" is the operator's action to attest that the
+ // external Xiaohongshu order has been paid and the category is deliverable.
+ // This is NOT an external payment verification or a user-entered checkbox.
  const result=await api("/api/ops/sales/issue","POST",{
    categoryId:category,orderReference:order,
    paymentConfirmed:true,contentConfirmed:true
@@ -420,7 +424,7 @@ button("saleIssueButton",async()=>{
  ].join("\n");
  $("saleReceipt").hidden=false;
  saleStatus("已为订单预留并入库一次性激活码，请立即复制交付。重新进入无法获取明文。");
- $("salePaid").checked=false;$("saleContent").checked=false;syncSaleButtons();
+ syncSaleButtons();
 });
 $("saleCopy").addEventListener("click",async()=>{
  const field=$("saleDelivery");
@@ -428,7 +432,13 @@ $("saleCopy").addEventListener("click",async()=>{
  try{await navigator.clipboard.writeText(field.value);saleStatus("已复制交付信息，请通过小红书私聊发送给对应买家。");}
  catch{field.select();saleStatus("浏览器不允许自动复制，已选中内容，请手动复制。");}
 });
-$("saleClear").addEventListener("click",()=>{clearSaleReceipt();saleStatus("已从当前页面清除私有激活码和找回凭证。");});
+$("saleClear").addEventListener("click",()=>{
+ clearSaleReceipt();
+ $("saleOrder").value="";
+ syncSaleButtons();
+ $("saleOrder").focus();
+ saleStatus("已清除本笔发货凭证，可输入下一笔已付款订单。");
+});
 button("connect",verify);button("refresh",()=>loadBooks());button("approve",doApprove);
 button("publish",doPublish);button("withdraw",doWithdraw);
 button("disconnect",async()=>{
