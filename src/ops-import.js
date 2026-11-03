@@ -61,9 +61,9 @@ export function planOpsBookImport(validated){
     anchors.push([ch.id,s.wordId,context,"p"+pi+":s"+si]);
   }
   // Multi-value INSERTs avoid thousands of roundtrips, and each statement
-  // uses <=400 SQLite parameters (D1 SQLite variable limit safe).
-  for(let i=0;i<anchors.length;i+=100){
-   const rows=anchors.slice(i,i+100);
+  // uses <=100 parameters (Cloudflare D1 current per-query limit).
+  for(let i=0;i<anchors.length;i+=25){
+   const rows=anchors.slice(i,i+25);
    statements.push({sql:"INSERT INTO chapter_words(chapter_id,word_id,context_sentence,context_anchor) VALUES "+
     rows.map(()=>"(?,?,?,?)").join(","),
     params:rows.flat()});
