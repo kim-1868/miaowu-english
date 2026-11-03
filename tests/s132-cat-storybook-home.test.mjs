@@ -13,7 +13,7 @@ test("S132 visual: reminder uses the user's reference-style solid paw and stays 
  assert.ok(html.indexOf('id="reviewReminder"')>html.indexOf("story-home-hero"));
  assert.ok(html.indexOf('id="reviewReminder"')<html.indexOf('class="category-row"'));
  assert.match(app,/class="solid-cat-paw"/);
- assert.match(app,/viewBox="0 0 64 64"/);
+ assert.match(app,/viewBox="0 0 80 80"/);
  assert.match(app,/fill="currentColor"/);
  assert.match(app,/const due=user\?cloudDue\(\):0/);
  assert.match(app,/due\?'喵呜，今天有 '/);
@@ -42,7 +42,7 @@ test("S132 visual: a unique sleepy cat banner and a cat-shaped bookmark clip are
   assert.ok(image.includes("<svg"));
   assert.doesNotMatch(image,/<script\b|foreignObject|onload=|xlink:href=/i);
  }
- assert.ok(html.includes('src="/cat-reading-watercolor.webp?v=20261103-watercolor"'));
+ assert.ok(html.includes('srcset="/cat-reading-hd.avif?v=20261103-hd-v15"'));
  assert.ok(html.includes('src="/cat-bookmark-clip.svg"'));
  assert.ok(html.includes('class="home-study-card"'));
  assert.ok(css.includes("html[data-theme=\"dark\"] #view-library .story-home-hero"));
@@ -67,5 +67,5 @@ test("S132 production builds only approved SVG and customer assets",()=>{
    "shelf-cet4.svg","shelf-cet6.svg","shelf-postgrad.svg","shelf-ielts.svg"]){
   assert.ok(report.assets.includes(f));
  }
- assert.equal(report.assets.length,27);
+ assert.equal(report.assets.length,28);
 });
