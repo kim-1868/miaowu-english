@@ -161,8 +161,10 @@
     function queuePartialProgress(){
       if(view!=='reader'||!user||!activeCloud?.chapterId)return;
       clearTimeout(readingSaveTimer);
-      if(Date.now()-readingLastSave<6000)return;
-      readingSaveTimer=setTimeout(()=>{saveReadingProgress({quiet:true})},900);
+      // At most one partial sync roughly every 30 seconds during continuous
+      // scrolling; leaving a chapter still saves immediately and explicitly.
+      if(Date.now()-readingLastSave<30000)return;
+      readingSaveTimer=setTimeout(()=>{saveReadingProgress({quiet:true})},1400);
     }
     window.addEventListener('scroll',queuePartialProgress,{passive:true});
     window.addEventListener('pagehide',()=>{
@@ -856,7 +858,7 @@
         '<div class="account-expanded">'+
         '<div class="account-feature account-reading-feature"><span class="eyebrow">CURRENTLY READING · 继续阅读</span>'+
         '<h3>'+safe(recent?.book_title||'你的下一本故事')+'</h3>'+
-        '<p>'+(recent?'最近读到第 '+recent.chapter_no+' 章 · 云端已保存':
+        '<p>'+(recent?'最近读到第 '+recent.chapter_no+' 章 · 已同步阅读进度':
           '从书架开始阅读一本故事，读完后云端会保存进度。')+'</p>'+
         '<button class="secondary-btn" id="accountResumeRead">'+(recent?'继续阅读 →':'探索书架 →')+'</button></div>'+
         '<div class="account-feature account-word-feature"><span class="eyebrow">MY MEMORY NOTES · 学习记录</span>'+
