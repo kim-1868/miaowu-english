@@ -12,7 +12,7 @@ export const PRODUCTION_ASSET_ALLOWLIST=Object.freeze([
  "index.html","styles.css","app.js","chapter-words.js","echo-cloud.js",
  "live.html","live-reader.js","live-reader.css",
  "ops.html","ops-console.js","ops-console.css","novel-file-parser.js","rainy-night.html",
- "rainy-night-cover.webp", "rejected-family-second-life.html"
+ "rainy-night-cover.webp","rainy-night-cover-v2.svg", "rejected-family-second-life.html"
 ]);
 const forbidden=/^(?:account-test|reading-test|editor|design-reference)/i;
 export function auditProductionAssets(){
