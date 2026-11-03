@@ -13,7 +13,8 @@ const HEADERS={
 };
 const answer=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:HEADERS});
 const fail=(code,status=400)=>answer({error:code},status);
-const CATEGORIES=new Set(["cet4","cet6","postgrad","ielts"]);
+const CATEGORY=/^[a-z][a-z0-9-]{2,29}$/;
+const TITLE_MAX=40;
 const ORDER=/^ORD-[A-Z0-9][A-Z0-9_-]{5,55}$/;
 function normalizeOrder(value){
  if(typeof value!=="string")return null;
@@ -47,16 +48,75 @@ async function mintRecovery(env){
  return {key,digest};
 }
 function stmt(db,sql,...args){return db.prepare(sql).bind(...args)}
+// All configured learning categories are visible to authorized merchants.
+ // The public bookshelf still reads ONLY categories where is_visible=1.
+ // Do not confuse "created" with "launched", or "launched" with "saleable".
 async function categories(env){
- const data=await env.DB.prepare(`SELECT c.slug,c.title,
+ const data=await env.DB.prepare(`SELECT c.slug,c.title,c.is_visible,
+  (SELECT COUNT(*) FROM books b WHERE b.category_id=c.id
+    AND b.status='draft') AS draft_books,
   (SELECT COUNT(*) FROM books b
    WHERE b.category_id=c.id AND b.status='published'
     AND EXISTS(SELECT 1 FROM chapters ch WHERE ch.book_id=b.id
      AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP)) AS published_books
-  FROM categories c WHERE c.is_visible=1 AND c.slug IN ('cet4','cet6','postgrad','ielts')
-  ORDER BY c.slug`).all();
- return answer({categories:(data.results||[]).map(c=>({...c,
-  issuable:Number(c.published_books)>0}))});
+  FROM categories c ORDER BY
+    CASE c.slug WHEN 'cet4' THEN 0 WHEN 'cet6' THEN 1
+      WHEN 'postgrad' THEN 2 WHEN 'ielts' THEN 3 ELSE 4 END,
+    c.slug LIMIT 40`).all();
+ return answer({categories:(data.results||[]).map(c=>({
+  slug:c.slug,title:c.title,isVisible:Boolean(c.is_visible),
+  draftBooks:Number(c.draft_books),publishedBooks:Number(c.published_books),
+  issuable:Boolean(c.is_visible)&&Number(c.published_books)>0,
+  status:!c.is_visible?"draft":
+    Number(c.published_books)>0?"on_sale":"preparing"
+ }))});
+}
+// Adding a category has no impact on the public shelf or customer rights.
+async function createCategory(env,request,operator){
+ const data=await body(request);
+ const slug=data?.slug;
+ const title=typeof data?.title==="string"?data.title.normalize("NFKC").trim():"";
+ if(typeof slug!=="string"||!CATEGORY.test(slug)||
+    title.length<2||title.length>TITLE_MAX||/[\\u0000-\\u001f]/.test(title))
+  return fail("INVALID_CATEGORY_INPUT",400);
+ const auditId=crypto.randomUUID(),reqId=crypto.randomUUID();
+ try{
+  await env.DB.batch([
+   stmt(env.DB,`INSERT INTO categories(id,slug,title,is_visible)
+      SELECT ?,?,?,0 WHERE (SELECT COUNT(*) FROM categories)<30`,
+      slug,slug,title),
+   stmt(env.DB,`INSERT INTO ops_audit_events
+    (id,actor_id,event_type,resource_type,resource_id,request_id,reason_code)
+    VALUES (?,?,CASE WHEN changes()=1 THEN 'category.create' ELSE NULL END,
+      'category',?,?,'HIDDEN_UNTIL_LAUNCH')`,
+      auditId,operator.id,slug,reqId)
+  ]);
+ }catch{return fail("CATEGORY_CREATE_REJECTED",409)}
+ return answer({created:true,slug,title,isVisible:false,issuable:false},201);
+}
+// Launch means opening the category to the public bookshelf; it does not
+// grant a buyer any additional entitlement. Require a published chapter first.
+async function launchCategory(env,request,operator){
+ const data=await body(request);
+ const slug=data?.slug;
+ if(typeof slug!=="string"||!CATEGORY.test(slug))
+  return fail("INVALID_CATEGORY_INPUT",400);
+ const auditId=crypto.randomUUID(),reqId=crypto.randomUUID();
+ try{
+  await env.DB.batch([
+   stmt(env.DB,`UPDATE categories SET is_visible=1 WHERE slug=?
+      AND is_visible=0 AND EXISTS(SELECT 1 FROM books b
+        WHERE b.category_id=categories.id AND b.status='published'
+        AND EXISTS(SELECT 1 FROM chapters ch WHERE ch.book_id=b.id
+          AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP))`,slug),
+   stmt(env.DB,`INSERT INTO ops_audit_events
+    (id,actor_id,event_type,resource_type,resource_id,request_id,reason_code)
+    VALUES (?,?,CASE WHEN changes()=1 THEN 'category.launch' ELSE NULL END,
+      'category',?,?,'PUBLISHED_CONTENT_CONFIRMED')`,
+      auditId,operator.id,slug,reqId)
+  ]);
+ }catch{return fail("CATEGORY_LAUNCH_REJECTED",409)}
+ return answer({launched:true,slug,isVisible:true},200);
 }
 async function status(env,request){
  const data=await body(request);
@@ -74,7 +134,7 @@ async function issue(env,request,operator){
  const data=await body(request);
  const order=normalizeOrder(data?.orderReference);
  const category=data?.categoryId;
- if(!order||!CATEGORIES.has(category)||data?.paymentConfirmed!==true||
+ if(!order||typeof category!=="string"||!CATEGORY.test(category)||data?.paymentConfirmed!==true||
     data?.contentConfirmed!==true)
   return fail("INVALID_SALES_CONFIRMATION",400);
  // Explicit cap on creation even if operator token is compromised.
@@ -121,6 +181,10 @@ export async function handleOpsSales(req,env,path){
  if(!hasOpsRole(auth.operator,"publisher"))return fail("OPS_ROLE_FORBIDDEN",403);
  try{
   if(path==="/api/ops/sales/categories"&&req.method==="GET")return await categories(env);
+  if(path==="/api/ops/sales/categories/create"&&req.method==="POST")
+    return await createCategory(env,req,auth.operator);
+  if(path==="/api/ops/sales/categories/launch"&&req.method==="POST")
+    return await launchCategory(env,req,auth.operator);
   if(path==="/api/ops/sales/status"&&req.method==="POST")return await status(env,req);
   if(path==="/api/ops/sales/issue"&&req.method==="POST")return await issue(env,req,auth.operator);
   return fail("NOT_FOUND",404);
