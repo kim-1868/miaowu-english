@@ -283,15 +283,20 @@ export function buildChapters2to12DensityCandidate(){
    // Spread word exposures across sentences rather than concentrating all in
    // one introductory clause. The review gate still checks human readability.
    const sentences=source.split(/(?<=[。！？])/u);
+   // The user's 3–6 goal is a paragraph AVERAGE, not an absolute cap.
+   // Four substantive sentences can legitimately require 8 exposures to
+   // satisfy 2/sentence; S84 already marks >8 as overconcentrated.
+   const longSentences=sentences.filter(t=>hanCount(t)>=25).length;
+   const paragraphCap=longSentences>=4?8:6;
    const countIn=t=>(t.match(TOKEN)||[]).length;
    const total=()=>sentences.reduce((n,t)=>n+countIn(t),0);
    const insertIn=(i)=>{
-    if(total()>=6)return false;
+    if(total()>=paragraphCap)return false;
     for(const [from,to] of rules){
      const inserted=[...to.matchAll(TOKEN)].map(m=>m[1]);
      const currentSentenceWords=new Set([...sentences[i].matchAll(TOKEN)].map(m=>m[1]));
      if(inserted.some(w=>(counts.get(w)||0)>=2||currentSentenceWords.has(w))||
-        total()+inserted.length>6)continue;
+        total()+inserted.length>paragraphCap)continue;
      const next=replaceOnlyPlain(sentences[i],from,to);
      if(next===sentences[i])continue;
      sentences[i]=next;replacements+=inserted.length;
@@ -304,7 +309,7 @@ export function buildChapters2to12DensityCandidate(){
    // one word exposure (at least 25 Chinese characters each).
    for(let i=0;i<sentences.length;i++){
     if(hanCount(sentences[i])<25)continue;
-    while(countIn(sentences[i])<2&&total()<6&&insertIn(i)){}
+    while(countIn(sentences[i])<2&&total()<paragraphCap&&insertIn(i)){}
    }
    // Then fill paragraph minimum; prefer long underexposed sentences.
    for(let attempt=0;attempt<7&&total()<5;attempt++){
@@ -320,7 +325,7 @@ export function buildChapters2to12DensityCandidate(){
    const next=segmentize(draft,byName);
    const wordCount=next.segments.filter(x=>x.wordId).length;
    if(wordCount<3)underfilled++;
-   if(wordCount>6)throw Error("TOO_MANY_WORDS_"+original.number+"_"+pi);
+   if(wordCount>paragraphCap)throw Error("TOO_MANY_WORDS_"+original.number+"_"+pi);
    if(originalWords>wordCount)throw Error("ORIGINAL_ANCHOR_LOST");
    // Check every original annotation is preserved and in original order.
    const oldIds=p.segments.filter(x=>x.wordId).map(x=>x.wordId);
