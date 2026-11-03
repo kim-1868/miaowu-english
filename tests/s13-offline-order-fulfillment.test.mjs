@@ -6,7 +6,7 @@ import {mkdtemp,readFile,writeFile,readdir,rm,mkdir} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {loadVoucherCatalog,assertIssuableCategory} from "../scripts/voucher-catalog.mjs";
-import {parseConfirmedOrdersCsv,makeVoucher,fulfillOrders} from "../scripts/fulfill-voucher-orders.mjs";
+import {parseConfirmedOrdersCsv,makeVoucher,makeOrderRecoveryKey,fulfillOrders} from "../scripts/fulfill-voucher-orders.mjs";
 import {normalizeCode,hashCode} from "../src/security.js";
 
 const pepper="ONLY_AN_INERT_S13_LOCAL_TEST_PEPPER_2026";
@@ -59,12 +59,17 @@ test("S13 one paid batch writes private inventory, irreversible SQL, and nonsecr
   const lines=inventory.trim().split("\n");
   const codes=lines.slice(1).map(x=>x.split(",")[2]);
   assert.equal(new Set(codes).size,2);
+  assert.equal(lines[0],"order_reference,category_id,activation_code,recovery_key");
+  const recoveryKeys=lines.slice(1).map(x=>x.split(",")[3]);
+  assert.equal(new Set(recoveryKeys).size,2);
+  assert.ok(recoveryKeys.every(x=>/^MW-REC-(?:[A-F0-9]{8}-){4}[A-F0-9]{8}$/.test(x)));
   for(const code of codes){
    assert.match(inventory,new RegExp(code));
    assert.ok(!sql.includes(code));
    assert.ok(!ledger.includes(code));
    assert.ok(!res.inventoryName.includes(code));
   }
+  for(const key of recoveryKeys){assert.ok(!sql.includes(key));assert.ok(!ledger.includes(key));}
   assert.ok(!ledger.includes(pepper));
   assert.ok(!sql.includes(pepper));
   assert.ok(!res.importName.includes("ORD-"));
@@ -76,10 +81,12 @@ test("S13 one paid batch writes private inventory, irreversible SQL, and nonsecr
   db.exec(readFileSync(new URL("../db/001_schema.sql",import.meta.url),"utf8"));
   db.exec(readFileSync(new URL("../db/003_public_categories.sql",import.meta.url),"utf8"));
   db.exec(readFileSync(new URL("../db/production/001_one_paid_order_one_code.sql",import.meta.url),"utf8"));
+  db.exec(readFileSync(new URL("../db/production/003_paid_order_recovery.sql",import.meta.url),"utf8"));
   db.exec(sql);
   const d=db.prepare("SELECT order_reference,category_id,status FROM activation_codes ORDER BY order_reference").all();
   assert.deepEqual(d.map(x=>x.category_id),["cet4","ielts"]);
   assert.ok(d.every(x=>x.status==="unused"));
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM order_recovery_credentials").get().n,2);
   assert.throws(()=>db.exec(sql),/UNIQUE/);
   db.close();
   // Same order, even with a fresh random code, can never be issued again
@@ -107,4 +114,13 @@ test("S13 disabling future sales and stale prepared/locked orders fails closed",
   await assert.rejects(fulfillOrders({ordersCsv:base+first+"\n",
    pepper,outputDir:out}),e=>e.code==="EEXIST");
  }finally{await rm(dir,{recursive:true,force:true})}
+});
+
+test("S13 recovery keys are distinct from voucher codes and use peppered hashes",()=>{
+ const a=makeVoucher("cet4",pepper);
+ const b=makeOrderRecoveryKey(pepper);
+ assert.notEqual(a.activationCode,b.recoveryKey);
+ assert.match(b.secretHash,/^[0-9a-f]{64}$/);
+ assert.ok(!b.secretHash.includes(b.recoveryKey));
+ assert.throws(()=>makeOrderRecoveryKey("weak"),/STRONG_PEPPER_REQUIRED/);
 });

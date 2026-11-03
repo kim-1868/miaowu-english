@@ -13,7 +13,7 @@ import {
   normalizedUsername, validPassword, normalizeCode, hashCode, newPasswordHash,
   verifyPassword, sha256, sessionData, sessionCookie, clearSessionCookie,
   readSessionCookie, checkOrigin, throttleKey, isBlocked, countFailure,
-  resetFailures, requireSecret
+  resetFailures, requireSecret, hmacHex
 } from "./security.js";
 
 const headers = {
@@ -251,6 +251,95 @@ async function recoverAccount(req,env){
    categories:await userEntitlements(db,userRecord.id),
    recoveryCode:replacement.displayCode,oldSessionsRevoked:true
  },200,{"set-cookie":sessionCookie(nextSession.token,req)});
+}
+// Paid-order self-service recovery requires TWO independent values:
+// the user's Xiaohongshu order reference AND a strong one-time recovery key
+// delivered privately with the voucher. An order number alone is never proof
+// of account ownership. The legacy recovery endpoint remains disabled.
+function normalizePaidOrderReference(value){
+ if(typeof value!=="string")return null;
+ const raw=value.normalize("NFKC").trim().toUpperCase();
+ const order=raw.startsWith("ORD-")?raw:"ORD-"+raw;
+ return /^ORD-[A-Z0-9][A-Z0-9_-]{5,55}$/.test(order)?order:null;
+}
+function normalizePaidRecoveryKey(value){
+ if(typeof value!=="string")return null;
+ const code=value.normalize("NFKC").toUpperCase().replace(/[\s-]/g,"");
+ return /^MWREC[A-F0-9]{40}$/.test(code)?code:null;
+}
+async function paidRecoveryDigest(value,env){
+ const key=normalizePaidRecoveryKey(value);
+ return key?await hmacHex(requireSecret(env),"order-recovery:v1:"+key):null;
+}
+async function freshPaidRecovery(env){
+ const bytes=crypto.getRandomValues(new Uint8Array(20));
+ const raw=Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("").toUpperCase();
+ const display="MW-REC-"+(raw.match(/.{8}/g)||[]).join("-");
+ return {display,hash:await paidRecoveryDigest(display,env)};
+}
+async function recoverWithPaidOrder(req,env){
+ // Mandatory feature flag ensures deploying code before the schema migration
+ // cannot accidentally activate an unprepared account recovery surface.
+ if(env.APP_ENV!=="production"||env.ORDER_RECOVERY_ENABLED!=="true")
+  return reject("ORDER_RECOVERY_UNAVAILABLE",503);
+ const body=await parseBody(req);
+ const username=normalizedUsername(body.username);
+ const orderReference=normalizePaidOrderReference(body.orderReference);
+ const digest=await paidRecoveryDigest(body.recoveryKey,env);
+ const password=body.newPassword;
+ if(!username||!orderReference||!digest||!validPassword(password))
+  return reject("INVALID_ORDER_RECOVERY_INPUT",400);
+ const db=env.DB;
+ const userThrottle=await throttleKey(env,"paid-order-recovery",req,username);
+ const sourceThrottle=await throttleKey(env,"paid-order-recovery-source",req);
+ if(await isBlocked(db,userThrottle)||await isBlocked(db,sourceThrottle))
+  return reject("TOO_MANY_ATTEMPTS",429);
+ // Same amount of expensive password work even when the lookup fails.
+ const {hash,salt}=await newPasswordHash(password,env);
+ const row=await dbStmt(db,`SELECT a.id AS code_id,u.id AS user_id,u.password_hash AS old_hash,
+     u.password_salt AS old_salt FROM activation_codes a
+     JOIN users u ON u.id=a.redeemed_by
+     JOIN order_recovery_credentials r ON r.code_id=a.id
+     WHERE a.order_reference=? AND a.status='redeemed'
+       AND u.username=? AND r.secret_hash=?`,
+     orderReference,username,digest).first();
+ if(!row){
+  await countFailure(db,userThrottle);await countFailure(db,sourceThrottle);
+  return reject("INVALID_ORDER_RECOVERY_CREDENTIALS",401);
+ }
+ const fresh=await freshPaidRecovery(env);
+ const session=await sessionData(row.user_id);
+ try{
+  // Compare-and-set key, user password, and session in one transaction.
+  // A concurrent request cannot re-use the consumed key. Any failed
+  // statement rolls back the key rotation and password change together.
+  await db.batch([
+   dbStmt(db,`UPDATE order_recovery_credentials SET secret_hash=?,last_used_at=CURRENT_TIMESTAMP,
+     reset_count=reset_count+1 WHERE code_id=? AND secret_hash=?`,
+     fresh.hash,row.code_id,digest),
+   dbStmt(db,`UPDATE users SET password_hash=?,password_salt=?
+      WHERE id=? AND password_hash=? AND password_salt=?
+      AND EXISTS(SELECT 1 FROM order_recovery_credentials
+       WHERE code_id=? AND secret_hash=?)`,
+     hash,salt,row.user_id,row.old_hash,row.old_salt,row.code_id,fresh.hash),
+   dbStmt(db,"DELETE FROM sessions WHERE user_id=?",row.user_id),
+   dbStmt(db,`INSERT INTO sessions(id_hash,user_id,expires_at)
+      VALUES(?,(SELECT u.id FROM users u JOIN order_recovery_credentials r
+        ON r.code_id=? JOIN activation_codes a ON a.id=r.code_id
+        WHERE u.id=? AND a.redeemed_by=u.id
+          AND r.secret_hash=? AND u.password_hash=? AND u.password_salt=?),?)`,
+      session.idHash,row.code_id,row.user_id,fresh.hash,hash,salt,session.expires)
+  ]);
+ }catch{
+  await countFailure(db,userThrottle);await countFailure(db,sourceThrottle);
+  return reject("INVALID_ORDER_RECOVERY_CREDENTIALS",401);
+ }
+ await resetFailures(db,userThrottle);
+ // A successful reset revokes all sessions on other devices and shows
+ // the replacement key once; it is never stored in browser storage.
+ return json({ok:true,oldSessionsRevoked:true,recoveryKey:fresh.display,
+   user:{username},categories:await userEntitlements(db,row.user_id)},200,
+   {"set-cookie":sessionCookie(session.token,req)});
 }
 async function redeem(req, env, user) {
   const body = await parseBody(req);
@@ -582,6 +671,7 @@ async function api(req, env) {
   if (path === "/api/auth/login" && req.method === "POST") return login(req, env);
   // Password recovery is handled by verified staff; the legacy recovery-code endpoint is disabled.
   if (path === "/api/auth/recover" && req.method === "POST") return reject("MANUAL_RECOVERY_REQUIRED", 403);
+  if (path === "/api/auth/recover-by-order" && req.method === "POST") return recoverWithPaidOrder(req,env);
   if (path === "/api/auth/logout" && req.method === "POST") return logout(req, env);
   if (path === "/api/auth/change-password" && req.method === "POST") return changePassword(req, env, user);
   if (path === "/api/auth/me" && req.method === "GET") {
