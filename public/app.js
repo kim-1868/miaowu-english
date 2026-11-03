@@ -842,26 +842,6 @@
           });
       };
     }
-    // A recovery code is a full account credential. Display only once.
-    // Never save it in localStorage, an analytics event, log or query string.
-    function showRecoveryNotice(code){
-      showModal([
-        '<span class="eyebrow">KEEP YOUR LIBRARY SAFE</span>',
-        '<h2 id="modalTitle">请妥善保存账号恢复码</h2>',
-        '<p>这是独立于密码的一次性恢复凭证。忘记密码时可以凭用户名和它找回已购买的英语分类、藏书票与阅读记录。请保存到你的密码管理器或离线安全位置。关掉后不能重新查看，只能登录后修改密码再生成。</p>',
-        '<div class="onboarding" style="padding:14px;overflow-wrap:anywhere">',
-          '<code id="recoveryCodeText">',safe(code),'</code>',
-        '</div>',
-        '<p class="helper">任何拿到此码的人都可能重置你的密码。不要发给他人、客服、群聊或截图公开。每次成功恢复或在正式环境修改密码，原恢复码即作废。</p>',
-        '<div class="form-actions"><button type="button" class="secondary-btn" id="recoveryCopy">复制恢复码</button>',
-        '<button class="primary" type="button" id="recoveryDone">我已安全保存</button></div>'
-      ].join(''));
-      $('recoveryCopy').onclick=async()=>{
-        try{await navigator.clipboard.writeText(code);toast('已复制，请存入安全位置')}
-        catch{toast('复制失败，请手动选择并保存恢复码')}
-      };
-      $('recoveryDone').onclick=closeModal;
-    }
     function showManualRecovery(){
       showModal([
         '<span class="eyebrow">ACCOUNT SUPPORT</span>',
@@ -871,46 +851,6 @@
         '<div class="form-actions"><button class="primary" type="button" id="manualRecoveryDone">我知道了</button></div>'
       ].join(''));
       $('manualRecoveryDone').onclick=closeModal;
-    }
-    function showRecoverAccount(){
-      showModal([
-        '<span class="eyebrow">ACCOUNT RECOVERY</span>',
-        '<h2 id="modalTitle">使用恢复码重置密码</h2>',
-        '<p>输入用户名及注册或上次修改密码时保存的恢复码。恢复成功后原码作废、其他设备退出登录，并生成新的恢复码。</p>',
-        '<form id="recoveryForm">',
-          '<div class="form-field"><label for="recoverName">用户名</label>',
-          '<input id="recoverName" autocomplete="username" required></div>',
-          '<div class="form-field"><label for="recoverCode">恢复码</label>',
-          '<input id="recoverCode" autocomplete="off" spellcheck="false" required></div>',
-          '<div class="form-field"><label for="recoverPassword">新密码</label>',
-          '<input id="recoverPassword" type="password" minlength="10" maxlength="128" autocomplete="new-password" required></div>',
-          '<div class="form-field"><label for="recoverPasswordConfirm">确认新密码</label>',
-          '<input id="recoverPasswordConfirm" type="password" minlength="10" maxlength="128" autocomplete="new-password" required></div>',
-          '<div class="form-actions"><button class="primary" type="submit">验证恢复码并重置密码</button></div>',
-          '<div id="formMessage" role="alert"></div>',
-        '</form>',
-        '<p class="helper">如果恢复码也丢失，请联系官方支持渠道，不要把购买激活码当作恢复码。</p>'
-      ].join(''));
-      $('recoveryForm').onsubmit=e=>{
-        e.preventDefault();const form=e.currentTarget;
-        if($('recoverPassword').value!==$('recoverPasswordConfirm').value){
-          formError('两次输入的新密码不一致');return;
-        }
-        const btn=form.querySelector('button[type=submit]');
-        btn.dataset.original=btn.textContent;
-        submitServerForm(form,
-          ()=>serverRequest('/api/auth/recover','POST',{
-            username:$('recoverName').value.trim(),
-            recoveryCode:$('recoverCode').value.trim(),
-            newPassword:$('recoverPassword').value
-          }),
-          result=>{
-            $('recoverCode').value='';$('recoverPassword').value='';
-            $('recoverPasswordConfirm').value='';
-            closeModal();applyServerAccount(result,true);
-            showRecoveryNotice(result.recoveryCode);
-          });
-      };
     }
     function showChangePassword(){
       if(!user){showLogin();return;}
