@@ -46,6 +46,7 @@ function button(id,fn){
   });
 }
 function syncButtons(){
+  syncSaleButtons();
   $("checkNovel").disabled=!connected()||!$("uploadNovel").files?.length;
   $("useSelectedDraft").disabled=!connected()||chosen?.status!=="draft";
   $("reviseNovel").disabled=!(connected()&&pendingNovel&&chosen?.status==="draft"&&
@@ -80,6 +81,7 @@ async function verify(){
   $("operatorIdentity").textContent=identity.displayName+" · "+identity.role+" · "+identity.environment;
   status("已通过运营身份校验。所有数据只从后台接口读取。");
   await loadBooks();
+  try{await loadSaleCategories();}catch(e){saleStatus('发码功能暂不可用：'+e.message);}
 }
 async function loadBooks(keepId=chosen?.id){
   if(!connected())return;
@@ -346,14 +348,96 @@ button("reviseNovel",async()=>{
  resetNovel();await loadBooks(chosen.id);
 });
 
+// Merchant issuance shares the publisher's short-lived operator credential.
+// The API uses the production Worker secret internally. No plaintext is
+// persisted to storage, URL or analytics.
+let saleReady=false;
+function saleStatus(message){$("saleStatus").textContent=message;}
+function syncSaleButtons(){
+ const ok=connected()&&saleReady;
+ $("saleCategory").disabled=!ok;
+ $("saleStatusButton").disabled=!ok||!$("saleOrder").value.trim();
+ $("saleIssueButton").disabled=!ok||!$("saleCategory").value||
+  !$("saleOrder").value.trim()||!$("salePaid").checked||!$("saleContent").checked;
+}
+async function loadSaleCategories(){
+ saleReady=false;syncSaleButtons();
+ const data=await api("/api/ops/sales/categories");
+ const select=$("saleCategory");
+ select.replaceChildren(byId("option","选择已发布的商品分类"));
+ select.firstChild.value="";
+ for(const product of data.categories||[]){
+  if(!product.issuable)continue;
+  const option=byId("option",product.title+"（"+product.slug+"）");
+  option.value=product.slug;select.append(option);
+ }
+ saleReady=select.options.length>1;
+ saleStatus(saleReady?"已验证发布者身份，选择商品后可以发码。":
+   "目前没有已发布且允许发码的商品分类。");
+ syncSaleButtons();
+}
+function clearSaleReceipt(){
+ $("saleDelivery").value="";$("saleReceipt").hidden=true;
+}
+for(const id of ["saleCategory","saleOrder","salePaid","saleContent"])
+ $(id).addEventListener("input",syncSaleButtons);
+button("saleStatusButton",async()=>{
+ clearSaleReceipt();
+ const result=await api("/api/ops/sales/status","POST",{
+  orderReference:$("saleOrder").value.trim()
+ });
+ saleStatus(result.found?
+  "已存在此订单：分类 "+result.order.title+"，激活状态 "+result.order.status+
+    (result.order.redeemed_at?"，已激活":"，尚未激活")+
+    "。请勿重复发码。":
+  "没有找到此订单的发码记录。确认收款和类目可交付后再生成。");
+});
+button("saleIssueButton",async()=>{
+ if(!connected()||!saleReady)throw Error("请先验证发布者身份");
+ if(!$("salePaid").checked||!$("saleContent").checked)
+  throw Error("必须确认收款并核对可交付内容");
+ const order=$("saleOrder").value.trim();
+ const category=$("saleCategory").value;
+ if(!window.confirm("确认这个订单已收款、商品已可交付，并且只生成一次？\n订单："+order))
+  return;
+ clearSaleReceipt();
+ const result=await api("/api/ops/sales/issue","POST",{
+   categoryId:category,orderReference:order,
+   paymentConfirmed:true,contentConfirmed:true
+ });
+ const name=$("saleCategory").selectedOptions[0]?.textContent||category;
+ $("saleDelivery").value=[
+  "妙屋英语｜订单交付说明",
+  "学习网址：https://miaowu-english-pages.pages.dev/",
+  "购买商品："+name,
+  "小红书订单号："+result.orderReference.replace(/^ORD-/,""),
+  "本单一次性激活码："+result.activationCode,
+  "订单专属密码找回凭证："+result.recoveryKey,
+  "",
+  "首次使用：注册并激活，设置用户名和密码。",
+  "忘记密码：登录页面点击「订单找回」，输入用户名、订单号及独立找回凭证。",
+  "请私下保存以上信息；找回凭证使用后会自动失效并生成新凭证。"
+ ].join("\n");
+ $("saleReceipt").hidden=false;
+ saleStatus("已为订单预留并入库一次性激活码，请立即复制交付。重新进入无法获取明文。");
+ $("salePaid").checked=false;$("saleContent").checked=false;syncSaleButtons();
+});
+$("saleCopy").addEventListener("click",async()=>{
+ const field=$("saleDelivery");
+ if(!field.value)return;
+ try{await navigator.clipboard.writeText(field.value);saleStatus("已复制交付信息，请通过小红书私聊发送给对应买家。");}
+ catch{field.select();saleStatus("浏览器不允许自动复制，已选中内容，请手动复制。");}
+});
+$("saleClear").addEventListener("click",()=>{clearSaleReceipt();saleStatus("已从当前页面清除私有激活码和找回凭证。");});
 button("connect",verify);button("refresh",()=>loadBooks());button("approve",doApprove);
 button("publish",doPublish);button("withdraw",doWithdraw);
 button("disconnect",async()=>{
-  key="";identity=null;chosen=null;clearActions();$("opsKey").value="";
+  key="";identity=null;chosen=null;clearActions();clearSaleReceipt();
+  saleReady=false;syncSaleButtons();$("opsKey").value="";
   $("operatorIdentity").textContent="未登录";$("books").replaceChildren(byId("p","已清除密钥。","soft"));
   $("audit").replaceChildren(byId("p","请先验证身份。","soft"));
   $("selected").textContent="请选择一本书";status("本页内存中的运营密钥已清除。");
 });
-window.addEventListener("pagehide",()=>{key="";identity=null;});
+window.addEventListener("pagehide",()=>{key="";identity=null;clearSaleReceipt();});
 syncButtons();
 })();
