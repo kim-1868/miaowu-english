@@ -123,4 +123,4 @@ authoring: Original story written directly for Miaowu; no model API used
 
 她伸出手，主动握住他的手：“如果以后真的有 [[wedding]]，一定是我们两个人自己作的 [[choice]]。没有隐藏的 [[contract]]，也没有交换条件。”
 
-陆砚深点头：“我 [[promise]]。”那一刻，姜知意终于明白，所谓豪门故事真正的结局，不是嫁给谁，而是可以自己决定要不要走进那扇门。
+陆砚深点头：“我会守住这份 [[promise]]。”那一刻，姜知意终于明白，所谓豪门故事真正的结局，不是嫁给谁，而是可以自己决定要不要走进那扇门。
