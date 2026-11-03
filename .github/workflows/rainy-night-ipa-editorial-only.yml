@@ -1,0 +1,46 @@
+name: Rainy Night IPA editorial candidate only
+on:
+  push:
+    branches:
+      - editorial/rainy-night-pronunciation-sense-pass-20261103
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pronunciation-draft:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate British cross-check and test US sense selection (offline)
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq espeak >/dev/null
+          node --test tests/s115-rainy-night-ipa-ai-working-copy.test.mjs
+          node scripts/prepare-rainy-night-ipa-ai-working-copy.mjs --write-private
+          test -s private-output/rainy-night-188-IPA-AI-DRAFT-NEEDS-REVIEW.json
+          node --input-type=module <<'JS'
+          import {readFileSync} from "node:fs";
+          import assert from "node:assert/strict";
+          const d=JSON.parse(readFileSync("private-output/rainy-night-188-IPA-AI-DRAFT-NEEDS-REVIEW.json","utf8"));
+          assert.equal(d.rows.length,188);
+          assert.ok(d.rows.every(x=>x.americanSuggested.length>4&&x.britishSuggested.length>4));
+          assert.ok(d.rows.every(x=>x.textMeaningAndPronunciationApproved===false));
+          console.log("IPA_EDITING_CANDIDATE_ONLY "+JSON.stringify({
+            words:d.rows.length,ukGaps:d.ukGaps,multiOrGap:d.multipleOrGap,humanApproved:d.humanApproved
+          }));
+          JS
+      - name: Upload private review working copy (never publish content)
+        uses: actions/upload-artifact@v4
+        with:
+          name: rainy-night-188-IPA-EDITORIAL-DRAFT-UNVERIFIED
+          path: private-output/rainy-night-188-IPA-AI-DRAFT-NEEDS-REVIEW.json
+          retention-days: 14
+          if-no-files-found: error
