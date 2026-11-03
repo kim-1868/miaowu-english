@@ -5,7 +5,6 @@ on:
     branches:
       - dev/s1-auth-and-entitlements
       - dev/foundation-s0
-      - editorial/rainy-night-ch02-ch12-high-density-20261103
 jobs:
   test:
     runs-on: ubuntu-latest
