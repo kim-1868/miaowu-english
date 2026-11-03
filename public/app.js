@@ -9,7 +9,7 @@
     Object.keys(WORD_EXTRAS).forEach(k=>Object.assign(WORDS[k],WORD_EXTRAS[k]));
     const CHAPTERS=[{title:'一纸协议',parts:['这只是一个用于测试阅读功能的场景片段，并非正式小说正文。窗外的雨敲打玻璃，客厅里只亮着一盏灯。','她将那份 [[contract]]（合同）轻轻推到桌面中央。对面的男人看上去依旧 [[indifferent]]（冷淡的），仿佛这不过是一次寻常的会面。','“我只想 [[confirm]]（确认）一件事。”她望着他，“这真的是你的决定吗？”','他没有回答。她也没有 [[hesitate]]（犹豫），拿起笔，在最后一页留下自己的 [[signature]]（签名）。','离开前，她发现文件下压着一张旧照片。也许，那会是一份重要的 [[evidence]]（证据）。']},{title:'藏在照片里的名字',parts:['这一章同样是临时交互文案，仅用于体验付费章节解锁与词汇功能。','照片背面的名字让她重新思考自己的 [[identity]]（身份）。那是一段不曾向任何人提起的往事。','律师寄来的邮件提到了股份 [[transfer]]（转让）。事情比她想象的复杂。','她将信纸折好，决定先不 [[reveal]]（透露）真相。某个遥远的 [[promise]]（承诺），仍然留在她的记忆里。','门外的脚步声逐渐 [[approach]]（接近）。她突然明白，每个决定都可能带来新的 [[consequence]]（后果）。']}];
     const QUIZ=[{q:'她把哪一种文件推到桌面中央？',hint:'提示：一份正式的书面约定。',choices:['contract','evidence','identity','promise'],correct:'contract',detail:'contract = 合同；契约。想起桌上的那份协议。'},{q:'她在文件最后一页留下了什么？',hint:'提示：这是签署协议时的一个动作。',choices:['approach','signature','transfer','reveal'],correct:'signature',detail:'signature = 签名。把词义和“落笔签字”的画面连在一起。'},{q:'他看上去冷淡的，哪个英文词更贴近？',hint:'提示：描述人物的态度。',choices:['indifferent','hesitate','confirm','consequence'],correct:'indifferent',detail:'indifferent = 冷淡的；漠不关心的。再次想起故事人物的神情。'}];
-    const $=id=>document.getElementById(id);let view='library',category='cet4',chapter=0,gloss=true,night=(function(){try{return localStorage.getItem('miaowu_theme')==='dark'}catch(e){return false}})(),fontSize=18,wordFilter='all',popWord=null,user=null,grants=new Set(),quizIndex=0,quizScore=0,quizAnswer=null,utterances=[],speakIndex=0,speaking=false,paused=false;
+    const $=id=>document.getElementById(id);let view='library',category='cet4',chapter=0,gloss=true,night=(function(){try{return localStorage.getItem('miaowu_theme')==='dark'}catch(e){return false}})(),fontSize=(()=>{try{return Math.min(25,Math.max(15,Number(localStorage.getItem('miaowu_reader_font'))||18))}catch{return 18}})(),wordFilter='all',popWord=null,user=null,grants=new Set(),quizIndex=0,quizScore=0,quizAnswer=null,utterances=[],speakIndex=0,speaking=false,paused=false;
     const stored=(key)=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch(e){return []}};const saved=new Set(stored('miaowu_demo_words').filter(w=>WORDS[w]));const mastered=new Set(stored('miaowu_demo_mastered').filter(w=>WORDS[w]));
     const safe=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     function applyTheme(){
@@ -39,23 +39,24 @@
       const area=$('reviewReminder');
       if(!area)return;
       const due=user?cloudDue():0,seen=cloudSaved.size;
-      const title=!user?(saved.size?'喵呜，你在本机演示收藏了 '+saved.size+' 张词卡':'喵呜，欢迎来到你的故事书房'):
+      const title=!user?'喵呜，欢迎来到你的故事书房':
         due?'喵呜，今天有 '+due+' 个单词等你复习':
-        seen?'喵呜，你已收藏 '+seen+' 张云端词卡':saved.size?'喵呜，你在本机演示收藏了 '+saved.size+' 张词卡':'喵呜，读一段故事，收藏第一张词卡';
-      const hint=!user?(saved.size?'演示收藏仅保存在当前浏览器；登录后正式小说收藏可跨设备同步。':'登录后，正式小说的章节进度与词卡可以跨设备保存。'):
-        due?'这些词已经到复习时间。进入剧情回声，完成练习后会更新云端学习记录。':
-        saved.size&&!seen?'演示收藏保存在当前浏览器，可在记忆藏书票查看；正式小说词卡会同步到账号。':'进入记忆藏书票复习已收藏的单词，也可以到剧情回声回顾已读章节。';
+        seen?'喵呜，你已收藏 '+seen+' 张词卡':'喵呜，读一段故事，收藏第一张词卡';
+      const hint=!user?'登录后，阅读进度与词卡会自动同步到你的账号。':
+        due?'这些词已经到复习时间。去剧情回声找回故事里的单词吧。':
+        '打开记忆藏书票，继续复习你在小说中遇见的单词。';
       area.innerHTML='<div class="reminder-cat" aria-hidden="true">'+
-        '<svg viewBox="0 0 48 48" width="30" height="30" fill="currentColor">'+
-        '<ellipse cx="12" cy="15" rx="4.1" ry="5.6" transform="rotate(-24 12 15)"/>'+
-        '<ellipse cx="23" cy="10" rx="4.1" ry="5.6"/>'+
-        '<ellipse cx="34" cy="15" rx="4.1" ry="5.6" transform="rotate(24 34 15)"/>'+
-        '<ellipse cx="41" cy="25" rx="3.4" ry="4.6" transform="rotate(30 41 25)"/>'+
-        '<path d="M23 23c-6.2 0-9.6 5-13 9.4-2.2 3-1 8.6 3.7 9.1 3.9.5 6.2-2.2 9.3-2.2 3.2 0 5.5 2.7 9.4 2.2 4.7-.5 5.9-6.1 3.7-9.1C32.6 28 29.2 23 23 23Z"/></svg></div>'+
+        '<svg viewBox="0 0 48 48" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">'+
+        '<ellipse cx="11" cy="16" rx="3.3" ry="4.6" transform="rotate(-21 11 16)"/>'+
+        '<ellipse cx="21" cy="10.5" rx="3.1" ry="4.8"/>'+
+        '<ellipse cx="31" cy="12" rx="3.1" ry="4.7" transform="rotate(14 31 12)"/>'+
+        '<ellipse cx="39" cy="20" rx="2.8" ry="4.1" transform="rotate(32 39 20)"/>'+
+        '<path d="M23 22c-5.3 0-9.5 5.2-12.1 10.2-1.7 3.5-.3 8.3 4.7 8.3 3 0 5.3-2 7.4-2s4.4 2 7.4 2c5 0 6.5-4.8 4.7-8.3C33 27.2 28.3 22 23 22Z"/>'+
+        '<path d="M35.5 3v4M33.5 5h4" stroke-width="1.1"/></svg></div>'+
         '<div class="reminder-content"><strong>'+safe(title)+'</strong><small>'+safe(hint)+'</small></div>'+
         '<button class="primary reminder-btn" id="reviewReminderBtn">'+
-        (user||saved.size?'查看记忆藏书票 →':'登录后同步 →')+'</button>';
-      $('reviewReminderBtn').onclick=()=>user||saved.size?navigate('words'):showLogin();
+        (user?'查看记忆藏书票 →':'登录后同步 →')+'</button>';
+      $('reviewReminderBtn').onclick=()=>user?navigate('words'):showLogin();
     }
     const ECHO_TYPES=[{id:'fill',title:'剧情填词',desc:'在故事原句中选择恰当的英文词',symbol:'▤'},{id:'situation',title:'情境选择',desc:'根据人物行为和事件判断词义',symbol:'✧'},{id:'spell',title:'单词找回',desc:'键盘或平板系统手写拼出单词',symbol:'✎'}];
     const ECHO_BANK=[
@@ -74,7 +75,7 @@
       {type:'spell',ch:1,word:'promise',q:'某个遥远的 ______，仍留在记忆里。',hint:'承诺 · 名词'},
       {type:'spell',ch:1,word:'identity',q:'照片背面的名字让她重新思考自己的 ______。',hint:'身份 · 名词'}
     ];
-    let echoMode='demo',echoScope='recent',echoTypes=new Set(['fill','situation','spell']),echoPhase='setup',echoChapterSet=new Set([0]),quizQuestions=[],quizHint=false;
+    let echoMode='cloud',echoScope='recent',echoTypes=new Set(['fill','situation','spell']),echoPhase='setup',echoChapterSet=new Set([0]),quizQuestions=[],quizHint=false;
     let echoCustomBook='all',echoCustomRange='all',echoRangeStart=1,echoRangeEnd=3;
     // Demo has one published book; the selector layout supports future books without one-by-one ticking.
     const availablePublishedBooks=()=>BOOKS.filter(b=>b.status==='demo');
@@ -99,13 +100,79 @@
     function asMeaning(c){return WORDS[c]?`${safe(c)}：${safe(WORDS[c].meaning)}`:safe(c)}
     function reportExamResult(q,ans,hint=false){if(quizAnswer!==null)return;quizAnswer=ans;const ok=ans.toLowerCase().trim()===q.word; if(ok)quizScore++;recordAnswer(q.word,ok,hint);renderQuiz()}
 
-    function navigate(to){if(view==='echo'&&echoMode==='cloud'&&window.MiaowuCloudEcho?.running()){window.MiaowuCloudEcho.leave(to);return}if(view==='echo'&&echoMode==='demo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='reader'&&to!=='reader')stopReading();view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words')renderWords();if(to==='echo')renderQuiz();if(to==='account')renderAccount();$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
+    function navigate(to){if(view==='echo'&&echoMode==='cloud'&&window.MiaowuCloudEcho?.running()){window.MiaowuCloudEcho.leave(to);return}if(view==='echo'&&echoMode==='demo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='reader'&&to!=='reader'){clearTimeout(readingSaveTimer);void saveReadingProgress({quiet:true});stopReading();}view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words')renderWords();if(to==='echo')renderQuiz();if(to==='account')renderAccount();$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
 
     // D1 is the primary reader source. Legacy chapter sample stays unreachable from default book cards.
     // No paid chapter bodies are bundled into app.js or held in a client-side book constant.
     let cloudListSequence=0;
     let activeCloud=null;
     let cloudBooks=[],cloudSaved=new Map(),cloudProgress=[],cloudSessionKey=null,cloudLearningSequence=0;
+    const glossaryCache=new Map();
+    let readingSaveTimer=0,readingLastSave=0,readingSavePending=null;
+    const readingPrefs={
+      tone:(()=>{try{return localStorage.getItem('miaowu_reader_tone')||'paper'}catch{return 'paper'}})(),
+      line:(()=>{try{return localStorage.getItem('miaowu_reader_line')||'2.15'}catch{return '2.15'}})()
+    };
+    function applyReadingPrefs(){
+      const tone=['paper','white','night'].includes(readingPrefs.tone)?readingPrefs.tone:'paper';
+      const line=['1.85','2.15','2.4'].includes(readingPrefs.line)?readingPrefs.line:'2.15';
+      $('readerLayout')?.setAttribute('data-reader-tone',tone);
+      if($('readerTone'))$('readerTone').value=tone;
+      if($('readerLine'))$('readerLine').value=line;
+      $('storyText')?.style.setProperty('line-height',line);
+      $('storyText')?.style.setProperty('font-size',fontSize+'px');
+      try{
+        localStorage.setItem('miaowu_reader_font',String(fontSize));
+        localStorage.setItem('miaowu_reader_tone',tone);
+        localStorage.setItem('miaowu_reader_line',line);
+      }catch{}
+    }
+    function readingFraction(){
+      const content=$('storyText');
+      if(!activeCloud?.chapterId||!content?.offsetHeight)return 0;
+      const start=window.scrollY+content.getBoundingClientRect().top;
+      const viewport=window.scrollY+innerHeight*.45;
+      const fraction=(viewport-start)/Math.max(1,content.offsetHeight-innerHeight*.4);
+      return Math.min(.995,Math.max(.01,fraction));
+    }
+    async function saveReadingProgress({complete=false,quiet=true}={}){
+      if(!user||!activeCloud?.chapterId)return true;
+      const id=activeCloud.chapterId,amount=complete?1:readingFraction();
+      if(!complete&&amount<=.015)return true;
+      try{
+        if(readingSavePending)await readingSavePending;
+        const job=serverRequest('/api/me/progress','POST',{chapterId:id,progress:amount});
+        readingSavePending=job;
+        await job;readingLastSave=Date.now();readingSavePending=null;
+        if(complete){
+          const row=cloudProgress.find(x=>x.chapter_id===id);
+          if(row){row.progress=1;row.completed_at=row.completed_at||new Date().toISOString()}
+          else cloudProgress.unshift({chapter_id:id,book_id:activeCloud.bookId,chapter_no:
+            activeCloud.chapters.find(x=>x.id===id)?.chapterNo||0,progress:1,completed_at:new Date().toISOString()});
+          showCloudProgress(id);updateCloudShelfProgress();
+          await refreshCloudLearning();
+        }
+        return true;
+      }catch(error){
+        readingSavePending=null;
+        if(!quiet)toast('阅读进度未能同步：'+error.message+'；请重试');
+        return false;
+      }
+    }
+    function queuePartialProgress(){
+      if(view!=='reader'||!user||!activeCloud?.chapterId)return;
+      clearTimeout(readingSaveTimer);
+      if(Date.now()-readingLastSave<6000)return;
+      readingSaveTimer=setTimeout(()=>{saveReadingProgress({quiet:true})},900);
+    }
+    window.addEventListener('scroll',queuePartialProgress,{passive:true});
+    window.addEventListener('pagehide',()=>{
+      if(!user||!activeCloud?.chapterId)return;
+      const fraction=readingFraction();if(fraction<=.015)return;
+      try{navigator.sendBeacon('/api/me/progress',new Blob([JSON.stringify({
+        chapterId:activeCloud.chapterId,progress:fraction})],{type:'application/json'}))}catch{}
+    });
+
     let cloudReviewDue=0;
     const cloudDue=()=>cloudReviewDue;
     async function refreshCloudLearning(){
@@ -179,21 +246,23 @@
           const item=document.createElement('div');
           item.className='book-item cloud-book-item';
           const kind=['one','two','three'][i%3];
-          const test=/测试|示例|qa-|demo|sample/i.test(book.title+' '+book.id);
-          const coverTitle=test?'故事试读册':book.title;
-          const coverLabel=test?'TEST EDITION · 功能测试':'STORY COLLECTION';
-          const badge=test?'测试内容 · 不出售':has(slug)?'已解锁':book.title==='雨夜档案'?'四级会员专享':'免费试读';
-          const action=cloudProgress.some(p=>p.book_id===book.id)?'继续阅读 →':book.title==='雨夜档案'?(has(slug)?'开始阅读 →':'查看会员目录 →'):'开始试读 →';
-          item.innerHTML='<div class="book-cover '+kind+'" aria-label="'+safe(book.title)+'">'+
+          const coverTitle=book.title;
+          const coverLabel='STORY COLLECTION';
+          const isRainyNight=book.id==='rainy-night-archives-cet4-v1';
+          const badge=has(slug)?'已解锁':'会员专享';
+          const action=cloudProgress.some(p=>p.book_id===book.id)?'继续阅读 →':
+            has(slug)?'开始阅读 →':'查看会员目录 →';
+          item.innerHTML='<div class="book-cover '+kind+(isRainyNight?' rainy-night-published-cover':'')+'" aria-label="'+safe(book.title)+'">'+
+            (isRainyNight?'<img src="/rainy-night-cover.webp" alt="《雨夜档案》小说封面" class="rainy-night-cover-image" loading="lazy" decoding="async">':'')+
             '<span class="book-tag">'+safe(badge)+'</span>'+
-            '<span class="edition">THE STORY EDITION / '+String(i+1).padStart(2,'0')+'</span>'+
+            (isRainyNight?'':('<span class="edition">THE STORY EDITION / '+String(i+1).padStart(2,'0')+'</span>'+
             '<span class="illustration">'+['❦','♧','✥'][i%3]+'</span>'+
-            '<h3>'+safe(coverTitle)+'</h3><span class="edition-bottom">'+safe(coverLabel)+'</span></div>'+
+            '<h3>'+safe(coverTitle)+'</h3><span class="edition-bottom">'+safe(coverLabel)+'</span>'))+'</div>'+
             '<div class="book-info"><div class="line1"><h3 title="'+safe(book.title)+'">'+safe(book.title)+'</h3>'+
             '<span class="eyebrow">'+String(i+1).padStart(2,'0')+'</span></div>'+
             '<p>'+safe(book.description||'读一本舍不得合上的故事。')+'</p>'+
             '<div class="book-meta"><span class="pill">'+safe(slug.toUpperCase())+'</span>'+
-            '<span class="pill">'+(test?'仅供联调':has(slug)?'已拥有学习权限':book.title==='雨夜档案'?'四级权益解锁全部12章':'免费章节开放')+'</span></div>'+
+            '<span class="pill">'+(has(slug)?'已拥有阅读权益':'解锁后阅读')+'</span></div>'+
             '<div class="shelf-progress" data-live-progress="'+safe(book.id)+'">'+
             '<div class="progress-text"><span>正在读取阅读记录</span><span>—</span></div>'+
             '<div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>'+
@@ -201,119 +270,13 @@
           item.querySelector('.book-actions button').onclick=()=>openCloudBook(book,slug);
           list.append(item);
         });
-        // Show only public book metadata until the protected D1 edition is published.
-        // No free Rainy Night chapter or manuscript content is bundled in the client.
-        if(slug==='cet4'&&!books.some(b=>b.title==='雨夜档案')){
-          const item=document.createElement('div');
-          item.className='book-item rainy-night-sample-book-item';
-          item.innerHTML='<div class="book-cover three" aria-label="雨夜档案 四级会员专享">'+
-            '<img class="rainy-night-cover-image" src="/rainy-night-cover.webp" alt="《雨夜档案》原创小说封面" loading="lazy" decoding="async">'+
-            '<span class="book-tag">四级会员专享</span></div>'+
-            '<div class="book-info"><div class="line1"><h3>雨夜档案</h3><span class="eyebrow">12 CHAPTERS</span></div>'+
-            '<p>十二章完整小说，四级权益用户可阅读全部章节。不提供免费试读。</p>'+
-            '<div class="book-meta"><span class="pill">等待正式发布</span></div>'+
-            '<div class="book-actions"><span class="soft">登录后查看四级会员内容</span></div></div>';
-          list.append(item);
-        }
-        // Original CET4 content queue. Internal writing genres are NEVER presented
-        // to buyers. No unreviewed full chapters are bundled as public assets.
-        if(slug==='cet4'){
-          const newNovels=[
-            {title:'重生后我不再讨好他们',desc:'重回改变命运的那一天，她第一次拒绝替全家背债。',sample:'/rejected-family-second-life.html'},
-            {title:'被赶出豪门后我成了继承人',desc:'离开家族修复馆后，她意外找回祖母留给她的一份使命。'},
-            {title:'契约婚姻到期那天',desc:'三年婚约到期后，两个人开始学会真正尊重彼此。'},
-            {title:'穿成恶毒女配后，我不演了',desc:'不再扮演原剧情里的坏人，她决定自己选择未来。'},
-            {title:'死对头突然开始对我好',desc:'毕业七年后再相遇，旧日的竞争对手成了意外室友。'},
-            {title:'合租室友藏了七年的秘密',desc:'一场旧录音风波，七封没寄出的信，让两个人再次靠近。'},
-            {title:'离婚后，前夫公司成了我的客户',desc:'离婚后，她靠自己的设计赢得前夫公司的合作订单。'},
-            {title:'替嫁当天，我撕了婚约',desc:'被推上豪门婚礼的她，选择自己决定事业与爱情。'}
-          ];
-          newNovels.forEach((n,i)=>{
-            if(books.some(b=>b.title===n.title))return;
-            const item=document.createElement('div');
-            item.className='book-item original-coming-book-item';
-            const kind=['one','two','three'][i%3];
-            const available=!!n.sample;
-            item.innerHTML='<div class="book-cover '+kind+'" aria-label="'+safe(n.title)+'">'+
-              '<span class="book-tag">'+(available?'第一章试读':'内容校对中')+'</span>'+
-              '<span class="edition">WORDLETTER / '+String(i+1).padStart(2,'0')+'</span>'+
-              '<span class="illustration">'+['❦','✧','♧'][i%3]+'</span>'+
-              '<h3>'+safe(n.title)+'</h3><span class="edition-bottom">ORIGINAL CET4 STORY</span></div>'+
-              '<div class="book-info"><div class="line1"><h3>'+safe(n.title)+'</h3>'+
-              '<span class="eyebrow">'+(available?'NEW':'SOON')+'</span></div>'+
-              '<p>'+safe(n.desc)+'</p>'+
-              '<div class="book-meta"><span class="pill">'+
-              (available?'第一章可免费阅读':'完整版校对中 · 暂不出售')+'</span></div>'+
-              '<div class="shelf-progress"><div class="progress-text"><span>'+
-              (available?'免费阅读 · 无需激活':'已完成故事初稿')+'</span><span>'+
-              (available?'第一章':'待审核')+'</span></div></div>'+
-              '<div class="book-actions">'+(available?
-                '<a class="secondary-btn" href="'+n.sample+'">读第一章 →</a>':
-                '<button class="secondary-btn" disabled type="button">暂未开放</button>')+
-              '</div></div>';
-            list.append(item);
-          });
-        }
-        // Preserve the user's approved original two-chapter local demo as a
-        // clearly labelled teaching/interaction sample. D1 is still the ONLY
-        // source for published and paid books. Never double-render a D1 book.
-        const showRoseDemo=slug==='cet4'&&!books.some(b=>
-          b.id==='rose'||b.title==='玫瑰未落幕');
-        if(showRoseDemo){
-          const rose=BOOKS.find(b=>b.id==='rose'&&b.status==='demo');
-          if(rose){
-            const item=document.createElement('div');
-            item.className='book-item demo-book-item';
-            const ix=books.length+1;
-            item.innerHTML='<div class="book-cover '+safe(rose.kind)+'" aria-label="'+safe(rose.name)+' 互动演示">'+
-              '<span class="book-tag">互动演示 · 非正式商品</span>'+
-              '<span class="edition">THE STORY EDITION / '+String(ix).padStart(2,'0')+'</span>'+
-              '<span class="illustration">'+safe(rose.illustration)+'</span>'+
-              '<h3>'+safe(rose.name)+'</h3><span class="edition-bottom">DEMO · 2 CHAPTERS</span></div>'+
-              '<div class="book-info"><div class="line1"><h3>'+safe(rose.name)+'</h3>'+
-              '<span class="eyebrow">'+String(ix).padStart(2,'0')+'</span></div>'+
-              '<p>保留的两章互动测试故事；点击英文词可体验词卡与发音。演示进度保存在本浏览器，不代表正式购买权益。</p>'+
-              '<div class="book-meta"><span class="pill">CET4 演示</span>'+
-              '<span class="pill">仅供体验 · 不出售</span></div>'+
-              '<div class="shelf-progress"><div class="progress-text">'+
-              '<span>共2章 · 浏览器本地演示</span><span>—</span></div></div>'+
-              '<div class="book-actions"><button class="secondary-btn" type="button">试读演示第1章 →</button></div></div>';
-            item.querySelector('.book-actions button').onclick=()=>openChapter(0);
-            list.append(item);
-          }
-        }
-        // Keep the approved V0.3 three-cover rhythm when room remains.
-        // Placeholder covers have no published body or downloadable content.
-        const visibleCardCount=books.length+(showRoseDemo?1:0);
-        if(slug==='cet4'&&visibleCardCount<3){
-          BOOKS.filter(b=>b.status==='planned').slice(0,3-visibleCardCount).forEach((b,i)=>{
-            const item=document.createElement('div');
-            item.className='book-item planned-book-item';
-            const ix=visibleCardCount+i+1;
-            item.innerHTML='<div class="book-cover '+safe(b.kind)+'">'+
-              '<span class="book-tag">内容筹备中</span>'+
-              '<span class="edition">THE STORY EDITION / '+String(ix).padStart(2,'0')+'</span>'+
-              '<span class="illustration">'+safe(b.illustration)+'</span>'+
-              '<h3>'+safe(b.name)+'</h3><span class="edition-bottom">COMING SOON · 故事企划</span></div>'+
-              '<div class="book-info"><div class="line1"><h3>'+safe(b.name)+'</h3>'+
-              '<span class="eyebrow">'+String(ix).padStart(2,'0')+'</span></div>'+
-              '<p>'+safe(b.desc)+'</p><div class="book-meta">'+
-              '<span class="pill">未上架 · 不可购买</span></div>'+
-              '<div class="shelf-progress"><div class="progress-text"><span>故事企划阶段</span>'+
-              '<span>敬请期待</span></div></div>'+
-              '<div class="book-actions"><button class="secondary-btn" type="button" disabled>尚未开放</button></div></div>';
-            list.append(item);
-          });
-        }
+        // Only published D1 books appear on the customer shelf.
         if(!books.length){
-          const explanation=document.createElement('div');
-          explanation.className='onboarding cloud-shelf-empty';
-          explanation.innerHTML='<span class="eyebrow">YOUR NEXT STORY</span>'+
-            '<h3>这一层书架，还在等待故事</h3>'+
-            '<p>'+(showRoseDemo?
-              '目前没有正式发布的数据库小说。《玫瑰未落幕》仅保留两章临时互动演示，不是付费商品；其余封面为未上架企划。':
-              '目前没有已发布的小说。下方封面为尚未上架的设计企划，不能阅读或购买。')+'</p>';
-          list.prepend(explanation);
+          const empty=document.createElement('div');
+          empty.className='onboarding cloud-shelf-empty';
+          empty.innerHTML='<span class="eyebrow">YOUR NEXT STORY</span>'+
+            '<h3>更多故事正在路上</h3><p>这层书架暂无已发布作品，更多故事正在陆续加入。</p>';
+          list.append(empty);
         }
         updateCloudShelfProgress();
       }catch(error){
@@ -332,15 +295,15 @@
         if(!chapters.length){toast('这本书尚无已发布章节');return;}
         activeCloud={bookId:book.id,title:book.title,slug,chapters,chapterId:null,parts:[]};
         showModal(`<span class="eyebrow">MIAOWU · STORY CHAPTERS</span><h2 id="modalTitle">${safe(book.title)}</h2>
-          <p>目录可见。正文由服务器核对当前账号的分类购买权益后返回；《雨夜档案》不提供免费试读。</p>
-          <div class="cloud-chapter-options">${chapters.map(ch=>`<button class="chapter-btn" type="button" data-cloud-choose="${safe(ch.id)}">${String(ch.chapterNo).padStart(2,'0')} · ${safe(ch.title)} ${ch.isPreview?'· 免费试读':(ch.canRead?'· 已授权':'· 🔒 未解锁')}</button>`).join('')}</div>`);
+          <p>点击章节即可开始阅读。会员章节仅对已解锁该学习分类的账号开放。</p>
+          <div class="cloud-chapter-options">${chapters.map(ch=>`<button class="chapter-btn" type="button" data-cloud-choose="${safe(ch.id)}">${String(ch.chapterNo).padStart(2,'0')} · ${safe(ch.title)} ${ch.isPreview?'· 免费试读':(ch.canRead?'':'· 🔒 未解锁')}</button>`).join('')}</div>`);
         document.querySelectorAll('[data-cloud-choose]').forEach(btn=>{
           btn.onclick=()=>openCloudChapter(btn.dataset.cloudChoose);
         });
       }catch(error){toast(error.message||'章节目录加载失败');}
     }
-    function renderD1Paragraph(paragraph){
-      if(typeof paragraph==='string')return '<p>'+safe(paragraph)+'</p>';
+    function renderD1Paragraph(paragraph,index){
+      if(typeof paragraph==='string')return '<p data-audio-paragraph="'+index+'">'+safe(paragraph)+'</p>';
       const segments=Array.isArray(paragraph?.segments)?paragraph.segments:[];
       const html=segments.map(segment=>{
         if(typeof segment?.text==='string')return safe(segment.text);
@@ -350,7 +313,7 @@
         }
         return '';
       }).join('');
-      return '<p>'+html+'</p>';
+      return '<p data-audio-paragraph="'+index+'">'+html+'</p>';
     }
     function cloudPlainText(paragraph){
       if(typeof paragraph==='string')return paragraph;
@@ -408,39 +371,37 @@
       $('savedCount').textContent=cloudSaved.size;
       $('readerUnseen').textContent=String(Array.from(activeCloud.words?.keys()||[]).filter(id=>!cloudSaved.has(id)).length);
       $('readerDue').textContent=String(cloudDue());
-      const finish=$('cloudFinishReading');
-      if(finish){finish.hidden=false;finish.disabled=!user;finish.textContent=savedProgress?.completed_at?'✓ 本章已读完（已同步）':'✓ 标记本章读完并同步';}
-    }
-    async function finishCloudChapter(){
-      if(!activeCloud?.chapterId)return;
-      if(!user){showLogin();return}
-      const id=activeCloud.chapterId,button=$('cloudFinishReading');
-      button.disabled=true;
-      try{
-        await serverRequest('/api/me/progress','POST',{chapterId:id,progress:1});
-        await refreshCloudLearning();
-        showCloudProgress(id);toast('阅读进度已保存到你的云端账号');
-      }catch(error){toast(error.message);button.disabled=false}
+      // Completed chapters are automatically recorded when the reader chooses 下一章.
     }
     let cloudChapterSequence=0;
-    async function openCloudChapter(id){
+    async function openCloudChapter(id,{finishPrevious=false}={}){
       if(!activeCloud)return;
+      if(activeCloud.chapterId&&activeCloud.chapterId!==id&&view==='reader'){
+        clearTimeout(readingSaveTimer);
+        if(!(await saveReadingProgress({complete:finishPrevious,quiet:false})))return;
+      }
       const book=activeCloud;
+      stopReading();
       // A chapter-list click must visibly respond before any network request.
       const selected=book.chapters.find(ch=>ch.id===id);
       if(!selected)return;
       const chosen=++cloudChapterSequence;
+      $('readerLayout').classList.remove('chapter-drawer-open','vocab-drawer-open');
       closeModal();
       navigate('reader');
       $('chapterNo').textContent='CHAPTER '+String(selected.chapterNo).padStart(2,'0');
       $('chapterTitle').textContent=selected.title;
       $('readerCrumb').textContent=(book.slug||'STORY').toUpperCase()+' / '+book.title;
       $('storyText').innerHTML='<p class="cloud-reader-loading" role="status">正在打开章节，读取云端正文……</p>';
-      $('cloudFinishReading').hidden=true;
       $('nextChapter').disabled=true;
       $('doEcho').disabled=true;
       book.chapterId=null;
       window.MiaowuChapterWords?.openChapter(id);
+      const key=(user?.name||'guest')+'::'+id;
+      const glossaryPromise=glossaryCache.has(key)?
+        Promise.resolve({ok:true,data:glossaryCache.get(key)}):
+        serverRequest('/api/chapters/'+encodeURIComponent(id)+'/words')
+          .then(data=>({ok:true,data}),error=>({ok:false,error}));
       // Always fetch D1, even for previously visited chapters. Never trust
       // local entitlement flags when deciding access to protected text.
       let page;
@@ -473,17 +434,27 @@
       const thisChapter=book.chapters.find(ch=>ch.id===id);
       const ix=book.chapters.findIndex(ch=>ch.id===id);
       const next=book.chapters[ix+1];
-      $('chapterNo').textContent='CHAPTER '+String(page.chapterNo).padStart(2,'0')+(thisChapter?.isPreview?' · FREE PREVIEW':' · PRIVATE READING');
+      $('chapterNo').textContent='CHAPTER '+String(page.chapterNo).padStart(2,'0')+(thisChapter?.isPreview?' · FREE PREVIEW':'');
       $('chapterTitle').textContent=page.title;
-      $('storyText').innerHTML=parts.map(renderD1Paragraph).join('')||'<p>此测试章节暂无段落。</p>';
+      $('storyText').innerHTML=parts.map(renderD1Paragraph).join('')||'<p>本章内容暂时无法显示，请稍后重试。</p>';
       $('storyText').querySelectorAll('[data-cloud-word]').forEach(btn=>btn.onclick=()=>showCloudWord(btn.dataset.cloudWord));
-      $('storyText').style.fontSize=fontSize+'px';
+      applyReadingPrefs();
+      const savedAt=cloudProgress.find(x=>x.chapter_id===id);
+      if(savedAt?.progress>0.025&&savedAt.progress<1){
+        requestAnimationFrame(()=>{
+          if(activeCloud===book&&book.chapterId===id&&view==='reader'){
+            const body=$('storyText'),top=window.scrollY+body.getBoundingClientRect().top;
+            window.scrollTo({top:top+Math.min(1,Number(savedAt.progress))*Math.max(0,body.offsetHeight-innerHeight*.4),
+              behavior:'instant'});
+          }
+        });
+      }
       $('readerCrumb').textContent=book.slug.toUpperCase()+' / '+book.title;
       const sideHeading=$('chapterList').parentElement.querySelector('h3');
       if(sideHeading)sideHeading.textContent=book.title+' · 目录';
       const sideCaption=$('chapterList').parentElement.querySelector('.side-caption');
       if(sideCaption)sideCaption.textContent='只显示已发布章节，未授权正文不会传到浏览器。';
-      $('chapterList').innerHTML=book.chapters.map(ch=>`<button class="chapter-btn ${ch.id===id?'current':''}" data-cloud-chapter="${safe(ch.id)}" type="button">${String(ch.chapterNo).padStart(2,'0')} · ${safe(ch.title)} ${ch.isPreview?'· 免费':' · '+(ch.canRead?'已授权':'🔒')}</button>`).join('');
+      $('chapterList').innerHTML=book.chapters.map(ch=>`<button class="chapter-btn ${ch.id===id?'current':''}" data-cloud-chapter="${safe(ch.id)}" type="button">${String(ch.chapterNo).padStart(2,'0')} · ${safe(ch.title)} ${ch.isPreview?'· 免费':(ch.canRead?'':' · 🔒')}</button>`).join('');
       $('chapterList').querySelectorAll('[data-cloud-chapter]').forEach(btn=>btn.onclick=()=>openCloudChapter(btn.dataset.cloudChapter));
       $('readingChapter').textContent='第'+page.chapterNo+'章';
       showCloudProgress(id);
@@ -494,28 +465,27 @@
       $('doEcho').title='练习本章已读单词并同步云端复习记录';
       $('nextChapter').textContent=next?'下一章 →':'返回书架 →';
       $('nextChapter').disabled=false;
-      $('nextChapter').onclick=()=>next?openCloudChapter(next.id):navigate('library');
+      $('nextChapter').onclick=async()=>{
+        if(next)return openCloudChapter(next.id,{finishPrevious:true});
+        if(await saveReadingProgress({complete:true,quiet:false}))navigate('library');
+      };
       const study=$('readerLayout').querySelector('#readerLearningStats');
       if(study)study.hidden=true;
-      const note=$('readerLayout').querySelector('.sidebar .side-panel:nth-child(2) .side-caption');
-      if(note)note.textContent='点击正文英文标注查看词卡；阅读进度与收藏保存在云端。';
-      try{
-        const glossary=await serverRequest('/api/chapters/'+encodeURIComponent(id)+'/words');
-        if(activeCloud!==book||chosen!==cloudChapterSequence||book.chapterId!==id)return;
-        for(const row of (glossary.words||[])){
+      const glossary=await glossaryPromise;
+      if(activeCloud!==book||chosen!==cloudChapterSequence||book.chapterId!==id)return;
+      if(glossary.ok){
+        if(!glossaryCache.has(key))glossaryCache.set(key,glossary.data);
+        for(const row of (glossary.data.words||[])){
           if(row?.word_id&&!book.words.has(row.word_id))book.words.set(row.word_id,row);
         }
         window.MiaowuChapterWords?.setWords([...book.words.values()]);
         showCloudProgress(id);
-      }catch{
-        if(activeCloud===book&&chosen===cloudChapterSequence&&book.chapterId===id){
-          toast('正文已打开，但词汇详情暂未加载；稍后切换章节可重试');
-        }
+      }else{
+        toast('正文已打开，词汇列表暂未加载，请稍后重新打开章节。');
       }
     }
     function resetDemoReadingUI(){
       activeCloud=null;
-      $('cloudFinishReading').hidden=true;
       const heading=$('chapterList').parentElement.querySelector('h3');
       if(heading)heading.textContent='《玫瑰未落幕》 · 目录';
       const caption=$('chapterList').parentElement.querySelector('.side-caption');
@@ -525,8 +495,6 @@
       $('doEcho').disabled=false;$('doEcho').title='';
       const study=$('readerLayout').querySelector('#readerLearningStats');
       if(study)study.hidden=false;
-      const note=$('readerLayout').querySelector('.sidebar .side-panel:nth-child(2) .side-caption');
-      if(note)note.textContent='点击正文中的酒红色英文词汇，打开释义、发音与收藏。';
     }
 
     function renderLibrary(){
@@ -554,23 +522,20 @@
       document.querySelectorAll('[data-word-filter]').forEach(x=>x.classList.toggle('active',x.dataset.wordFilter===wordFilter));
       const words=[...cloudSaved.values()].filter(w=>wordFilter==='all'||
         (wordFilter==='mastered'?w.status==='mastered':w.status!=='mastered'));
-      const localWords=[...saved].filter(id=>WORDS[id]&&(wordFilter==='all'||
-        (wordFilter==='mastered'?mastered.has(id):!mastered.has(id))));
       const cloudTotal=user?cloudSaved.size:0;
-      const localTotal=saved.size;
-      $('bookplateCount').textContent=String(cloudTotal+localTotal);
-      if(!user&&!localWords.length){
+      $('bookplateCount').textContent=String(cloudTotal);
+      if(!user){
         $('vocabGrid').innerHTML='<div class="empty" style="grid-column:1/-1">'+
           '<div class="big">♧</div><h3>登录后，打开你的云端藏书票</h3>'+
           '<p>登录同一账号即可在不同设备读取已收藏的单词。</p>'+
           '<button class="primary" id="cloudWordsLogin">登录我的书房</button></div>';
         $('cloudWordsLogin').onclick=showLogin;return;
       }
-      if(!words.length&&!localWords.length){
-        const hasSaved=cloudTotal+localTotal>0;
+      if(!words.length){
+        const hasSaved=cloudTotal>0;
         $('vocabGrid').innerHTML='<div class="empty" style="grid-column:1/-1">'+
           '<div class="big">♧</div><h3>'+(hasSaved?'这个筛选下暂无藏书票':'第一张藏书票，等你来收下')+'</h3>'+
-          '<p>'+(hasSaved?'试试切换「全部收藏」，查看其它学习状态的词卡。':'打开《玫瑰未落幕》可以收藏本机演示词卡；正式小说词卡将在上线后支持云端同步。')+'</p>'+
+          '<p>'+(hasSaved?'试试切换「全部收藏」，查看其它学习状态的词卡。':'打开已解锁的故事，点击英文词汇即可收藏到记忆藏书票。')+'</p>'+
           '<button class="primary" id="emptyRead">寻找故事 →</button></div>';
         $('emptyRead').onclick=()=>navigate('library');return;
       }
@@ -596,47 +561,10 @@
           '<button data-cloud-master="'+safe(w.word_id)+'">'+(mastered?'↻ 改为学习中':'✓ 标记已掌握')+'</button>'+
           '<button data-cloud-remove="'+safe(w.word_id)+'">移除收藏</button></div></div>';
       }).join(''):'';
-      const demoCards=localWords.map(id=>{
-        const w=WORDS[id],isMastered=mastered.has(id);
-        return '<div class="vocab-card demo-vocab-card status-'+(isMastered?'mastered':'learning')+'">'+
-          '<div class="bookplate-card-top"><span class="eyebrow">MIAOWU · DEMO BOOKPLATE</span>'+
-          '<span class="word-status">'+(isMastered?'✓ 已记住':'◷ 学习中')+'</span></div>'+
-          '<h3>'+safe(id)+'</h3><p class="vocab-phonetic">'+safe(w.phonetic||'')+
-          ' <button data-demo-voice="'+safe(id)+'" aria-label="播放发音">♫</button></p>'+
-          '<p>'+safe(w.part||'')+' '+safe(w.meaning||'')+'</p>'+
-          '<div class="vocab-section"><b>《玫瑰未落幕》演示原句</b>'+
-          '<div class="vocab-example">'+safe(w.context||'')+'</div></div>'+
-          '<div class="vocab-section"><b>例句 / EXAMPLE</b>'+
-          '<div class="vocab-example">'+safe(w.example||'')+'</div>'+
-          '<p class="vocab-translation">'+safe(w.translation||'')+'</p></div>'+
-          '<div class="vocab-section"><b>常用搭配 / COLLOCATIONS</b>'+
-          (w.collocations||[]).map(pair=>'<div class="vocab-collocation"><span>'+
-            safe(pair[0])+'</span><span>'+safe(pair[1])+'</span></div>').join('')+'</div>'+
-          '<div class="card-tools"><button data-demo-say="'+safe(id)+'">♫ 发音</button>'+
-          '<button data-demo-master="'+safe(id)+'">'+(isMastered?'↻ 改为学习中':'✓ 标记已掌握')+'</button>'+
-          '<button data-demo-remove="'+safe(id)+'">移除收藏</button></div></div>';
-      }).join('');
-      const sources='<div class="bookplate-source-summary">云端词卡 '+cloudTotal+
-        ' 张 · 本机演示收藏 '+localTotal+' 张'+
-        '<small>本机演示词卡仅保存在当前浏览器，不与账号同步；正式内容的收藏由云端保存。</small></div>';
+      const sources='<div class="bookplate-source-summary">已同步词卡 '+cloudTotal+
+        ' 张<small>这些词卡关联你的账号，可在登录后跨设备查看。</small></div>';
       const cloudSection=cloudCards?'<div class="bookplate-source-heading">☁ 云端收藏 · 已同步到账号</div>'+cloudCards:'';
-      const demoSection=demoCards?'<div class="bookplate-source-heading">✦ 本机演示收藏 · 《玫瑰未落幕》</div>'+demoCards:'';
-      $('vocabGrid').innerHTML=sources+cloudSection+demoSection;
-      document.querySelectorAll('[data-demo-voice],[data-demo-say]').forEach(button=>{
-        button.onclick=()=>speakWord(button.dataset.demoVoice||button.dataset.demoSay);
-      });
-      document.querySelectorAll('[data-demo-master]').forEach(button=>button.onclick=()=>{
-        const id=button.dataset.demoMaster;
-        if(!saved.has(id))return;
-        if(mastered.has(id))mastered.delete(id);else mastered.add(id);
-        saveWords();renderWords();
-        toast(mastered.has(id)?'本机演示词已标记掌握':'本机演示词已改为学习中');
-      });
-      document.querySelectorAll('[data-demo-remove]').forEach(button=>button.onclick=()=>{
-        const id=button.dataset.demoRemove;
-        saved.delete(id);saveWords();renderWords();
-        toast('已从本机演示收藏移除');
-      });
+      $('vocabGrid').innerHTML=sources+cloudSection;
       document.querySelectorAll('[data-cloud-voice],[data-cloud-say]').forEach(x=>{
         x.onclick=()=>{const w=cloudSaved.get(x.dataset.cloudVoice||x.dataset.cloudSay);if(w)speakWord(w.headword)};
       });
@@ -664,32 +592,14 @@
     }
     function renderEchoModeSwitch(){
       const area=$('echoModeSwitch');
-      if(!area)return;
-      const playing=echoMode==='cloud'?!!window.MiaowuCloudEcho?.running():
-        echoPhase==='playing'&&quizIndex<quizQuestions.length;
-      if(playing){area.innerHTML='';return}
-      area.innerHTML='<div class="echo-mode-switch" role="group" aria-label="选择剧情回声模式">'+
-        '<button type="button" class="echo-mode-button '+(echoMode==='demo'?'selected':'')+
-        '" data-echo-mode="demo" aria-pressed="'+(echoMode==='demo')+'">✦ 故事演示练习</button>'+
-        '<button type="button" class="echo-mode-button '+(echoMode==='cloud'?'selected':'')+
-        '" data-echo-mode="cloud" aria-pressed="'+(echoMode==='cloud')+'">☁ 云端正式练习</button></div>'+
-        '<p class="echo-mode-note">'+(echoMode==='demo'?
-        '《玫瑰未落幕》的演示题目 · 练习记录仅保存在当前浏览器，不计入云端账号。':
-        '仅从已发布、已读完且有阅读权限的正式章节出题，学习记录同步到账号。')+'</p>';
-      area.querySelectorAll('[data-echo-mode]').forEach(button=>button.onclick=()=>{
-        const next=button.dataset.echoMode;
-        if(next===echoMode)return;
-        echoMode=next;
-        if(next==='demo')echoPhase='setup';
-        renderQuiz();
-      });
+      if(area)area.innerHTML='';
     }
     function renderQuiz(){
       const c=$('quizContainer');
       renderEchoModeSwitch();
-      if(echoMode==='cloud'&&window.MiaowuCloudEcho){
+      if(window.MiaowuCloudEcho){
         if(!user){
-          c.innerHTML='<div class="echo-panel"><span class="eyebrow">STORY ECHO · YOUR REAL MEMORY</span><h3>登录后，从读过的故事里练习</h3><p class="echo-tip">云端剧情回声仅使用已读完、仍有权限阅读的正式章节。暂时也可以切换上方的「故事演示练习」体验三种玩法。</p><button class="primary" id="cloudEchoLogin">登录我的书房 →</button></div>';
+          c.innerHTML='<div class="echo-panel"><span class="eyebrow">STORY ECHO · YOUR REAL MEMORY</span><h3>登录后，从读过的故事里练习</h3><p class="echo-tip">云端剧情回声会根据已完成的章节生成练习，答题记录会自动同步。</p><button class="primary" id="cloudEchoLogin">登录我的书房 →</button></div>';
           $('cloudEchoLogin').onclick=showLogin;
           return;
         }
@@ -775,7 +685,7 @@
         activeCloud=null;
         if(view==='reader'){navigate('library');$('storyText').textContent='';}
       }
-      cloudSaved=new Map();cloudProgress=[];cloudSessionKey=user?.name||null;
+      cloudSaved=new Map();cloudProgress=[];glossaryCache.clear();cloudSessionKey=user?.name||null;
       renderLibrary();renderAccount();renderReminder();
       refreshCloudLearning();
       if(view==='echo')renderQuiz();
@@ -800,37 +710,6 @@
         if(btn){btn.disabled=false;btn.textContent=btn.dataset.original||'重新提交';}
       }
     }
-    function demoAccountSummary(){
-      // Browser-local prototype state must never be mixed into cloud account statistics.
-      const opened=[...VISITED].filter(i=>Number.isInteger(i)&&i>=0&&i<CHAPTERS.length);
-      const records=Object.entries(reviewData||{}).filter(([word,item])=>
-        !!WORDS[word]&&item&&typeof item==='object');
-      const attempts=records.reduce((n,[,item])=>n+Math.max(0,Number(item.attempts)||0),0);
-      const correct=records.reduce((n,[,item])=>n+Math.max(0,Number(item.correct)||0),0);
-      const localSaved=[...saved].filter(w=>!!WORDS[w]).length;
-      const localMastered=[...mastered].filter(w=>!!WORDS[w]).length;
-      const cards=[
-        {label:'体验过的章节',value:opened.length+'章'},
-        {label:'本机收藏词卡',value:localSaved+'张'},
-        {label:'演示已掌握词',value:localMastered+'个'},
-        {label:'剧情回声已作答',value:attempts+'题'},
-        {label:'本机待复习词',value:dueList().length+'个'}
-      ];
-      const names=opened.map(i=>'第'+(i+1)+'章 · '+CHAPTERS[i].title).join('、');
-      return '<section class="account-demo-section" aria-label="本机演示学习记录">'+
-        '<div class="account-demo-heading"><span class="eyebrow">LOCAL STORY PROGRESS · 体验记录</span>'+
-        '<h3>《玫瑰未落幕》 · 本机学习记录</h3>'+
-        '<p>这是当前浏览器的演示数据，不会同步到账号；同一浏览器切换账号仍可能看到这些记录。</p></div>'+
-        '<div class="account-demo-stats">'+cards.map(x=>
-          '<div class="account-demo-stat"><strong>'+safe(x.value)+'</strong>'+
-          '<small>'+safe(x.label)+'</small></div>').join('')+'</div>'+
-        '<p class="account-demo-recent">'+(opened.length?'已经打开：'+safe(names):
-          '还未打开演示章节，可以从四级书架体验《玫瑰未落幕》。')+
-        ' · 剧情回声答对 '+correct+' / '+attempts+' 题</p>'+
-        '<p class="account-demo-note">上方是正式云端数据；演示章节只统计曾打开过，不等于正式“已读完”。清除浏览器网站数据会删除这些演示记录。</p>'+
-        '<button class="secondary-btn" id="accountDemoRead">继续演示阅读 →</button>'+
-        '</section>';
-    }
     function renderAccount(){
       if(!user){
         $('accountPanel').innerHTML='<div class="onboarding" style="margin:0">'+
@@ -854,12 +733,12 @@
         '<div><span class="eyebrow">YOUR PRIVATE SHELF</span>'+
         '<h2 style="font:normal 25px Songti SC,serif;color:var(--wine);margin:6px 0">'+
         safe(user.name)+' 的书房</h2>'+
-        '<span style="font-size:12px;color:var(--muted)">妙屋英语 · Cloudflare D1 云端正式学习记录（不包括本机演示）</span></div></div>'+
+        '<span style="font-size:12px;color:var(--muted)">妙屋英语 · 我的云端学习记录</span></div></div>'+
         '<div class="account-stats">'+stats.map(x=>'<div class="account-stat"><strong>'+x.n+'</strong><small>'+
         x.t+'</small></div>').join('')+'</div>'+
         '<div class="account-reminder"><div><strong>♧ 记忆藏书票</strong>'+
         '<div class="echo-tip">到期词卡 '+due+' 张 · 已收藏 '+cloudSaved.size+
-        ' 张 · 本机演示收藏 '+saved.size+' 张（仅此浏览器） · 剧情回声记录单独保存云端</div></div>'+
+        ' 张 · 剧情回声学习记录同步到账户</div></div>'+
         '<button class="primary" id="accountStartReview">查看藏书票 →</button></div>'+
         '<div class="account-content"><div class="account-block"><h3>已解锁学习分类</h3>'+
         (ent.map(c=>'<span class="account-tag">✓ '+safe(c.name)+'</span>').join('')||
@@ -879,14 +758,12 @@
         '<span>到期词卡 <strong>'+due+'</strong></span>'+
         '<span>收藏词汇 <strong>'+cloudSaved.size+'</strong></span>'+
         '<span>学习中 <strong>'+(cloudSaved.size-mastered)+'</strong></span></div></div></div>'+
-        demoAccountSummary()+
         '<div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">'+
         '<button class="secondary-btn" id="changePassword">修改登录密码</button>'+
         '<button class="secondary-btn" id="logout">退出账号</button></div></div>';
       $('doRedeem').onclick=showRedeem;
       $('changePassword').onclick=showChangePassword;
       $('accountStartReview').onclick=()=>navigate('words');
-      $('accountDemoRead').onclick=()=>{category='cet4';navigate('library')};
       $('accountResumeRead').onclick=()=>{
         if(recent)openCloudBook({id:recent.book_id,title:recent.book_title},recent.category_slug||category);
         else navigate('library');
@@ -1092,44 +969,148 @@
       };
     }
     function formError(s){$('formMessage').innerHTML=`<div class="form-message">${safe(s)}</div>`}
-    function explain(){showModal(`<span class="eyebrow">HOW IT WORKS</span><h2 id="modalTitle">一部小说，一段词汇记忆</h2><p>这是一款将阅读、听书、词汇收藏与情节回忆组合在一起的互动阅读器。</p><div class="onboarding" style="padding:15px;margin:12px 0"><h3>01 · 先读故事</h3><p>第一章开放试读，点击酒红色英文词查义、听发音。</p><h3>02 · 收下藏书票</h3><p>收藏之后，你可以在「记忆藏书票」里复习。</p><h3>03 · 听见剧情回声</h3><p>可选不同玩法、章节范围，通过选择与拼写练习回忆词汇。</p><h3>04 · 解锁完整书架</h3><p>注册账号后使用一次性分类激活码解锁更多作品，实际开放内容以书架为准。</p></div><button class="primary" id="explainRead" style="width:100%">开始试读 →</button>`);$('explainRead').onclick=()=>{closeModal();openFirstCloudBook()}}
-    function speakWord(w){if(!('speechSynthesis' in window)){toast('此浏览器暂不支持语音朗读');return}window.speechSynthesis.cancel();speaking=false;$('player').classList.remove('show');let u=new SpeechSynthesisUtterance(w);u.lang='en-US';u.rate=.82;window.speechSynthesis.speak(u)}
-    function stopReading(){if('speechSynthesis' in window)window.speechSynthesis.cancel();speaking=false;paused=false;utterances=[];$('player').classList.remove('show')}
-    function startReading(){
-      if(!('speechSynthesis' in window)){toast('此浏览器暂不支持朗读');return}
-      if(activeCloud&&!activeCloud.chapterId){toast('请先打开一个可阅读的章节');return}
+    function explain(){showModal(`<span class="eyebrow">HOW IT WORKS</span><h2 id="modalTitle">一部小说，一段词汇记忆</h2><p>这是一款将阅读、听书、词汇收藏与情节回忆组合在一起的互动阅读器。</p><div class="onboarding" style="padding:15px;margin:12px 0"><h3>01 · 先读故事</h3><p>打开已解锁的章节，点击酒红色英文词查义、听发音。</p><h3>02 · 收下藏书票</h3><p>收藏之后，你可以在「记忆藏书票」里复习。</p><h3>03 · 听见剧情回声</h3><p>可选不同玩法、章节范围，通过选择与拼写练习回忆词汇。</p><h3>04 · 解锁完整书架</h3><p>注册账号后使用一次性分类激活码解锁更多作品，实际开放内容以书架为准。</p></div><button class="primary" id="explainRead" style="width:100%">去书架看看 →</button>`);$('explainRead').onclick=()=>{closeModal();openFirstCloudBook()}}
+    // Device TTS remains unchanged. The player now supports paragraph/segment
+    // navigation without pretending that speechSynthesis has audio timestamps.
+    let speechGeneration=0;
+    function speechStorageKey(){
+      return 'miaowu_audio_position_'+(user?.name||'guest')+'_'+
+        (activeCloud?.bookId||'story')+'_'+(activeCloud?.chapterId||'0');
+    }
+    function rememberSpeechPosition(index){
+      try{localStorage.setItem(speechStorageKey(),String(index))}catch{}
+    }
+    function showSpeechPosition(index){
+      const seek=$('playerSeek'),position=$('playerPosition');
+      if(seek){
+        seek.max=Math.max(0,utterances.length-1);
+        seek.value=Math.min(Math.max(0,index),Math.max(0,utterances.length-1));
+      }
+      if(position)position.textContent=Math.min(index+1,utterances.length)+' / '+utterances.length+' 段';
+    }
+    function highlightSpeechParagraph(index){
+      const paras=$('storyText')?.querySelectorAll('[data-audio-paragraph]')||[];
+      paras.forEach(p=>p.classList.toggle('reading-current',
+        Number(p.dataset.audioParagraph)===index));
+    }
+    function speakWord(w){
+      if(!('speechSynthesis' in window)){toast('此浏览器暂不支持语音朗读');return}
       stopReading();
-      const segments=[];
+      const u=new SpeechSynthesisUtterance(w);u.lang='en-US';u.rate=.82;
+      window.speechSynthesis.speak(u);
+    }
+    function stopReading(){
+      speechGeneration++;
+      if('speechSynthesis' in window)window.speechSynthesis.cancel();
+      speaking=false;paused=false;utterances=[];
+      $('player').classList.remove('show');
+      highlightSpeechParagraph(-1);
+    }
+    function buildSpeechSegments(){
+      const items=[];
+      const add=(text,lang,p)=>{
+        if(typeof text!=='string'||!text.trim())return;
+        // Chinese chunks are split at natural sentence stops; inline English
+        // words remain separate to preserve their existing en-US voice.
+        const fragments=lang==='zh-CN'?
+          (text.match(/[^。！？!?]+[。！？!?]?/gu)||[text]):[text];
+        for(const frag of fragments)if(frag.trim())items.push({text:frag,lang,paragraph:p});
+      };
       if(activeCloud?.chapterId&&Array.isArray(activeCloud.rawParagraphs)){
-        // D1 token boundaries preserve the English pronunciation rather than
-        // speaking inline English words with the Chinese synthetic voice.
-        for(const p of activeCloud.rawParagraphs){
-          if(typeof p==='string'){if(p.trim())segments.push({text:p,lang:'zh-CN'});continue}
-          for(const token of p.segments||[]){
-            if(typeof token.text==='string'&&token.text.trim())
-              segments.push({text:token.text,lang:'zh-CN'});
-            else if(typeof token.surface==='string'&&token.surface.trim())
-              segments.push({text:token.surface,lang:'en-US'});
+        activeCloud.rawParagraphs.forEach((paragraph,index)=>{
+          if(typeof paragraph==='string'){add(paragraph,'zh-CN',index);return}
+          for(const token of paragraph.segments||[]){
+            if(typeof token.text==='string')add(token.text,'zh-CN',index);
+            else if(typeof token.surface==='string')add(token.surface,'en-US',index);
           }
-        }
+        });
       }else{
-        for(const line of CHAPTERS[chapter].parts){
+        CHAPTERS[chapter].parts.forEach((line,index)=>{
           const pieces=line.split(/(\[\[[a-z]+\]\]（[^）]+）)/g).filter(Boolean);
           for(const piece of pieces){
             const match=piece.match(/^\[\[([a-z]+)\]\]（[^）]+）$/);
-            segments.push({text:match?match[1]:piece,lang:match?'en-US':'zh-CN'});
+            add(match?match[1]:piece,match?'en-US':'zh-CN',index);
           }
-        }
+        });
       }
-      if(!segments.length){toast('本章没有可朗读的内容');return}
-      utterances=segments;speakIndex=0;speaking=true;paused=false;
-      $('player').classList.add('show');
-      $('playerState').textContent='章节正文朗读 · 中文与英文分段发音';
-      $('playerPause').textContent='Ⅱ';speakNext();
+      return items;
     }
-    function speakNext(){if(!speaking)return;if(speakIndex>=utterances.length){stopReading();toast('本章朗读结束');return}const seg=utterances[speakIndex++],u=new SpeechSynthesisUtterance(seg.text);u.lang=seg.lang;u.rate=seg.lang==='en-US'?.86:.94;u.onend=()=>{if(speaking)speakNext()};u.onerror=(e)=>{if(speaking&&e.error!=='interrupted')speakNext()};window.speechSynthesis.speak(u)}
-    document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=openFirstCloudBook;$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{if(activeCloud?.chapterId){echoMode='cloud';window.MiaowuCloudEcho?.useChapter(activeCloud.chapterId)}else{echoMode='demo';echoScope='chapter'}navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);$('storyText').style.fontSize=fontSize+'px'};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);$('storyText').style.fontSize=fontSize+'px'};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=stopReading;$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
-    $('cloudFinishReading').onclick=finishCloudChapter;
+    function seekSpeech(index){
+      if(!utterances.length)return;
+      speechGeneration++;
+      window.speechSynthesis.cancel();
+      speaking=true;paused=false;
+      speakIndex=Math.max(0,Math.min(utterances.length-1,Math.floor(index)));
+      $('player').classList.add('show');
+      $('playerPause').textContent='Ⅱ';
+      speakNext();
+    }
+    function startReading(fromParagraph=null){
+      if(!('speechSynthesis' in window)){toast('此浏览器暂不支持朗读');return}
+      if(activeCloud&&!activeCloud.chapterId){toast('请先打开一个可阅读的章节');return}
+      const next=buildSpeechSegments();
+      if(!next.length){toast('本章没有可朗读的内容');return}
+      stopReading();
+      utterances=next;speaking=true;paused=false;
+      let first=0;
+      if(Number.isInteger(fromParagraph)){
+        const target=utterances.findIndex(t=>t.paragraph>=fromParagraph);
+        first=target<0?0:target;
+      }else{
+        try{first=Math.max(0,Math.min(next.length-1,Number(localStorage.getItem(speechStorageKey()))||0))}
+        catch{first=0}
+      }
+      speakIndex=first;
+      $('player').classList.add('show');
+      $('playerPause').textContent='Ⅱ';
+      $('playerState').textContent='朗读中 · 可拖动调整位置';
+      showSpeechPosition(speakIndex);
+      speakNext();
+    }
+    function speakNext(){
+      if(!speaking)return;
+      if(speakIndex>=utterances.length){
+        rememberSpeechPosition(0);stopReading();toast('本章朗读结束');return;
+      }
+      const current=speakIndex,seg=utterances[speakIndex++];
+      const gen=speechGeneration,u=new SpeechSynthesisUtterance(seg.text);
+      showSpeechPosition(current);
+      highlightSpeechParagraph(seg.paragraph);
+      rememberSpeechPosition(current);
+      u.lang=seg.lang;u.rate=seg.lang==='en-US'?.86:.94;
+      u.onend=()=>{if(speaking&&gen===speechGeneration)speakNext()};
+      u.onerror=e=>{if(speaking&&gen===speechGeneration&&e.error!=='interrupted')speakNext()};
+      $('playerState').textContent='朗读中 · 第'+(current+1)+'段';
+      window.speechSynthesis.speak(u);
+    }
+    document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=openFirstCloudBook;$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');
+    $('mobileChapterOpen').onclick=()=>{
+      $('readerLayout').classList.remove('vocab-drawer-open');
+      $('readerLayout').classList.add('chapter-drawer-open');
+      $('mobileChapterOpen').setAttribute('aria-expanded','true');
+    };
+    $('mobileChapterClose').onclick=()=>{$('readerLayout').classList.remove('chapter-drawer-open')};
+    $('readerDrawerOverlay').onclick=()=>{
+      $('readerLayout').classList.remove('chapter-drawer-open','vocab-drawer-open');
+      $('mobileChapterOpen').setAttribute('aria-expanded','false');
+    };$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{echoMode='cloud';if(activeCloud?.chapterId)window.MiaowuCloudEcho?.useChapter(activeCloud.chapterId);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);applyReadingPrefs()};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);applyReadingPrefs()};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=()=>{rememberSpeechPosition(0);stopReading()};
+    $('playerPrevious').onclick=()=>{if(speaking)seekSpeech(speakIndex-2);else startReading()};
+    $('playerNext').onclick=()=>{if(speaking)seekSpeech(speakIndex);else startReading()};
+    $('playerSeek').addEventListener('input',e=>{
+      $('playerPosition').textContent=(Number(e.target.value)+1)+' / '+utterances.length+' 段';
+    });
+    $('playerSeek').addEventListener('change',e=>{
+      if(speaking)seekSpeech(Number(e.target.value));
+      else startReading();
+    });
+    $('storyText').addEventListener('click',e=>{
+      if(e.target.closest('button,a,[role=button]'))return;
+      const p=e.target.closest('[data-audio-paragraph]');
+      if(activeCloud?.chapterId&&p)startReading(Number(p.dataset.audioParagraph));
+    });
+    $('readerTone').onchange=e=>{readingPrefs.tone=e.target.value;applyReadingPrefs()};
+    $('readerLine').onchange=e=>{readingPrefs.line=e.target.value;applyReadingPrefs()};$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
+    // Cloud reading progress is saved automatically on scroll and chapter navigation.
     window.MiaowuChapterWords?.configure({
       request:serverRequest,refresh:refreshCloudLearning,
       user:()=>!!user,login:showLogin,toast,speak:speakWord,showWord:showCloudWord
@@ -1138,6 +1119,6 @@
       request:serverRequest,refresh:refreshCloudLearning,progress:()=>cloudProgress,
       showModal,closeModal,navigate,toast,speak:speakWord
     });
-    applyTheme();renderLibrary();renderReminder();renderWords();renderQuiz();renderAccount();loadServerSession();refreshCloudCategories();
+    applyTheme();applyReadingPrefs();renderLibrary();renderReminder();renderWords();renderQuiz();renderAccount();loadServerSession();refreshCloudCategories();
   })();
   

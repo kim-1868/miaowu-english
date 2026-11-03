@@ -7,7 +7,8 @@ test("V0.3 cloud review reminder uses paw SVG and up-to-date real Echo copy",()=
  assert.match(app,/reminder-cat/);
  assert.match(app,/<svg viewBox="0 0 48 48"/);
  assert.match(app,/今天有 '\+due\+' 个单词等你复习/);
- assert.match(app,/剧情回声，完成练习后会更新云端学习记录/);
+ assert.match(app,/去剧情回声找回故事里的单词/);
+ assert.match(app,/fill="none" stroke="currentColor"/);
  assert.doesNotMatch(app,/记忆练习将在云端剧情回声上线后同步/);
  assert.doesNotMatch(app,/剧情回声目前仍为演示玩法/);
  assert.match(app,/id="wordSmallSpeak"/);

@@ -21,71 +21,52 @@ test('original designed reader fetches paid cloud chapters from D1 without bundl
   assert.match(script,/safe\(segment\.surface\)/);
 });
 
-test('S5 uses the existing book cover, reader, bookplates, and dashboard for real D1-backed content',()=>{
-  const script=app(),markup=html();
-  assert.match(markup,/网站上线准备中/);
-  assert.match(markup,/付费购买仍在验收中/);
-  assert.doesNotMatch(markup,/私有测试环境/);
-  assert.match(markup,/演示玩法/);
-  assert.match(markup,/id="echoModeSwitch"/);
-  assert.match(script,/function renderEchoModeSwitch/);
-  assert.match(markup,/id="view-library"/);
-  assert.match(markup,/id="view-reader"/);
-  assert.match(markup,/id="view-words"/);
-  assert.match(markup,/id="view-account"/);
-  assert.match(markup,/id="cloudFinishReading"/);
-  assert.match(script,/function loadCloudBookCards/);
-  assert.match(script,/function showCloudWord/);
-  assert.match(script,/function renderWords/);
-  assert.match(script,/function renderAccount/);
-  assert.match(script,/\/api\/me\/progress/);
-  assert.match(script,/\/api\/me\/words/);
-  assert.match(script,/refreshCloudLearning/);
-  assert.match(script,/function renderReminder/);
-  // The old internal demo array is inert: the real Story Echo adapter is active.
-  assert.match(script,/window\.MiaowuCloudEcho\.render\(\)/);
-  assert.match(markup,/script src="\/echo-cloud\.js"/);
+test("S5 production UI is cloud-first, without public QA notices or manual progress controls",()=>{
+ const script=app(),markup=html();
+ assert.doesNotMatch(markup,/网站上线准备中|付费购买仍在验收中|阅读笔记|故事演示练习/);
+ for(const id of ["view-library","view-reader","view-words","view-account","echoModeSwitch","readerTone","playerSeek"]){
+  assert.match(markup,new RegExp('id="'+id+'"'));
+ }
+ assert.doesNotMatch(markup,/id="cloudFinishReading"/);
+ for(const symbol of ["function loadCloudBookCards","function showCloudWord","function renderWords",
+  "function renderAccount","function renderReminder","window.MiaowuCloudEcho.render()"]){
+  assert.ok(script.includes(symbol),symbol);
+ }
+ assert.match(script,/\/api\/me\/progress/);
+ assert.match(script,/\/api\/me\/words/);
+ assert.match(markup,/script src="\/echo-cloud\.js"/);
 });
-
-test('chapter dialog selection immediately reveals reading screen and never waits for glossary',()=>{
-  const js=app();
-  const start=js.indexOf('async function openCloudChapter(id){');
-  const end=js.indexOf('function resetDemoReadingUI()',start);
-  assert.ok(start>=0&&end>start);
-  const fn=js.slice(start,end);
-  assert.ok(fn.indexOf("closeModal();")>=0);
-  assert.ok(fn.indexOf("navigate('reader');")>=0);
-  assert.ok(fn.indexOf("serverRequest('/api/chapters/'")>=0);
-  assert.ok(fn.indexOf("closeModal();")<fn.indexOf("serverRequest('/api/chapters/'"));
-  assert.ok(fn.indexOf("navigate('reader');")<fn.indexOf("serverRequest('/api/chapters/'"));
-  assert.ok(fn.indexOf("parts.map(renderD1Paragraph)")<fn.indexOf("'/words'"));
-  assert.match(fn,/cloud-reader-loading/);
-  assert.match(fn,/cloud-reader-error/);
-  assert.match(fn,/重试打开本章/);
+test("S5 chapter navigation shows protected chapter first, glossary loads independently",()=>{
+ const js=app();
+ const start=js.indexOf("async function openCloudChapter(id,{finishPrevious=false}={}){");
+ const end=js.indexOf("function resetDemoReadingUI()",start);
+ assert.ok(start>=0&&end>start);
+ const fn=js.slice(start,end);
+ for(const marker of ["closeModal();","navigate('reader');","cloud-reader-loading",
+    "cloud-reader-error","重试打开本章","glossaryPromise"]){
+  assert.ok(fn.includes(marker),marker);
+ }
+ assert.ok(fn.indexOf("navigate('reader');")<fn.indexOf("await serverRequest('/api/chapters/'"));
+ assert.ok(fn.indexOf("book.chapterId=id")<fn.indexOf("const glossary=await glossaryPromise"));
+ assert.match(fn,/serverRequest\('\/api\/chapters\/'/);
+ assert.match(fn,/serverRequest\('\/api\/chapters\/'.*'\/words'/s);
 });
-
-test('S7 matches the original V0.3 design rules while showing actual progress and explicit planned books',()=>{
-  const script=app(),markup=html();
-  const css=readFileSync(new URL('../public/styles.css',import.meta.url),'utf8');
-  const baseline=readFileSync(new URL('../public/design-reference-v03.html',import.meta.url),'utf8');
-  const ref=baseline.match(/<style>([\s\S]*?)<\/style>/);
-  assert.ok(ref,'V0.3 has an embedded original design system');
-  assert.ok(css.startsWith(ref[1]),'approved V0.3 stylesheet must remain unchanged at its base');
-  assert.match(script,/function updateCloudShelfProgress/);
-  assert.match(script,/book\.chapter_count/);
-  assert.match(script,/p\.completed_at/);
-  assert.match(script,/data-live-progress/);
-  assert.match(script,/BOOKS\.filter\(b=>b\.status==='planned'\)/);
-  assert.match(script,/未上架 · 不可购买/);
-  assert.match(script,/测试内容 · 不出售/);
-  assert.match(script,/book\.cover_key|story\W+edition|故事试读册/);
-  assert.match(script,/function openFirstCloudBook/);
-  assert.match(script,/closeModal\(\);openFirstCloudBook\(\)/);
-  assert.match(script,/activeCloud\.rawParagraphs/);
-  assert.match(script,/token\.surface/);
-  assert.match(markup,/付费购买仍在验收中/);
+test("S7 retains original design foundation, but public shelf shows only actually published books",()=>{
+ const script=app(),markup=html();
+ const css=readFileSync(new URL("../public/styles.css",import.meta.url),"utf8");
+ const baseline=readFileSync(new URL("../public/design-reference-v03.html",import.meta.url),"utf8");
+ const ref=baseline.match(/<style>([\s\S]*?)<\/style>/);
+ assert.ok(ref);
+ assert.ok(css.startsWith(ref[1]));
+ for(const marker of ["function updateCloudShelfProgress","book.chapter_count",
+    "p.completed_at","data-live-progress","function openFirstCloudBook",
+    "activeCloud.rawParagraphs","token.surface","rainy-night-cover.webp"]){
+  assert.ok(script.includes(marker),marker);
+ }
+ assert.doesNotMatch(script,/book-item demo-book-item/);
+ assert.doesNotMatch(script,/BOOKS\.filter\(b=>b\.status==='planned'\)/);
+ assert.doesNotMatch(markup,/付费购买仍在验收中/);
 });
-
 test('S8 original reader embeds chapter word sidebar and secure quick-review controls',()=>{
   const js=app(),markup=html();
   const chapterWords=readFileSync(new URL('../public/chapter-words.js',import.meta.url),'utf8');

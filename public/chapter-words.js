@@ -2,7 +2,8 @@
 "use strict";
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let api=null,chapter="",words=[],cursor=0,judgments=new Map(),mode="list";
+let api=null,chapter="",words=[],cursor=0,judgments=new Map(),mode="list",visibleCount=36;
+const PAGE=36;
 const host=()=>$("chapterVocabBody");
 function render(){
   const area=host();if(!area)return;
@@ -13,16 +14,19 @@ function render(){
   if(!words.length){area.innerHTML='<p class="side-caption">本章没有可展示的目标词，或词汇正在加载。</p>';return}
   if(mode==="list"){
     area.innerHTML='<div class="chapter-vocab-actions"><button class="primary" id="startQuickReview">开始速记 →</button></div>'+
-    '<div class="chapter-vocab-list">'+words.map((w,i)=>
+    '<div class="chapter-vocab-list">'+words.slice(0,visibleCount).map((w,i)=>
       '<div class="chapter-vocab-item"><button type="button" class="chapter-vocab-select" data-vocab-index="'+i+'">'+
       '<strong>'+esc(w.headword)+'</strong><small>'+esc(w.meaning_zh)+'</small></button>'+
       '<button type="button" class="chapter-vocab-voice" aria-label="朗读 '+esc(w.headword)+'" data-vocab-say="'+i+'">♫</button></div>'
-    ).join("")+'</div>';
+    ).join("")+'</div>'+
+    (visibleCount<words.length?'<button type="button" id="chapterLoadMore" class="chapter-load-more">查看更多词汇（'+visibleCount+' / '+words.length+'）</button>':'');
     $("startQuickReview").onclick=()=>{cursor=0;mode="quick";render()};
     area.querySelectorAll("[data-vocab-index]").forEach(b=>b.onclick=()=>{
       const word=words[+b.dataset.vocabIndex];api.showWord(word.word_id);
     });
     area.querySelectorAll("[data-vocab-say]").forEach(b=>b.onclick=()=>api.speak(words[+b.dataset.vocabSay].headword));
+    const more=$("chapterLoadMore");
+    if(more)more.onclick=()=>{const y=area.scrollTop;visibleCount=Math.min(words.length,visibleCount+PAGE);render();area.scrollTop=y};
   }else{
     const w=words[cursor],decision=judgments.get(w.word_id);
     area.innerHTML='<div class="quick-review-card"><div class="quick-counter">'+(cursor+1)+' / '+words.length+'</div>'+
@@ -62,6 +66,7 @@ $("chapterVocabToggle").onclick=()=>{
   $("chapterVocabToggle").textContent=folded?"展开":"收起";
 };
 $("mobileVocabOpen").onclick=()=>{
+  $("readerLayout").classList.remove("chapter-drawer-open");
   $("readerLayout").classList.add("vocab-drawer-open");
   $("mobileVocabOpen").setAttribute("aria-expanded","true");
 };
@@ -71,11 +76,12 @@ $("mobileVocabClose").onclick=()=>{
 };
 window.MiaowuChapterWords={
   configure(x){api=x},
-  openChapter(id){chapter=id;words=[];cursor=0;mode="list";judgments.clear();render()},
+  openChapter(id){chapter=id;words=[];cursor=0;visibleCount=PAGE;mode="list";judgments.clear();
+    $("readerLayout")?.classList.remove("vocab-drawer-open");render()},
   setWords(rows){const seen=new Set();words=(rows||[]).filter(w=>{
     if(!w?.word_id||seen.has(w.word_id))return false;seen.add(w.word_id);return true;
-  });render()},
-  clear(){chapter="";words=[];mode="list";render()},
+  });visibleCount=PAGE;render()},
+  clear(){chapter="";words=[];mode="list";visibleCount=PAGE;render()},
   render(){render()}
 };
 })();

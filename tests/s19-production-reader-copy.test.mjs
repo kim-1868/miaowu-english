@@ -23,9 +23,9 @@ test("S19 reader recovery UI does not persist credentials to local storage or UR
  assert.ok(!app.includes('localStorage.setItem("recoveryCode"'));
  assert.ok(!app.includes("location.search='?recoveryCode"));
 });
-test("S19 preserved Rose demo stays labeled as browser-only and never looks paid",()=>{
- assert.match(app,/name:'玫瑰未落幕'/);
- assert.match(app,/仅供体验 · 不出售/);
- assert.match(app,/互动演示 · 非正式商品/);
- assert.match(html,/玫瑰未落幕/);
+test("S19 customer storefront hides prototype stories and only releases D1-approved book cards",()=>{
+ assert.match(app,/serverRequest\('\/api\/books\?category='/);
+ assert.match(app,/isRainyNight=book\.id==='rainy-night-archives-cet4-v1'/);
+ assert.doesNotMatch(html,/玫瑰未落幕|演示内容|上线准备中/);
+ assert.doesNotMatch(app,/book-item demo-book-item|book-item planned-book-item/);
 });
