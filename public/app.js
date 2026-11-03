@@ -618,10 +618,13 @@
       const cat=$('categories');
       cat.innerHTML=CATS.map(c=>{
         const art=['cet4','cet6','postgrad','ielts'].includes(c.id)?
-          '<img src="/shelf-'+c.id+'.svg?v=20261103-line-v16" class="category-illustration" alt="" aria-hidden="true" width="210" height="165" loading="lazy">':
+          '<img src="/shelf-'+c.id+'.svg?v=20261103-home-v17" class="category-illustration" alt="" aria-hidden="true" width="210" height="165" loading="lazy">':
           '<span class="category-icon">'+safe(c.icon)+'</span>';
+        const english=/^CET-([46])$/.exec(c.en)?
+          '<span class="category-level-prefix">CET</span><span class="category-level-number">-'+safe(c.en.slice(-1))+'</span>':
+          safe(c.en);
         return '<button class="category '+(c.id===category?'selected':'')+
-          ' available" data-category="'+safe(c.id)+'"><span class="category-en">'+safe(c.en)+
+          ' available" data-category="'+safe(c.id)+'"><span class="category-en">'+english+
           '</span>'+art+'<strong>'+safe(c.name)+
           '</strong><small>'+safe(c.sub)+'</small><span class="category-tag">'+
           (has(c.id)?'✓ 已解锁':'● 可查看书架')+'</span></button>';
