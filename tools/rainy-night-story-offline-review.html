@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>妙屋英语 · 《雨夜档案》12章校稿台（离线）</title>
+<style>
+:root{--paper:#fbf8f1;--ink:#242729;--muted:#5c625d;--border:#e5ddd1;--red:#ab504b;--green:#256a53}
+*{box-sizing:border-box}body{background:var(--paper);color:var(--ink);font:16px/1.95 system-ui,-apple-system,"PingFang SC",sans-serif;margin:0}
+header,main{max-width:1050px;margin:0 auto;padding:14px}h1{font:2rem Georgia,serif;margin:0}h2{font:1.5rem Georgia,serif}small{font-size:.85rem;color:var(--muted)}
+button,select,input,textarea{font:inherit}button{cursor:pointer;background:#343c38;color:#fff;padding:8px 14px;border:0;border-radius:7px}
+input[type=file],select,textarea,input[type=text]{width:100%;border:1px solid #c8c0b5;border-radius:7px;padding:8px;background:#fff}
+label{display:block;font-weight:600;margin:12px 0 4px}button[disabled]{opacity:.4}
+.setup,.panel{background:#fff;padding:19px;border:1px solid var(--border);border-radius:12px;margin-bottom:15px}
+.warning{border-left:4px solid var(--red);padding:9px 13px;background:#fff4f2}
+.word{font-weight:650;color:#8b3e49;border-bottom:1px dotted #c9717d;cursor:help;white-space:nowrap}
+.paragraph{font-size:1.06rem;line-height:2.15;margin:0 0 1.1em;padding:5px 9px;border-left:3px solid transparent}
+.paragraph.issues{border-color:#e5bd5f}.paragraph.selected{background:#fdf1d7}
+.ctl{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.ctl>*{flex:1}.ctl button{flex:0 0 auto}
+.two{display:grid;grid-template-columns:minmax(0,2fr) minmax(250px,1fr);gap:14px}
+#queue{max-height:550px;overflow:auto;padding-right:5px}
+.issue{background:#fff;border:1px solid var(--border);border-radius:9px;margin-bottom:7px;padding:10px}
+.issue button{background:#fff;color:#26302b;border:1px solid #bbb}
+.issue b{color:var(--red)}.issue p{margin:2px 0;font-size:.9rem}
+.green{color:var(--green)}.gray{color:var(--muted)}
+textarea{min-height:100px;resize:vertical}
+@media(max-width:750px){.two{display:block}.ctl{flex-direction:column;align-items:stretch}}
+</style>
+</head>
+<body>
+<header>
+<h1>《雨夜档案》·12章审校台</h1>
+<small>妙屋英语 / WordLetter · 仅限私有稿件审校 · 本地文件，不需要登录、不联网、不自动批准出版</small>
+</header>
+<main>
+<section class="setup">
+<div class="warning"><b>阅读质量要求</b>：不只检查“单词数量”，还要逐处核对中英语法、剧情因果、用词自然度、证据链、双语释义和章节衔接。审核留痕供编辑修订使用，<b>不等同于运营后台的真实正式发布签审</b>。</div>
+<label for="storyFile">① 载入完整12章高密度候选 JSON</label>
+<input type="file" id="storyFile" accept=".json">
+<label for="issuesFile">② 载入逐句问题清单 JSON</label>
+<input type="file" id="issuesFile" accept=".json">
+<label for="reviewFile">③ 已有审校笔记（可选，用于继续上次工作）</label>
+<input type="file" id="reviewFile" accept=".json">
+<div class="ctl"><button id="load" type="button">载入并检查</button><small id="summary" aria-live="polite"></small></div>
+</section>
+<div id="workspace" hidden>
+<section class="panel">
+<div class="ctl">
+<button id="prev" type="button">上一章</button>
+<select id="chapter" aria-label="选择章节"></select>
+<button id="next" type="button">下一章</button>
+<button id="export" type="button">导出审校笔记</button>
+</div>
+<h2 id="chapterTitle"></h2><small id="stats"></small>
+</section>
+<div class="two">
+<section class="panel" id="reading"><div id="paragraphs"></div></section>
+<aside class="panel">
+<h2>当前章待核对句子</h2>
+<p class="gray">点击定位原段，核对实际语义。候选词数的统计问题不代表读者必须看到不自然的英语。</p>
+<div id="queue"></div>
+<section class="panel" id="issueDetail" hidden>
+<strong id="issueTitle"></strong><p id="issueText"></p>
+<label for="decision">本项审校结果</label>
+<select id="decision">
+<option value="pending">未核验</option>
+<option value="pass">已核对，表达合理</option>
+<option value="revise">需要修订原稿</option>
+</select>
+<label for="note">具体校对说明或修改意见</label>
+<textarea id="note" placeholder="不合理的中文与英语搭配在哪里？建议怎么改？"></textarea>
+<button id="save" type="button">保存本项审核备注</button>
+</section>
+</aside>
+</div>
+</div>
+</main>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+let story=null,issues=null,notes={},chapterIndex=0,selectedIssue=null;
+async function readFile(id){const f=$(id).files[0];if(!f)return null;return JSON.parse(await f.text())}
+function download(data,name){const b=new Blob([JSON.stringify(data,null,2)+"\n"],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement("a");
+ a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),5000)}
+const create=(tag,txt,cls)=>{const n=document.createElement(tag);if(txt!==undefined)n.textContent=txt;if(cls)n.className=cls;return n};
+function currentChapter(){return story.chapters[chapterIndex]}
+function selectIssue(entry){
+ selectedIssue=entry.id;$("issueDetail").hidden=false;
+ $("issueTitle").textContent=entry.id+" · "+entry.kind+" · "+entry.englishAnchors+"个英语词";
+ $("issueText").textContent=entry.textForPrivateReview;
+ const status=notes[entry.id]||{decision:"pending",note:""};
+ $("decision").value=status.decision;$("note").value=status.note;
+ const p=$("p"+entry.chapter+"_"+entry.paragraph);
+ if(p){for(const x of document.querySelectorAll(".paragraph.selected"))x.classList.remove("selected");p.classList.add("selected");p.scrollIntoView({behavior:"smooth",block:"center"})}
+}
+function render(){
+ if(!story)return;
+ const ch=currentChapter(),num=ch.number,rows=issues.reviewRows.filter(x=>x.chapter===num);
+ $("chapter").value=String(chapterIndex);$("prev").disabled=chapterIndex===0;$("next").disabled=chapterIndex===11;
+ $("chapterTitle").textContent="第"+num+"章 · "+ch.title;
+ const anchorCount=ch.paragraphs.reduce((n,p)=>n+p.segments.filter(s=>s.wordId).length,0);
+ $("stats").textContent=ch.paragraphs.length+"段 · "+anchorCount+"处词汇标注 · "+rows.length+"个句子待核对";
+ const pp=$("paragraphs");pp.replaceChildren();
+ for(let i=0;i<ch.paragraphs.length;i++){
+  const p=ch.paragraphs[i],div=create("p",undefined,"paragraph");
+  div.id="p"+num+"_"+(i+1);
+  if(rows.some(x=>x.paragraph===i+1))div.classList.add("issues");
+  for(const s of p.segments){
+   if(s.wordId){const word=create("span",s.surface,"word");word.title=s.gloss||"";div.append(word)}
+   else div.append(document.createTextNode(s.text));
+  }
+  pp.append(div);
+ }
+ const qq=$("queue");qq.replaceChildren();
+ for(const entry of rows){
+  const d=create("div",undefined,"issue"),status=notes[entry.id]?.decision||"pending";
+  d.append(create("b",entry.id+" · "+(entry.englishAnchors===0?"零词长句":entry.englishAnchors+"词长句")));
+  d.append(create("p",entry.textForPrivateReview.slice(0,76)));
+  const button=create("button",status==="pass"?"✓已核对":status==="revise"?"↻待修订":"定位并审校");
+  button.addEventListener("click",()=>selectIssue(entry));d.append(button);qq.append(d);
+ }
+ $("issueDetail").hidden=true;selectedIssue=null;
+ const done=Object.values(notes).filter(n=>n.decision==="pass").length;
+ const redo=Object.values(notes).filter(n=>n.decision==="revise").length;
+ $("summary").textContent=issues.reviewRows.length+"条待核句 · 已确认"+done+"条 · 待修改"+redo+"条";
+}
+$("load").addEventListener("click",async()=>{
+ try{
+ const a=await readFile("storyFile"),b=await readFile("issuesFile"),n=await readFile("reviewFile");
+ if(!a||!b||!Array.isArray(a.chapters)||a.chapters.length!==12||a.chapters.some(c=>c.preview)||
+  a.book?.id!=="rainy-night-archives-cet4-v1"||
+  b.bookId!==a.book.id||b.chapters!==12||!Array.isArray(b.reviewRows)||
+  b.totalIssues!==b.reviewRows.length||!/^[a-f0-9]{64}$/.test(b.sourceDigest))
+  throw Error("稿件或逐句审核数据结构有误，无法安全加载");
+ if(n){if(n.bookId!==b.bookId||n.sourceDigest!==b.sourceDigest)throw Error("上次审核的稿件版本不匹配");
+ notes=n.notes&&typeof n.notes==="object"?n.notes:{};}
+ else notes={};
+ story=a;issues=b;chapterIndex=0;
+ const sel=$("chapter");sel.replaceChildren();
+ for(const [i,c] of story.chapters.entries()){const o=create("option","第"+c.number+"章 · "+c.title);o.value=i;sel.append(o);}
+ $("workspace").hidden=false;render();
+ }catch(err){$("workspace").hidden=true;alert("读取失败："+String(err.message||err))}
+});
+$("chapter").addEventListener("change",()=>{chapterIndex=Number($("chapter").value);render()});
+$("prev").addEventListener("click",()=>{if(chapterIndex>0){chapterIndex--;render()}});
+$("next").addEventListener("click",()=>{if(chapterIndex<11){chapterIndex++;render()}});
+$("save").addEventListener("click",()=>{
+ if(!selectedIssue)return;
+ const status=$("decision").value,note=$("note").value.trim();
+ if(status!=="pending"&&note.length<15){alert("需要至少15字的实际审校记录或修改意见。");return}
+ notes[selectedIssue]={decision:status,note,editedAt:new Date().toISOString()};
+ render();
+});
+$("export").addEventListener("click",()=>{
+ if(!story||!issues)return;
+ download({schema:"RAINY_NIGHT_HUMAN_SENTENCE_NOTES_V1",bookId:story.book.id,
+ sourceDigest:issues.sourceDigest,notes,issuesTotal:issues.totalIssues,
+ remaining:issues.reviewRows.filter(x=>notes[x.id]?.decision!=="pass").length,
+ label:"PRIVATE_LANGUAGE_NOTES_NOT_APPROVAL_TO_PUBLISH"},
+ "rainy-night-editorial-sentence-review-notes.json");
+});
+</script>
+</body>
+</html>
