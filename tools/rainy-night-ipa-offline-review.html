@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>妙屋英语 · 雨夜档案188词词卡人工审核台（离线）</title>
+<style>
+:root{color-scheme:light;--paper:#f9f6ef;--ink:#252729;--muted:#68675f;--line:#e6dfd4;--green:#236f4b;--pink:#b76a67}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.6 system-ui,-apple-system,"PingFang SC",sans-serif}
+main{width:min(100%,1100px);margin:auto;padding:24px}h1{font-family:Georgia,serif;font-size:2rem;margin-bottom:0}h2{font-size:1.15rem}
+small,.help{color:var(--muted)}section{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:20px 0}
+input,textarea,select,button{font:inherit}input:not([type=checkbox]):not([type=file]),textarea,select{background:#fff;width:100%;padding:9px 11px;border:1px solid #c7c0b6;border-radius:7px}
+textarea{min-height:90px;resize:vertical}label{display:block;font-weight:600;margin:12px 0 6px}
+button{background:#252729;color:#fff;border:0;border-radius:8px;padding:10px 14px;cursor:pointer}
+button:disabled{opacity:.4;cursor:not-allowed}.ghost{background:#fff;color:#252729;border:1px solid #c7c0b6}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.row>*{flex:1}.row button,.row strong{flex:0 0 auto}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.status{color:var(--green);font-weight:700}
+.warning{border-left:4px solid var(--pink);padding:10px 14px;background:#fff7f5}
+#notice{white-space:pre-line;color:#88512c}code{font-size:.9em;background:#f4eee5;padding:2px 4px}
+@media(max-width:720px){main{padding:12px}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<header><h1>妙屋英语 · 188词人工审核台</h1>
+<p class="help">《雨夜档案》四级会员版 · 仅离线编辑 · 无网络请求、无数据上传。输入的内容只保存在当前浏览器内存中，请及时导出。</p></header>
+<section>
+<div class="warning"><b>重要：</b>这是内容审核工具，不是自动发布程序。候选IPA、词性和例句必须由实际审核人逐条核对。不得为了清除阻断项而虚构版权许可、核验来源或人工签名。未批准的JSON不能用于正式D1更新。</div>
+<label for="file">① 载入预填审校 JSON（由私有 GitHub Actions 生成）</label>
+<input type="file" id="file" accept=".json,application/json">
+<div class="grid">
+<div><label for="reviewer">审核人标识（3–80位英数字、_ 或 -）</label><input id="reviewer" placeholder="例如 owner_editor_01" autocomplete="off"></div>
+<div><label for="evidence">实际来源核验编号（3–80位英数字、_ 或 -）</label><input id="evidence" placeholder="例如 ipa_check_20261103" autocomplete="off"></div>
+</div>
+<p class="help">只有你完成真实核对后，才点击每个词的「确认审核」。审核人标识不能代表独立第三方认证。</p>
+</section>
+<section id="editor" hidden>
+<div class="row">
+<div><strong id="progress"></strong><p id="notice" role="status"></p></div>
+<button id="export" type="button">导出审核JSON（含未完成项）</button>
+</div>
+<div class="row">
+<input id="search" placeholder="搜索英语单词" aria-label="搜索英语单词">
+<select id="filter" aria-label="筛选词条"><option value="all">全部188词</option><option value="pending">仅未确认</option><option value="done">仅已确认</option></select>
+</div>
+<div class="row"><button class="ghost" id="previous" type="button">上一词</button><select id="wordList" aria-label="选择词条"></select><button class="ghost" id="next" type="button">下一词</button></div>
+<h2 id="wordTitle"></h2>
+<div class="grid">
+<div><label for="part">词性</label><input id="part" disabled></div>
+<div><label for="meaning">词义</label><input id="meaning" disabled></div>
+</div>
+<label for="exEn">英语例句（与原稿绑定；若错误需修改原稿重新生成审核包）</label><textarea id="exEn" disabled></textarea>
+<label for="exZh">中文译文</label><textarea id="exZh" disabled></textarea>
+<div class="grid">
+<div><label for="uk">正式英式IPA候选（可人工更正）</label><input id="uk" spellcheck="false"><small id="ukOrigin"></small></div>
+<div><label for="us">正式美式IPA候选（可人工更正）</label><input id="us" spellcheck="false"><small id="usOrigin"></small></div>
+</div>
+<div class="grid">
+<div><label for="ukProv">英式来源/独立转写来源</label>
+<select id="ukProv"><option value="">尚未核验</option><option value="BRITFONE_MIT">Britfone MIT（已逐词核查）</option><option value="INDEPENDENT_TRANSCRIPTION">独立转写并核验</option></select></div>
+<div><label for="usProv">美式来源/独立转写来源</label>
+<select id="usProv"><option value="">尚未核验</option><option value="IPA_DICT_MIT">ipa-dict MIT（已逐词核查）</option><option value="INDEPENDENT_TRANSCRIPTION">独立转写并核验</option></select></div>
+</div>
+<label for="note">审核记录（至少15字符：核验的是哪个发音、什么词性，是否纠正了候选）</label>
+<textarea id="note" placeholder="写出实质性核对内容。"></textarea>
+<label><input type="checkbox" id="commercial"> 我已实际核查本词的音标与使用许可，并确认用于付费教材的权利依据</label>
+<div class="row">
+<button id="save" type="button">确认本词已人工审核</button>
+<button id="undo" class="ghost" type="button">撤销本词审核</button>
+</div>
+<p id="wordError" role="status" class="warning" hidden></p>
+</section>
+</main>
+<script>
+"use strict";
+let form=null,idx=0,visible=[];
+const $=id=>document.getElementById(id);
+const validId=/^[a-zA-Z0-9_-]{3,80}$/;
+const validIpa=/^\/[^\/<>\r\n]{1,100}\/$/u;
+const validDate=/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/;
+const columns=["uk","us","ukProv","usProv","note","commercial"];
+let editingWord=null;
+function updated(){
+ const reviewed=form.rows.filter(r=>r.reviewedBy&&r.commercialUseConfirmed);
+ $("progress").textContent=reviewed.length+" / "+form.rows.length+" 已确认";
+ const s=$("search").value.trim().toLowerCase(),filter=$("filter").value;
+ visible=form.rows.map((r,i)=>({r,i})).filter(({r})=>
+ (!s||r.headword.toLowerCase().includes(s))&&
+ (filter==="all"||(filter==="done"?Boolean(r.reviewedBy):!r.reviewedBy))).map(x=>x.i);
+ const list=$("wordList");list.replaceChildren();
+ for(const i of visible){const option=document.createElement("option");option.value=i;
+ option.textContent=(form.rows[i].reviewedBy?"✓ ":"○ ")+form.rows[i].headword;list.append(option);}
+ if(visible.length&&!visible.includes(idx))idx=visible[0];
+ list.value=String(idx);
+ $("previous").disabled=!visible.length||idx===visible[0];
+ $("next").disabled=!visible.length||idx===visible[visible.length-1];
+ if(visible.length)render();else $("wordTitle").textContent="无匹配词条";
+}
+function applyEdits(){
+ if(!form||editingWord===null)return;
+ const r=form.rows[editingWord];
+ r.phoneticUk=$("uk").value.trim();r.phoneticUs=$("us").value.trim();
+ r.ukProvenance=$("ukProv").value;r.usProvenance=$("usProv").value;
+ r.reviewNote=$("note").value.trim();r.commercialUseConfirmed=$("commercial").checked&&Boolean(r.reviewedBy);
+ // Editing a previously approved pronunciation/rights record invalidates signoff.
+ if(r.reviewedBy&&(
+ r.phoneticUk!==r._loadedUk||r.phoneticUs!==r._loadedUs||
+ r.ukProvenance!==r._loadedUkProv||r.usProvenance!==r._loadedUsProv||
+ r.reviewNote!==r._loadedNote||!$("commercial").checked)){
+ r.reviewedBy="";r.reviewedAt="";r.evidenceRef="";r.commercialUseConfirmed=false;
+ }
+}
+function render(){
+ if(!form)return;
+ $("wordError").hidden=true;const r=form.rows[idx],item=idx+1;
+ editingWord=idx;$("wordTitle").textContent=item+" / 188 · "+r.headword+(r.reviewedBy?"（已审）":"（待核）");
+ $("part").value=r.partOfSpeech;$("meaning").value=r.meaningZh;
+ $("exEn").value=r.englishExample;$("exZh").value=r.chineseExample;
+ $("uk").value=r.phoneticUk;$("us").value=r.phoneticUs;
+ $("ukProv").value=r.ukProvenance;$("usProv").value=r.usProvenance;
+ $("note").value=r.reviewNote;$("commercial").checked=r.commercialUseConfirmed===true;
+ $("ukOrigin").textContent="Britfone原始候选: "+(r.ukSourceCandidates.join(" | ")||"缺失：须独立核验");
+ $("usOrigin").textContent="ipa-dict美式候选: "+r.usSourceCandidates.join(" | ");
+ r._loadedUk=r.phoneticUk;r._loadedUs=r.phoneticUs;
+ r._loadedUkProv=r.ukProvenance;r._loadedUsProv=r.usProvenance;r._loadedNote=r.reviewNote;
+}
+function move(to){applyEdits();idx=to;updated();}
+function fail(message){$("wordError").textContent=message;$("wordError").hidden=false;}
+$("file").addEventListener("change",async e=>{
+ const f=e.target.files[0];if(!f)return;
+ try{
+  const v=JSON.parse(await f.text());
+  if(v.schemaVersion!=="RAINY_NIGHT_IPA_HUMAN_REVIEW_V1"||
+   v.bookId!=="rainy-night-archives-cet4-v1"||
+   !/^[0-9a-f]{64}$/.test(v.sourceDigest)||
+   !Array.isArray(v.rows)||v.rows.length!==188||
+   new Set(v.rows.map(x=>x.wordId)).size!==188)throw Error("文件版本、作品ID或188词完整性不匹配");
+  form=v;idx=0;editingWord=null;$("editor").hidden=false;updated();
+ }catch(err){$("editor").hidden=true;form=null;alert("不能载入："+err.message)}
+});
+$("search").addEventListener("input",()=>{applyEdits();updated()});
+$("filter").addEventListener("change",()=>{applyEdits();updated()});
+$("wordList").addEventListener("change",()=>move(Number($("wordList").value)));
+$("previous").addEventListener("click",()=>{const p=visible.indexOf(idx);if(p>0)move(visible[p-1])});
+$("next").addEventListener("click",()=>{const p=visible.indexOf(idx);if(p>=0&&p<visible.length-1)move(visible[p+1])});
+$("save").addEventListener("click",()=>{
+ if(!form)return;applyEdits();
+ const r=form.rows[idx],reviewer=$("reviewer").value.trim(),evidence=$("evidence").value.trim();
+ if(!validId.test(reviewer)||!validId.test(evidence))return fail("填写有效审核人标识与实际核验来源编号（3–80位）。");
+ if(!validIpa.test(r.phoneticUk)||!validIpa.test(r.phoneticUs))return fail("英式和美式IPA必须使用 /音标/ 格式。");
+ if(!["BRITFONE_MIT","INDEPENDENT_TRANSCRIPTION"].includes(r.ukProvenance)||
+ !["IPA_DICT_MIT","INDEPENDENT_TRANSCRIPTION"].includes(r.usProvenance))return fail("必须逐词核对来源并选择适当的合法使用方式。");
+ if(r.ukSourceCandidates.length===0&&r.ukProvenance!=="INDEPENDENT_TRANSCRIPTION")return fail("此词没有可直接使用的UK候选，必须独立转写并核验。");
+ if(r.reviewNote.length<15||r.reviewNote.length>1000)return fail("请写至少15字符、至多1000字符的实际校对记录。");
+ if(!$("commercial").checked)return fail("未确认真实版权/商用使用依据，不能签审。");
+ r.reviewedBy=reviewer;r.evidenceRef=evidence;r.reviewedAt=new Date().toISOString();
+ r.commercialUseConfirmed=true;
+ updated();
+});
+$("undo").addEventListener("click",()=>{if(!form)return;applyEdits();const r=form.rows[idx];r.reviewedBy="";r.reviewedAt="";r.evidenceRef="";r.commercialUseConfirmed=false;updated()});
+$("export").addEventListener("click",()=>{
+ if(!form)return;applyEdits();
+ const result=JSON.parse(JSON.stringify(form,(k,v)=>k.startsWith("_")?undefined:v));
+ const blob=new Blob([JSON.stringify(result,null,2)+"\n"],{type:"application/json"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="rainy-night-188-ipa-editorial-review.json";a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),5000);updated();
+});
+</script>
+</body>
+</html>
