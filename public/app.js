@@ -522,19 +522,17 @@
       document.querySelectorAll('[data-word-filter]').forEach(x=>x.classList.toggle('active',x.dataset.wordFilter===wordFilter));
       const words=[...cloudSaved.values()].filter(w=>wordFilter==='all'||
         (wordFilter==='mastered'?w.status==='mastered':w.status!=='mastered'));
-      const localWords=[]; // Hide private prototype vocabulary on production.
       const cloudTotal=user?cloudSaved.size:0;
-      const localTotal=0;
-      $('bookplateCount').textContent=String(cloudTotal+localTotal);
-      if(!user&&!localWords.length){
+      $('bookplateCount').textContent=String(cloudTotal);
+      if(!user){
         $('vocabGrid').innerHTML='<div class="empty" style="grid-column:1/-1">'+
           '<div class="big">♧</div><h3>登录后，打开你的云端藏书票</h3>'+
           '<p>登录同一账号即可在不同设备读取已收藏的单词。</p>'+
           '<button class="primary" id="cloudWordsLogin">登录我的书房</button></div>';
         $('cloudWordsLogin').onclick=showLogin;return;
       }
-      if(!words.length&&!localWords.length){
-        const hasSaved=cloudTotal+localTotal>0;
+      if(!words.length){
+        const hasSaved=cloudTotal>0;
         $('vocabGrid').innerHTML='<div class="empty" style="grid-column:1/-1">'+
           '<div class="big">♧</div><h3>'+(hasSaved?'这个筛选下暂无藏书票':'第一张藏书票，等你来收下')+'</h3>'+
           '<p>'+(hasSaved?'试试切换「全部收藏」，查看其它学习状态的词卡。':'打开已解锁的故事，点击英文词汇即可收藏到记忆藏书票。')+'</p>'+
@@ -563,47 +561,10 @@
           '<button data-cloud-master="'+safe(w.word_id)+'">'+(mastered?'↻ 改为学习中':'✓ 标记已掌握')+'</button>'+
           '<button data-cloud-remove="'+safe(w.word_id)+'">移除收藏</button></div></div>';
       }).join(''):'';
-      const demoCards=localWords.map(id=>{
-        const w=WORDS[id],isMastered=mastered.has(id);
-        return '<div class="vocab-card demo-vocab-card status-'+(isMastered?'mastered':'learning')+'">'+
-          '<div class="bookplate-card-top"><span class="eyebrow">MIAOWU · DEMO BOOKPLATE</span>'+
-          '<span class="word-status">'+(isMastered?'✓ 已记住':'◷ 学习中')+'</span></div>'+
-          '<h3>'+safe(id)+'</h3><p class="vocab-phonetic">'+safe(w.phonetic||'')+
-          ' <button data-demo-voice="'+safe(id)+'" aria-label="播放发音">♫</button></p>'+
-          '<p>'+safe(w.part||'')+' '+safe(w.meaning||'')+'</p>'+
-          '<div class="vocab-section"><b>《玫瑰未落幕》演示原句</b>'+
-          '<div class="vocab-example">'+safe(w.context||'')+'</div></div>'+
-          '<div class="vocab-section"><b>例句 / EXAMPLE</b>'+
-          '<div class="vocab-example">'+safe(w.example||'')+'</div>'+
-          '<p class="vocab-translation">'+safe(w.translation||'')+'</p></div>'+
-          '<div class="vocab-section"><b>常用搭配 / COLLOCATIONS</b>'+
-          (w.collocations||[]).map(pair=>'<div class="vocab-collocation"><span>'+
-            safe(pair[0])+'</span><span>'+safe(pair[1])+'</span></div>').join('')+'</div>'+
-          '<div class="card-tools"><button data-demo-say="'+safe(id)+'">♫ 发音</button>'+
-          '<button data-demo-master="'+safe(id)+'">'+(isMastered?'↻ 改为学习中':'✓ 标记已掌握')+'</button>'+
-          '<button data-demo-remove="'+safe(id)+'">移除收藏</button></div></div>';
-      }).join('');
-      const sources='<div class="bookplate-source-summary">云端词卡 '+cloudTotal+
-        ' 张 · 本机演示收藏 '+localTotal+' 张'+
-        '<small>本机演示词卡仅保存在当前浏览器，不与账号同步；正式内容的收藏由云端保存。</small></div>';
+      const sources='<div class="bookplate-source-summary">已同步词卡 '+cloudTotal+
+        ' 张<small>这些词卡关联你的账号，可在登录后跨设备查看。</small></div>';
       const cloudSection=cloudCards?'<div class="bookplate-source-heading">☁ 云端收藏 · 已同步到账号</div>'+cloudCards:'';
-      const demoSection='';
-      $('vocabGrid').innerHTML=sources+cloudSection+demoSection;
-      document.querySelectorAll('[data-demo-voice],[data-demo-say]').forEach(button=>{
-        button.onclick=()=>speakWord(button.dataset.demoVoice||button.dataset.demoSay);
-      });
-      document.querySelectorAll('[data-demo-master]').forEach(button=>button.onclick=()=>{
-        const id=button.dataset.demoMaster;
-        if(!saved.has(id))return;
-        if(mastered.has(id))mastered.delete(id);else mastered.add(id);
-        saveWords();renderWords();
-        toast(mastered.has(id)?'本机演示词已标记掌握':'本机演示词已改为学习中');
-      });
-      document.querySelectorAll('[data-demo-remove]').forEach(button=>button.onclick=()=>{
-        const id=button.dataset.demoRemove;
-        saved.delete(id);saveWords();renderWords();
-        toast('已从本机演示收藏移除');
-      });
+      $('vocabGrid').innerHTML=sources+cloudSection;
       document.querySelectorAll('[data-cloud-voice],[data-cloud-say]').forEach(x=>{
         x.onclick=()=>{const w=cloudSaved.get(x.dataset.cloudVoice||x.dataset.cloudSay);if(w)speakWord(w.headword)};
       });
@@ -748,37 +709,6 @@
         formError(error.message||'操作失败，请重试');
         if(btn){btn.disabled=false;btn.textContent=btn.dataset.original||'重新提交';}
       }
-    }
-    function demoAccountSummary(){
-      // Browser-local prototype state must never be mixed into cloud account statistics.
-      const opened=[...VISITED].filter(i=>Number.isInteger(i)&&i>=0&&i<CHAPTERS.length);
-      const records=Object.entries(reviewData||{}).filter(([word,item])=>
-        !!WORDS[word]&&item&&typeof item==='object');
-      const attempts=records.reduce((n,[,item])=>n+Math.max(0,Number(item.attempts)||0),0);
-      const correct=records.reduce((n,[,item])=>n+Math.max(0,Number(item.correct)||0),0);
-      const localSaved=[...saved].filter(w=>!!WORDS[w]).length;
-      const localMastered=[...mastered].filter(w=>!!WORDS[w]).length;
-      const cards=[
-        {label:'体验过的章节',value:opened.length+'章'},
-        {label:'本机收藏词卡',value:localSaved+'张'},
-        {label:'演示已掌握词',value:localMastered+'个'},
-        {label:'剧情回声已作答',value:attempts+'题'},
-        {label:'本机待复习词',value:dueList().length+'个'}
-      ];
-      const names=opened.map(i=>'第'+(i+1)+'章 · '+CHAPTERS[i].title).join('、');
-      return '<section class="account-demo-section" aria-label="本机演示学习记录">'+
-        '<div class="account-demo-heading"><span class="eyebrow">LOCAL STORY PROGRESS · 体验记录</span>'+
-        '<h3>《玫瑰未落幕》 · 本机学习记录</h3>'+
-        '<p>这是当前浏览器的演示数据，不会同步到账号；同一浏览器切换账号仍可能看到这些记录。</p></div>'+
-        '<div class="account-demo-stats">'+cards.map(x=>
-          '<div class="account-demo-stat"><strong>'+safe(x.value)+'</strong>'+
-          '<small>'+safe(x.label)+'</small></div>').join('')+'</div>'+
-        '<p class="account-demo-recent">'+(opened.length?'已经打开：'+safe(names):
-          '还未打开演示章节，可以从四级书架体验《玫瑰未落幕》。')+
-        ' · 剧情回声答对 '+correct+' / '+attempts+' 题</p>'+
-        '<p class="account-demo-note">上方是正式云端数据；演示章节只统计曾打开过，不等于正式“已读完”。清除浏览器网站数据会删除这些演示记录。</p>'+
-        '<button class="secondary-btn" id="accountDemoRead">继续演示阅读 →</button>'+
-        '</section>';
     }
     function renderAccount(){
       if(!user){
