@@ -100,7 +100,7 @@
     function asMeaning(c){return WORDS[c]?`${safe(c)}：${safe(WORDS[c].meaning)}`:safe(c)}
     function reportExamResult(q,ans,hint=false){if(quizAnswer!==null)return;quizAnswer=ans;const ok=ans.toLowerCase().trim()===q.word; if(ok)quizScore++;recordAnswer(q.word,ok,hint);renderQuiz()}
 
-    function navigate(to){if(view==='echo'&&echoMode==='cloud'&&window.MiaowuCloudEcho?.running()){window.MiaowuCloudEcho.leave(to);return}if(view==='echo'&&echoMode==='demo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='reader'&&to!=='reader'){clearTimeout(readingSaveTimer);void saveReadingProgress({quiet:true});stopReading();}view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words')renderWords();if(to==='echo')renderQuiz();if(to==='account')renderAccount();$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
+    function navigate(to){if(view==='echo'&&echoMode==='cloud'&&window.MiaowuCloudEcho?.running()){window.MiaowuCloudEcho.leave(to);return}if(view==='echo'&&echoMode==='demo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='reader'&&to!=='reader'){closeWord();clearTimeout(readingSaveTimer);void saveReadingProgress({quiet:true});stopReading();}view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words')renderWords();if(to==='echo')renderQuiz();if(to==='account')renderAccount();$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
 
     // D1 is the primary reader source. Legacy chapter sample stays unreachable from default book cards.
     // No paid chapter bodies are bundled into app.js or held in a client-side book constant.
@@ -109,19 +109,18 @@
     let cloudBooks=[],cloudSaved=new Map(),cloudProgress=[],cloudSessionKey=null,cloudLearningSequence=0;
     const glossaryCache=new Map();
     let readingSaveTimer=0,readingLastSave=0,readingSavePending=null;
-    const readingPrefs={
-      line:(()=>{try{return localStorage.getItem('miaowu_reader_line')||'2.15'}catch{return '2.15'}})()
-    };
     function applyReadingPrefs(){
-      const line=['1.85','2.15','2.4'].includes(readingPrefs.line)?readingPrefs.line:'2.15';
+      // Reading uses the global light/dark theme and one comfortable line height.
+      const content=$('storyText');
+      if(content){
+        content.style.setProperty('line-height','2.15');
+        content.style.setProperty('font-size',fontSize+'px');
+      }
       $('readerLayout')?.removeAttribute('data-reader-tone');
-      if($('readerLine'))$('readerLine').value=line;
-      $('storyText')?.style.setProperty('line-height',line);
-      $('storyText')?.style.setProperty('font-size',fontSize+'px');
       try{
         localStorage.setItem('miaowu_reader_font',String(fontSize));
         localStorage.removeItem('miaowu_reader_tone');
-        localStorage.setItem('miaowu_reader_line',line);
+        localStorage.removeItem('miaowu_reader_line');
       }catch{}
     }
     function readingFraction(){
@@ -317,29 +316,82 @@
       return (Array.isArray(paragraph?.segments)?paragraph.segments:[])
         .map(s=>typeof s?.text==='string'?s.text:(s?.surface||'')).join('');
     }
+    // The bottom study tray is stable across re-rendered chapters. It is not a
+    // blocking mobile modal: readers can tap another highlighted word in place.
+    let selectedStudyWordId=null,studyRequestSequence=0;
+    function chapterStudyWordIds(){
+      return [...new Set(Array.from($('storyText').querySelectorAll('[data-cloud-word]'))
+        .map(el=>el.dataset.cloudWord).filter(Boolean))];
+    }
     function showCloudWord(wordId){
-      if(!activeCloud?.words?.has(wordId)){toast('暂时未找到这张词卡');return}
-      const w=activeCloud.words.get(wordId);
+      if(!activeCloud?.chapterId)return;
+      selectedStudyWordId=wordId;
+      const ids=chapterStudyWordIds();
+      const idx=ids.indexOf(wordId);
+      const clicked=Array.from($('storyText').querySelectorAll('[data-cloud-word]'))
+        .find(el=>el.dataset.cloudWord===wordId);
+      const w=activeCloud.words?.get(wordId);
       const current=cloudSaved.get(wordId);
-      const pairs=Array.isArray(w.collocations)?w.collocations:[];
-      $('wordPop').innerHTML='<button class="modal-close" id="wordClose" aria-label="关闭">×</button>'+
-        '<div class="eyebrow">MIAOWU · WORD IN STORY</div><h3>'+safe(w.headword)+'</h3>'+
-        '<div class="pron">'+safe(w.phonetic_us||w.phonetic_uk||'')+
-        ' <button id="wordSmallSpeak" class="word-voice-inline" aria-label="播放发音">♫</button> · '+safe(w.part_of_speech||'')+'</div>'+
-        '<div class="meaning">'+safe(w.meaning_zh||'')+'</div>'+
-        '<div class="context">故事原句：<br>'+safe(w.context_sentence||'')+'</div>'+
-        '<div class="word-extra"><strong>额外例句</strong><br>'+safe(w.example_en||'')+
-        '<br><span style="color:var(--muted)">'+safe(w.example_zh||'')+'</span></div>'+
-        '<div class="word-extra"><strong>常用搭配</strong><br>'+pairs.map(x=>safe(x.en||'')+' · '+safe(x.zh||'')).join('<br>')+'</div>'+
-        '<div class="word-actions"><button id="wordSpeak">♫ 听发音</button>'+
-        '<button id="wordSave">'+(current?'✓ 已收藏 · 移除':'♡ 收藏藏书票')+'</button>'+
-        '<button id="cloudMaster">'+(current?.status==='mastered'?'↻ 继续学习':'✓ 标记已掌握')+'</button></div>';
-      $('wordPop').classList.add('on');$('wordBackdrop').classList.add('on');
+      const pairs=Array.isArray(w?.collocations)?w.collocations:[];
+      const title=w?.headword||clicked?.textContent||'单词学习';
+      const meaning=w?.meaning_zh||clicked?.nextElementSibling?.textContent?.replace(/[（）]/g,'')||'词义加载中…';
+      const loading=!w;
+      $('wordPop').innerHTML='<button class="modal-close" id="wordClose" type="button" aria-label="收起词卡">×</button>'+
+        '<div class="study-navigation"><span class="eyebrow">MIAOWU · LEARN A WORD</span>'+
+        '<span class="study-position">'+(idx>=0?idx+1:1)+' / '+Math.max(1,ids.length)+'</span></div>'+
+        '<h3>'+safe(title)+'</h3>'+
+        '<div class="pron">'+safe(w?.phonetic_us||w?.phonetic_uk||'')+
+        ' <button id="wordSmallSpeak" class="word-voice-inline" type="button" aria-label="播放发音">♫</button> · '+safe(w?.part_of_speech||'')+'</div>'+
+        '<div class="meaning">'+safe(meaning)+'</div>'+
+        (loading?'<p class="study-loading" role="status">正在读取这张词卡的学习资料…</p>':
+          '<div class="word-extra"><strong>例句</strong><br>'+safe(w.example_en||'暂未提供')+
+          '<br><span class="study-translation">'+safe(w.example_zh||'')+'</span></div>'+
+          '<div class="word-extra"><strong>常用搭配</strong><br>'+
+          (pairs.length?pairs.map(x=>safe(x.en||'')+' · '+safe(x.zh||'')).join('<br>'):'暂无搭配')+'</div>')+
+        '<div class="study-switch"><button id="studyPrevious" type="button" '+(idx<=0?'disabled':'')+'>← 上一个词</button>'+
+        '<button id="studyNext" type="button" '+(idx<0||idx===ids.length-1?'disabled':'')+'>下一个词 →</button></div>'+
+        '<div class="word-actions"><button id="wordSpeak" type="button">♫ 听发音</button>'+
+        '<button id="wordSave" type="button" '+(loading?'disabled':'')+'>'+(current?'✓ 已收藏 · 移除':'♡ 收藏藏书票')+'</button>'+
+        '<button id="cloudMaster" type="button" '+(loading?'disabled':'')+'>'+
+        (current?.status==='mastered'?'↻ 继续学习':'✓ 标记已掌握')+'</button></div>';
+      $('wordPop').classList.add('on');
+      $('wordBackdrop').classList.add('on');
+      document.documentElement.classList.add('study-tray-open');
+      $('storyText').querySelectorAll('[data-cloud-word]').forEach(el=>{
+        el.classList.toggle('study-word-active',el.dataset.cloudWord===wordId);
+      });
       $('wordClose').onclick=closeWord;
-      $('wordSpeak').onclick=()=>speakWord(w.headword);
-      $('wordSmallSpeak').onclick=()=>speakWord(w.headword);
+      $('wordSpeak').onclick=()=>speakWord(title);
+      $('wordSmallSpeak').onclick=()=>speakWord(title);
       $('wordSave').onclick=()=>saveCloudWord(wordId,false);
       $('cloudMaster').onclick=()=>saveCloudWord(wordId,true);
+      $('studyPrevious').onclick=()=>{if(idx>0)showCloudWord(ids[idx-1]);};
+      $('studyNext').onclick=()=>{if(idx>=0&&idx<ids.length-1)showCloudWord(ids[idx+1]);};
+      // Always display a card immediately. Vocabulary is fetched independently
+      // of chapter body; a slow glossary must not make taps appear broken.
+      if(loading){
+        const requestId=++studyRequestSequence;
+        const chapterId=activeCloud.chapterId;
+        const key=(user?.name||'guest')+'::'+chapterId;
+        const pending=glossaryCache.has(key)?
+          Promise.resolve(glossaryCache.get(key)):
+          serverRequest('/api/chapters/'+encodeURIComponent(chapterId)+'/words');
+        pending.then(data=>{
+          if(!activeCloud||activeCloud.chapterId!==chapterId)return;
+          glossaryCache.set(key,data);
+          if(!(activeCloud.words instanceof Map))activeCloud.words=new Map();
+          for(const row of data.words||[])if(row?.word_id)activeCloud.words.set(row.word_id,row);
+          if(requestId===studyRequestSequence&&selectedStudyWordId===wordId&&$('wordPop').classList.contains('on'))
+            showCloudWord(wordId);
+        }).catch(()=>{
+          if(requestId===studyRequestSequence&&selectedStudyWordId===wordId){
+            const notice=$('wordPop').querySelector('.study-loading');
+            if(notice)notice.textContent='词汇资料暂时未加载，请稍后再点击重试。';
+          }
+        });
+      }else{
+        ++studyRequestSequence;
+      }
     }
     async function saveCloudWord(id,markMastered){
       if(!user){closeWord();showLogin();return}
@@ -378,6 +430,7 @@
         if(!(await saveReadingProgress({complete:finishPrevious,quiet:false})))return;
       }
       const book=activeCloud;
+      closeWord();
       stopReading();
       // A chapter-list click must visibly respond before any network request.
       const selected=book.chapters.find(ch=>ch.id===id);
@@ -482,7 +535,7 @@
       }
     }
     function resetDemoReadingUI(){
-      activeCloud=null;
+      closeWord();activeCloud=null;
       const heading=$('chapterList').parentElement.querySelector('h3');
       if(heading)heading.textContent='《玫瑰未落幕》 · 目录';
       const caption=$('chapterList').parentElement.querySelector('.side-caption');
@@ -512,7 +565,13 @@
     function splitPart(txt){const rg=/\[\[([a-z]+)\]\]（([^）]+)）/g;let last=0,html='',m;while((m=rg.exec(txt))){html+=safe(txt.slice(last,m.index));html+=`<button class="word" data-word="${m[1]}">${m[1]}</button><span class="gloss">（${safe(m[2])}）</span>`;last=rg.lastIndex}return html+safe(txt.slice(last))}
     function openChapter(num){resetDemoReadingUI();if(num>0&&!has('cet4')){showRegister({intent:'locked'});return}if(num<0||num>=CHAPTERS.length)return;chapter=num;VISITED.add(num);CHAPTER_WORDS[num].forEach(touchWord);saveReview();navigate('reader');$('chapterNo').textContent=`CHAPTER ${String(num+1).padStart(2,'0')} · ${num===0?'FREE PREVIEW':'MEMBER PREVIEW'}`;$('chapterTitle').textContent=CHAPTERS[num].title;$('storyText').innerHTML=CHAPTERS[num].parts.map(p=>`<p>${splitPart(p)}</p>`).join('');$('storyText').style.fontSize=fontSize+'px';$('readerCrumb').textContent='四级故事馆 / '+(num===0?'免费试读':'已购演示');$('chapterList').innerHTML=CHAPTERS.map((ch,i)=>`<button class="chapter-btn ${i===num?'current':''}" data-chapter="${i}">${String(i+1).padStart(2,'0')} · ${ch.title} ${i===1&&!has('cet4')?'🔒':''}</button>`).join('')+'<button class="chapter-btn" disabled>后续章节 · 内容筹备中</button>';document.querySelectorAll('[data-chapter]').forEach(b=>b.onclick=()=>openChapter(Number(b.dataset.chapter)));document.querySelectorAll('.word').forEach(b=>b.onclick=()=>openWord(b.dataset.word));$('readingStatus').textContent=has('cet4')?'四级已解锁 · 演示内容':'免费试读 · 章节02需激活';$('progressBar').style.width=(VISITED.size/CHAPTERS.length*100)+'%';$('readingChapter').textContent=`第${String(num+1).padStart(2,'0')}章`;$('savedCount').textContent=saved.size;$('nextChapter').textContent=num===0?'下一章 →':'返回书架 →';$('readerLayout').classList.toggle('night',night);$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);$('toggleNight').classList.toggle('pressed',night);$('toggleNight').textContent=night?'☀ 日间':'☾ 夜间';$('nextChapter').onclick=()=>num===0?openChapter(1):navigate('library');let side=$('readingStatus').closest('.side-panel');let extra=side.querySelector('#readerLearningStats');if(!extra){extra=document.createElement('div');extra.id='readerLearningStats';side.appendChild(extra)}extra.innerHTML=`<div class="metric"><span>待学习词汇（演示）</span><strong>${Object.keys(WORDS).length-touchedWords().length}</strong></div><div class="metric"><span>今天待复习</span><strong>${dueList().length}</strong></div>`;try{localStorage.setItem('miaowu_demo_lastchapter',String(num))}catch(e){} }
     function openWord(w){if(!WORDS[w])return;popWord=w;touchWord(w);const info=WORDS[w];$('wordPop').innerHTML=`<button class="modal-close" id="wordClose" aria-label="关闭">×</button><div class="eyebrow">MIAOWU · WORD IN STORY</div><h3>${safe(w)}</h3><div class="pron">${safe(info.phonetic)} · ${safe(info.part)}</div><div class="meaning">${safe(info.meaning)}</div><div class="context">故事原句：<br>${safe(info.context)}</div><div class="word-extra"><strong>额外例句</strong><br>${safe(info.example)}<br><span style="color:var(--muted)">${safe(info.translation)}</span></div><div class="word-extra"><strong>常用搭配</strong><br>${info.collocations.map(x=>safe(x[0])+' · '+safe(x[1])).join('<br>')}</div><div class="word-actions"><button id="wordSpeak">♫ 听发音</button><button id="wordSave">${saved.has(w)?'✓ 已收藏':'♡ 收藏藏书票'}</button></div>`;$('wordPop').classList.add('on');$('wordBackdrop').classList.add('on');$('wordClose').onclick=closeWord;$('wordSpeak').onclick=()=>speakWord(w);$('wordSave').onclick=()=>toggleWord(w)}
-    function closeWord(){$('wordPop').classList.remove('on');$('wordBackdrop').classList.remove('on');popWord=null}
+    function closeWord(){
+      ++studyRequestSequence;selectedStudyWordId=null;
+      $('wordPop').classList.remove('on');$('wordBackdrop').classList.remove('on');
+      document.documentElement.classList.remove('study-tray-open');
+      $('storyText').querySelectorAll('[data-cloud-word]').forEach(el=>el.classList.remove('study-word-active'));
+      popWord=null;
+    }
     function toggleWord(w){if(saved.has(w)){saved.delete(w);toast('已从本机演示收藏移除，学习记录继续保留')}else{saved.add(w);toast('已收藏到本机演示藏书票（仅此浏览器）')}saveWords();if(popWord===w)openWord(w);$('savedCount').textContent=saved.size;if(view==='words')renderWords()}
     function saveWords(){try{localStorage.setItem('miaowu_demo_words',JSON.stringify([...saved]));localStorage.setItem('miaowu_demo_mastered',JSON.stringify([...mastered]))}catch(e){}}
     function renderWords(){
@@ -547,8 +606,6 @@
           safe(w.phonetic_us||w.phonetic_uk||'')+
           ' <button data-cloud-voice="'+safe(w.word_id)+'" aria-label="播放发音">♫</button></p>'+
           '<p>'+safe(w.part_of_speech||'')+' '+safe(w.meaning_zh||'')+'</p>'+
-          '<div class="vocab-section"><b>故事中的原句</b>'+
-          '<div class="vocab-example">'+safe(w.context_sentence||'请在已解锁的正文中找到这个词。')+'</div></div>'+
           '<div class="vocab-section"><b>例句 / EXAMPLE</b><div class="vocab-example">'+
           safe(w.example_en||'待补充')+'</div><p class="vocab-translation">'+safe(w.example_zh||'')+'</p></div>'+
           '<div class="vocab-section"><b>常用搭配 / COLLOCATIONS</b>'+
@@ -1055,7 +1112,7 @@
       const p=e.target.closest('[data-audio-paragraph]');
       if(activeCloud?.chapterId&&p)startReading(Number(p.dataset.audioParagraph));
     });
-    $('readerLine').onchange=e=>{readingPrefs.line=e.target.value;applyReadingPrefs()};$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
+$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
     // Cloud reading progress is saved automatically on scroll and chapter navigation.
     window.MiaowuChapterWords?.configure({
       request:serverRequest,refresh:refreshCloudLearning,
