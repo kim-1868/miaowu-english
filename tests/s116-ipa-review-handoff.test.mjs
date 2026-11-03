@@ -1,0 +1,22 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {pronunciationDraft} from "../scripts/prepare-rainy-night-ipa-ai-working-copy.mjs";
+import {prepareIPAOwnerReviewForm} from "../scripts/prepare-rainy-night-ipa-review-handoff.mjs";
+import {validateReview,buildPrivateSql} from "../scripts/build-rainy-night-reviewed-ipa-patch.mjs";
+test("S116 drafted UK-US IPA fills real editor form but NEVER qualifies as signed commercial permission",()=>{
+ const source=pronunciationDraft({britishRead:()=>"/ˈwɜːd/"});
+ const result=prepareIPAOwnerReviewForm(source);
+ assert.equal(result.preflight.wordCount,188);
+ assert.equal(result.preflight.prefilledUK,188);
+ assert.equal(result.preflight.prefilledUS,188);
+ assert.equal(result.preflight.stillMissingRealHumanApprovals,true);
+ assert.equal(result.preflight.productionD1Touched,false);
+ assert.ok(result.form.rows.every(r=>r.phoneticUk&&r.phoneticUs));
+ assert.ok(result.form.rows.every(r=>r.reviewedBy===""&&r.commercialUseConfirmed===false));
+ assert.equal(validateReview(result.form).valid,false);
+ assert.throws(()=>buildPrivateSql(result.form),/IPA_REVIEW_NOT_APPROVED/);
+ const altered=structuredClone(source);altered.rows[0].headword="tampered";
+ assert.throws(()=>prepareIPAOwnerReviewForm(altered),/IPA_DRAFT_STALE/);
+ const missing=structuredClone(source);missing.rows.pop();
+ assert.throws(()=>prepareIPAOwnerReviewForm(missing),/UNTRUSTED_OR_INCOMPLETE/);
+});
