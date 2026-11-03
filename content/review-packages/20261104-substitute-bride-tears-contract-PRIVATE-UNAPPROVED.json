@@ -1,0 +1,2559 @@
+{
+  "version": 1,
+  "sourceLabel": "cet4-private-review-package-20261104-unapproved",
+  "book": {
+    "id": "s82-substitute-bride-tears-contract",
+    "category": "cet4",
+    "title": "替嫁当天，我撕了婚约",
+    "description": "临时被推上豪门婚礼的姜知意拒绝替姐姐出嫁，以自己的空间设计争取事业机会。婚约背后的债务真相逐渐浮现，她也重新认识了陆砚深。",
+    "coverKey": null
+  },
+  "words": [
+    {
+      "id": "rns1-account",
+      "headword": "account",
+      "partOfSpeech": "n.",
+      "meaningZh": "账号；账户",
+      "exampleEn": "The account name did not prove who logged in.",
+      "exampleZh": "账号名称无法证明是谁登录的。",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "collocations": [
+        {
+          "en": "user account",
+          "zh": "用户账号"
+        }
+      ]
+    },
+    {
+      "id": "rns1-calculate",
+      "headword": "calculate",
+      "partOfSpeech": "v.",
+      "meaningZh": "计算",
+      "exampleEn": "She calculated the time difference.",
+      "exampleZh": "她计算了时间差。",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "collocations": [
+        {
+          "en": "calculate the cost",
+          "zh": "计算费用"
+        }
+      ]
+    },
+    {
+      "id": "s87-candidate-card",
+      "headword": "card",
+      "meaningZh": "卡片；银行卡",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "rns1-choice",
+      "headword": "choice",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "选择",
+      "exampleEn": "It was her choice to stay.",
+      "exampleZh": "留下是她自己的选择。",
+      "collocations": [
+        {
+          "en": "make a choice",
+          "zh": "作出选择"
+        },
+        {
+          "en": "a difficult choice",
+          "zh": "艰难的选择"
+        }
+      ]
+    },
+    {
+      "id": "s87-candidate-client",
+      "headword": "client",
+      "meaningZh": "客户；委托方",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "s87-candidate-coat",
+      "headword": "coat",
+      "meaningZh": "外套",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "s87-candidate-company",
+      "headword": "company",
+      "meaningZh": "公司",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "rns1-confirm",
+      "headword": "confirm",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "v.",
+      "meaningZh": "确认",
+      "exampleEn": "The security footage could confirm when he entered the shop.",
+      "exampleZh": "监控录像可以证实他何时走进了店里。",
+      "collocations": [
+        {
+          "en": "confirm the details",
+          "zh": "确认细节"
+        },
+        {
+          "en": "confirm an appointment",
+          "zh": "确认预约"
+        }
+      ]
+    },
+    {
+      "id": "s85-candidate-contract",
+      "headword": "contract",
+      "meaningZh": "合同；契约",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "s87-candidate-customer",
+      "headword": "customer",
+      "meaningZh": "顾客",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "s85-candidate-debt",
+      "headword": "debt",
+      "meaningZh": "债务；欠款",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "rns1-decision",
+      "headword": "decision",
+      "partOfSpeech": "n.",
+      "meaningZh": "决定",
+      "exampleEn": "She made a careful decision.",
+      "exampleZh": "她作出了慎重的决定。",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "collocations": [
+        {
+          "en": "make a decision",
+          "zh": "作出决定"
+        }
+      ]
+    },
+    {
+      "id": "s87-candidate-design",
+      "headword": "design",
+      "meaningZh": "设计；设计作品",
+      "partOfSpeech": "n./v.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "s85-candidate-discuss",
+      "headword": "discuss",
+      "meaningZh": "讨论；商议",
+      "partOfSpeech": "v.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "rns1-document",
+      "headword": "document",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "文件；文档",
+      "exampleEn": "The document was dated two years earlier.",
+      "exampleZh": "文件上的日期是两年前。",
+      "collocations": [
+        {
+          "en": "official document",
+          "zh": "官方文件"
+        },
+        {
+          "en": "check a document",
+          "zh": "核查文件"
+        }
+      ]
+    },
+    {
+      "id": "s87-candidate-dress",
+      "headword": "dress",
+      "meaningZh": "连衣裙；礼服",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "rns1-evidence",
+      "headword": "evidence",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "证据",
+      "exampleEn": "We need evidence, not a guess.",
+      "exampleZh": "我们需要证据，而不是猜测。",
+      "collocations": [
+        {
+          "en": "collect evidence",
+          "zh": "收集证据"
+        },
+        {
+          "en": "strong evidence",
+          "zh": "有力证据"
+        }
+      ]
+    },
+    {
+      "id": "rns1-explain",
+      "headword": "explain",
+      "partOfSpeech": "v.",
+      "meaningZh": "解释",
+      "exampleEn": "She tried to explain her decision.",
+      "exampleZh": "她试着解释自己的决定。",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "collocations": [
+        {
+          "en": "explain clearly",
+          "zh": "清楚解释"
+        }
+      ]
+    },
+    {
+      "id": "rns1-future",
+      "headword": "future",
+      "partOfSpeech": "n.",
+      "meaningZh": "未来",
+      "exampleEn": "For the first time in two years, she could imagine a future with her sister.",
+      "exampleZh": "两年来，她第一次能想象和姐姐共度未来的生活。",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "collocations": [
+        {
+          "en": "in the future",
+          "zh": "在未来"
+        }
+      ]
+    },
+    {
+      "id": "rns1-hesitate",
+      "headword": "hesitate",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "v.",
+      "meaningZh": "犹豫",
+      "exampleEn": "She hesitated before opening the door.",
+      "exampleZh": "她在开门前犹豫了一下。",
+      "collocations": [
+        {
+          "en": "hesitate to speak",
+          "zh": "犹豫要不要开口"
+        },
+        {
+          "en": "without hesitation",
+          "zh": "毫不犹豫地"
+        }
+      ]
+    },
+    {
+      "id": "rns1-interview",
+      "headword": "interview",
+      "partOfSpeech": "n.",
+      "meaningZh": "访谈；采访",
+      "exampleEn": "The interview was part of the investigation.",
+      "exampleZh": "那次访谈是调查的一部分。",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "collocations": [
+        {
+          "en": "conduct an interview",
+          "zh": "进行访谈"
+        }
+      ]
+    },
+    {
+      "id": "s87-candidate-job",
+      "headword": "job",
+      "meaningZh": "工作；职位",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "s85-candidate-loan",
+      "headword": "loan",
+      "meaningZh": "贷款；借款",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "s87-candidate-manager",
+      "headword": "manager",
+      "meaningZh": "经理；负责人",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "s87-candidate-marriage",
+      "headword": "marriage",
+      "meaningZh": "婚姻",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "s87-candidate-meeting",
+      "headword": "meeting",
+      "meaningZh": "会议",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "s85-candidate-message",
+      "headword": "message",
+      "meaningZh": "消息；信息",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "s85-candidate-money",
+      "headword": "money",
+      "meaningZh": "钱；款项",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "rns1-notice",
+      "headword": "notice",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "v.",
+      "meaningZh": "注意到",
+      "exampleEn": "I noticed a letter on the desk.",
+      "exampleZh": "我注意到桌上有一封信。",
+      "collocations": [
+        {
+          "en": "notice a change",
+          "zh": "注意到变化"
+        },
+        {
+          "en": "take notice of",
+          "zh": "注意到；留意"
+        }
+      ]
+    },
+    {
+      "id": "s87-candidate-office",
+      "headword": "office",
+      "meaningZh": "办公室",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "rns1-option",
+      "headword": "option",
+      "partOfSpeech": "n.",
+      "meaningZh": "选择；选项",
+      "exampleEn": "They considered another option.",
+      "exampleZh": "他们考虑了另一种选择。",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "collocations": [
+        {
+          "en": "another option",
+          "zh": "另一个选择"
+        }
+      ]
+    },
+    {
+      "id": "s85-candidate-phone",
+      "headword": "phone",
+      "meaningZh": "电话；手机（语境义待审）",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "s87-candidate-picture",
+      "headword": "picture",
+      "meaningZh": "图片",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "s85-candidate-plan",
+      "headword": "plan",
+      "meaningZh": "计划；方案",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "s87-candidate-price",
+      "headword": "price",
+      "meaningZh": "价格",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "s87-candidate-project",
+      "headword": "project",
+      "meaningZh": "项目",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "rns1-promise",
+      "headword": "promise",
+      "partOfSpeech": "n.",
+      "meaningZh": "承诺",
+      "exampleEn": "She kept her promise to her sister.",
+      "exampleZh": "她信守了对姐姐的承诺。",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "collocations": [
+        {
+          "en": "make a promise",
+          "zh": "许下承诺"
+        }
+      ]
+    },
+    {
+      "id": "s85-candidate-property",
+      "headword": "property",
+      "meaningZh": "财产；资产（具体义待审）",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "rns1-record",
+      "headword": "record",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "记录",
+      "exampleEn": "The old record showed a different name.",
+      "exampleZh": "旧记录上写着另一个名字。",
+      "collocations": [
+        {
+          "en": "keep a record",
+          "zh": "保留记录"
+        },
+        {
+          "en": "a written record",
+          "zh": "书面记录"
+        }
+      ]
+    },
+    {
+      "id": "rns1-regret",
+      "headword": "regret",
+      "partOfSpeech": "n./v.",
+      "meaningZh": "遗憾；后悔",
+      "exampleEn": "She regretted her angry words.",
+      "exampleZh": "她后悔自己说过的气话。",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "collocations": [
+        {
+          "en": "feel regret",
+          "zh": "感到后悔"
+        }
+      ]
+    },
+    {
+      "id": "s87-candidate-relationship",
+      "headword": "relationship",
+      "meaningZh": "关系",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "s87-candidate-report",
+      "headword": "report",
+      "meaningZh": "报告",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "rns1-request",
+      "headword": "request",
+      "partOfSpeech": "n.",
+      "meaningZh": "请求；申请",
+      "exampleEn": "She submitted a written request.",
+      "exampleZh": "她提交了一份书面申请。",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "collocations": [
+        {
+          "en": "submit a request",
+          "zh": "提交申请"
+        }
+      ]
+    },
+    {
+      "id": "rns1-respond",
+      "headword": "respond",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "v.",
+      "meaningZh": "回应；回答",
+      "exampleEn": "He refused to respond to her question.",
+      "exampleZh": "他拒绝回答她的问题。",
+      "collocations": [
+        {
+          "en": "respond to a question",
+          "zh": "回答问题"
+        },
+        {
+          "en": "respond quickly",
+          "zh": "迅速回应"
+        }
+      ]
+    },
+    {
+      "id": "rns1-responsibility",
+      "headword": "responsibility",
+      "partOfSpeech": "n.",
+      "meaningZh": "责任",
+      "exampleEn": "He accepted responsibility for his decision.",
+      "exampleZh": "他为自己的决定承担了责任。",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "collocations": [
+        {
+          "en": "take responsibility",
+          "zh": "承担责任"
+        }
+      ]
+    },
+    {
+      "id": "s87-candidate-result",
+      "headword": "result",
+      "meaningZh": "结果",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "s87-candidate-ring",
+      "headword": "ring",
+      "meaningZh": "戒指",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "rns1-risk",
+      "headword": "risk",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "partOfSpeech": "n.",
+      "meaningZh": "风险",
+      "exampleEn": "She knew the risk of trusting him.",
+      "exampleZh": "她知道信任他意味着风险。",
+      "collocations": [
+        {
+          "en": "take a risk",
+          "zh": "承担风险"
+        },
+        {
+          "en": "reduce the risk",
+          "zh": "降低风险"
+        }
+      ]
+    },
+    {
+      "id": "s87-candidate-room",
+      "headword": "room",
+      "meaningZh": "房间",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "rns1-schedule",
+      "headword": "schedule",
+      "partOfSpeech": "n.",
+      "meaningZh": "时间表",
+      "exampleEn": "She checked the maintenance schedule.",
+      "exampleZh": "她核对了维护时间表。",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "collocations": [
+        {
+          "en": "a daily schedule",
+          "zh": "每日时间表"
+        }
+      ]
+    },
+    {
+      "id": "s85-candidate-screen",
+      "headword": "screen",
+      "meaningZh": "屏幕",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "rns1-signature",
+      "headword": "signature",
+      "partOfSpeech": "n.",
+      "meaningZh": "签名",
+      "exampleEn": "The signature was not hers.",
+      "exampleZh": "那个签名不是她的。",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "collocations": [
+        {
+          "en": "handwritten signature",
+          "zh": "手写签名"
+        }
+      ]
+    },
+    {
+      "id": "s87-candidate-team",
+      "headword": "team",
+      "meaningZh": "团队",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    },
+    {
+      "id": "rns1-trust",
+      "headword": "trust",
+      "partOfSpeech": "v./n.",
+      "meaningZh": "信任",
+      "exampleEn": "It was difficult to trust him again.",
+      "exampleZh": "再次信任他很困难。",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "collocations": [
+        {
+          "en": "earn trust",
+          "zh": "赢得信任"
+        }
+      ]
+    },
+    {
+      "id": "rns1-verify",
+      "headword": "verify",
+      "partOfSpeech": "v.",
+      "meaningZh": "核实",
+      "exampleEn": "She asked him to verify the source.",
+      "exampleZh": "她请他核实来源。",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "collocations": [
+        {
+          "en": "verify information",
+          "zh": "核实信息"
+        }
+      ]
+    },
+    {
+      "id": "s87-candidate-wedding",
+      "headword": "wedding",
+      "meaningZh": "婚礼",
+      "partOfSpeech": "n.",
+      "phoneticUk": null,
+      "phoneticUs": null,
+      "exampleEn": null,
+      "exampleZh": null,
+      "collocations": []
+    }
+  ],
+  "chapters": [
+    {
+      "id": "s82-substitute-bride-tears-contract-ch01",
+      "number": 1,
+      "title": "这场婚礼没有新娘",
+      "preview": true,
+      "paragraphs": [
+        {
+          "segments": [
+            {
+              "text": "婚礼开始前半小时，姜知意收到姐姐发来的 "
+            },
+            {
+              "wordId": "s85-candidate-message",
+              "surface": "message",
+              "gloss": "消息"
+            },
+            {
+              "text": "：对不起，我真的不能嫁。她站在酒店的 "
+            },
+            {
+              "wordId": "s87-candidate-room",
+              "surface": "room",
+              "gloss": "房间"
+            },
+            {
+              "text": " 里，看见化妆师准备好的白色 "
+            },
+            {
+              "wordId": "s87-candidate-dress",
+              "surface": "dress",
+              "gloss": "连衣裙"
+            },
+            {
+              "text": "，以及桌上那份她从未同意的婚姻 "
+            },
+            {
+              "wordId": "s85-candidate-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "母亲推开门：“你姐姐出国了，今天只能由你代替。”她将一张银行卡塞过来，“这笔 "
+            },
+            {
+              "wordId": "s85-candidate-money",
+              "surface": "money",
+              "gloss": "钱"
+            },
+            {
+              "text": " 可以帮你还清工作室的 "
+            },
+            {
+              "wordId": "s85-candidate-debt",
+              "surface": "debt",
+              "gloss": "债务"
+            },
+            {
+              "text": "，只要你作出正确 "
+            },
+            {
+              "wordId": "rns1-decision",
+              "surface": "decision",
+              "gloss": "决定"
+            },
+            {
+              "text": "。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "姜知意把 "
+            },
+            {
+              "wordId": "s87-candidate-card",
+              "surface": "card",
+              "gloss": "卡片"
+            },
+            {
+              "text": " 放回桌上。“你们不能把一个成年人的 "
+            },
+            {
+              "wordId": "s87-candidate-marriage",
+              "surface": "marriage",
+              "gloss": "婚姻"
+            },
+            {
+              "text": " 当作可以替换的 "
+            },
+            {
+              "wordId": "s87-candidate-project",
+              "surface": "project",
+              "gloss": "项目"
+            },
+            {
+              "text": "。我还没看过任何正式 "
+            },
+            {
+              "wordId": "rns1-document",
+              "surface": "document",
+              "gloss": "文件"
+            },
+            {
+              "text": "，更没有给过 "
+            },
+            {
+              "wordId": "rns1-promise",
+              "surface": "promise",
+              "gloss": "承诺"
+            },
+            {
+              "text": "。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "父亲拿出公司的财务 "
+            },
+            {
+              "wordId": "s87-candidate-report",
+              "surface": "report",
+              "gloss": "报告"
+            },
+            {
+              "text": "：“如果婚礼取消，对方就撤回投资，我们的 "
+            },
+            {
+              "wordId": "s87-candidate-company",
+              "surface": "company",
+              "gloss": "公司"
+            },
+            {
+              "text": " 会破产。”他把全部 "
+            },
+            {
+              "wordId": "rns1-risk",
+              "surface": "risk",
+              "gloss": "风险"
+            },
+            {
+              "text": " 都推到她面前，甚至要求她马上在合同上留下 "
+            },
+            {
+              "wordId": "rns1-signature",
+              "surface": "signature",
+              "gloss": "签名"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "姜知意抬起 "
+            },
+            {
+              "wordId": "s85-candidate-phone",
+              "surface": "phone",
+              "gloss": "电话"
+            },
+            {
+              "text": "，拍下桌上全部 "
+            },
+            {
+              "wordId": "rns1-document",
+              "surface": "document",
+              "gloss": "文件"
+            },
+            {
+              "text": "。“公司财务是经营者的 "
+            },
+            {
+              "wordId": "rns1-responsibility",
+              "surface": "responsibility",
+              "gloss": "责任"
+            },
+            {
+              "text": "，不是我的婚姻义务。我愿意帮忙寻找 "
+            },
+            {
+              "wordId": "rns1-option",
+              "surface": "option",
+              "gloss": "选择"
+            },
+            {
+              "text": "，但不会靠欺骗新郎来换投资。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "门外忽然传来脚步声。新郎陆砚深没有穿礼服，只穿深色 "
+            },
+            {
+              "wordId": "s87-candidate-coat",
+              "surface": "coat",
+              "gloss": "外套"
+            },
+            {
+              "text": "，手里拿着一份新的 "
+            },
+            {
+              "wordId": "s85-candidate-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": "。“看来我们都不知道，今天被要求参加的是什么 "
+            },
+            {
+              "wordId": "s87-candidate-meeting",
+              "surface": "meeting",
+              "gloss": "会议"
+            },
+            {
+              "text": "。”他看向姜知意，“你愿意先坐下来 "
+            },
+            {
+              "wordId": "s85-candidate-discuss",
+              "surface": "discuss",
+              "gloss": "讨论"
+            },
+            {
+              "text": " 吗？”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "姜知意本以为会看到小说里的冷面霸总，却发现对方首先让律师 "
+            },
+            {
+              "wordId": "rns1-confirm",
+              "surface": "confirm",
+              "gloss": "确认"
+            },
+            {
+              "text": "：原 "
+            },
+            {
+              "wordId": "s85-candidate-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": " 里没有任何一方本人签字，所谓婚约并不自动成立。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“今天不会举行虚假的 "
+            },
+            {
+              "wordId": "s87-candidate-wedding",
+              "surface": "wedding",
+              "gloss": "婚礼"
+            },
+            {
+              "text": "。”陆砚深作出 "
+            },
+            {
+              "wordId": "rns1-decision",
+              "surface": "decision",
+              "gloss": "决定"
+            },
+            {
+              "text": "，又对她说，“两家公司合作可以单独 "
+            },
+            {
+              "wordId": "s85-candidate-discuss",
+              "surface": "discuss",
+              "gloss": "讨论"
+            },
+            {
+              "text": "，你的 "
+            },
+            {
+              "wordId": "rns1-choice",
+              "surface": "choice",
+              "gloss": "选择"
+            },
+            {
+              "text": " 不应该成为付款条件。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "姜知意松了口气。她没有想到，自己第一次在豪门婚礼上赢得的，不是一枚 "
+            },
+            {
+              "wordId": "s87-candidate-ring",
+              "surface": "ring",
+              "gloss": "戒指"
+            },
+            {
+              "text": "，而是有人终于听懂了她的 "
+            },
+            {
+              "wordId": "rns1-request",
+              "surface": "request",
+              "gloss": "请求"
+            },
+            {
+              "text": "：我不愿意。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s82-substitute-bride-tears-contract-ch02",
+      "number": 2,
+      "title": "她拿回自己的方案",
+      "preview": false,
+      "paragraphs": [
+        {
+          "segments": [
+            {
+              "text": "取消婚礼的 "
+            },
+            {
+              "wordId": "s85-candidate-message",
+              "surface": "message",
+              "gloss": "消息"
+            },
+            {
+              "text": " 传出后，姜家的 "
+            },
+            {
+              "wordId": "s87-candidate-company",
+              "surface": "company",
+              "gloss": "公司"
+            },
+            {
+              "text": " 陷入舆论风波。父亲把责任推给姜知意，声称她破坏重要的商业 "
+            },
+            {
+              "wordId": "s85-candidate-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": "，还让亲戚不停给她打 "
+            },
+            {
+              "wordId": "s85-candidate-phone",
+              "surface": "phone",
+              "gloss": "电话"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "姜知意没有在网上争吵。她找到合伙人纪宁，打开工作室最近的项目 "
+            },
+            {
+              "wordId": "rns1-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": "，逐项查看还没付款的 "
+            },
+            {
+              "wordId": "s87-candidate-client",
+              "surface": "client",
+              "gloss": "客户"
+            },
+            {
+              "text": "、可以按期交付的 "
+            },
+            {
+              "wordId": "s87-candidate-design",
+              "surface": "design",
+              "gloss": "设计"
+            },
+            {
+              "text": "，以及下个月要支付的租金 "
+            },
+            {
+              "wordId": "s87-candidate-price",
+              "surface": "price",
+              "gloss": "价格"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“你家里不给钱，我们还能撑多久？”纪宁盯着财务 "
+            },
+            {
+              "wordId": "s87-candidate-report",
+              "surface": "report",
+              "gloss": "报告"
+            },
+            {
+              "text": "。姜知意拿出一张 "
+            },
+            {
+              "wordId": "s85-candidate-plan",
+              "surface": "plan",
+              "gloss": "计划"
+            },
+            {
+              "text": "：“四十天。但我有一个 "
+            },
+            {
+              "wordId": "rns1-option",
+              "surface": "option",
+              "gloss": "选择"
+            },
+            {
+              "text": "：先拿下城市旧书店改造 "
+            },
+            {
+              "wordId": "s87-candidate-project",
+              "surface": "project",
+              "gloss": "项目"
+            },
+            {
+              "text": "，再争取更多 "
+            },
+            {
+              "wordId": "s87-candidate-customer",
+              "surface": "customer",
+              "gloss": "顾客"
+            },
+            {
+              "text": "。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "报名当天，她在招标 "
+            },
+            {
+              "wordId": "rns1-document",
+              "surface": "document",
+              "gloss": "文件"
+            },
+            {
+              "text": " 上看见一个熟悉的名字：陆砚深的 "
+            },
+            {
+              "wordId": "s87-candidate-company",
+              "surface": "company",
+              "gloss": "公司"
+            },
+            {
+              "text": " 也是潜在投资方。姜知意立刻向主办方 "
+            },
+            {
+              "wordId": "rns1-confirm",
+              "surface": "confirm",
+              "gloss": "确认"
+            },
+            {
+              "text": "，自己与他是否存在需要披露的 "
+            },
+            {
+              "wordId": "s87-candidate-relationship",
+              "surface": "relationship",
+              "gloss": "关系"
+            },
+            {
+              "text": "，不让私人误会影响公平 "
+            },
+            {
+              "wordId": "rns1-decision",
+              "surface": "decision",
+              "gloss": "决定"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "工作人员发来正式 "
+            },
+            {
+              "wordId": "s85-candidate-message",
+              "surface": "message",
+              "gloss": "消息"
+            },
+            {
+              "text": "：所有提案由独立评委审核，参与者须签署利益披露 "
+            },
+            {
+              "wordId": "rns1-document",
+              "surface": "document",
+              "gloss": "文件"
+            },
+            {
+              "text": "。姜知意照办，把双方取消婚礼的事实也写进 "
+            },
+            {
+              "wordId": "rns1-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "她熬了两晚修改 "
+            },
+            {
+              "wordId": "s87-candidate-design",
+              "surface": "design",
+              "gloss": "设计"
+            },
+            {
+              "text": "，重新制定旧书店通道的 "
+            },
+            {
+              "wordId": "s85-candidate-plan",
+              "surface": "plan",
+              "gloss": "计划"
+            },
+            {
+              "text": "，为行动不便的读者预留足够空间；纪宁负责 "
+            },
+            {
+              "wordId": "rns1-calculate",
+              "surface": "calculate",
+              "gloss": "计算"
+            },
+            {
+              "text": " 材料用量和采购 "
+            },
+            {
+              "wordId": "s87-candidate-price",
+              "surface": "price",
+              "gloss": "价格"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "提交前，母亲突然到 "
+            },
+            {
+              "wordId": "s87-candidate-office",
+              "surface": "office",
+              "gloss": "办公室"
+            },
+            {
+              "text": "，要求她把方案交给姐姐，说姐姐更适合代表姜家与大 "
+            },
+            {
+              "wordId": "s87-candidate-company",
+              "surface": "company",
+              "gloss": "公司"
+            },
+            {
+              "text": " 合作。姜知意第一次没有 "
+            },
+            {
+              "wordId": "rns1-hesitate",
+              "surface": "hesitate",
+              "gloss": "犹豫"
+            },
+            {
+              "text": "：“这个 "
+            },
+            {
+              "wordId": "s87-candidate-project",
+              "surface": "project",
+              "gloss": "项目"
+            },
+            {
+              "text": " 的原始设计和劳动 "
+            },
+            {
+              "wordId": "rns1-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": " 都在我们工作室。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "她向母亲展示保存完整的设计 "
+            },
+            {
+              "wordId": "rns1-document",
+              "surface": "document",
+              "gloss": "文件"
+            },
+            {
+              "text": "，平静地说：“如果姐姐愿意正式加入 "
+            },
+            {
+              "wordId": "s87-candidate-team",
+              "surface": "team",
+              "gloss": "团队"
+            },
+            {
+              "text": "，可以按能力分工。否则，这不是她可以随便拿走的 "
+            },
+            {
+              "wordId": "s85-candidate-property",
+              "surface": "property",
+              "gloss": "财产"
+            },
+            {
+              "text": "。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "母亲愣住了。姜知意将门打开，继续完成自己的 "
+            },
+            {
+              "wordId": "s85-candidate-plan",
+              "surface": "plan",
+              "gloss": "计划"
+            },
+            {
+              "text": "。婚礼结束了，她的事业才刚开始。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s82-substitute-bride-tears-contract-ch03",
+      "number": 3,
+      "title": "他没有替她作决定",
+      "preview": false,
+      "paragraphs": [
+        {
+          "segments": [
+            {
+              "text": "旧书店改造的现场 "
+            },
+            {
+              "wordId": "s87-candidate-meeting",
+              "surface": "meeting",
+              "gloss": "会议"
+            },
+            {
+              "text": " 安排在周末。陆砚深作为投资方的观察员参加，没有参与评分。他发现姜知意的 "
+            },
+            {
+              "wordId": "s87-candidate-design",
+              "surface": "design",
+              "gloss": "设计"
+            },
+            {
+              "text": " 不华丽，却在每一处细节上解释了维护 "
+            },
+            {
+              "wordId": "s87-candidate-price",
+              "surface": "price",
+              "gloss": "价格"
+            },
+            {
+              "text": " 和人流风险。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "其他团队不断强调自己的 "
+            },
+            {
+              "wordId": "s87-candidate-company",
+              "surface": "company",
+              "gloss": "公司"
+            },
+            {
+              "text": " 资源，姜知意则邀请大家看居民 "
+            },
+            {
+              "wordId": "rns1-interview",
+              "surface": "interview",
+              "gloss": "访谈"
+            },
+            {
+              "text": " 的文字 "
+            },
+            {
+              "wordId": "rns1-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": "。“有位老人说，只想再找到过去那个能安静看书的 "
+            },
+            {
+              "wordId": "s87-candidate-room",
+              "surface": "room",
+              "gloss": "房间"
+            },
+            {
+              "text": "。”她指着入口的 "
+            },
+            {
+              "wordId": "s85-candidate-plan",
+              "surface": "plan",
+              "gloss": "计划"
+            },
+            {
+              "text": "，“我们需要保留这种体验。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "散会后，陆砚深看了看那份详细的 "
+            },
+            {
+              "wordId": "rns1-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": "，问她能不能一起喝杯咖啡。她先 "
+            },
+            {
+              "wordId": "rns1-confirm",
+              "surface": "confirm",
+              "gloss": "确认"
+            },
+            {
+              "text": " 这不是项目 "
+            },
+            {
+              "wordId": "s87-candidate-meeting",
+              "surface": "meeting",
+              "gloss": "会议"
+            },
+            {
+              "text": "，才点头：“如果只谈你我，不讨论招标 "
+            },
+            {
+              "wordId": "s87-candidate-result",
+              "surface": "result",
+              "gloss": "结果"
+            },
+            {
+              "text": "，可以。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "他把一份旧 "
+            },
+            {
+              "wordId": "s87-candidate-report",
+              "surface": "report",
+              "gloss": "报告"
+            },
+            {
+              "text": " 放在桌上：原来取消婚礼以前，他就在调查两家公司之间异常的资金 "
+            },
+            {
+              "wordId": "rns1-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": "，发现有人试图以“联姻”为名，把一笔有争议的 "
+            },
+            {
+              "wordId": "s85-candidate-loan",
+              "surface": "loan",
+              "gloss": "贷款"
+            },
+            {
+              "text": " 转进新成立的空壳公司。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“你为什么不直接告诉我？”姜知意皱眉。陆砚深把 "
+            },
+            {
+              "wordId": "rns1-document",
+              "surface": "document",
+              "gloss": "文件"
+            },
+            {
+              "text": " 收回：“我没有完全 "
+            },
+            {
+              "wordId": "rns1-confirm",
+              "surface": "confirm",
+              "gloss": "确认"
+            },
+            {
+              "text": "，不应该用怀疑去改变你的 "
+            },
+            {
+              "wordId": "rns1-decision",
+              "surface": "decision",
+              "gloss": "决定"
+            },
+            {
+              "text": "。现在我能提供的是合法取得的资料，不是结论。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "姜知意没有把对方当成救星。她找到独立律师，询问应如何 "
+            },
+            {
+              "wordId": "rns1-verify",
+              "surface": "verify",
+              "gloss": "核实"
+            },
+            {
+              "text": " 相关债务资料，再联系家族公司的管理部门，请相关负责人以书面形式 "
+            },
+            {
+              "wordId": "rns1-explain",
+              "surface": "explain",
+              "gloss": "解释"
+            },
+            {
+              "text": " 资金流向。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "父亲接到律师函，气得发来一连串 "
+            },
+            {
+              "wordId": "s85-candidate-message",
+              "surface": "message",
+              "gloss": "消息"
+            },
+            {
+              "text": "：“你居然相信外人？”姜知意只回复：“我相信可核对的 "
+            },
+            {
+              "wordId": "rns1-evidence",
+              "surface": "evidence",
+              "gloss": "证据"
+            },
+            {
+              "text": "，不相信一句话就能让我承担全部 "
+            },
+            {
+              "wordId": "rns1-risk",
+              "surface": "risk",
+              "gloss": "风险"
+            },
+            {
+              "text": "。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "陆砚深听说后没有替她打 "
+            },
+            {
+              "wordId": "s85-candidate-phone",
+              "surface": "phone",
+              "gloss": "电话"
+            },
+            {
+              "text": "，只问：“有需要我配合 "
+            },
+            {
+              "wordId": "rns1-confirm",
+              "surface": "confirm",
+              "gloss": "确认"
+            },
+            {
+              "text": " 的地方吗？”姜知意想了想：“有。你能别把我当作一个需要被拯救的 "
+            },
+            {
+              "wordId": "s87-candidate-project",
+              "surface": "project",
+              "gloss": "项目"
+            },
+            {
+              "text": " 吗？”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“我会记住。”他回答。这是那场取消的 "
+            },
+            {
+              "wordId": "s87-candidate-wedding",
+              "surface": "wedding",
+              "gloss": "婚礼"
+            },
+            {
+              "text": " 以后，他第一次真正对她露出笑容。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s82-substitute-bride-tears-contract-ch04",
+      "number": 4,
+      "title": "豪门的秘密没有那么浪漫",
+      "preview": false,
+      "paragraphs": [
+        {
+          "segments": [
+            {
+              "text": "律师核对完 "
+            },
+            {
+              "wordId": "s85-candidate-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": "，发现姜家所谓“必须联姻才能获得的投资”，实际只是一份附条件的意向 "
+            },
+            {
+              "wordId": "rns1-document",
+              "surface": "document",
+              "gloss": "文件"
+            },
+            {
+              "text": "，没有生效的付款 "
+            },
+            {
+              "wordId": "rns1-promise",
+              "surface": "promise",
+              "gloss": "承诺"
+            },
+            {
+              "text": "。一旦仓促签字，姜知意可能反而卷入不属于自己的财务 "
+            },
+            {
+              "wordId": "rns1-risk",
+              "surface": "risk",
+              "gloss": "风险"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "姜知意把调查 "
+            },
+            {
+              "wordId": "s87-candidate-result",
+              "surface": "result",
+              "gloss": "结果"
+            },
+            {
+              "text": " 与完整 "
+            },
+            {
+              "wordId": "rns1-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": " 带到家庭 "
+            },
+            {
+              "wordId": "s87-candidate-meeting",
+              "surface": "meeting",
+              "gloss": "会议"
+            },
+            {
+              "text": "。她没有录音威胁谁，只要求父亲说明那笔 "
+            },
+            {
+              "wordId": "s85-candidate-loan",
+              "surface": "loan",
+              "gloss": "贷款"
+            },
+            {
+              "text": " 和实际资金流向，并表示涉及责任争议会交由专业人员处理。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "姐姐姜予乔也回来了。她打开 "
+            },
+            {
+              "wordId": "s85-candidate-phone",
+              "surface": "phone",
+              "gloss": "电话"
+            },
+            {
+              "text": "，展示自己过去一个月的 "
+            },
+            {
+              "wordId": "s85-candidate-message",
+              "surface": "message",
+              "gloss": "消息"
+            },
+            {
+              "text": "：她一直明确说不愿意结婚，父母却向两家人宣称已经获得她的 "
+            },
+            {
+              "wordId": "rns1-confirm",
+              "surface": "confirm",
+              "gloss": "确认"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“我不是故意把你推上台。”姐姐低头说，“我以为他们会取消 "
+            },
+            {
+              "wordId": "s87-candidate-wedding",
+              "surface": "wedding",
+              "gloss": "婚礼"
+            },
+            {
+              "text": "。没想到他们把你当作唯一的 "
+            },
+            {
+              "wordId": "rns1-option",
+              "surface": "option",
+              "gloss": "选择"
+            },
+            {
+              "text": "。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "姜知意看着她，很久才 "
+            },
+            {
+              "wordId": "rns1-respond",
+              "surface": "respond",
+              "gloss": "回应"
+            },
+            {
+              "text": "：“你可以拒绝，我也可以拒绝。我们都不是家里的一张 "
+            },
+            {
+              "wordId": "s87-candidate-card",
+              "surface": "card",
+              "gloss": "卡片"
+            },
+            {
+              "text": "，更不是谁的 "
+            },
+            {
+              "wordId": "s85-candidate-property",
+              "surface": "property",
+              "gloss": "财产"
+            },
+            {
+              "text": "。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "父亲仍不甘心，却在律师要求出示账目和签约依据后暂时收起了强硬态度。他发现再也不能只用“我们会破产”这句话，就让两个女儿签下不知道内容的 "
+            },
+            {
+              "wordId": "rns1-document",
+              "surface": "document",
+              "gloss": "文件"
+            },
+            {
+              "text": "。真正需要解决的，是公司的现金流和错误 "
+            },
+            {
+              "wordId": "rns1-decision",
+              "surface": "decision",
+              "gloss": "决定"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "当晚，陆砚深发来一张旧书店的 "
+            },
+            {
+              "wordId": "s87-candidate-picture",
+              "surface": "picture",
+              "gloss": "图片"
+            },
+            {
+              "text": "。他问：“如果改造 "
+            },
+            {
+              "wordId": "s87-candidate-project",
+              "surface": "project",
+              "gloss": "项目"
+            },
+            {
+              "text": " 结束，你愿不愿意和我一起去那里读书？”姜知意盯着 "
+            },
+            {
+              "wordId": "s85-candidate-screen",
+              "surface": "screen",
+              "gloss": "屏幕"
+            },
+            {
+              "text": "，忍不住笑了。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "她回复一条 "
+            },
+            {
+              "wordId": "s85-candidate-message",
+              "surface": "message",
+              "gloss": "消息"
+            },
+            {
+              "text": "：等正式招标 "
+            },
+            {
+              "wordId": "s87-candidate-result",
+              "surface": "result",
+              "gloss": "结果"
+            },
+            {
+              "text": " 出来再约，省得别人说你替我改评分。他很快 "
+            },
+            {
+              "wordId": "rns1-respond",
+              "surface": "respond",
+              "gloss": "回应"
+            },
+            {
+              "text": "：好，我等你的消息。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s82-substitute-bride-tears-contract-ch05",
+      "number": 5,
+      "title": "她自己的名字写在合同上",
+      "preview": false,
+      "paragraphs": [
+        {
+          "segments": [
+            {
+              "text": "项目评审最终 "
+            },
+            {
+              "wordId": "s87-candidate-result",
+              "surface": "result",
+              "gloss": "结果"
+            },
+            {
+              "text": " 公布，姜知意与纪宁的工作室获得第一名。没有人给她走后门，评委的 "
+            },
+            {
+              "wordId": "s87-candidate-report",
+              "surface": "report",
+              "gloss": "报告"
+            },
+            {
+              "text": " 明确说明，方案的维护成本和使用体验优于其他 "
+            },
+            {
+              "wordId": "s87-candidate-design",
+              "surface": "design",
+              "gloss": "设计"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "签约前，双方举行正式 "
+            },
+            {
+              "wordId": "s87-candidate-meeting",
+              "surface": "meeting",
+              "gloss": "会议"
+            },
+            {
+              "text": "。陆砚深所在的投资 "
+            },
+            {
+              "wordId": "s87-candidate-company",
+              "surface": "company",
+              "gloss": "公司"
+            },
+            {
+              "text": " 只提供资金支持，现场管理由第三方承担。姜知意逐项核对 "
+            },
+            {
+              "wordId": "s85-candidate-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": "、交付 "
+            },
+            {
+              "wordId": "rns1-schedule",
+              "surface": "schedule",
+              "gloss": "时间表"
+            },
+            {
+              "text": " 和付款 "
+            },
+            {
+              "wordId": "s87-candidate-price",
+              "surface": "price",
+              "gloss": "价格"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "父亲忽然提出要以姜家 "
+            },
+            {
+              "wordId": "s87-candidate-company",
+              "surface": "company",
+              "gloss": "公司"
+            },
+            {
+              "text": " 名义签字：“外面的人更 "
+            },
+            {
+              "wordId": "rns1-trust",
+              "surface": "trust",
+              "gloss": "信任"
+            },
+            {
+              "text": " 大公司，你们的工作室太小。”姜知意拿出所有权 "
+            },
+            {
+              "wordId": "rns1-document",
+              "surface": "document",
+              "gloss": "文件"
+            },
+            {
+              "text": "：“参加招标的是我们， "
+            },
+            {
+              "wordId": "s87-candidate-design",
+              "surface": "design",
+              "gloss": "设计"
+            },
+            {
+              "text": " 的创作者也是我们。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "她没有羞辱父亲，只给出专业的 "
+            },
+            {
+              "wordId": "rns1-option",
+              "surface": "option",
+              "gloss": "选择"
+            },
+            {
+              "text": "：如果姜家有合适供应商，可以参加公开采购；但不能把女儿的劳动 "
+            },
+            {
+              "wordId": "rns1-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": " 改成别人的 "
+            },
+            {
+              "wordId": "s87-candidate-result",
+              "surface": "result",
+              "gloss": "结果"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "纪宁在桌下偷偷握住她的手。那一刻姜知意终于 "
+            },
+            {
+              "wordId": "rns1-notice",
+              "surface": "notice",
+              "gloss": "注意到"
+            },
+            {
+              "text": "，自己不必嫁给任何人，也能用正式的 "
+            },
+            {
+              "wordId": "s85-candidate-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": " 获得一个值得骄傲的 "
+            },
+            {
+              "wordId": "s87-candidate-project",
+              "surface": "project",
+              "gloss": "项目"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "晚饭时，陆砚深来祝贺。姜知意问他：“你真的没有想过，把婚约重新当成合作 "
+            },
+            {
+              "wordId": "s85-candidate-plan",
+              "surface": "plan",
+              "gloss": "计划"
+            },
+            {
+              "text": "？”他摇头：“"
+            },
+            {
+              "wordId": "s87-candidate-marriage",
+              "surface": "marriage",
+              "gloss": "婚姻"
+            },
+            {
+              "text": " 不应该是获得 "
+            },
+            {
+              "wordId": "s87-candidate-client",
+              "surface": "client",
+              "gloss": "客户"
+            },
+            {
+              "text": " 或资金的条件。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“那我们可以先从普通朋友开始。”她说，“如果相处愉快，再考虑其他 "
+            },
+            {
+              "wordId": "rns1-option",
+              "surface": "option",
+              "gloss": "选择"
+            },
+            {
+              "text": "。重要的 "
+            },
+            {
+              "wordId": "rns1-decision",
+              "surface": "decision",
+              "gloss": "决定"
+            },
+            {
+              "text": " 都要双方愿意。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "陆砚深笑着伸出手：“这是一个我愿意认真遵守的 "
+            },
+            {
+              "wordId": "rns1-promise",
+              "surface": "promise",
+              "gloss": "承诺"
+            },
+            {
+              "text": "。”姜知意握了握，第一次感到自己的 "
+            },
+            {
+              "wordId": "rns1-future",
+              "surface": "future",
+              "gloss": "未来"
+            },
+            {
+              "text": " 没有被任何人提前安排。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s82-substitute-bride-tears-contract-ch06",
+      "number": 6,
+      "title": "不必替谁嫁过去",
+      "preview": false,
+      "paragraphs": [
+        {
+          "segments": [
+            {
+              "text": "几个月后，旧书店重新营业。姜知意和纪宁带着 "
+            },
+            {
+              "wordId": "s87-candidate-team",
+              "surface": "team",
+              "gloss": "团队"
+            },
+            {
+              "text": " 检查最后一批设备，把验收 "
+            },
+            {
+              "wordId": "s87-candidate-report",
+              "surface": "report",
+              "gloss": "报告"
+            },
+            {
+              "text": " 和维护 "
+            },
+            {
+              "wordId": "rns1-schedule",
+              "surface": "schedule",
+              "gloss": "时间表"
+            },
+            {
+              "text": " 交给书店负责人，每一项都留下完整 "
+            },
+            {
+              "wordId": "rns1-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "姜家的经营危机也没有突然消失。父亲与债权人按照法律程序协商新的还款 "
+            },
+            {
+              "wordId": "s85-candidate-plan",
+              "surface": "plan",
+              "gloss": "计划"
+            },
+            {
+              "text": "，需要承担的 "
+            },
+            {
+              "wordId": "s85-candidate-debt",
+              "surface": "debt",
+              "gloss": "债务"
+            },
+            {
+              "text": " 仍在处理。姜知意偶尔提供专业 "
+            },
+            {
+              "wordId": "s87-candidate-design",
+              "surface": "design",
+              "gloss": "设计"
+            },
+            {
+              "text": " 建议，但不再替任何人签没有看懂的 "
+            },
+            {
+              "wordId": "s85-candidate-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "姐姐姜予乔找到自己的 "
+            },
+            {
+              "wordId": "s87-candidate-job",
+              "surface": "job",
+              "gloss": "工作"
+            },
+            {
+              "text": "，开始学习独立管理 "
+            },
+            {
+              "wordId": "rns1-account",
+              "surface": "account",
+              "gloss": "账号"
+            },
+            {
+              "text": " 和 "
+            },
+            {
+              "wordId": "s85-candidate-money",
+              "surface": "money",
+              "gloss": "钱"
+            },
+            {
+              "text": "。她给妹妹发来一条 "
+            },
+            {
+              "wordId": "s85-candidate-message",
+              "surface": "message",
+              "gloss": "消息"
+            },
+            {
+              "text": "：以后如果家里再拿结婚说事，我们谁都不用 "
+            },
+            {
+              "wordId": "rns1-hesitate",
+              "surface": "hesitate",
+              "gloss": "犹豫"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "陆砚深带着一本旧小说走进书店，问姜知意有没有时间一起喝咖啡。他没有礼物，也没有让任何 "
+            },
+            {
+              "wordId": "s87-candidate-manager",
+              "surface": "manager",
+              "gloss": "经理"
+            },
+            {
+              "text": " 安排昂贵的 "
+            },
+            {
+              "wordId": "s87-candidate-room",
+              "surface": "room",
+              "gloss": "房间"
+            },
+            {
+              "text": "，只有一本他想分享的书。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“今天没什么重要 "
+            },
+            {
+              "wordId": "s87-candidate-meeting",
+              "surface": "meeting",
+              "gloss": "会议"
+            },
+            {
+              "text": " 吧？”姜知意开玩笑。陆砚深晃了晃 "
+            },
+            {
+              "wordId": "s85-candidate-phone",
+              "surface": "phone",
+              "gloss": "电话"
+            },
+            {
+              "text": "：“我的 "
+            },
+            {
+              "wordId": "rns1-schedule",
+              "surface": "schedule",
+              "gloss": "时间表"
+            },
+            {
+              "text": " 空着，如果你想改 "
+            },
+            {
+              "wordId": "s85-candidate-plan",
+              "surface": "plan",
+              "gloss": "计划"
+            },
+            {
+              "text": "，现在还来得及。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "两人在靠窗的位置坐下，聊起书、工作和未来的 "
+            },
+            {
+              "wordId": "rns1-choice",
+              "surface": "choice",
+              "gloss": "选择"
+            },
+            {
+              "text": "。姜知意发现，自己喜欢的不是对方拥有多少 "
+            },
+            {
+              "wordId": "s85-candidate-property",
+              "surface": "property",
+              "gloss": "财产"
+            },
+            {
+              "text": "，而是他愿意听她完整 "
+            },
+            {
+              "wordId": "rns1-explain",
+              "surface": "explain",
+              "gloss": "解释"
+            },
+            {
+              "text": " 一个想法。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "走出书店时，陆砚深问：“当初你撕掉那份婚约，会不会 "
+            },
+            {
+              "wordId": "rns1-regret",
+              "surface": "regret",
+              "gloss": "遗憾"
+            },
+            {
+              "text": "？”姜知意看着身后亮起的灯，轻轻摇头：“我拒绝的不是你，而是别人替我们写好的 "
+            },
+            {
+              "wordId": "rns1-decision",
+              "surface": "decision",
+              "gloss": "决定"
+            },
+            {
+              "text": "。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "她伸出手，主动握住他的手：“如果以后真的有 "
+            },
+            {
+              "wordId": "s87-candidate-wedding",
+              "surface": "wedding",
+              "gloss": "婚礼"
+            },
+            {
+              "text": "，一定是我们两个人自己作的 "
+            },
+            {
+              "wordId": "rns1-choice",
+              "surface": "choice",
+              "gloss": "选择"
+            },
+            {
+              "text": "。没有隐藏的 "
+            },
+            {
+              "wordId": "s85-candidate-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": "，也没有交换条件。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "陆砚深点头：“我 "
+            },
+            {
+              "wordId": "rns1-promise",
+              "surface": "promise",
+              "gloss": "承诺"
+            },
+            {
+              "text": "。”那一刻，姜知意终于明白，所谓豪门故事真正的结局，不是嫁给谁，而是可以自己决定要不要走进那扇门。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
