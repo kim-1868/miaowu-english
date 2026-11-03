@@ -12,7 +12,7 @@ test("S73 public Rainy Night page contains only cover and entitlement informatio
  const html=buildRainyNightPublicSample();
  assert.match(html,/<title>《雨夜档案》· 四级会员专享/);
  assert.match(html,/全部为四级会员专享内容/);
- assert.match(html,/rainy-night-cover-v2\\.svg/);
+ assert.ok(html.includes("rainy-night-cover-v2.svg"));
  assert.equal((html.match(/<strong lang="en">/g)||[]).length,0);
  assert.equal((html.match(/<article id="chapter">/g)||[]).length,0);
  for(const chapter of bundle.chapters){
