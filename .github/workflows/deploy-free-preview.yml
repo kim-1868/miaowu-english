@@ -1,9 +1,9 @@
 # Operational dispatcher intentionally lives on repository default main branch.
 # The production source remains on the separate, release-reviewed branch.
-# Home V1.3 cat storybook and solid paw reminder: CI green; manual-only production deployment retained.
+# Home V1.4 reference watercolor hero and four category illustrations: CI green; manual-only production deployment retained.
 # No database writes and no private manuscript assets.
 name: Deploy Miaowu CET4 members-only site (production Worker)
-run-name: CET4 protected Worker · Home V1.3 cat scene and paw reminder · ${{ github.actor }}
+run-name: CET4 protected Worker · Home V1.4 watercolor illustration replacement · ${{ github.actor }}
 
 on:
   workflow_dispatch:
@@ -29,14 +29,14 @@ jobs:
       - name: Checkout fixed, reviewed release (not default main)
         uses: actions/checkout@v4
         with:
-          ref: e0855a4905e8945e151ca902c6584827ef97dc4f
+          ref: bdbba74dfa0947e463dc84b7a20f612242dab78a
           persist-credentials: false
 
       - name: Guard exact release SHA and target config
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "e0855a4905e8945e151ca902c6584827ef97dc4f"
+          test "$(git rev-parse HEAD)" = "bdbba74dfa0947e463dc84b7a20f612242dab78a"
           grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
           grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
           test ! -e private-output
