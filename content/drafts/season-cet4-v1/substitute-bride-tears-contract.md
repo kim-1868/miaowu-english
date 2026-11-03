@@ -17,7 +17,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 姜知意把 [[card]] 放回桌上。“你们不能把一个成年人的 [[marriage]] 当作可以替换的 [[project]]。我还没看过任何正式 [[document]]，更没有给过 [[promise]]。”
 
-父亲拿出公司的财务 [[report]]：“如果婚礼取消，对方就撤回投资，我们的 [[company]] 会破产。”他把全部 [[risk]] 都推到她面前，甚至要求她马上交出 [[signature]]。
+父亲拿出公司的财务 [[report]]：“如果婚礼取消，对方就撤回投资，我们的 [[company]] 会破产。”他把全部 [[risk]] 都推到她面前，甚至要求她马上在合同上留下 [[signature]]。
 
 姜知意抬起 [[phone]]，拍下桌上全部 [[document]]。“公司财务是经营者的 [[responsibility]]，不是我的婚姻义务。我愿意帮忙寻找 [[option]]，但不会靠欺骗新郎来换投资。”
 
@@ -33,7 +33,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 取消婚礼的 [[message]] 传出后，姜家的 [[company]] 陷入舆论风波。父亲把责任推给姜知意，声称她破坏重要的商业 [[contract]]，还让亲戚不停给她打 [[phone]]。
 
-姜知意没有在网上争吵。她找到合伙人纪宁，打开工作室最近的项目 [[record]]，逐项查看未付款的 [[client]]、可交付的 [[design]] 和下个月的租金 [[price]]。
+姜知意没有在网上争吵。她找到合伙人纪宁，打开工作室最近的项目 [[record]]，逐项查看还没付款的 [[client]]、可以按期交付的 [[design]]，以及下个月要支付的租金 [[price]]。
 
 “你家里不给钱，我们还能撑多久？”纪宁盯着财务 [[report]]。姜知意拿出一张 [[plan]]：“四十天。但我有一个 [[option]]：先拿下城市旧书店改造 [[project]]，再争取更多 [[customer]]。”
 
@@ -41,7 +41,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 工作人员发来正式 [[message]]：所有提案由独立评委审核，参与者须签署利益披露 [[document]]。姜知意照办，把双方取消婚礼的事实也写进 [[record]]。
 
-她熬了两晚修改 [[design]]，把旧书店狭窄的通道重新 [[plan]]，为行动不便的读者预留足够空间；纪宁负责 [[calculate]] 材料和施工 [[price]]。
+她熬了两晚修改 [[design]]，重新制定旧书店通道的 [[plan]]，为行动不便的读者预留足够空间；纪宁负责 [[calculate]] 材料用量和采购 [[price]]。
 
 提交前，母亲突然到 [[office]]，要求她把方案交给姐姐，说姐姐更适合代表姜家与大 [[company]] 合作。姜知意第一次没有 [[hesitate]]：“这个 [[project]] 的原始设计和劳动 [[record]] 都在我们工作室。”
 
@@ -61,7 +61,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 “你为什么不直接告诉我？”姜知意皱眉。陆砚深把 [[document]] 收回：“我没有完全 [[confirm]]，不应该用怀疑去改变你的 [[decision]]。现在我能提供的是合法取得的资料，不是结论。”
 
-姜知意没有把对方当成救星。她找到独立律师，询问应如何 [[verify]] 相关债务资料，再联系家族公司的正式管理部门请求书面 [[explain]]。
+姜知意没有把对方当成救星。她找到独立律师，询问应如何 [[verify]] 相关债务资料，再联系家族公司的管理部门，请相关负责人以书面形式 [[explain]] 资金流向。
 
 父亲接到律师函，气得发来一连串 [[message]]：“你居然相信外人？”姜知意只回复：“我相信可核对的 [[evidence]]，不相信一句话就能让我承担全部 [[risk]]。”
 
@@ -81,7 +81,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 姜知意看着她，很久才 [[respond]]：“你可以拒绝，我也可以拒绝。我们都不是家里的一张 [[card]]，更不是谁的 [[property]]。”
 
-父亲终于放下了强硬态度。他发现再也不能用“我们会破产”这句话，就让两个女儿签下不知道内容的 [[document]]。真正需要解决的，是公司的现金流和错误 [[decision]]。
+父亲仍不甘心，却在律师要求出示账目和签约依据后暂时收起了强硬态度。他发现再也不能只用“我们会破产”这句话，就让两个女儿签下不知道内容的 [[document]]。真正需要解决的，是公司的现金流和错误 [[decision]]。
 
 当晚，陆砚深发来一张旧书店的 [[picture]]。他问：“如果改造 [[project]] 结束，你愿不愿意和我一起去那里读书？”姜知意盯着 [[screen]]，忍不住笑了。
 
