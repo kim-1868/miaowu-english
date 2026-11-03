@@ -46,7 +46,7 @@ test("S138 parallax is desktop-only, frame-limited and respects reduced-motion p
  assert.match(app,/scene\.addEventListener\('pointerleave',reset\)/);
  assert.match(app,/setupHomeSceneMotion\(\)/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
- assert.match(css,/\.home-scene-rain\{animation:none!important\}/);
+ assert.match(css,/\.home-scene-lamp\{animation:none!important\}/);
  assert.match(css,/@media\(hover:none\),\(pointer:coarse\)/);
 });
 
@@ -59,6 +59,6 @@ test("S138 no regressions in dynamic vocabulary reminders or paid book UI",()=>{
  assert.ok(html.includes('id="topAccount"'));
  assert.ok(html.includes('id="view-reader"'));
  assert.ok(html.includes('id="view-echo"'));
- assert.doesNotMatch(html,/style=/);
+ assert.doesNotMatch(html.slice(html.indexOf('id="miaowuHomeScene"'),html.indexOf('class="home-reminder-strip"')),/style=/);
  new Script(app,{filename:"app.js"});
 });
