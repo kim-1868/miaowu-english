@@ -130,19 +130,44 @@ export function buildChapters2to12DensityCandidate(){
   let replacements=0,underfilled=0,sourceMentions=0;
   const paragraphs=original.paragraphs.map((p,pi)=>{
    const source=packText(p);
-   let draft=source;
    const originalWords=(source.match(TOKEN)||[]).length;
    const seen=new Set([...source.matchAll(TOKEN)].map(m=>m[1]));
    const added=[];
-   for(const [from,to] of rules){
-    if((draft.match(TOKEN)||[]).length>=6)break;
-    const inserted=[...to.matchAll(TOKEN)].map(m=>m[1]);
-    if(inserted.some(w=>seen.has(w)))continue;
-    const next=replaceOnlyPlain(draft,from,to);
-    if(next===draft)continue;
-    draft=next;replacements+=inserted.length;
-    inserted.forEach(w=>{seen.add(w);added.push(w)});
+   // Spread word exposures across sentences rather than concentrating all in
+   // one introductory clause. The review gate still checks human readability.
+   const sentences=source.split(/(?<=[。！？])/u);
+   const countIn=t=>(t.match(TOKEN)||[]).length;
+   const total=()=>sentences.reduce((n,t)=>n+countIn(t),0);
+   const insertIn=(i)=>{
+    if(total()>=6)return false;
+    for(const [from,to] of rules){
+     const inserted=[...to.matchAll(TOKEN)].map(m=>m[1]);
+     if(inserted.some(w=>seen.has(w))||total()+inserted.length>6)continue;
+     const next=replaceOnlyPlain(sentences[i],from,to);
+     if(next===sentences[i])continue;
+     sentences[i]=next;replacements+=inserted.length;
+     inserted.forEach(w=>{seen.add(w);added.push(w)});
+     return true;
+    }
+    return false;
+   };
+   // First, cover substantive sentences that would otherwise have zero or
+   // one word exposure (at least 25 Chinese characters each).
+   for(let i=0;i<sentences.length;i++){
+    if(hanCount(sentences[i])<25)continue;
+    while(countIn(sentences[i])<2&&total()<6&&insertIn(i)){}
    }
+   // Then fill paragraph minimum; prefer long underexposed sentences.
+   for(let attempt=0;attempt<6&&total()<4;attempt++){
+    const order=sentences.map((t,i)=>({i,words:countIn(t),han:hanCount(t)}))
+     .sort((a,b)=>(a.words-b.words)||(b.han-a.han));
+    let changed=false;
+    for(const item of order){
+     if(insertIn(item.i)){changed=true;break;}
+    }
+    if(!changed)break;
+   }
+   const draft=sentences.join("");
    const next=segmentize(draft,byName);
    const wordCount=next.segments.filter(x=>x.wordId).length;
    if(wordCount<3)underfilled++;
