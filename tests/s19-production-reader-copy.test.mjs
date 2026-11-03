@@ -19,7 +19,7 @@ test("S19 manual recovery UI never collects passwords or creates self-service cr
  assert.match(app,/function showManualRecovery\(\)/);
  assert.match(app,/忘记密码？人工找回/);
  assert.doesNotMatch(app,/function showRecoverAccount\(\)/);
- assert.doesNotMatch(app,/serverRequest\('\\/api\\/auth\\/recover','POST'/);
+ assert.ok(!app.includes("serverRequest('/api/auth/recover','POST'"));
  assert.ok(!app.includes('localStorage.setItem("recoveryCode"'));
  assert.ok(!app.includes("location.search='?recoveryCode"));
 });
