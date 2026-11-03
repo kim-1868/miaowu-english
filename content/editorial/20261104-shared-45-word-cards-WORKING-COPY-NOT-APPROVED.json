@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "ORIGINAL_EXAMPLES_DRAFT_ONLY_IPA_AND_EXAM_LEVEL_UNVERIFIED",
+  "status": "IPA_SOURCE_REFERENCES_PRESENT_BUT_EXAM_LEVEL_AND_SENSE_FINAL_SIGNOFF_PENDING",
   "wordCount": 45,
   "words": [
     {
@@ -8,8 +8,8 @@
       "headword": "bank",
       "meaningZh": "银行",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈbæŋk/",
+      "phoneticUs": "/ˈbæŋk/",
       "exampleEn": "The bank approved the loan after reviewing the documents.",
       "exampleZh": "银行审核文件后批准了贷款。",
       "collocations": [
@@ -18,15 +18,15 @@
           "zh": "开设银行账户"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s85-candidate-contract",
       "headword": "contract",
       "meaningZh": "合同；契约",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈkɒntrækt/",
+      "phoneticUs": "/ˈkɑnˌtɹækt/",
       "exampleEn": "She read every clause of the contract before signing.",
       "exampleZh": "她签字前阅读了合同的每一项条款。",
       "collocations": [
@@ -35,15 +35,15 @@
           "zh": "签署合同"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s85-candidate-dawn",
       "headword": "dawn",
       "meaningZh": "黎明；破晓时分",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈdɔːn/",
+      "phoneticUs": "/ˈdɔn/",
       "exampleEn": "At dawn, the street outside the studio was still quiet.",
       "exampleZh": "黎明时，工作室外的街道仍然安静。",
       "collocations": [
@@ -52,15 +52,15 @@
           "zh": "在黎明时"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s85-candidate-debt",
       "headword": "debt",
       "meaningZh": "债务；欠款",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈdet/",
+      "phoneticUs": "/ˈdɛt/",
       "exampleEn": "The company needed a clear plan to repay its debt.",
       "exampleZh": "公司需要明确的计划来偿还债务。",
       "collocations": [
@@ -69,15 +69,15 @@
           "zh": "偿还债务"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s85-candidate-discuss",
       "headword": "discuss",
       "meaningZh": "讨论；商议",
       "partOfSpeech": "v.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/dɪˈskʌs/",
+      "phoneticUs": "/dɪˈskəs/",
       "exampleEn": "They agreed to discuss the revised schedule together.",
       "exampleZh": "他们同意一起讨论修改后的日程。",
       "collocations": [
@@ -86,15 +86,15 @@
           "zh": "讨论问题"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s85-candidate-hospital",
       "headword": "hospital",
       "meaningZh": "医院",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈhɒspɪtəl/",
+      "phoneticUs": "/ˈhɑˌspɪtəɫ/",
       "exampleEn": "She went to the hospital to visit her sister.",
       "exampleZh": "她去医院探望姐姐。",
       "collocations": [
@@ -103,15 +103,15 @@
           "zh": "去医院"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s85-candidate-loan",
       "headword": "loan",
       "meaningZh": "贷款；借款",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈləʊn/",
+      "phoneticUs": "/ˈɫoʊn/",
       "exampleEn": "The studio applied for a bank loan to buy equipment.",
       "exampleZh": "工作室申请银行贷款以购买设备。",
       "collocations": [
@@ -120,15 +120,15 @@
           "zh": "申请贷款"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s85-candidate-message",
       "headword": "message",
       "meaningZh": "消息；信息",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈmesɪdʒ/",
+      "phoneticUs": "/ˈmɛsɪdʒ/",
       "exampleEn": "A new message appeared on her phone.",
       "exampleZh": "她的手机收到一条新消息。",
       "collocations": [
@@ -137,15 +137,15 @@
           "zh": "发送消息"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s85-candidate-money",
       "headword": "money",
       "meaningZh": "钱；款项",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈmʌni/",
+      "phoneticUs": "/ˈməni/",
       "exampleEn": "The money belonged to the company, not to him.",
       "exampleZh": "这笔钱属于公司，而不是他个人。",
       "collocations": [
@@ -154,15 +154,15 @@
           "zh": "存钱"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s85-candidate-pen",
       "headword": "pen",
       "meaningZh": "钢笔；笔",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈpen/",
+      "phoneticUs": "/ˈpɛn/",
       "exampleEn": "She signed the final page with a black pen.",
       "exampleZh": "她用一支黑色钢笔签署了最后一页。",
       "collocations": [
@@ -171,15 +171,15 @@
           "zh": "拿起笔"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s85-candidate-phone",
       "headword": "phone",
       "meaningZh": "手机；电话",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈfəʊn/",
+      "phoneticUs": "/ˈfoʊn/",
       "exampleEn": "Her phone rang during the meeting.",
       "exampleZh": "她的手机在会议期间响了。",
       "collocations": [
@@ -188,15 +188,15 @@
           "zh": "接电话"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s85-candidate-plan",
       "headword": "plan",
       "meaningZh": "计划；方案",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈplæn/",
+      "phoneticUs": "/ˈpɫæn/",
       "exampleEn": "They prepared a new plan for the project.",
       "exampleZh": "他们为这个项目准备了新计划。",
       "collocations": [
@@ -205,15 +205,15 @@
           "zh": "制订计划"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s85-candidate-property",
       "headword": "property",
       "meaningZh": "财产；资产",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈprɒpəti/",
+      "phoneticUs": "/ˈpɹɑpɝti/",
       "exampleEn": "The lawyer checked who legally owned the property.",
       "exampleZh": "律师核查了这处财产的合法所有人。",
       "collocations": [
@@ -222,15 +222,15 @@
           "zh": "拥有财产"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s85-candidate-remember",
       "headword": "remember",
       "meaningZh": "记得；记住",
       "partOfSpeech": "v.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/rɪˈmembə/",
+      "phoneticUs": "/ɹɪˈmɛmbɝ/",
       "exampleEn": "She remembered the promise she had made.",
       "exampleZh": "她记起了自己曾作出的承诺。",
       "collocations": [
@@ -239,15 +239,15 @@
           "zh": "记得一个承诺"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s85-candidate-screen",
       "headword": "screen",
       "meaningZh": "屏幕",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈskriːn/",
+      "phoneticUs": "/ˈskɹin/",
       "exampleEn": "The results appeared on the large screen.",
       "exampleZh": "结果显示在大屏幕上。",
       "collocations": [
@@ -256,15 +256,15 @@
           "zh": "电脑屏幕"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-agreement",
       "headword": "agreement",
       "meaningZh": "协议；约定",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/əˈɡriːmənt/",
+      "phoneticUs": "/əˈɡɹimənt/",
       "exampleEn": "Both teams reached an agreement after the meeting.",
       "exampleZh": "双方团队在会议后达成了协议。",
       "collocations": [
@@ -273,15 +273,15 @@
           "zh": "达成协议"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-client",
       "headword": "client",
       "meaningZh": "客户；委托方",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈklaɪənt/",
+      "phoneticUs": "/ˈkɫaɪənt/",
       "exampleEn": "The client asked for a written progress report.",
       "exampleZh": "客户要求提交一份书面进度报告。",
       "collocations": [
@@ -290,15 +290,15 @@
           "zh": "会见客户"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-company",
       "headword": "company",
       "meaningZh": "公司",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈkʌmpəni/",
+      "phoneticUs": "/ˈkəmpəˌni/",
       "exampleEn": "The company agreed to review the proposal.",
       "exampleZh": "公司同意重新审核这份提案。",
       "collocations": [
@@ -307,15 +307,15 @@
           "zh": "创办公司"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-customer",
       "headword": "customer",
       "meaningZh": "顾客",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈkʌstəmə/",
+      "phoneticUs": "/ˈkəstəmɝ/",
       "exampleEn": "Every customer could return the empty bottle.",
       "exampleZh": "每位顾客都可以归还空瓶。",
       "collocations": [
@@ -324,15 +324,15 @@
           "zh": "客户服务"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-design",
       "headword": "design",
       "meaningZh": "设计；设计作品",
       "partOfSpeech": "n./v.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/dɪˈzaɪn/",
+      "phoneticUs": "/dɪˈzaɪn/",
       "exampleEn": "Her design made the package easier to recycle.",
       "exampleZh": "她的设计让包装更容易回收。",
       "collocations": [
@@ -341,15 +341,15 @@
           "zh": "包装设计"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-information",
       "headword": "information",
       "meaningZh": "信息",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˌɪnfəˈmeɪʃən/",
+      "phoneticUs": "/ˌɪnfɝˈmeɪʃən/",
       "exampleEn": "The report contained important information.",
       "exampleZh": "报告中包含重要信息。",
       "collocations": [
@@ -358,15 +358,15 @@
           "zh": "分享信息"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-manager",
       "headword": "manager",
       "meaningZh": "经理；负责人",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈmænɪdʒə/",
+      "phoneticUs": "/ˈmænɪdʒɝ/",
       "exampleEn": "The manager asked for another safety test.",
       "exampleZh": "经理要求再进行一次安全测试。",
       "collocations": [
@@ -375,15 +375,15 @@
           "zh": "项目经理"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-market",
       "headword": "market",
       "meaningZh": "市场",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈmɑːkɪt/",
+      "phoneticUs": "/ˈmɑɹkɪt/",
       "exampleEn": "The product entered the market in autumn.",
       "exampleZh": "这款产品于秋季进入市场。",
       "collocations": [
@@ -392,15 +392,15 @@
           "zh": "进入市场"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-meeting",
       "headword": "meeting",
       "meaningZh": "会议",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈmiːtɪŋ/",
+      "phoneticUs": "/ˈmitɪŋ/",
       "exampleEn": "The meeting began at ten o'clock.",
       "exampleZh": "会议在十点开始。",
       "collocations": [
@@ -409,15 +409,15 @@
           "zh": "参加会议"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-model",
       "headword": "model",
       "meaningZh": "模型",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈmɒdəl/",
+      "phoneticUs": "/ˈmɑdəɫ/",
       "exampleEn": "The team built a small model before production.",
       "exampleZh": "团队在生产前制作了一个小模型。",
       "collocations": [
@@ -426,15 +426,15 @@
           "zh": "制作模型"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-office",
       "headword": "office",
       "meaningZh": "办公室",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈɒfɪs/",
+      "phoneticUs": "/ˈɔfɪs/",
       "exampleEn": "She arrived at the office before everyone else.",
       "exampleZh": "她比其他人都早到办公室。",
       "collocations": [
@@ -443,15 +443,15 @@
           "zh": "离开办公室"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-partner",
       "headword": "partner",
       "meaningZh": "合伙人；伙伴",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈpɑːtnə/",
+      "phoneticUs": "/ˈpɑɹtnɝ/",
       "exampleEn": "Her business partner checked the budget.",
       "exampleZh": "她的生意合伙人核对了预算。",
       "collocations": [
@@ -460,15 +460,15 @@
           "zh": "商业合伙人"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-picture",
       "headword": "picture",
       "meaningZh": "图片",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈpɪktʃə/",
+      "phoneticUs": "/ˈpɪktʃɝ/",
       "exampleEn": "She sent a picture of the completed project.",
       "exampleZh": "她发了一张已完成项目的照片。",
       "collocations": [
@@ -477,15 +477,15 @@
           "zh": "拍照片"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-price",
       "headword": "price",
       "meaningZh": "价格",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈpraɪs/",
+      "phoneticUs": "/ˈpɹaɪs/",
       "exampleEn": "The new material increased the price.",
       "exampleZh": "新材料提高了价格。",
       "collocations": [
@@ -494,15 +494,15 @@
           "zh": "以合理价格"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-problem",
       "headword": "problem",
       "meaningZh": "问题",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈprɒbləm/",
+      "phoneticUs": "/ˈpɹɑbɫəm/",
       "exampleEn": "They found a problem with the first sample.",
       "exampleZh": "他们发现第一份样品存在问题。",
       "collocations": [
@@ -511,15 +511,15 @@
           "zh": "解决问题"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-project",
       "headword": "project",
       "meaningZh": "项目",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈprɒdʒekt/",
+      "phoneticUs": "/ˈpɹɑdʒɛkt/",
       "exampleEn": "The project required two more weeks.",
       "exampleZh": "这个项目还需要两周时间。",
       "collocations": [
@@ -528,15 +528,15 @@
           "zh": "完成项目"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-report",
       "headword": "report",
       "meaningZh": "报告",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/rɪˈpɔːt/",
+      "phoneticUs": "/ɹɪˈpɔɹt/",
       "exampleEn": "The engineer submitted a report on the test.",
       "exampleZh": "工程师提交了一份测试报告。",
       "collocations": [
@@ -545,15 +545,15 @@
           "zh": "撰写报告"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-result",
       "headword": "result",
       "meaningZh": "结果",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/rɪˈzʌlt/",
+      "phoneticUs": "/ɹɪˈzəɫt/",
       "exampleEn": "The final result surprised the judges.",
       "exampleZh": "最终结果让评委们感到意外。",
       "collocations": [
@@ -562,15 +562,15 @@
           "zh": "测试结果"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-structure",
       "headword": "structure",
       "meaningZh": "结构",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈstrʌktʃə/",
+      "phoneticUs": "/ˈstɹəktʃɝ/",
       "exampleEn": "The new structure made the package stronger.",
       "exampleZh": "新结构使包装更加结实。",
       "collocations": [
@@ -579,15 +579,15 @@
           "zh": "清晰的结构"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-team",
       "headword": "team",
       "meaningZh": "团队",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈtiːm/",
+      "phoneticUs": "/ˈtim/",
       "exampleEn": "The team discussed the risks together.",
       "exampleZh": "团队一起讨论了风险。",
       "collocations": [
@@ -596,15 +596,15 @@
           "zh": "作为团队合作"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-time",
       "headword": "time",
       "meaningZh": "时间",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈtaɪm/",
+      "phoneticUs": "/ˈtaɪm/",
       "exampleEn": "She needed more time to review the document.",
       "exampleZh": "她需要更多时间审核文件。",
       "collocations": [
@@ -613,15 +613,15 @@
           "zh": "准时"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-card",
       "headword": "card",
       "meaningZh": "卡片；银行卡",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈkɑːd/",
+      "phoneticUs": "/ˈkɑɹd/",
       "exampleEn": "She returned the bank card to her mother.",
       "exampleZh": "她把银行卡还给了母亲。",
       "collocations": [
@@ -630,15 +630,15 @@
           "zh": "银行卡"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-coat",
       "headword": "coat",
       "meaningZh": "外套",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈkəʊt/",
+      "phoneticUs": "/ˈkoʊt/",
       "exampleEn": "He wore a dark coat to the meeting.",
       "exampleZh": "他穿着一件深色外套参加会议。",
       "collocations": [
@@ -647,15 +647,15 @@
           "zh": "穿上外套"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-dress",
       "headword": "dress",
       "meaningZh": "连衣裙；礼服",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈdres/",
+      "phoneticUs": "/ˈdɹɛs/",
       "exampleEn": "The white dress was still hanging in the room.",
       "exampleZh": "白色礼服仍挂在房间里。",
       "collocations": [
@@ -664,15 +664,15 @@
           "zh": "婚纱"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-job",
       "headword": "job",
       "meaningZh": "工作；职位",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈdʒɒb/",
+      "phoneticUs": "/ˈdʒɑb/",
       "exampleEn": "She found a new job after leaving the company.",
       "exampleZh": "她离开公司后找到了新工作。",
       "collocations": [
@@ -681,15 +681,15 @@
           "zh": "找到工作"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-marriage",
       "headword": "marriage",
       "meaningZh": "婚姻",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈmærɪdʒ/",
+      "phoneticUs": "/ˈmɛɹɪdʒ/",
       "exampleEn": "She refused to treat marriage as a business deal.",
       "exampleZh": "她拒绝把婚姻当成商业交易。",
       "collocations": [
@@ -698,15 +698,15 @@
           "zh": "幸福的婚姻"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-relationship",
       "headword": "relationship",
       "meaningZh": "关系",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/rɪˈleɪʃənʃɪp/",
+      "phoneticUs": "/ɹiˈɫeɪʃənˌʃɪp/",
       "exampleEn": "She disclosed the relationship before the review.",
       "exampleZh": "她在审核前披露了这一关系。",
       "collocations": [
@@ -715,15 +715,15 @@
           "zh": "商业关系"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-ring",
       "headword": "ring",
       "meaningZh": "戒指",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈrɪŋ/",
+      "phoneticUs": "/ˈɹɪŋ/",
       "exampleEn": "The ring remained in its small box.",
       "exampleZh": "戒指仍放在小盒子里。",
       "collocations": [
@@ -732,15 +732,15 @@
           "zh": "婚戒"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-room",
       "headword": "room",
       "meaningZh": "房间",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈruːm/",
+      "phoneticUs": "/ˈɹum/",
       "exampleEn": "They waited in a quiet room.",
       "exampleZh": "他们在一间安静的房间里等候。",
       "collocations": [
@@ -749,15 +749,15 @@
           "zh": "会议室"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     },
     {
       "id": "s87-candidate-wedding",
       "headword": "wedding",
       "meaningZh": "婚礼",
       "partOfSpeech": "n.",
-      "phoneticUk": null,
-      "phoneticUs": null,
+      "phoneticUk": "/ˈwedɪŋ/",
+      "phoneticUs": "/ˈwɛdɪŋ/",
       "exampleEn": "The wedding was cancelled before the guests arrived.",
       "exampleZh": "婚礼在宾客抵达前就取消了。",
       "collocations": [
@@ -766,7 +766,7 @@
           "zh": "婚礼仪式"
         }
       ],
-      "editorialStatus": "NOT_FOR_PUBLICATION_PENDING_FORM_SENSE_AND_IPA_REVIEW"
+      "editorialStatus": "IPA_SOURCE_SELECTION_NOT_SIGNED_OFF_CET4_FORM_PENDING"
     }
   ]
 }
