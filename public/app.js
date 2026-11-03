@@ -39,12 +39,12 @@
       const area=$('reviewReminder');
       if(!area)return;
       const due=user?cloudDue():0,seen=cloudSaved.size;
-      const title=!user?(saved.size?'喵呜，你在本机演示收藏了 '+saved.size+' 张词卡':'喵呜，欢迎来到你的故事书房'):
+      const title=!user?'喵呜，欢迎来到你的故事书房':
         due?'喵呜，今天有 '+due+' 个单词等你复习':
-        seen?'喵呜，你已收藏 '+seen+' 张云端词卡':saved.size?'喵呜，你在本机演示收藏了 '+saved.size+' 张词卡':'喵呜，读一段故事，收藏第一张词卡';
-      const hint=!user?(saved.size?'演示收藏仅保存在当前浏览器；登录后正式小说收藏可跨设备同步。':'登录后，正式小说的章节进度与词卡可以跨设备保存。'):
-        due?'这些词已经到复习时间。进入剧情回声，完成练习后会更新云端学习记录。':
-        saved.size&&!seen?'演示收藏保存在当前浏览器，可在记忆藏书票查看；正式小说词卡会同步到账号。':'进入记忆藏书票复习已收藏的单词，也可以到剧情回声回顾已读章节。';
+        seen?'喵呜，你已收藏 '+seen+' 张词卡':'喵呜，读一段故事，收藏第一张词卡';
+      const hint=!user?'登录后，阅读进度与词卡会自动同步到你的账号。':
+        due?'这些词已经到复习时间。去剧情回声找回故事里的单词吧。':
+        '打开记忆藏书票，继续复习你在小说中遇见的单词。';
       area.innerHTML='<div class="reminder-cat" aria-hidden="true">'+
         '<svg viewBox="0 0 48 48" width="30" height="30" fill="currentColor">'+
         '<ellipse cx="12" cy="15" rx="4.1" ry="5.6" transform="rotate(-24 12 15)"/>'+
@@ -54,8 +54,8 @@
         '<path d="M23 23c-6.2 0-9.6 5-13 9.4-2.2 3-1 8.6 3.7 9.1 3.9.5 6.2-2.2 9.3-2.2 3.2 0 5.5 2.7 9.4 2.2 4.7-.5 5.9-6.1 3.7-9.1C32.6 28 29.2 23 23 23Z"/></svg></div>'+
         '<div class="reminder-content"><strong>'+safe(title)+'</strong><small>'+safe(hint)+'</small></div>'+
         '<button class="primary reminder-btn" id="reviewReminderBtn">'+
-        (user||saved.size?'查看记忆藏书票 →':'登录后同步 →')+'</button>';
-      $('reviewReminderBtn').onclick=()=>user||saved.size?navigate('words'):showLogin();
+        (user?'查看记忆藏书票 →':'登录后同步 →')+'</button>';
+      $('reviewReminderBtn').onclick=()=>user?navigate('words'):showLogin();
     }
     const ECHO_TYPES=[{id:'fill',title:'剧情填词',desc:'在故事原句中选择恰当的英文词',symbol:'▤'},{id:'situation',title:'情境选择',desc:'根据人物行为和事件判断词义',symbol:'✧'},{id:'spell',title:'单词找回',desc:'键盘或平板系统手写拼出单词',symbol:'✎'}];
     const ECHO_BANK=[
@@ -74,7 +74,7 @@
       {type:'spell',ch:1,word:'promise',q:'某个遥远的 ______，仍留在记忆里。',hint:'承诺 · 名词'},
       {type:'spell',ch:1,word:'identity',q:'照片背面的名字让她重新思考自己的 ______。',hint:'身份 · 名词'}
     ];
-    let echoMode='demo',echoScope='recent',echoTypes=new Set(['fill','situation','spell']),echoPhase='setup',echoChapterSet=new Set([0]),quizQuestions=[],quizHint=false;
+    let echoMode='cloud',echoScope='recent',echoTypes=new Set(['fill','situation','spell']),echoPhase='setup',echoChapterSet=new Set([0]),quizQuestions=[],quizHint=false;
     let echoCustomBook='all',echoCustomRange='all',echoRangeStart=1,echoRangeEnd=3;
     // Demo has one published book; the selector layout supports future books without one-by-one ticking.
     const availablePublishedBooks=()=>BOOKS.filter(b=>b.status==='demo');
@@ -179,11 +179,11 @@
           const item=document.createElement('div');
           item.className='book-item cloud-book-item';
           const kind=['one','two','three'][i%3];
-          const test=/测试|示例|qa-|demo|sample/i.test(book.title+' '+book.id);
-          const coverTitle=test?'故事试读册':book.title;
-          const coverLabel=test?'TEST EDITION · 功能测试':'STORY COLLECTION';
-          const badge=test?'测试内容 · 不出售':has(slug)?'已解锁':book.title==='雨夜档案'?'四级会员专享':'免费试读';
-          const action=cloudProgress.some(p=>p.book_id===book.id)?'继续阅读 →':book.title==='雨夜档案'?(has(slug)?'开始阅读 →':'查看会员目录 →'):'开始试读 →';
+          const coverTitle=book.title;
+          const coverLabel='STORY COLLECTION';
+          const badge=has(slug)?'已解锁':'会员专享';
+          const action=cloudProgress.some(p=>p.book_id===book.id)?'继续阅读 →':
+            has(slug)?'开始阅读 →':'查看会员目录 →';
           item.innerHTML='<div class="book-cover '+kind+'" aria-label="'+safe(book.title)+'">'+
             '<span class="book-tag">'+safe(badge)+'</span>'+
             '<span class="edition">THE STORY EDITION / '+String(i+1).padStart(2,'0')+'</span>'+
@@ -193,7 +193,7 @@
             '<span class="eyebrow">'+String(i+1).padStart(2,'0')+'</span></div>'+
             '<p>'+safe(book.description||'读一本舍不得合上的故事。')+'</p>'+
             '<div class="book-meta"><span class="pill">'+safe(slug.toUpperCase())+'</span>'+
-            '<span class="pill">'+(test?'仅供联调':has(slug)?'已拥有学习权限':book.title==='雨夜档案'?'四级权益解锁全部12章':'免费章节开放')+'</span></div>'+
+            '<span class="pill">'+(has(slug)?'已拥有阅读权益':'解锁后阅读')+'</span></div>'+
             '<div class="shelf-progress" data-live-progress="'+safe(book.id)+'">'+
             '<div class="progress-text"><span>正在读取阅读记录</span><span>—</span></div>'+
             '<div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>'+
@@ -201,119 +201,13 @@
           item.querySelector('.book-actions button').onclick=()=>openCloudBook(book,slug);
           list.append(item);
         });
-        // Show only public book metadata until the protected D1 edition is published.
-        // No free Rainy Night chapter or manuscript content is bundled in the client.
-        if(slug==='cet4'&&!books.some(b=>b.title==='雨夜档案')){
-          const item=document.createElement('div');
-          item.className='book-item rainy-night-sample-book-item';
-          item.innerHTML='<div class="book-cover three" aria-label="雨夜档案 四级会员专享">'+
-            '<img class="rainy-night-cover-image" src="/rainy-night-cover.webp" alt="《雨夜档案》原创小说封面" loading="lazy" decoding="async">'+
-            '<span class="book-tag">四级会员专享</span></div>'+
-            '<div class="book-info"><div class="line1"><h3>雨夜档案</h3><span class="eyebrow">12 CHAPTERS</span></div>'+
-            '<p>十二章完整小说，四级权益用户可阅读全部章节。不提供免费试读。</p>'+
-            '<div class="book-meta"><span class="pill">等待正式发布</span></div>'+
-            '<div class="book-actions"><span class="soft">登录后查看四级会员内容</span></div></div>';
-          list.append(item);
-        }
-        // Original CET4 content queue. Internal writing genres are NEVER presented
-        // to buyers. No unreviewed full chapters are bundled as public assets.
-        if(slug==='cet4'){
-          const newNovels=[
-            {title:'重生后我不再讨好他们',desc:'重回改变命运的那一天，她第一次拒绝替全家背债。',sample:'/rejected-family-second-life.html'},
-            {title:'被赶出豪门后我成了继承人',desc:'离开家族修复馆后，她意外找回祖母留给她的一份使命。'},
-            {title:'契约婚姻到期那天',desc:'三年婚约到期后，两个人开始学会真正尊重彼此。'},
-            {title:'穿成恶毒女配后，我不演了',desc:'不再扮演原剧情里的坏人，她决定自己选择未来。'},
-            {title:'死对头突然开始对我好',desc:'毕业七年后再相遇，旧日的竞争对手成了意外室友。'},
-            {title:'合租室友藏了七年的秘密',desc:'一场旧录音风波，七封没寄出的信，让两个人再次靠近。'},
-            {title:'离婚后，前夫公司成了我的客户',desc:'离婚后，她靠自己的设计赢得前夫公司的合作订单。'},
-            {title:'替嫁当天，我撕了婚约',desc:'被推上豪门婚礼的她，选择自己决定事业与爱情。'}
-          ];
-          newNovels.forEach((n,i)=>{
-            if(books.some(b=>b.title===n.title))return;
-            const item=document.createElement('div');
-            item.className='book-item original-coming-book-item';
-            const kind=['one','two','three'][i%3];
-            const available=!!n.sample;
-            item.innerHTML='<div class="book-cover '+kind+'" aria-label="'+safe(n.title)+'">'+
-              '<span class="book-tag">'+(available?'第一章试读':'内容校对中')+'</span>'+
-              '<span class="edition">WORDLETTER / '+String(i+1).padStart(2,'0')+'</span>'+
-              '<span class="illustration">'+['❦','✧','♧'][i%3]+'</span>'+
-              '<h3>'+safe(n.title)+'</h3><span class="edition-bottom">ORIGINAL CET4 STORY</span></div>'+
-              '<div class="book-info"><div class="line1"><h3>'+safe(n.title)+'</h3>'+
-              '<span class="eyebrow">'+(available?'NEW':'SOON')+'</span></div>'+
-              '<p>'+safe(n.desc)+'</p>'+
-              '<div class="book-meta"><span class="pill">'+
-              (available?'第一章可免费阅读':'完整版校对中 · 暂不出售')+'</span></div>'+
-              '<div class="shelf-progress"><div class="progress-text"><span>'+
-              (available?'免费阅读 · 无需激活':'已完成故事初稿')+'</span><span>'+
-              (available?'第一章':'待审核')+'</span></div></div>'+
-              '<div class="book-actions">'+(available?
-                '<a class="secondary-btn" href="'+n.sample+'">读第一章 →</a>':
-                '<button class="secondary-btn" disabled type="button">暂未开放</button>')+
-              '</div></div>';
-            list.append(item);
-          });
-        }
-        // Preserve the user's approved original two-chapter local demo as a
-        // clearly labelled teaching/interaction sample. D1 is still the ONLY
-        // source for published and paid books. Never double-render a D1 book.
-        const showRoseDemo=slug==='cet4'&&!books.some(b=>
-          b.id==='rose'||b.title==='玫瑰未落幕');
-        if(showRoseDemo){
-          const rose=BOOKS.find(b=>b.id==='rose'&&b.status==='demo');
-          if(rose){
-            const item=document.createElement('div');
-            item.className='book-item demo-book-item';
-            const ix=books.length+1;
-            item.innerHTML='<div class="book-cover '+safe(rose.kind)+'" aria-label="'+safe(rose.name)+' 互动演示">'+
-              '<span class="book-tag">互动演示 · 非正式商品</span>'+
-              '<span class="edition">THE STORY EDITION / '+String(ix).padStart(2,'0')+'</span>'+
-              '<span class="illustration">'+safe(rose.illustration)+'</span>'+
-              '<h3>'+safe(rose.name)+'</h3><span class="edition-bottom">DEMO · 2 CHAPTERS</span></div>'+
-              '<div class="book-info"><div class="line1"><h3>'+safe(rose.name)+'</h3>'+
-              '<span class="eyebrow">'+String(ix).padStart(2,'0')+'</span></div>'+
-              '<p>保留的两章互动测试故事；点击英文词可体验词卡与发音。演示进度保存在本浏览器，不代表正式购买权益。</p>'+
-              '<div class="book-meta"><span class="pill">CET4 演示</span>'+
-              '<span class="pill">仅供体验 · 不出售</span></div>'+
-              '<div class="shelf-progress"><div class="progress-text">'+
-              '<span>共2章 · 浏览器本地演示</span><span>—</span></div></div>'+
-              '<div class="book-actions"><button class="secondary-btn" type="button">试读演示第1章 →</button></div></div>';
-            item.querySelector('.book-actions button').onclick=()=>openChapter(0);
-            list.append(item);
-          }
-        }
-        // Keep the approved V0.3 three-cover rhythm when room remains.
-        // Placeholder covers have no published body or downloadable content.
-        const visibleCardCount=books.length+(showRoseDemo?1:0);
-        if(slug==='cet4'&&visibleCardCount<3){
-          BOOKS.filter(b=>b.status==='planned').slice(0,3-visibleCardCount).forEach((b,i)=>{
-            const item=document.createElement('div');
-            item.className='book-item planned-book-item';
-            const ix=visibleCardCount+i+1;
-            item.innerHTML='<div class="book-cover '+safe(b.kind)+'">'+
-              '<span class="book-tag">内容筹备中</span>'+
-              '<span class="edition">THE STORY EDITION / '+String(ix).padStart(2,'0')+'</span>'+
-              '<span class="illustration">'+safe(b.illustration)+'</span>'+
-              '<h3>'+safe(b.name)+'</h3><span class="edition-bottom">COMING SOON · 故事企划</span></div>'+
-              '<div class="book-info"><div class="line1"><h3>'+safe(b.name)+'</h3>'+
-              '<span class="eyebrow">'+String(ix).padStart(2,'0')+'</span></div>'+
-              '<p>'+safe(b.desc)+'</p><div class="book-meta">'+
-              '<span class="pill">未上架 · 不可购买</span></div>'+
-              '<div class="shelf-progress"><div class="progress-text"><span>故事企划阶段</span>'+
-              '<span>敬请期待</span></div></div>'+
-              '<div class="book-actions"><button class="secondary-btn" type="button" disabled>尚未开放</button></div></div>';
-            list.append(item);
-          });
-        }
+        // Only published D1 books appear on the customer shelf.
         if(!books.length){
-          const explanation=document.createElement('div');
-          explanation.className='onboarding cloud-shelf-empty';
-          explanation.innerHTML='<span class="eyebrow">YOUR NEXT STORY</span>'+
-            '<h3>这一层书架，还在等待故事</h3>'+
-            '<p>'+(showRoseDemo?
-              '目前没有正式发布的数据库小说。《玫瑰未落幕》仅保留两章临时互动演示，不是付费商品；其余封面为未上架企划。':
-              '目前没有已发布的小说。下方封面为尚未上架的设计企划，不能阅读或购买。')+'</p>';
-          list.prepend(explanation);
+          const empty=document.createElement('div');
+          empty.className='onboarding cloud-shelf-empty';
+          empty.innerHTML='<span class="eyebrow">YOUR NEXT STORY</span>'+
+            '<h3>更多故事正在路上</h3><p>这层书架暂无已发布作品，更多故事正在陆续加入。</p>';
+          list.append(empty);
         }
         updateCloudShelfProgress();
       }catch(error){
@@ -332,8 +226,8 @@
         if(!chapters.length){toast('这本书尚无已发布章节');return;}
         activeCloud={bookId:book.id,title:book.title,slug,chapters,chapterId:null,parts:[]};
         showModal(`<span class="eyebrow">MIAOWU · STORY CHAPTERS</span><h2 id="modalTitle">${safe(book.title)}</h2>
-          <p>目录可见。正文由服务器核对当前账号的分类购买权益后返回；《雨夜档案》不提供免费试读。</p>
-          <div class="cloud-chapter-options">${chapters.map(ch=>`<button class="chapter-btn" type="button" data-cloud-choose="${safe(ch.id)}">${String(ch.chapterNo).padStart(2,'0')} · ${safe(ch.title)} ${ch.isPreview?'· 免费试读':(ch.canRead?'· 已授权':'· 🔒 未解锁')}</button>`).join('')}</div>`);
+          <p>点击章节即可开始阅读。会员章节仅对已解锁该学习分类的账号开放。</p>
+          <div class="cloud-chapter-options">${chapters.map(ch=>`<button class="chapter-btn" type="button" data-cloud-choose="${safe(ch.id)}">${String(ch.chapterNo).padStart(2,'0')} · ${safe(ch.title)} ${ch.isPreview?'· 免费试读':(ch.canRead?'':'· 🔒 未解锁')}</button>`).join('')}</div>`);
         document.querySelectorAll('[data-cloud-choose]').forEach(btn=>{
           btn.onclick=()=>openCloudChapter(btn.dataset.cloudChoose);
         });
@@ -473,9 +367,9 @@
       const thisChapter=book.chapters.find(ch=>ch.id===id);
       const ix=book.chapters.findIndex(ch=>ch.id===id);
       const next=book.chapters[ix+1];
-      $('chapterNo').textContent='CHAPTER '+String(page.chapterNo).padStart(2,'0')+(thisChapter?.isPreview?' · FREE PREVIEW':' · PRIVATE READING');
+      $('chapterNo').textContent='CHAPTER '+String(page.chapterNo).padStart(2,'0')+(thisChapter?.isPreview?' · FREE PREVIEW':'');
       $('chapterTitle').textContent=page.title;
-      $('storyText').innerHTML=parts.map(renderD1Paragraph).join('')||'<p>此测试章节暂无段落。</p>';
+      $('storyText').innerHTML=parts.map(renderD1Paragraph).join('')||'<p>本章内容暂时无法显示，请稍后重试。</p>';
       $('storyText').querySelectorAll('[data-cloud-word]').forEach(btn=>btn.onclick=()=>showCloudWord(btn.dataset.cloudWord));
       $('storyText').style.fontSize=fontSize+'px';
       $('readerCrumb').textContent=book.slug.toUpperCase()+' / '+book.title;
@@ -483,7 +377,7 @@
       if(sideHeading)sideHeading.textContent=book.title+' · 目录';
       const sideCaption=$('chapterList').parentElement.querySelector('.side-caption');
       if(sideCaption)sideCaption.textContent='只显示已发布章节，未授权正文不会传到浏览器。';
-      $('chapterList').innerHTML=book.chapters.map(ch=>`<button class="chapter-btn ${ch.id===id?'current':''}" data-cloud-chapter="${safe(ch.id)}" type="button">${String(ch.chapterNo).padStart(2,'0')} · ${safe(ch.title)} ${ch.isPreview?'· 免费':' · '+(ch.canRead?'已授权':'🔒')}</button>`).join('');
+      $('chapterList').innerHTML=book.chapters.map(ch=>`<button class="chapter-btn ${ch.id===id?'current':''}" data-cloud-chapter="${safe(ch.id)}" type="button">${String(ch.chapterNo).padStart(2,'0')} · ${safe(ch.title)} ${ch.isPreview?'· 免费':(ch.canRead?'':' · 🔒')}</button>`).join('');
       $('chapterList').querySelectorAll('[data-cloud-chapter]').forEach(btn=>btn.onclick=()=>openCloudChapter(btn.dataset.cloudChapter));
       $('readingChapter').textContent='第'+page.chapterNo+'章';
       showCloudProgress(id);
@@ -497,8 +391,6 @@
       $('nextChapter').onclick=()=>next?openCloudChapter(next.id):navigate('library');
       const study=$('readerLayout').querySelector('#readerLearningStats');
       if(study)study.hidden=true;
-      const note=$('readerLayout').querySelector('.sidebar .side-panel:nth-child(2) .side-caption');
-      if(note)note.textContent='点击正文英文标注查看词卡；阅读进度与收藏保存在云端。';
       try{
         const glossary=await serverRequest('/api/chapters/'+encodeURIComponent(id)+'/words');
         if(activeCloud!==book||chosen!==cloudChapterSequence||book.chapterId!==id)return;
@@ -525,8 +417,6 @@
       $('doEcho').disabled=false;$('doEcho').title='';
       const study=$('readerLayout').querySelector('#readerLearningStats');
       if(study)study.hidden=false;
-      const note=$('readerLayout').querySelector('.sidebar .side-panel:nth-child(2) .side-caption');
-      if(note)note.textContent='点击正文中的酒红色英文词汇，打开释义、发音与收藏。';
     }
 
     function renderLibrary(){
@@ -554,10 +444,9 @@
       document.querySelectorAll('[data-word-filter]').forEach(x=>x.classList.toggle('active',x.dataset.wordFilter===wordFilter));
       const words=[...cloudSaved.values()].filter(w=>wordFilter==='all'||
         (wordFilter==='mastered'?w.status==='mastered':w.status!=='mastered'));
-      const localWords=[...saved].filter(id=>WORDS[id]&&(wordFilter==='all'||
-        (wordFilter==='mastered'?mastered.has(id):!mastered.has(id))));
+      const localWords=[]; // Hide private prototype vocabulary on production.
       const cloudTotal=user?cloudSaved.size:0;
-      const localTotal=saved.size;
+      const localTotal=0;
       $('bookplateCount').textContent=String(cloudTotal+localTotal);
       if(!user&&!localWords.length){
         $('vocabGrid').innerHTML='<div class="empty" style="grid-column:1/-1">'+
@@ -570,7 +459,7 @@
         const hasSaved=cloudTotal+localTotal>0;
         $('vocabGrid').innerHTML='<div class="empty" style="grid-column:1/-1">'+
           '<div class="big">♧</div><h3>'+(hasSaved?'这个筛选下暂无藏书票':'第一张藏书票，等你来收下')+'</h3>'+
-          '<p>'+(hasSaved?'试试切换「全部收藏」，查看其它学习状态的词卡。':'打开《玫瑰未落幕》可以收藏本机演示词卡；正式小说词卡将在上线后支持云端同步。')+'</p>'+
+          '<p>'+(hasSaved?'试试切换「全部收藏」，查看其它学习状态的词卡。':'打开已解锁的故事，点击英文词汇即可收藏到记忆藏书票。')+'</p>'+
           '<button class="primary" id="emptyRead">寻找故事 →</button></div>';
         $('emptyRead').onclick=()=>navigate('library');return;
       }
@@ -620,7 +509,7 @@
         ' 张 · 本机演示收藏 '+localTotal+' 张'+
         '<small>本机演示词卡仅保存在当前浏览器，不与账号同步；正式内容的收藏由云端保存。</small></div>';
       const cloudSection=cloudCards?'<div class="bookplate-source-heading">☁ 云端收藏 · 已同步到账号</div>'+cloudCards:'';
-      const demoSection=demoCards?'<div class="bookplate-source-heading">✦ 本机演示收藏 · 《玫瑰未落幕》</div>'+demoCards:'';
+      const demoSection='';
       $('vocabGrid').innerHTML=sources+cloudSection+demoSection;
       document.querySelectorAll('[data-demo-voice],[data-demo-say]').forEach(button=>{
         button.onclick=()=>speakWord(button.dataset.demoVoice||button.dataset.demoSay);
@@ -664,32 +553,14 @@
     }
     function renderEchoModeSwitch(){
       const area=$('echoModeSwitch');
-      if(!area)return;
-      const playing=echoMode==='cloud'?!!window.MiaowuCloudEcho?.running():
-        echoPhase==='playing'&&quizIndex<quizQuestions.length;
-      if(playing){area.innerHTML='';return}
-      area.innerHTML='<div class="echo-mode-switch" role="group" aria-label="选择剧情回声模式">'+
-        '<button type="button" class="echo-mode-button '+(echoMode==='demo'?'selected':'')+
-        '" data-echo-mode="demo" aria-pressed="'+(echoMode==='demo')+'">✦ 故事演示练习</button>'+
-        '<button type="button" class="echo-mode-button '+(echoMode==='cloud'?'selected':'')+
-        '" data-echo-mode="cloud" aria-pressed="'+(echoMode==='cloud')+'">☁ 云端正式练习</button></div>'+
-        '<p class="echo-mode-note">'+(echoMode==='demo'?
-        '《玫瑰未落幕》的演示题目 · 练习记录仅保存在当前浏览器，不计入云端账号。':
-        '仅从已发布、已读完且有阅读权限的正式章节出题，学习记录同步到账号。')+'</p>';
-      area.querySelectorAll('[data-echo-mode]').forEach(button=>button.onclick=()=>{
-        const next=button.dataset.echoMode;
-        if(next===echoMode)return;
-        echoMode=next;
-        if(next==='demo')echoPhase='setup';
-        renderQuiz();
-      });
+      if(area)area.replaceChildren();
     }
     function renderQuiz(){
       const c=$('quizContainer');
       renderEchoModeSwitch();
-      if(echoMode==='cloud'&&window.MiaowuCloudEcho){
+      if(window.MiaowuCloudEcho){
         if(!user){
-          c.innerHTML='<div class="echo-panel"><span class="eyebrow">STORY ECHO · YOUR REAL MEMORY</span><h3>登录后，从读过的故事里练习</h3><p class="echo-tip">云端剧情回声仅使用已读完、仍有权限阅读的正式章节。暂时也可以切换上方的「故事演示练习」体验三种玩法。</p><button class="primary" id="cloudEchoLogin">登录我的书房 →</button></div>';
+          c.innerHTML='<div class="echo-panel"><span class="eyebrow">STORY ECHO · YOUR REAL MEMORY</span><h3>登录后，从读过的故事里练习</h3><p class="echo-tip">云端剧情回声会根据已完成的章节生成练习，答题记录会自动同步。</p><button class="primary" id="cloudEchoLogin">登录我的书房 →</button></div>';
           $('cloudEchoLogin').onclick=showLogin;
           return;
         }
@@ -854,12 +725,12 @@
         '<div><span class="eyebrow">YOUR PRIVATE SHELF</span>'+
         '<h2 style="font:normal 25px Songti SC,serif;color:var(--wine);margin:6px 0">'+
         safe(user.name)+' 的书房</h2>'+
-        '<span style="font-size:12px;color:var(--muted)">妙屋英语 · Cloudflare D1 云端正式学习记录（不包括本机演示）</span></div></div>'+
+        '<span style="font-size:12px;color:var(--muted)">妙屋英语 · 我的云端学习记录</span></div></div>'+
         '<div class="account-stats">'+stats.map(x=>'<div class="account-stat"><strong>'+x.n+'</strong><small>'+
         x.t+'</small></div>').join('')+'</div>'+
         '<div class="account-reminder"><div><strong>♧ 记忆藏书票</strong>'+
         '<div class="echo-tip">到期词卡 '+due+' 张 · 已收藏 '+cloudSaved.size+
-        ' 张 · 本机演示收藏 '+saved.size+' 张（仅此浏览器） · 剧情回声记录单独保存云端</div></div>'+
+        ' 张 · 剧情回声学习记录同步到账户</div></div>'+
         '<button class="primary" id="accountStartReview">查看藏书票 →</button></div>'+
         '<div class="account-content"><div class="account-block"><h3>已解锁学习分类</h3>'+
         (ent.map(c=>'<span class="account-tag">✓ '+safe(c.name)+'</span>').join('')||
@@ -879,14 +750,12 @@
         '<span>到期词卡 <strong>'+due+'</strong></span>'+
         '<span>收藏词汇 <strong>'+cloudSaved.size+'</strong></span>'+
         '<span>学习中 <strong>'+(cloudSaved.size-mastered)+'</strong></span></div></div></div>'+
-        demoAccountSummary()+
         '<div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">'+
         '<button class="secondary-btn" id="changePassword">修改登录密码</button>'+
         '<button class="secondary-btn" id="logout">退出账号</button></div></div>';
       $('doRedeem').onclick=showRedeem;
       $('changePassword').onclick=showChangePassword;
       $('accountStartReview').onclick=()=>navigate('words');
-      $('accountDemoRead').onclick=()=>{category='cet4';navigate('library')};
       $('accountResumeRead').onclick=()=>{
         if(recent)openCloudBook({id:recent.book_id,title:recent.book_title},recent.category_slug||category);
         else navigate('library');
@@ -1092,7 +961,7 @@
       };
     }
     function formError(s){$('formMessage').innerHTML=`<div class="form-message">${safe(s)}</div>`}
-    function explain(){showModal(`<span class="eyebrow">HOW IT WORKS</span><h2 id="modalTitle">一部小说，一段词汇记忆</h2><p>这是一款将阅读、听书、词汇收藏与情节回忆组合在一起的互动阅读器。</p><div class="onboarding" style="padding:15px;margin:12px 0"><h3>01 · 先读故事</h3><p>第一章开放试读，点击酒红色英文词查义、听发音。</p><h3>02 · 收下藏书票</h3><p>收藏之后，你可以在「记忆藏书票」里复习。</p><h3>03 · 听见剧情回声</h3><p>可选不同玩法、章节范围，通过选择与拼写练习回忆词汇。</p><h3>04 · 解锁完整书架</h3><p>注册账号后使用一次性分类激活码解锁更多作品，实际开放内容以书架为准。</p></div><button class="primary" id="explainRead" style="width:100%">开始试读 →</button>`);$('explainRead').onclick=()=>{closeModal();openFirstCloudBook()}}
+    function explain(){showModal(`<span class="eyebrow">HOW IT WORKS</span><h2 id="modalTitle">一部小说，一段词汇记忆</h2><p>这是一款将阅读、听书、词汇收藏与情节回忆组合在一起的互动阅读器。</p><div class="onboarding" style="padding:15px;margin:12px 0"><h3>01 · 先读故事</h3><p>打开已解锁的章节，点击酒红色英文词查义、听发音。</p><h3>02 · 收下藏书票</h3><p>收藏之后，你可以在「记忆藏书票」里复习。</p><h3>03 · 听见剧情回声</h3><p>可选不同玩法、章节范围，通过选择与拼写练习回忆词汇。</p><h3>04 · 解锁完整书架</h3><p>注册账号后使用一次性分类激活码解锁更多作品，实际开放内容以书架为准。</p></div><button class="primary" id="explainRead" style="width:100%">去书架看看 →</button>`);$('explainRead').onclick=()=>{closeModal();openFirstCloudBook()}}
     function speakWord(w){if(!('speechSynthesis' in window)){toast('此浏览器暂不支持语音朗读');return}window.speechSynthesis.cancel();speaking=false;$('player').classList.remove('show');let u=new SpeechSynthesisUtterance(w);u.lang='en-US';u.rate=.82;window.speechSynthesis.speak(u)}
     function stopReading(){if('speechSynthesis' in window)window.speechSynthesis.cancel();speaking=false;paused=false;utterances=[];$('player').classList.remove('show')}
     function startReading(){
