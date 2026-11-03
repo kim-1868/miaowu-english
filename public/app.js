@@ -69,6 +69,9 @@
       $('homeMasteredCount').textContent=user?String(mastered):'—';
       $('homeSavedCount').textContent=user?String(total):'—';
       $('homeChapterCount').textContent=user?String(finished):'—';
+      for(const id of ['homeDueCount','homeMasteredCount','homeSavedCount','homeChapterCount']){
+        $(id).dataset.ready=user?'true':'false';
+      }
       $('homeStudyFoot').textContent=user?
         '小猫替你记下每一点进步，数据已与你的账号关联。':
         '登录后，这里会显示你的真实学习进度。';
