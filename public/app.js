@@ -45,18 +45,37 @@
       const hint=!user?'登录后，阅读进度与词卡会自动同步到你的账号。':
         due?'这些词已经到复习时间。去剧情回声找回故事里的单词吧。':
         '打开记忆藏书票，继续复习你在小说中遇见的单词。';
-      area.innerHTML='<div class="reminder-cat" aria-hidden="true">'+
-        '<svg viewBox="0 0 48 48" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">'+
-        '<ellipse cx="11" cy="16" rx="3.3" ry="4.6" transform="rotate(-21 11 16)"/>'+
-        '<ellipse cx="21" cy="10.5" rx="3.1" ry="4.8"/>'+
-        '<ellipse cx="31" cy="12" rx="3.1" ry="4.7" transform="rotate(14 31 12)"/>'+
-        '<ellipse cx="39" cy="20" rx="2.8" ry="4.1" transform="rotate(32 39 20)"/>'+
-        '<path d="M23 22c-5.3 0-9.5 5.2-12.1 10.2-1.7 3.5-.3 8.3 4.7 8.3 3 0 5.3-2 7.4-2s4.4 2 7.4 2c5 0 6.5-4.8 4.7-8.3C33 27.2 28.3 22 23 22Z"/>'+
-        '<path d="M35.5 3v4M33.5 5h4" stroke-width="1.1"/></svg></div>'+
+      area.innerHTML='<div class="reminder-cat reminder-paw" aria-hidden="true">'+
+        '<svg class="solid-cat-paw" viewBox="0 0 64 64" width="52" height="52" fill="currentColor" xmlns="http://www.w3.org/2000/svg">'+
+        '<ellipse cx="14" cy="22" rx="6.5" ry="10" transform="rotate(-28 14 22)"/>'+
+        '<ellipse cx="28" cy="12" rx="6.7" ry="10" transform="rotate(-9 28 12)"/>'+
+        '<ellipse cx="43" cy="15" rx="6.7" ry="10" transform="rotate(17 43 15)"/>'+
+        '<ellipse cx="54" cy="28" rx="6" ry="9.3" transform="rotate(32 54 28)"/>'+
+        '<path d="M31 30c-8 0-12 7-17 13-4.3 5.3-2.2 14.3 4.9 15.2 5.1.7 8.4-3.9 13.4-3.9 5.1 0 8 4.6 13.2 3.9 7.1-1 9.6-9.9 5.1-15-4.6-7.2-9.4-17.2-19.6-17.2Z"/>'+
+        '</svg></div>'+
         '<div class="reminder-content"><strong>'+safe(title)+'</strong><small>'+safe(hint)+'</small></div>'+
         '<button class="primary reminder-btn" id="reviewReminderBtn">'+
         (user?'查看记忆藏书票 →':'登录后同步 →')+'</button>';
-      $('reviewReminderBtn').onclick=()=>user?navigate('words'):showLogin();
+      $('reviewReminderBtn').onclick=()=>user?(due?navigate('echo'):navigate('words')):showLogin();
+      renderHomeStudyStats();
+    }
+    function renderHomeStudyStats(){
+      const due=$('homeDueCount');
+      if(!due)return;
+      const total=cloudSaved.size;
+      const mastered=[...cloudSaved.values()].filter(w=>w.status==='mastered').length;
+      const finished=cloudProgress.filter(p=>Boolean(p.completed_at)).length;
+      due.textContent=user?String(cloudDue()):'—';
+      $('homeMasteredCount').textContent=user?String(mastered):'—';
+      $('homeSavedCount').textContent=user?String(total):'—';
+      $('homeChapterCount').textContent=user?String(finished):'—';
+      $('homeStudyFoot').textContent=user?
+        '小猫替你记下每一点进步，数据已与你的账号关联。':
+        '登录后，这里会显示你的真实学习进度。';
+      $('homeDueStat').onclick=()=>user?navigate('echo'):showLogin();
+      $('homeMasteredStat').onclick=()=>user?navigate('words'):showLogin();
+      $('homeSavedStat').onclick=()=>user?navigate('words'):showLogin();
+      $('homeChaptersStat').onclick=()=>user?navigate('account'):showLogin();
     }
     const ECHO_TYPES=[{id:'fill',title:'剧情填词',desc:'在故事原句中选择恰当的英文词',symbol:'▤'},{id:'situation',title:'情境选择',desc:'根据人物行为和事件判断词义',symbol:'✧'},{id:'spell',title:'单词找回',desc:'键盘或平板系统手写拼出单词',symbol:'✎'}];
     const ECHO_BANK=[
@@ -594,11 +613,16 @@
 
     function renderLibrary(){
       const cat=$('categories');
-      cat.innerHTML=CATS.map(c=>'<button class="category '+(c.id===category?'selected':'')+
-        ' available" data-category="'+safe(c.id)+'"><span class="category-en">'+safe(c.en)+
-        '</span><span class="category-icon">'+safe(c.icon)+'</span><strong>'+safe(c.name)+
-        '</strong><small>'+safe(c.sub)+'</small><span class="category-tag">'+
-        (has(c.id)?'✓ 已解锁':'● 可查看书架')+'</span></button>').join('');
+      cat.innerHTML=CATS.map(c=>{
+        const art=['cet4','cet6','postgrad','ielts'].includes(c.id)?
+          '<img src="/shelf-'+c.id+'.svg" class="category-illustration" alt="" aria-hidden="true" width="210" height="165" loading="lazy">':
+          '<span class="category-icon">'+safe(c.icon)+'</span>';
+        return '<button class="category '+(c.id===category?'selected':'')+
+          ' available" data-category="'+safe(c.id)+'"><span class="category-en">'+safe(c.en)+
+          '</span>'+art+'<strong>'+safe(c.name)+
+          '</strong><small>'+safe(c.sub)+'</small><span class="category-tag">'+
+          (has(c.id)?'✓ 已解锁':'● 可查看书架')+'</span></button>';
+      }).join('');
       cat.querySelectorAll('[data-category]').forEach(el=>el.onclick=()=>{
         category=el.dataset.category;cloudBooks=[];renderLibrary();
       });
