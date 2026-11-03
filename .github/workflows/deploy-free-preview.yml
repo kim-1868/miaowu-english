@@ -1,15 +1,11 @@
 # Operational dispatcher intentionally lives on repository default main branch.
 # The production source remains on the separate, release-reviewed branch.
-# One-time owner-authorized V1.0 UX deployment; restore manual-only workflow after success.
+# V1.0 UX release deployed successfully; manual-only production deployment restored.
 # No database writes and no private manuscript assets.
 name: Deploy Miaowu CET4 members-only site (production Worker)
 run-name: CET4 protected Worker · V1.0 customer experience · ${{ github.actor }}
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - .github/workflows/deploy-free-preview.yml
   workflow_dispatch:
     inputs:
       confirmation:
@@ -26,7 +22,7 @@ concurrency:
 
 jobs:
   deploy-preview:
-    if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || inputs.confirmation == 'DEPLOY_CET4_PROTECTED_SITE' }}
+    if: ${{ inputs.confirmation == 'DEPLOY_CET4_PROTECTED_SITE' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
