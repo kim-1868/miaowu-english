@@ -1,8 +1,2 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 165" fill="none" role="img" aria-label="学习书架插画"><defs><linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff5e4"/><stop offset="1" stop-color="#eed5b7"/></linearGradient><linearGradient id="wine" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9b5349"/><stop offset="1" stop-color="#693b41"/></linearGradient></defs><g stroke="#805243" stroke-width="3" stroke-linejoin="round">
-<circle cx="105" cy="69" r="56" fill="#f2d7ad"/><circle cx="105" cy="69" r="47" fill="#fdf0d9"/>
-<path d="M66 45q16-19 33-12 13 6 18 20-10 12-25 11-1 17-20 20l-6-13Z" fill="#bc9072"/>
-<path d="M125 43q21 3 26 18l-14 12q-19 1-19 23-14 9-19-8l11-18Z" fill="#b68b70"/>
-<path d="M106 22v94M58 70h94M78 28q-17 43-1 83M133 28q17 43 0 83M58 49q47 19 94 0M59 91q46-18 92 0" stroke="#9f7a62" stroke-width="1.8"/>
-<path d="M105 126v14M64 140h82m-41 0v17m-34 0h68" stroke="#7e4f42" stroke-width="5" stroke-linecap="round"/>
-<path d="M152 24q-5-12 5-18m-112 118q-12-4-18 6" stroke="#b89163" stroke-width="2"/>
-</g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 128" width="160" height="128" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<g stroke="#835044" stroke-width="3.1"><circle cx="77" cy="54" r="39" fill="#f9ead4"/><path d="M77 15q-20 40 0 78 20-38 0-78ZM39 54h77M44 36h66M44 73h66"/><path stroke="#a87956" d="m56 27 10 8-4 10 9 8-6 15-11-5-8 6M89 26l8 8-3 12 13 4-8 14-6 16-10-7"/><path d="M32 54a45 45 0 0 0 90 0M77 99v12M54 113h46M48 119h58"/><path stroke="#819267" d="M21 106q7-12 18-8-6 11-18 8ZM120 104q-8-12-19-7 7 11 19 7Z"/></g></svg>
