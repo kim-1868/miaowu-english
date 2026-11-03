@@ -135,7 +135,7 @@ test("S129 admin category catalog is separate from reader shelf and paid entitle
    VALUES('chapter-high-school','book-high-school',1,'English word story',
      '{"paragraphs":["PRIVATE_HIGHSCHOOL"]}',0,CURRENT_TIMESTAMP);`);
   assert.equal((await worker.fetch(req("/api/ops/sales/issue","POST",{
-    orderReference:"HS-20261103-PAID999",categoryId:"high-school",
+    orderReference:"@INVALID-ORDER",categoryId:"high-school",
     paymentConfirmed:true,contentConfirmed:true
   }),app)).status,400);
   const sale={orderReference:"20261103-HS999",categoryId:"high-school",
