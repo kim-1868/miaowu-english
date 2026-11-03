@@ -17,7 +17,9 @@ test("S19 customer-facing auth forms do not link to blocked staging laboratories
 });
 test("S19 manual recovery UI never collects passwords or creates self-service credentials",()=>{
  assert.match(app,/function showManualRecovery\(\)/);
- assert.match(app,/忘记密码？人工找回/);
+ assert.match(app,/忘记密码？订单找回/);
+ assert.match(app,/function showOrderRecovery\(\)/);
+ assert.match(app,/serverRequest\(\x27\/api\/auth\/recover-by-order\x27,\x27POST\x27/);
  assert.doesNotMatch(app,/function showRecoverAccount\(\)/);
  assert.ok(!app.includes("serverRequest('/api/auth/recover','POST'"));
  assert.ok(!app.includes('localStorage.setItem("recoveryCode"'));
