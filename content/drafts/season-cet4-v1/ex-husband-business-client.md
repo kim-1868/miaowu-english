@@ -75,7 +75,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 “你变得很会谈 [[contract]] 了。”散会后，顾承礼轻声说。苏晚知看着他，回答：“我一直会。只是以前你不 [[notice]]。每次我想 [[explain]]，你都没有认真听。”
 
-回到工作室，几位同事担心她的私人关系影响业务 [[result]]。苏晚知主动提出，由唐音担任客户的日常 [[manager]]，自己只负责技术 [[design]] 与最终质量审核。她把分工决定发给双方 [[team]]，请所有负责人 [[confirm]]。
+回到工作室，几位同事担心她的私人关系影响业务 [[result]]。苏晚知主动提出，由唐音担任客户的日常 [[manager]]，自己只负责技术 [[design]] 与最终质量审核。她把分工决定发给项目组，请所有负责人 [[confirm]]。
 
 唐音端来两杯热茶：“你真的一点都不 [[regret]]？”苏晚知望着桌上的新 [[project]] 计划，笑了一下：“离婚不是我的失败。放弃自己的 [[future]] 才是。”
 
