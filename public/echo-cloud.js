@@ -8,10 +8,12 @@ const st={scope:"recent",selected:new Set(kinds.map(x=>x[0])),book:"all",from:1,
 let adapter=null;
 function setup(){
  const hasCompletedChapter=adapter.progress().some(p=>!!p.completed_at);
+ const hasCurrentChapter=st.scope==="chapter"&&Boolean(st.chapter);
+ const canStart=hasCurrentChapter||hasCompletedChapter;
  const items=new Map(adapter.progress().map(p=>[p.book_id,p.book_title]));
  $("quizContainer").innerHTML='<div class="echo-panel"><span class="eyebrow">STORY ECHO · YOUR REAL STORY</span>'+
  '<h3 class="echo-selector-heading">让读过的故事，再次回响</h3>'+
- '<p class="echo-tip">只从已读完、已解锁的云端章节出题，答案与下次复习时间会保存到账号。</p>'+
+ '<p class="echo-tip">本章复习可以立即练当前章节的词，不需要收藏或读完。最近章节、今日到期等长期复习仍按云端进度筛选。</p>'+
  '<div class="echo-selector-title">01 · 选择练习范围</div><div class="echo-radio-group">'+
  [["chapter","本章复习"],["recent","最近章节"],["custom","自选已读章节"],["due","今日到期词汇"]].map(x=>
  '<button class="echo-radio '+(st.scope===x[0]?"selected":"")+'" data-scope="'+x[0]+'">'+x[1]+'</button>').join("")+'</div>'+
@@ -27,9 +29,9 @@ function setup(){
  '<span class="echo-option-title">'+x[1]+'</span><span class="echo-option-sub">'+
  (x[0]==="spell"?"主动拼写，支持系统手写键盘":"原剧情与英文词义选择")+
  '</span><span class="echo-check">'+(st.selected.has(x[0])?"✓ 已选择":"○ 点击加入")+'</span></button>').join("")+
- '</div>'+(hasCompletedChapter?'':'<div id="echoCloudEmpty" class="echo-cloud-empty" role="status">目前还没有已读完的正式云端章节，所以暂时没有云端练习题。可以切换上方「故事演示练习」，体验《玫瑰未落幕》的三种玩法。</div>')+
+ '</div>'+(canStart?'':'<div id="echoCloudEmpty" class="echo-cloud-empty" role="status">本章复习请从小说阅读页的「本章复习」进入；其余复习范围请先读完一章。</div>')+
  '<div class="echo-footer-actions"><span class="echo-tip">答题后显示对应释义与原剧情句子</span>'+
- '<button class="primary" id="cloudEchoStart" '+(hasCompletedChapter?'':'disabled')+'>开始复习 →</button></div></div>';
+ '<button class="primary" id="cloudEchoStart" '+(canStart?'':'disabled')+'>开始复习 →</button></div></div>';
  document.querySelectorAll("[data-scope]").forEach(b=>b.onclick=()=>{st.scope=b.dataset.scope;setup()});
  document.querySelectorAll("[data-kind]").forEach(b=>b.onclick=()=>{
  const id=b.dataset.kind;if(st.selected.has(id)&&st.selected.size>1)st.selected.delete(id);
@@ -43,7 +45,7 @@ async function start(){
  const b=$("cloudEchoStart");b.disabled=true;
  try{
  const q=new URLSearchParams({scope:st.scope});
- if(st.scope==="chapter"){if(!st.chapter){adapter.toast("请从刚才读完的章节进入复习，或选择最近章节");b.disabled=false;return}
+ if(st.scope==="chapter"){if(!st.chapter){adapter.toast("请从正在阅读的章节点击「本章复习」进入");b.disabled=false;return}
  q.set("chapterId",st.chapter)}
  if(st.scope==="custom"){
  if(st.book!=="all")q.set("bookId",st.book);
@@ -51,7 +53,7 @@ async function start(){
  }
  const payload=await adapter.request("/api/me/echo/available?"+q);
  const words=payload.words||[],allowed=[...st.selected].filter(x=>payload.availableGames.includes(x));
- if(!words.length){adapter.toast("没有符合条件的已读章节标注词；请先标记章节已读完");b.disabled=false;return}
+ if(!words.length){adapter.toast(st.scope==="chapter"?"这章尚无可用的目标词卡，请检查本章词汇数据":"当前范围尚无可复习词汇，请调整范围或完成章节阅读");b.disabled=false;return}
  if(!allowed.length){adapter.toast("当前词量较少，可先只选「单词找回」");b.disabled=false;return}
  const randomized=[...words].sort(()=>Math.random()-.5).slice(0,8);
  st.questions=randomized.map((w,i)=>({word:w,kind:allowed[i%allowed.length],
