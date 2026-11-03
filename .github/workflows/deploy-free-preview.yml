@@ -2,7 +2,7 @@
 # The production source remains on the separate, release-reviewed branch.
 # No automatic push/PR deploy, no database writes, no private manuscript assets.
 name: Deploy Miaowu CET4 members-only site (production Worker)
-run-name: CET4 protected Worker · pinned Rainy Night release · ${{ github.actor }}
+run-name: CET4 protected Worker · self-service publisher import · ${{ github.actor }}
 
 on:
   workflow_dispatch:
@@ -28,14 +28,14 @@ jobs:
       - name: Checkout fixed, reviewed release (not default main)
         uses: actions/checkout@v4
         with:
-          ref: a748c09efa78b0f02c16a7b6efd0a24cf2d908fe
+          ref: 4a49a3795c43bf20001ed947810dc8d9dea34bfc
           persist-credentials: false
 
       - name: Guard exact release SHA and target config
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "a748c09efa78b0f02c16a7b6efd0a24cf2d908fe"
+          test "$(git rev-parse HEAD)" = "4a49a3795c43bf20001ed947810dc8d9dea34bfc"
           grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
           grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
           test ! -e private-output
