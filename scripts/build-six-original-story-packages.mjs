@@ -85,7 +85,7 @@ export function parseS82Markdown(id,source,byWord,allowed){
   });
   if(anchors<2||anchors>200)fail("BAD_WORD_DENSITY_"+id+"_"+(i+1));
   return {id:"s82-"+id+"-ch"+String(i+1).padStart(2,"0"),
-   number:i+1,title:heading[2].trim(),preview:i===0,paragraphs:segments};
+   number:i+1,title:heading[2].trim(),preview:false,paragraphs:segments};
  });
  const words=[...ids].map(w=>structuredClone(byWord.get(w)));
  const bundle={version:1,sourceLabel:"s85-cet4-originals-private-first-draft-includes-unverified-form-candidates",
@@ -98,7 +98,7 @@ export function parseS82Markdown(id,source,byWord,allowed){
   chaptersLength:chapters.map(ch=>({number:ch.number,
    han:(ch.paragraphs.map(p=>p.segments.map(s=>s.text||s.surface).join("")).join("")
     .match(/\p{Script=Han}/gu)||[]).length})),
-  publicationAllowed:false,firstChapterPreviewOnly:true}};
+  publicationAllowed:false,freePreviewChapters:0,firstChapterPreviewOnly:false}};
 }
 export function buildS82DraftBundles(){
  const original=composeRainyNightSeasonDraft().bundle;
