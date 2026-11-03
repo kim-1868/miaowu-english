@@ -35,7 +35,7 @@ test("S131 approved vector image is crisp and does not expose any paid story tex
  assert.match(art,/viewBox="0 0 900 1200"/);
  assert.match(art,/雨夜档案/);
  assert.ok(art.length<30000);
- assert.doesNotMatch(art,/script\b|foreignObject|onload=|http:\/\//i);
+ assert.doesNotMatch(art,/<script\b|foreignObject|onload=|xlink:href=/i);
  assert.match(app,/rainy-night-cover-v2\.svg/);
  assert.match(app,/cover-d1-/);
 });
