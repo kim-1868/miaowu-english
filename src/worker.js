@@ -8,6 +8,7 @@ import { handleOpsConsole } from "./ops-console.js";
 import { handleOpsSales } from "./ops-sales.js";
 import { handleOpsImport } from "./ops-import.js";
 import { handleOpsDraftRevision } from "./ops-draft-revision.js";
+import { handleBookCover } from "./book-covers.js";
 import { handleLearningState } from "./reading-library.js";
 import {handleEcho} from "./echo-cloud.js";
 import {
@@ -632,6 +633,8 @@ async function api(req, env) {
   if (path.startsWith("/api/ops/")) {
     if (["POST","PUT","PATCH","DELETE"].includes(req.method) && !checkOrigin(req)) return reject("INVALID_ORIGIN",403);
     if(path==="/api/ops/me")return handleOps(req,env,path);
+    if(/^\/api\/ops\/books\/[a-zA-Z0-9_-]{1,80}\/cover$/.test(path))
+      return handleBookCover(req,env,path);
     if(path.startsWith("/api/ops/sales/"))return handleOpsSales(req,env,path);
     if(path==="/api/ops/import"||path==="/api/ops/lexicon")return handleOpsImport(req,env,path);
     if(path==="/api/ops/import/revise")return handleOpsDraftRevision(req,env,path);
@@ -643,6 +646,8 @@ async function api(req, env) {
   if (!env.DB || !env.ACTIVATION_PEPPER || env.ACTIVATION_PEPPER.length < 32) {
     return reject("SERVICE_NOT_CONFIGURED", 503);
   }
+  if(/^\/api\/covers\/[a-zA-Z0-9_-]{1,80}$/.test(path))
+    return handleBookCover(req,env,path);
   if (["POST","PUT","PATCH","DELETE"].includes(req.method) && !checkOrigin(req)) return reject("INVALID_ORIGIN", 403);
   if (path.startsWith("/api/staging/editor/")) {
     return handleEditor(req,env,path);
