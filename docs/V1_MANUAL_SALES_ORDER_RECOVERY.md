@@ -1,5 +1,21 @@
 # 妙屋英语｜人工售卖与订单密码找回 V1
 
+## 新增：网站受保护的人工发码台（首选）
+
+在完成正式数据库增量迁移、审核生产密钥和运营身份后，商家可以直接使用网站现有的 `/ops.html` 运营出版台底部的「人工订单发码」，不必在本地复制或重新配置 `ACTIVATION_PEPPER`。
+
+- 服务器端使用已配置的生产 `ACTIVATION_PEPPER`，生成一次性分类激活码和独立订单找回凭证，原文仅在受保护的商家操作响应中返回一次。
+- 必须通过独立的 `X-Mw-Ops-Key` 运营身份验证，且数据库登记的角色为 `publisher`，环境为 `production`。
+- 需要同时开启 Worker 配置 `OPS_CONSOLE_ENABLED=true`、`OPS_SALES_ENABLED=true`、`ORDER_RECOVERY_ENABLED=true`，并配置生产 `OPS_TOKEN_PEPPER`（独立运营密钥；不能复用读者密码）。保持 Cloudflare Access 等外层访问保护。
+- 操作：验证运营身份 → 选择显示为可发码的商品类别 → 输入小红书真实订单号 → 在小红书后台核实到账并确认商品内容可交付 → 勾选两项确认 → 生成一枚专属激活码 → 立即复制完整发货文案 → 在小红书私信发送。
+- 相同订单重复发码会被生产 D1 唯一约束拒绝；可在「查询订单是否已发码」核实状态，但**无法再次读取激活码明文或找回凭证明文**。
+- 系统写入 `ops_audit_events` 审计事件、`activation_codes` 激活状态及 `order_recovery_credentials` 找回凭证；单日最多允许新增 30 个付费订单（代码层硬限额），超过后停止。
+- 没有实际发布章节的分类不会出现在可发码选项中。注意，仅有章节不代表学习内容已完成商业审核；仍需人工确认和商品说明一致。
+- 发布前必须验证生产 D1 已包含 `ops_operators`、`ops_audit_events` 和新增 `order_recovery_credentials`，且商家身份已真实创建。不得默认打开后台销售开关。
+- 若原运营身份没有配置，不要在聊天里发送运营 Token 或 Pepper；需要单独通过安全操作完成一次身份配置。
+
+`scripts/issue-manual-paid-order.mjs` 保留为离线备用工具，仅适用于安全持有现有生产 Pepper 的运营终端。日常发货优先使用受保护网站后台。
+
 ## 已实现的产品行为
 
 - 商品选择：在操作者本地执行 `node scripts/issue-manual-paid-order.mjs`，选择允许发码的类目（CET4/CET6/考研/雅思）。只有**已经可以兑现实际内容**的类目才允许实际售卖；类目出现在选择菜单不代表已经上架或内容完成。
@@ -72,4 +88,6 @@
 - `scripts/fulfill-voucher-orders.mjs`：底层离线订单发码，含独立找回凭证
 - `db/production/003_paid_order_recovery.sql`：生产增量迁移
 - `src/worker.js`：`POST /api/auth/recover-by-order`，受生产配置开关保护
+- `src/ops-sales.js`：发布者专用商品分类、订单发码及状态查询接口
+- `public/ops.html` 和 `public/ops-console.js`：商家发码操作入口
 - `public/app.js`：忘记密码订单找回界面，失败可选择人工找回
