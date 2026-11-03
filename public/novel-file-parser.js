@@ -5,7 +5,7 @@
 const ID=/^[a-z][a-z0-9_-]{2,79}$/;
 const heading=/^(?:\s*#{2,3}\s+(.+)|\s*第\s*([0-9零一二三四五六七八九十百]+)\s*章\s*[：:、·.\s-]*(.*)|\s*Chapter\s+([0-9]+)\s*[：:.\s-]*(.*))$/i;
 const token=/\[\[([a-z][a-z'-]{0,69})(?:\|([^\]\r\n]{1,200}))?\]\]|[a-z][a-z'-]*/gi;
-const category=new Set(["cet4","cet6","postgrad","ielts"]);
+const category=/^[a-z][a-z0-9-]{2,29}$/;
 const texts=x=>typeof x==="string"?x.trim():"";
 const groupWord=name=>texts(name).toLowerCase();
 const safeName=w=>({id:w.id,headword:w.headword,meaningZh:w.meaningZh,
@@ -47,7 +47,7 @@ export function parseNovelTextFile(source,opts={}){
   previewChapters=0,words=[]}=opts;
  if(!ID.test(bookId||""))throw Error("BOOK_ID_INVALID");
  if(!texts(title)||texts(title).length>120)throw Error("BOOK_TITLE_INVALID");
- if(!category.has(kind))throw Error("BOOK_CATEGORY_INVALID");
+ if(typeof kind!=="string"||!category.test(kind))throw Error("BOOK_CATEGORY_INVALID");
  if(!Number.isInteger(previewChapters)||previewChapters<0)throw Error("PREVIEW_COUNT_INVALID");
  if(typeof source!=="string"||!source.trim())throw Error("STORY_FILE_EMPTY");
  const list=splitChapters(source);

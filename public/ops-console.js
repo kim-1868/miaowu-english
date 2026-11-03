@@ -53,6 +53,7 @@ function syncButtons(){
     pendingNovel.book?.id===chosen.id&&pendingNovel.book?.title===chosen.title&&
     readiness?.contentFingerprint);
   $("refresh").disabled=!connected();
+  syncCategoryCreateButton();
   if(!readiness){$("approve").disabled=true;$("publish").disabled=true;$("withdraw").disabled=true;return}
   if(chosen?.status==="draft"){
     const checks=[...$("checks").querySelectorAll("input")];
@@ -364,21 +365,72 @@ function syncSaleButtons(){
  $("saleIssueButton").disabled=!ok||!$("saleCategory").value||
   !orderEntered||receiptOpen;
 }
+let categoryCatalog=[];
+function categoryState(product){
+ if(!product.isVisible)return product.publishedBooks>0?
+  "内容已发布 · 尚未向读者开放":"筹备中 · 读者不可见";
+ if(!product.issuable)return "已显示在书架 · 暂无正式内容";
+ return "已开放 · 可以发码";
+}
+function renderCategoryCatalog(){
+ const root=$("categoryCatalog");
+ root.replaceChildren();
+ if(!categoryCatalog.length){
+  root.append(byId("p","暂无已配置分类。请先添加隐藏分类。","soft"));
+  return;
+ }
+ for(const product of categoryCatalog){
+  const item=byId("div",undefined,"book-entry");
+  item.append(byId("strong",product.title+"（"+product.slug+"）"));
+  item.append(byId("p",categoryState(product)+" · 草稿 "+
+    product.draftBooks+" 本 · 已发布 "+product.publishedBooks+" 本"));
+  // A new category is created hidden. Its publication remains a separate
+  // action only after at least one real chapter has been published.
+  if(!product.isVisible&&product.publishedBooks>0){
+   const activate=byId("button","开放此分类书架与售卖","secondary");
+   activate.type="button";
+   activate.addEventListener("click",async()=>{
+    if(busy)return;
+    if(!window.confirm("此操作会向读者展示「"+product.title+
+      "」的已发布内容，并允许为它发放专属激活码。确认已审核内容与售卖范围？"))return;
+    busy=true;activate.disabled=true;
+    try{
+     await api("/api/ops/sales/categories/launch","POST",{slug:product.slug});
+     $("categoryManageStatus").textContent="分类已经开放："+product.title;
+     await loadSaleCategories();
+    }catch(e){$("categoryManageStatus").textContent=e.message;}
+    finally{busy=false;syncButtons();}
+   });
+   item.append(activate);
+  }
+  root.append(item);
+ }
+}
 async function loadSaleCategories(){
  saleReady=false;syncSaleButtons();
  const data=await api("/api/ops/sales/categories");
- const select=$("saleCategory");
- select.replaceChildren(byId("option","选择已发布的商品分类"));
+ categoryCatalog=Array.isArray(data.categories)?data.categories:[];
+ renderCategoryCatalog();
+ const select=$("saleCategory"),prior=select.value;
+ select.replaceChildren(byId("option","选择可售的商品分类"));
  select.firstChild.value="";
- for(const product of data.categories||[]){
+ for(const product of categoryCatalog){
   if(!product.issuable)continue;
   const option=byId("option",product.title+"（"+product.slug+"）");
   option.value=product.slug;select.append(option);
  }
+ if([...select.options].some(x=>x.value===prior))select.value=prior;
  saleReady=select.options.length>1;
- saleStatus(saleReady?"已验证发布者身份，选择商品后可以发码。":
-   "目前没有已发布且允许发码的商品分类。");
- syncSaleButtons();
+ const upload=$("uploadCategory"),old=upload.value;
+ upload.replaceChildren();
+ for(const product of categoryCatalog){
+  const option=byId("option",product.title+"（"+product.slug+"）");
+  option.value=product.slug;upload.append(option);
+ }
+ if([...upload.options].some(x=>x.value===old))upload.value=old;
+ saleStatus(saleReady?"已验证发布者身份；只有具备已发布内容、已开放的分类可以发码。":
+   "目前没有可售类别，请先在分类管理中准备并发布商品内容。");
+ syncButtons();
 }
 function clearSaleReceipt(){
  $("saleDelivery").value="";$("saleReceipt").hidden=true;
@@ -439,11 +491,31 @@ $("saleClear").addEventListener("click",()=>{
  $("saleOrder").focus();
  saleStatus("已清除本笔发货凭证，可输入下一笔已付款订单。");
 });
+// Create hidden content categories without writing anything to the public shelf.
+function syncCategoryCreateButton(){
+ $("categoryCreateButton").disabled=!connected()||busy||
+  !$("categoryName").value.trim()||!$("categorySlug").value.trim();
+}
+["categoryName","categorySlug"].forEach(id=>
+ $(id).addEventListener("input",syncCategoryCreateButton));
+button("categoryCreateButton",async()=>{
+ const title=$("categoryName").value.trim();
+ const slug=$("categorySlug").value.trim();
+ if(!/^[a-z][a-z0-9-]{2,29}$/.test(slug))
+  throw Error("分类标识只能是 3–30 位小写英文字母、数字或连字符，需以字母开头");
+ if(title.length<2||title.length>40)throw Error("分类名称需要 2–40 个字符");
+ const created=await api("/api/ops/sales/categories/create","POST",{slug,title});
+ $("categoryName").value="";$("categorySlug").value="";
+ $("categoryManageStatus").textContent="已创建隐藏分类「"+created.title+
+  "」。它不会出现在读者书架，也不能发码；请先上传小说并完成内容审核。";
+ await loadSaleCategories();
+});
 button("connect",verify);button("refresh",()=>loadBooks());button("approve",doApprove);
 button("publish",doPublish);button("withdraw",doWithdraw);
 button("disconnect",async()=>{
   key="";identity=null;chosen=null;clearActions();clearSaleReceipt();
-  saleReady=false;syncSaleButtons();$("opsKey").value="";
+  saleReady=false;categoryCatalog=[];renderCategoryCatalog();
+  syncSaleButtons();$("opsKey").value="";
   $("operatorIdentity").textContent="未登录";$("books").replaceChildren(byId("p","已清除密钥。","soft"));
   $("audit").replaceChildren(byId("p","请先验证身份。","soft"));
   $("selected").textContent="请选择一本书";status("本页内存中的运营密钥已清除。");

@@ -1,6 +1,6 @@
 // Shared pure validator for D1 editor and offline SQL importer. No Node dependencies.
 const ID = /^[a-z][a-z0-9_-]{2,79}$/;
-const CATEGORIES = new Set(["cet4", "cet6", "postgrad", "ielts"]);
+const CATEGORY_SLUG = /^[a-z][a-z0-9-]{2,29}$/;
 const fail = message => { throw new Error("Content validation: " + message); };
 function string(value, where, min = 1, max = 4000) {
   if (typeof value !== "string" || value.trim().length < min || value.length > max ||
@@ -24,7 +24,7 @@ export function validatePackage(input) {
   const book=input.book;
   id(book.id,"book.id");
   string(book.title,"book.title",1,120);
-  if (!CATEGORIES.has(book.category)) fail("book.category must be cet4/cet6/postgrad/ielts");
+  if (typeof book.category!=="string" || !CATEGORY_SLUG.test(book.category)) fail("book.category must use a safe configured category slug");
   optional(book.description,"book.description",2000);
   optional(book.coverKey,"book.coverKey",200);
   const chapters=array(input.chapters,"chapters",1,60);
