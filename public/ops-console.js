@@ -46,6 +46,7 @@ function button(id,fn){
   });
 }
 function syncButtons(){
+  $("checkNovel").disabled=!connected()||!$("uploadNovel").files?.length;
   $("refresh").disabled=!connected();
   if(!readiness){$("approve").disabled=true;$("publish").disabled=true;$("withdraw").disabled=true;return}
   if(chosen?.status==="draft"){
@@ -180,6 +181,142 @@ async function doWithdraw(){
   status("已撤回公开访问。"+(result.supportActionRequired?"该分类存在有效权益，请依售后政策处理已购用户。":""));
   await loadBooks(chosen.id);
 }
+let pendingNovel=null;
+const uploadMsg=message=>{$("uploadStatus").textContent=message;};
+function resetNovel(){
+ pendingNovel=null;$("importNovel").disabled=true;
+ $("uploadReport").hidden=true;$("uploadPreview").hidden=true;
+}
+function uploadedTitle(name){
+ return name.replace(/\.(json|md|markdown|txt)$/i,"").replace(/[_-]+/g," ").trim();
+}
+async function readFile(inputId){
+ const file=$(inputId).files?.[0];
+ if(!file)return null;
+ if(file.size>2_000_000)throw Error("文件超过2MB，请拆分章节或者压缩内容。");
+ return await file.text();
+}
+function localReport(pkg,external){
+ const chapters=pkg.chapters?.length||0;
+ const words=pkg.words?.length||0;
+ const anchors=(pkg.chapters||[]).reduce((n,c)=>n+(c.paragraphs||[]).reduce(
+  (p,par)=>p+(par.segments||[]).filter(s=>s.wordId).length,0),0);
+ const metadata=(pkg.words||[]).filter(w=>!w.phoneticUk||!w.phoneticUs||
+  !w.partOfSpeech||!w.exampleEn||!w.exampleZh);
+ const warnings=external?.warnings||[];
+ return {chapters,words,anchors,paid:(pkg.chapters||[]).filter(c=>!c.preview).length,
+  metadataIncomplete:metadata.map(w=>w.headword),
+  warnings,warningsCount:warnings.length,avgPerParagraph:external?.avgPerParagraph??null};
+}
+function previewNovelPackage(pkg){
+ const wrap=$("uploadPreviewSample");wrap.replaceChildren();
+ const cards=new Map((pkg.words||[]).map(w=>[w.id,w]));
+ for(const ch of (pkg.chapters||[]).slice(0,2)){
+  const heading=document.createElement("strong");heading.textContent="第"+ch.number+"章 · "+ch.title;wrap.append(heading);
+  for(const paragraph of (ch.paragraphs||[]).slice(0,3)){
+   const line=document.createElement("p");
+   for(const seg of paragraph.segments||[]){
+    if(!seg.wordId){line.append(document.createTextNode(seg.text||""));continue}
+    const word=cards.get(seg.wordId);
+    const b=document.createElement("button");
+    b.type="button";b.className="secondary";b.style.margin="0 3px";
+    b.style.padding="1px 5px";b.textContent=seg.surface;
+    b.title=(word?.meaningZh||seg.gloss||"")+" · "+(word?.phoneticUs||word?.phoneticUk||"");
+    b.addEventListener("click",()=>{
+     $("uploadPreviewWord").textContent=(word?.headword||seg.surface)+" · "+
+      (word?.phoneticUk||"")+" / "+(word?.phoneticUs||"")+" · "+
+      (word?.meaningZh||seg.gloss||"")+"；"+(word?.exampleEn||"");
+     if("speechSynthesis" in window){
+      speechSynthesis.cancel();
+      const utterance=new SpeechSynthesisUtterance(word?.headword||seg.surface);
+      utterance.lang="en-US";utterance.rate=.85;speechSynthesis.speak(utterance);
+     }
+    });
+    line.append(b);
+   }
+   wrap.append(line);
+  }
+ }
+ $("uploadPreview").hidden=false;
+}
+async function examineNovel(){
+ if(!connected())throw Error("请先验证运营身份");
+ const novel=$("uploadNovel").files?.[0];
+ if(!novel)throw Error("请先选择小说文件");
+ const source=await readFile("uploadNovel");
+ let pkg,report;
+ if(/\.json$/i.test(novel.name)){
+  try{const data=JSON.parse(source);pkg=data.package??data;}
+  catch{throw Error("文件不是有效JSON，请检查文件格式")}
+  report=localReport(pkg,null);
+ }else if(/\.(md|markdown|txt)$/i.test(novel.name)){
+  const title=$("uploadBookTitle").value.trim()||uploadedTitle(novel.name);
+  const bookId=$("uploadBookId").value.trim();
+  const category=$("uploadCategory").value;
+  const previewChapters=Number($("uploadPreviewCount").value||"0");
+  const common=await api("/api/ops/lexicon?category="+encodeURIComponent(category));
+  let supplement=[];
+  if($("uploadWords").files?.length){
+   try{
+    const parsed=JSON.parse(await readFile("uploadWords"));
+    supplement=Array.isArray(parsed)?parsed:parsed.words||[];
+    if(!Array.isArray(supplement))throw Error();
+   }catch{throw Error("补充词卡JSON格式不正确，应是词卡数组或含words数组的对象")}
+  }
+  const {parseNovelTextFile}=await import("/novel-file-parser.js");
+  let result;
+  try{result=parseNovelTextFile(source,{bookId,title,
+   category,previewChapters,description:$("uploadBookDescription").value.trim(),
+   words:[...(common.words||[]),...supplement]});}
+  catch(e){
+   if(e.details?.length)throw Error("有"+e.details.length+"个显式标记词没有对应词卡，例如："+e.details.slice(0,8).map(x=>x.word).join("、"));
+   throw e;
+  }
+  pkg=result.package;report=localReport(pkg,result.report);
+ }else throw Error("当前支持JSON、Markdown(.md)和TXT文件");
+ if(pkg?.version!==1||!pkg.book?.id||!Array.isArray(pkg.chapters)||
+  !pkg.chapters.length||!Array.isArray(pkg.words)||!pkg.words.length)
+  throw Error("小说文件缺少书籍、章节或目标词卡，无法导入");
+ if(report.anchors===0)throw Error("没有可点击的英文词汇标注，请检查词库匹配");
+ if(JSON.stringify(pkg).length>1_500_000)throw Error("内容包过大，请缩短单次上传文件");
+ if(report.metadataIncomplete.length)uploadMsg("预检发现"+report.metadataIncomplete.length+"个词卡缺少音标/例句。可以导入草稿，但必须补齐后才能正式上架。");
+ else uploadMsg("文件识别成功。预览报告如下，确认后点击“导入为新草稿”。");
+ pendingNovel=pkg;$("importNovel").disabled=false;
+ const lines=[
+  "书籍："+pkg.book.title+"（"+pkg.book.category+"）",
+  "章节："+report.chapters+"；付费章节："+report.paid,
+  "词卡："+report.words+"；正文标注："+report.anchors,
+  "缺少词卡信息："+report.metadataIncomplete.length,
+  "待复核识别提示："+report.warningsCount
+ ];
+ if(report.avgPerParagraph!=null)lines.push("平均每段英语词："+report.avgPerParagraph);
+ if(report.metadataIncomplete.length)lines.push("缺失信息词："+report.metadataIncomplete.slice(0,20).join("、"));
+ if(report.warningsCount)lines.push("示例提示："+report.warnings.slice(0,12).map(x=>
+  "第"+x.chapter+"章"+x.paragraph+"段 "+x.kind+" "+(x.word||"")).join("；"));
+ $("uploadReport").hidden=false;$("uploadReport").textContent=lines.join("\n");
+ previewNovelPackage(pkg);
+}
+$("uploadNovel").addEventListener("change",()=>{
+ resetNovel();const file=$("uploadNovel").files?.[0];
+ if(file&&!$("uploadBookTitle").value)$("uploadBookTitle").value=uploadedTitle(file.name);
+ if(file&&!$("uploadBookId").value)$("uploadBookId").value="story-"+crypto.randomUUID().slice(0,12);
+ syncButtons();
+});
+["uploadWords","uploadBookTitle","uploadBookId","uploadCategory",
+ "uploadPreviewCount","uploadBookDescription"].forEach(id=>{
+  $(id).addEventListener("change",resetNovel);
+});
+button("checkNovel",async()=>{
+ resetNovel();await examineNovel();
+});
+button("importNovel",async()=>{
+ if(!pendingNovel)throw Error("请先点击文件检查");
+ const result=await api("/api/ops/import","POST",{package:pendingNovel});
+ uploadMsg("草稿导入成功：《"+result.title+"》，"+result.chapters+"章、"+
+  result.wordCards+"词卡。未发布；请在书籍目录中完成审核和上架。");
+ resetNovel();await loadBooks(result.bookId);
+});
+
 button("connect",verify);button("refresh",()=>loadBooks());button("approve",doApprove);
 button("publish",doPublish);button("withdraw",doWithdraw);
 button("disconnect",async()=>{
