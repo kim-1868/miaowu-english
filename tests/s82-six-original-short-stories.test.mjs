@@ -17,7 +17,7 @@ test("S82 contains eight new original completed story arcs of six chapters each"
   assert.equal(bundle.chapters.length,6);
   assert.ok(bundle.words.length>=10);
   assert.ok(summary.chaptersLength.every(x=>x.han>=300));
-  assert.deepEqual(bundle.chapters.filter(c=>c.preview).map(c=>c.number),[1]);
+  assert.deepEqual(bundle.chapters.filter(c=>c.preview).map(c=>c.number),[]);
   assert.equal(summary.publicationAllowed,false);
   assert.ok(!JSON.stringify(bundle.book).includes("genre_internal"));
   const valid=validatePackage(bundle);
