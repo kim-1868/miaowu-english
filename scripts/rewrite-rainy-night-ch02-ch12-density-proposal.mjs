@@ -180,7 +180,7 @@ export function buildChapters2to12DensityCandidate(){
  if(candidate.chapters.length!==12||candidate.words.length!==188)throw Error("SOURCE_INVENTORY_DRIFT");
  const rules=RULES.filter(([from,to])=>!forbidden.has(from)&&
   [...to.matchAll(TOKEN)].every(match=>byName.has(match[1])&&!UNUSABLE.has(match[1])));
- const output=[],audit=[];
+ const output=[],audit=[],unappliedExtras=[];
  for(const original of candidate.chapters.slice(1)){
   let replacements=0,underfilled=0,sourceMentions=0;
   const paragraphs=original.paragraphs.map((p,pi)=>{
@@ -189,8 +189,7 @@ export function buildChapters2to12DensityCandidate(){
    const added=[];
    for(const [before,after] of (EXTRA[original.number]?.[pi+1]||[])){
     const candidate=replaceOnlyPlain(source,before,after);
-    if(candidate===source)throw Error("TARGETED_EDITORIAL_PHRASE_CHANGED_CH"+
-      original.number+"_P"+(pi+1)+": "+before);
+    if(candidate===source){unappliedExtras.push({chapter:original.number,paragraph:pi+1});continue;}
     source=candidate;
     for(const m of after.matchAll(TOKEN))added.push(m[1]);
    }
@@ -268,6 +267,7 @@ export function buildChapters2to12DensityCandidate(){
    candidateAnchors:sum,additionalAnchors:sum-originalCount,
    underfilledParagraphs:audit.filter(x=>x.needsManualRewrite).length,
    underfilledChapters:chapterReports.filter(x=>x.underfilledParagraphs>0).length,
+   unappliedExtras,unappliedExtraCount:unappliedExtras.length,
    chapterReports,reviewStatus:"PROVISIONAL_WORD_REPLACEMENTS_NOT_APPROVED",
    productionD1Touched:false,readyToPublish:false}};
 }
