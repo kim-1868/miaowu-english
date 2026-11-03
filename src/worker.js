@@ -745,7 +745,7 @@ export default {
         h.set("x-frame-options","DENY");
         h.set("content-security-policy",
           "default-src 'none'; script-src 'self'; style-src 'self'; "+
-          "connect-src 'self'; img-src 'self'; form-action 'none'; "+
+          "connect-src 'self'; img-src 'self' blob:; form-action 'none'; "+
           "base-uri 'none'; frame-ancestors 'none'");
         return attachPreviewCookie(
           new Response(response.body,{status:response.status,headers:h}),previewCookie);
