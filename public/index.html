@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f8f3ec" />
   <title>妙屋英语 · THE STORY & WORD LIBRARY｜故事阅读与词汇记忆</title>
-  <link rel="stylesheet" href="/styles.css?v=20261103-home-v17" />
+  <link rel="stylesheet" href="/styles.css?v=20261103-immersive-v18" />
 </head>
 <body>
   <div class="app-shell">
@@ -25,7 +25,7 @@
   </div>
   <main class="app-shell">
     <section id="view-library" class="view active">
-      <div class="hero story-home-hero">
+      <div class="hero story-home-hero" id="miaowuHomeScene">
         <div class="hero-copy">
           <span class="eyebrow">MIAOWU · YOUR COZY WORD LIBRARY</span>
           <h1>把故事读下去，<br><i>把喜欢的单词留下来。</i></h1>
@@ -36,7 +36,9 @@
           </div>
         </div>
         <div class="hero-art story-home-art" aria-hidden="true">
-          <picture><source srcset="/cat-reading-hd.avif?v=20261103-hd-v15" type="image/avif"><img src="/cat-reading-watercolor.webp?v=20261103-watercolor" alt="" width="1400" height="512" decoding="async" fetchpriority="high"></picture>
+          <picture class="home-scene-picture"><source srcset="/cat-reading-hd.avif?v=20261103-hd-v15" type="image/avif"><img src="/cat-reading-watercolor.webp?v=20261103-watercolor" alt="" width="1400" height="512" decoding="async" fetchpriority="high"></picture>
+          <span class="home-scene-rain" aria-hidden="true"></span>
+          <span class="home-scene-lamp" aria-hidden="true"></span>
         </div>
       </div>
       <aside class="home-reminder-strip" aria-label="词汇复习提醒">
@@ -91,6 +93,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="/chapter-words.js"></script>
   <script src="/echo-cloud.js?v=20261103-v12-review-cover"></script>
-  <script src="/app.js?v=20261103-home-v17"></script>
+  <script src="/app.js?v=20261103-immersive-v18"></script>
 </body>
 </html>

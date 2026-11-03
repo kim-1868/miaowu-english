@@ -1233,6 +1233,39 @@
       $('playerState').textContent='朗读中 · 第'+(current+1)+'段';
       window.speechSynthesis.speak(u);
     }
+    // Desktop-only pointer parallax. All movement is decorative and
+    // disabled for touch/keyboard users and when reduced motion is requested.
+    function setupHomeSceneMotion(){
+      const scene=$('miaowuHomeScene');
+      if(!scene||typeof window.matchMedia!=='function'||
+         !window.matchMedia('(hover: hover) and (pointer: fine)').matches)return;
+      const reduce=window.matchMedia('(prefers-reduced-motion: reduce)');
+      let frame=0,dx=0,dy=0;
+      const apply=()=>{
+        frame=0;
+        if(!scene.isConnected||reduce.matches)return;
+        scene.style.setProperty('--home-shift-x',dx.toFixed(1)+'px');
+        scene.style.setProperty('--home-shift-y',dy.toFixed(1)+'px');
+      };
+      const reset=()=>{
+        if(frame){window.cancelAnimationFrame(frame);frame=0}
+        scene.style.removeProperty('--home-shift-x');
+        scene.style.removeProperty('--home-shift-y');
+      };
+      scene.addEventListener('pointermove',event=>{
+        if(reduce.matches)return;
+        const rect=scene.getBoundingClientRect();
+        if(!rect.width||!rect.height)return;
+        dx=Math.max(-9,Math.min(9,((event.clientX-rect.left)/rect.width-.5)*18));
+        dy=Math.max(-5,Math.min(5,((event.clientY-rect.top)/rect.height-.5)*10));
+        if(!frame)frame=window.requestAnimationFrame(apply);
+      },{passive:true});
+      scene.addEventListener('pointerleave',reset);
+      scene.addEventListener('pointercancel',reset);
+      if(typeof reduce.addEventListener==='function')
+        reduce.addEventListener('change',event=>{if(event.matches)reset()});
+    }
+    setupHomeSceneMotion();
     document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=openFirstCloudBook;$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');
     $('mobileChapterOpen').onclick=()=>{
       $('readerLayout').classList.remove('vocab-drawer-open');

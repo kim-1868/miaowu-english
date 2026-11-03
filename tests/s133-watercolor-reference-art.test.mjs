@@ -31,8 +31,8 @@ test("S133 homepage uses watermark-free image crops without fake account stats",
  const css=text("styles.css");
  assert.ok(html.includes('src="/cat-reading-watercolor.webp?v=20261103-watercolor"'));
  assert.ok(html.includes('srcset="/cat-reading-hd.avif?v=20261103-hd-v15"'));
- assert.ok(html.includes('href="/styles.css?v=20261103-home-v17"'));
- assert.ok(html.includes('src="/app.js?v=20261103-home-v17"'));
+ assert.ok(html.includes('href="/styles.css?v=20261103-immersive-v18"'));
+ assert.ok(html.includes('src="/app.js?v=20261103-immersive-v18"'));
  assert.match(app,/shelf-'\+c\.id\+'\.svg\?v=20261103-home-v17/);
  assert.ok(app.includes('const due=user?cloudDue():0'));
  assert.ok(app.includes('renderHomeStudyStats()'));
