@@ -77,7 +77,7 @@ async function createCategory(env,request,operator){
  const slug=data?.slug;
  const title=typeof data?.title==="string"?data.title.normalize("NFKC").trim():"";
  if(typeof slug!=="string"||!CATEGORY.test(slug)||
-    title.length<2||title.length>TITLE_MAX||/[\\u0000-\\u001f]/.test(title))
+    title.length<2||title.length>TITLE_MAX||/[\u0000-\u001f]/.test(title))
   return fail("INVALID_CATEGORY_INPUT",400);
  const auditId=crypto.randomUUID(),reqId=crypto.randomUUID();
  try{
