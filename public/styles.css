@@ -1302,3 +1302,103 @@ html[data-theme="dark"] #view-library .story-home-hero .reminder-paw .solid-cat-
     height:49px;
   }
 }
+
+
+/* V1.6 sharp line-art course icons and consistent course-level baselines.
+   Fixed text rows prevent CET-4, CET-6, POSTGRAD and IELTS from moving
+   vertically when the Chinese heading wraps at different viewport widths. */
+#view-library .category-row .category{
+  grid-template-columns:minmax(75px,39%) minmax(0,1fr);
+  grid-template-rows:54px 24px 24px;
+  align-content:center;
+  column-gap:9px;
+  row-gap:1px;
+  min-height:162px;
+  padding-bottom:27px;
+}
+#view-library .category-row .category strong{
+  display:flex;
+  grid-column:2;grid-row:1;
+  align-items:end;
+  align-self:stretch;
+  margin:0;
+  min-width:0;
+  font-size:clamp(15px,1.42vw,21px);
+  line-height:1.4;
+}
+#view-library .category-row .category .category-en{
+  display:block;
+  grid-column:2;grid-row:2;
+  align-self:start;
+  margin:0;
+  min-width:0;
+  min-height:0;
+  height:24px;
+  font:14px/24px Georgia,serif;
+  white-space:nowrap;
+}
+#view-library .category-row .category small{
+  grid-column:2;grid-row:3;
+  align-self:start;
+  margin:0;
+  line-height:1.5;
+}
+#view-library .category-row .category .category-illustration{
+  grid-column:1;
+  grid-row:1 / span 3;
+  display:block;
+  width:100%;
+  max-width:150px;
+  height:118px;
+  object-fit:contain;
+  align-self:center;
+  justify-self:center;
+  mix-blend-mode:normal;
+  -webkit-mask-image:none;
+  mask-image:none;
+  filter:drop-shadow(0 2px 2px rgba(93,56,42,.08))!important;
+}
+html[data-theme="dark"] #view-library .category-row .category .category-illustration{
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.12))!important;
+}
+@media (min-width:821px) and (max-width:1120px){
+  #view-library .category-row .category{
+    grid-template-columns:minmax(60px,36%) minmax(0,1fr);
+    column-gap:4px;
+    padding-left:5px;
+    padding-right:6px;
+  }
+  #view-library .category-row .category strong{font-size:clamp(13px,1.35vw,17px)}
+  #view-library .category-row .category .category-illustration{height:105px}
+}
+@media (max-width:540px){
+  #view-library .category-row .category{
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:92px 47px 23px 24px;
+    min-height:206px;
+    justify-items:center;
+    text-align:center;
+    gap:0;
+    padding:8px 6px 23px;
+  }
+  #view-library .category-row .category .category-illustration{
+    grid-column:1;grid-row:1;
+    max-width:132px;height:87px;
+  }
+  #view-library .category-row .category strong{
+    display:flex;grid-column:1;grid-row:2;
+    justify-content:center;align-items:center;
+    font-size:16px;line-height:1.4;text-align:center;
+    width:100%;
+  }
+  #view-library .category-row .category .category-en{
+    grid-column:1;grid-row:3;
+    height:23px;font-size:12px;line-height:23px;
+    text-align:center;
+  }
+  #view-library .category-row .category small{
+    grid-column:1;grid-row:4;
+    justify-self:center;align-self:start;
+    font-size:9px;
+  }
+}
