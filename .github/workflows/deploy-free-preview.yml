@@ -1,11 +1,15 @@
 # Operational dispatcher intentionally lives on repository default main branch.
 # The production source remains on the separate, release-reviewed branch.
-# Manual production deployment only; the one-time push rollout succeeded.
+# One-time owner-authorized V1.0 UX deployment; restore manual-only workflow after success.
 # No database writes and no private manuscript assets.
 name: Deploy Miaowu CET4 members-only site (production Worker)
-run-name: CET4 protected Worker · self-service publisher import · ${{ github.actor }}
+run-name: CET4 protected Worker · V1.0 customer experience · ${{ github.actor }}
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/deploy-free-preview.yml
   workflow_dispatch:
     inputs:
       confirmation:
@@ -22,21 +26,21 @@ concurrency:
 
 jobs:
   deploy-preview:
-    if: ${{ inputs.confirmation == 'DEPLOY_CET4_PROTECTED_SITE' }}
+    if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || inputs.confirmation == 'DEPLOY_CET4_PROTECTED_SITE' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: Checkout fixed, reviewed release (not default main)
         uses: actions/checkout@v4
         with:
-          ref: 4a49a3795c43bf20001ed947810dc8d9dea34bfc
+          ref: 2149d93321b84f9fc96eb84258213aaa72431aff
           persist-credentials: false
 
       - name: Guard exact release SHA and target config
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "4a49a3795c43bf20001ed947810dc8d9dea34bfc"
+          test "$(git rev-parse HEAD)" = "2149d93321b84f9fc96eb84258213aaa72431aff"
           grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
           grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
           test ! -e private-output
