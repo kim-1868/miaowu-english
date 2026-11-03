@@ -15,7 +15,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 母亲推开门：“你姐姐出国了，今天只能由你代替。”她将一张银行卡塞过来，“这笔 [[money]] 可以帮你还清工作室的 [[debt]]，只要你作出正确 [[decision]]。”
 
-姜知意把 [[card]] 放回桌上。“你们不能把一个成年人的 [[marriage]] 当作可以替换的 [[project]]。我还没看过任何正式 [[document]]，更没有给过 [[promise]]。”
+姜知意把 [[card]] 放回桌上，又把化妆台上供婚礼拍照的婚约复印件撕成两半。她留下原始 [[document]] 和签字页照片，以备律师核对。“你们不能把一个成年人的 [[marriage]] 当作可以替换的 [[project]]。我还没看过任何正式 [[document]]，更没有给过 [[promise]]。”
 
 父亲拿出公司的财务 [[report]]：“如果婚礼取消，对方就撤回投资，我们的 [[company]] 会破产。”他把全部 [[risk]] 都推到她面前，甚至要求她马上在合同上留下 [[signature]]。
 
@@ -23,7 +23,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 门外忽然传来脚步声。新郎陆砚深没有穿礼服，只穿深色 [[coat]]，手里拿着一份新的 [[contract]]。“看来我们都不知道，今天被要求参加的是什么 [[meeting]]。”他看向姜知意，“你愿意先坐下来 [[discuss]] 吗？”
 
-姜知意本以为会看到小说里的冷面霸总，却发现对方首先让律师 [[confirm]]：原 [[contract]] 里没有任何一方本人签字，所谓婚约并不自动成立。
+姜知意本以为对方只在乎家族的面子，却发现他首先让律师 [[confirm]]：原 [[contract]] 里没有任何一方本人签字，所谓婚约并不自动成立。
 
 “今天不会举行虚假的 [[wedding]]。”陆砚深作出 [[decision]]，又对她说，“两家公司合作可以单独 [[discuss]]，你的 [[choice]] 不应该成为付款条件。”
 
@@ -41,7 +41,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 工作人员发来正式 [[message]]：所有提案由独立评委审核，参与者须签署利益披露 [[document]]。姜知意照办，把双方取消婚礼的事实也写进 [[record]]。
 
-她熬了两晚修改 [[design]]，重新制定旧书店通道的 [[plan]]，为行动不便的读者预留足够空间；纪宁负责 [[calculate]] 材料用量和采购 [[price]]。
+她熬了两晚修改 [[design]]，重新制定旧书店通道的 [[plan]]，为行动不便的读者预留足够空间；纪宁按材料清单 [[calculate]] 出施工成本，再逐项核对采购 [[price]]。
 
 提交前，母亲突然到 [[office]]，要求她把方案交给姐姐，说姐姐更适合代表姜家与大 [[company]] 合作。姜知意第一次没有 [[hesitate]]：“这个 [[project]] 的原始设计和劳动 [[record]] 都在我们工作室。”
 
@@ -91,13 +91,13 @@ authoring: Original story written directly for Miaowu; no model API used
 
 项目评审最终 [[result]] 公布，姜知意与纪宁的工作室获得第一名。没有人给她走后门，评委的 [[report]] 明确说明，方案的维护成本和使用体验优于其他 [[design]]。
 
-签约前，双方举行正式 [[meeting]]。陆砚深所在的投资 [[company]] 只提供资金支持，现场管理由第三方承担。姜知意逐项核对 [[contract]]、交付 [[schedule]] 和付款 [[price]]。
+签约前，双方举行正式 [[meeting]]。姜知意要求会议纪要注明独立评审结论，投资方与她的既往关系已按规定披露并交由第三方存档。陆砚深所在的投资 [[company]] 只提供资金支持，现场管理由第三方承担。姜知意逐项核对 [[contract]]、交付 [[schedule]] 和付款 [[price]]。
 
 父亲忽然提出要以姜家 [[company]] 名义签字：“外面的人更 [[trust]] 大公司，你们的工作室太小。”姜知意拿出所有权 [[document]]：“参加招标的是我们， [[design]] 的创作者也是我们。”
 
 她没有羞辱父亲，只给出专业的 [[option]]：如果姜家有合适供应商，可以参加公开采购；但不能把女儿的劳动 [[record]] 改成别人的 [[result]]。
 
-纪宁在桌下偷偷握住她的手。那一刻姜知意终于 [[notice]]，自己不必嫁给任何人，也能用正式的 [[contract]] 获得一个值得骄傲的 [[project]]。
+纪宁在桌下偷偷握住她的手。那一刻，姜知意终于 [[notice]] 到，自己不必嫁给任何人，也能用正式的 [[contract]] 获得一个值得骄傲的 [[project]]。
 
 晚饭时，陆砚深来祝贺。姜知意问他：“你真的没有想过，把婚约重新当成合作 [[plan]]？”他摇头：“[[marriage]] 不应该是获得 [[client]] 或资金的条件。”
 
