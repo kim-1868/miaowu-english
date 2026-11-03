@@ -319,6 +319,7 @@
     // The bottom study tray is stable across re-rendered chapters. It is not a
     // blocking mobile modal: readers can tap another highlighted word in place.
     let selectedStudyWordId=null,studyRequestSequence=0;
+    const studyMissingWordIds=new Set();
     function chapterStudyWordIds(){
       return [...new Set(Array.from($('storyText').querySelectorAll('[data-cloud-word]'))
         .map(el=>el.dataset.cloudWord).filter(Boolean))];
@@ -335,7 +336,8 @@
       const pairs=Array.isArray(w?.collocations)?w.collocations:[];
       const title=w?.headword||clicked?.textContent||'单词学习';
       const meaning=w?.meaning_zh||clicked?.nextElementSibling?.textContent?.replace(/[（）]/g,'')||'词义加载中…';
-      const loading=!w;
+      const missingKey=activeCloud.chapterId+'::'+wordId;
+      const loading=!w&&!studyMissingWordIds.has(missingKey);
       $('wordPop').innerHTML='<button class="modal-close" id="wordClose" type="button" aria-label="收起词卡">×</button>'+
         '<div class="study-navigation"><span class="eyebrow">MIAOWU · LEARN A WORD</span>'+
         '<span class="study-position">'+(idx>=0?idx+1:1)+' / '+Math.max(1,ids.length)+'</span></div>'+
@@ -343,7 +345,8 @@
         '<div class="pron">'+safe(w?.phonetic_us||w?.phonetic_uk||'')+
         ' <button id="wordSmallSpeak" class="word-voice-inline" type="button" aria-label="播放发音">♫</button> · '+safe(w?.part_of_speech||'')+'</div>'+
         '<div class="meaning">'+safe(meaning)+'</div>'+
-        (loading?'<p class="study-loading" role="status">正在读取这张词卡的学习资料…</p>':
+        (!w&&!loading?'<p class="study-loading" role="status">暂无这张词卡的完整资料，请换一个单词学习。</p>':
+        loading?'<p class="study-loading" role="status">正在读取这张词卡的学习资料…</p>':
           '<div class="word-extra"><strong>例句</strong><br>'+safe(w.example_en||'暂未提供')+
           '<br><span class="study-translation">'+safe(w.example_zh||'')+'</span></div>'+
           '<div class="word-extra"><strong>常用搭配</strong><br>'+
@@ -381,6 +384,7 @@
           glossaryCache.set(key,data);
           if(!(activeCloud.words instanceof Map))activeCloud.words=new Map();
           for(const row of data.words||[])if(row?.word_id)activeCloud.words.set(row.word_id,row);
+          if(!activeCloud.words.has(wordId))studyMissingWordIds.add(missingKey);
           if(requestId===studyRequestSequence&&selectedStudyWordId===wordId&&$('wordPop').classList.contains('on'))
             showCloudWord(wordId);
         }).catch(()=>{
