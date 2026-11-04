@@ -127,6 +127,8 @@
     // D1 is the primary reader source. Legacy chapter sample stays unreachable from default book cards.
     // No paid chapter bodies are bundled into app.js or held in a client-side book constant.
     let cloudListSequence=0;
+    let shelfPage=1;
+    const SHELF_PAGE_SIZE=9;
     let activeCloud=null;
     let cloudBooks=[],cloudSaved=new Map(),cloudProgress=[],cloudSessionKey=null,cloudLearningSequence=0;
     let initialSessionPromise=Promise.resolve(),heroResumeBusy=false;
@@ -302,15 +304,67 @@
         if(line)line.style.width=(total?Math.min(100,Math.round(completed/total*100)):0)+'%';
       });
     }
+    function renderShelfPagination(slug,meta){
+      const list=$('bookGrid');
+      const totalPages=Math.max(0,Math.floor(Number(meta?.totalPages)||0));
+      const total=Math.max(0,Math.floor(Number(meta?.total)||0));
+      if(totalPages<=1)return;
+      const nav=document.createElement('nav');
+      nav.className='shelf-pagination';
+      nav.setAttribute('aria-label','小说书架分页');
+      const info=document.createElement('span');
+      info.className='shelf-page-summary';
+      info.textContent='共 '+total+' 本 · 每页 '+SHELF_PAGE_SIZE+' 本';
+      const controls=document.createElement('div');controls.className='shelf-page-controls';
+      function addPage(label,page,{current=false,disabled=false,ariaLabel=''}={}){
+        const button=document.createElement('button');
+        button.type='button';button.className='shelf-page-button'+(current?' is-current':'');
+        button.textContent=label;
+        button.disabled=disabled||current;
+        if(ariaLabel)button.setAttribute('aria-label',ariaLabel);
+        if(current)button.setAttribute('aria-current','page');
+        button.addEventListener('click',()=>{
+          if(page<1||page>totalPages||page===shelfPage)return;
+          shelfPage=page;
+          void loadCloudBookCards(slug);
+          const heading=$('selectedCategoryTitle');
+          if(heading)heading.scrollIntoView({behavior:
+            window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth',
+            block:'start'});
+        });
+        controls.append(button);
+      }
+      addPage('上一页',shelfPage-1,{disabled:shelfPage<=1,ariaLabel:'上一页小说'});
+      const candidates=[1,totalPages,shelfPage-1,shelfPage,shelfPage+1]
+        .filter(p=>p>=1&&p<=totalPages);
+      const visible=[...new Set(candidates)].sort((a,b)=>a-b);
+      visible.forEach((p,i)=>{
+        if(i&&p-visible[i-1]>1){
+          const ellipsis=document.createElement('span');
+          ellipsis.className='shelf-page-ellipsis';ellipsis.textContent='…';
+          ellipsis.setAttribute('aria-hidden','true');controls.append(ellipsis);
+        }
+        addPage(String(p),p,{current:p===shelfPage,ariaLabel:'第 '+p+' 页'});
+      });
+      addPage('下一页',shelfPage+1,{disabled:shelfPage>=totalPages,ariaLabel:'下一页小说'});
+      nav.append(info,controls);list.append(nav);
+    }
     async function loadCloudBookCards(slug){
       const seq=++cloudListSequence;
       const list=$('bookGrid');
       list.innerHTML='<div class="onboarding cloud-loading" style="grid-column:1/-1"><span class="eyebrow">YOUR STORY SHELF</span><h3>正在整理故事书架……</h3><p>为你翻开已经发布的故事。</p></div>';
       try{
-        const response=await serverRequest('/api/books?category='+encodeURIComponent(slug));
+        const response=await serverRequest('/api/books?category='+encodeURIComponent(slug)+
+          '&page='+shelfPage);
         if(seq!==cloudListSequence||category!==slug||view!=='library')return;
         const books=Array.isArray(response.books)?
           response.books.filter(b=>b&&typeof b.id==='string'&&typeof b.title==='string'):[];
+        const meta=response.pagination||{page:1,pageSize:SHELF_PAGE_SIZE,
+          total:books.length,totalPages:Math.ceil(books.length/SHELF_PAGE_SIZE)};
+        if(meta.totalPages>0&&shelfPage>meta.totalPages){
+          shelfPage=meta.totalPages;
+          return loadCloudBookCards(slug);
+        }
         cloudBooks=books;
         list.replaceChildren();
         books.forEach((book,i)=>{
@@ -359,6 +413,7 @@
             '<h3>更多故事正在路上</h3><p>这层书架暂无已发布作品，更多故事正在陆续加入。</p>';
           list.append(empty);
         }
+        renderShelfPagination(slug,meta);
         updateCloudShelfProgress();
       }catch(error){
         if(seq===cloudListSequence&&category===slug&&view==='library'){
@@ -691,7 +746,7 @@
           (has(c.id)?'✓ 已解锁':'● 可查看书架')+'</span></button>';
       }).join('');
       cat.querySelectorAll('[data-category]').forEach(el=>el.onclick=()=>{
-        category=el.dataset.category;cloudBooks=[];renderLibrary();
+        category=el.dataset.category;shelfPage=1;cloudBooks=[];renderLibrary();
       });
       const picked=CATS.find(x=>x.id===category)||CATS[0];
       $('selectedCategoryEn').textContent=picked.en+' · STORY COLLECTION';
