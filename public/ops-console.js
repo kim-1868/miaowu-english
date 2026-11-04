@@ -4,6 +4,7 @@
 // browser cookies, analytics or console logs. Page memory only, cleared on exit.
 const $=id=>document.getElementById(id);
 let key="",chosen=null,readiness=null,identity=null,busy=false;
+let liveEditorState=null,liveRevision=null,liveHistory=[];
 const byId=(tag,text,className)=>{
   const el=document.createElement(tag);
   if(text!==undefined)el.textContent=String(text);
@@ -12,6 +13,7 @@ const byId=(tag,text,className)=>{
 };
 function status(msg){$("status").textContent=msg;}
 function clearActions(){
+  resetLiveEditor();
   readiness=null;$("draftActions").hidden=true;$("liveActions").hidden=true;
   $("publish").disabled=true;$("withdraw").disabled=true;
   $("report").textContent="";$("withdrawSummary").textContent="";
@@ -49,7 +51,7 @@ function button(id,fn){
   });
 }
 function syncButtons(){
-  syncSaleButtons();
+  syncSaleButtons();syncLiveEditorButtons();
   $("checkNovel").disabled=!connected()||!$("uploadNovel").files?.length;
   $("importNovel").disabled=!(connected()&&pendingNovel&&$("uploadCoverWithNovel").files?.length&&
     pendingNovel.words?.every(w=>w.phoneticUk&&w.phoneticUs&&w.partOfSpeech&&w.meaningZh&&w.exampleEn&&w.exampleZh));
@@ -209,7 +211,9 @@ async function openBook(book){
       "\n下架权限："+(result.canWithdraw?"已启用":"尚未启用")+
       "\n"+(result.effects||[]).join("\n");
   }
-  await loadAudit(book.id);syncButtons();
+  await loadAudit(book.id);
+  if(book.status==="published")await loadLiveEditor(book);
+  syncButtons();
 }
 async function loadAudit(bookId){
   const data=await api("/api/ops/books/"+encodeURIComponent(bookId)+"/audit");
