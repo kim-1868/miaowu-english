@@ -277,11 +277,16 @@
             '/api/covers/'+encodeURIComponent(book.id)+'?v='+coverVersion[1]:
             isRainyNight?'/rainy-night-cover-v2.svg':'';
           const hasCover=Boolean(coverUrl);
+          const coverTags=(Array.isArray(book.cover_tags)?book.cover_tags:[])
+            .filter(t=>typeof t?.label==='string'&&/^#[0-9a-fA-F]{6}$/.test(t.color||''))
+            .map(t=>'<span class="cover-custom-tag" style="--cover-tag-color:'+safe(t.color)+'">'+safe(t.label)+'</span>')
+            .join('');
           const badge=has(slug)?'已解锁':'会员专享';
           const action=cloudProgress.some(p=>p.book_id===book.id)?'继续阅读 →':
             has(slug)?'开始阅读 →':'查看会员目录 →';
           item.innerHTML='<div class="book-cover '+kind+(hasCover?' rainy-night-published-cover':'')+'" aria-label="'+safe(book.title)+'">'+
             (hasCover?'<img src="'+safe(coverUrl)+'" alt="《'+safe(book.title)+'》小说封面" class="rainy-night-cover-image" loading="lazy" decoding="async">':'')+
+            (coverTags?'<div class="cover-custom-tags" aria-label="小说标签">'+coverTags+'</div>':'')+
             '<span class="book-tag">'+safe(badge)+'</span>'+
             (hasCover?'':('<span class="edition">THE STORY EDITION / '+String(i+1).padStart(2,'0')+'</span>'+
             '<span class="illustration">'+['❦','♧','✥'][i%3]+'</span>'+
