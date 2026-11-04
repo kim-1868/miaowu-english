@@ -9,6 +9,7 @@ import { handleOpsSales } from "./ops-sales.js";
 import { handleOpsImport } from "./ops-import.js";
 import { handleOpsDraftRevision } from "./ops-draft-revision.js";
 import { handleBookCover } from "./book-covers.js";
+import { handleBookCoverTags } from "./book-cover-tags.js";
 import { handleLearningState } from "./reading-library.js";
 import {handleEcho} from "./echo-cloud.js";
 import {
@@ -635,6 +636,8 @@ async function api(req, env) {
     if(path==="/api/ops/me")return handleOps(req,env,path);
     if(/^\/api\/ops\/books\/[a-zA-Z0-9_-]{1,80}\/cover$/.test(path))
       return handleBookCover(req,env,path);
+    if(/^\/api\/ops\/books\/[a-zA-Z0-9_-]{1,80}\/tags$/.test(path))
+      return handleBookCoverTags(req,env,path);
     if(path.startsWith("/api/ops/sales/"))return handleOpsSales(req,env,path);
     if(path==="/api/ops/import"||path==="/api/ops/lexicon")return handleOpsImport(req,env,path);
     if(path==="/api/ops/import/revise")return handleOpsDraftRevision(req,env,path);
@@ -701,7 +704,27 @@ async function api(req, env) {
         AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP) AS chapter_count
       FROM books b JOIN categories c ON c.id=b.category_id WHERE c.slug=?
       AND c.is_visible=1 AND b.status='published' ORDER BY b.sort_order LIMIT 100`, slug).all();
-    return json({ books: data.results || [] });
+
+    const books=data.results||[];
+    if(books.length){
+      // Cosmetic tags are optional metadata: an un-migrated deployment must
+      // not break the reader shelf or expose draft titles.
+      try{
+        const ids=books.map(x=>x.id);
+        const rows=await env.DB.prepare("SELECT book_id,label,color FROM book_cover_tags "+
+          "WHERE book_id IN ("+ids.map(()=>"?").join(",")+") ORDER BY sort_order,rowid")
+          .bind(...ids).all();
+        const tags=new Map();
+        for(const row of rows.results||[]){
+          if(!tags.has(row.book_id))tags.set(row.book_id,[]);
+          tags.get(row.book_id).push({label:row.label,color:row.color});
+        }
+        for(const item of books)item.cover_tags=tags.get(item.id)||[];
+      }catch{
+        for(const item of books)item.cover_tags=[];
+      }
+    }
+    return json({ books });
   }
   const bookChaptersMatch = path.match(/^\/api\/books\/([^/]+)\/chapters$/);
   if (bookChaptersMatch && req.method === "GET") {
