@@ -243,7 +243,8 @@ async function writeMetadata(req,env,id,actor){
   const replay=await priorEvent(env.DB,v.requestId,actor,id,"metadata");if(replay)return reply(replay);
   if(typeof v.title!=="string"||!v.title.trim()||v.title.length>120||
     typeof v.description!=="string"||v.description.length>2000||
-    /[\u0000-\u001f]/.test(v.title+v.description))
+    /[\u0000-\u001f]/.test(v.title)||
+    /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(v.description))
     throw Error("INVALID_BOOK_METADATA");
   const current=await readCurrent(env.DB,id,{withContent:false});
   if(current.book.version!==v.expectedVersion)throw Error("STALE_BOOK_VERSION");
