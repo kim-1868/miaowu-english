@@ -16,6 +16,9 @@ with Image.open(source) as original:
     image = original.convert("RGB")
 if image.size != (1400, 512):
     raise SystemExit(f"Unexpected source size: {image.size}")
+# Preserve original-size data for low-density displays and older Safari.
+one_x = root / "cat-reading-tablet-1x.webp"
+image.save(one_x, format="WEBP", quality=89, method=6)
 # Keep proportions and watercolor shading; avoid haloing fine hand-drawn edges.
 image = image.resize((2800, 1024), Image.Resampling.LANCZOS)
 image = image.filter(ImageFilter.UnsharpMask(radius=1.05, percent=100, threshold=3))
@@ -23,8 +26,8 @@ webp = root / "cat-reading-tablet-2x.webp"
 avif = root / "cat-reading-tablet-2x.avif"
 image.save(webp, format="WEBP", quality=91, method=6)
 image.save(avif, format="AVIF", quality=87, speed=5)
-for target in (webp, avif):
+for target, expected in ((one_x, (1400, 512)), (webp, (2800, 1024)), (avif, (2800, 1024))):
     with Image.open(target) as check:
-        if check.size != (2800, 1024):
+        if check.size != expected:
             raise SystemExit(f"Unexpected output size {target}: {check.size}")
-    print(f"{target.name}: {target.stat().st_size} bytes (2800x1024)")
+    print(f"{target.name}: {target.stat().st_size} bytes ({expected[0]}x{expected[1]})")
