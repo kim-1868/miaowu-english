@@ -1,0 +1,210 @@
+{
+  "version": 1,
+  "kind": "source-attributed-work-copy",
+  "note": "These eleven headwords matched an extraction of the 2016 official CET4 list; IPA selected from published UK Britfone and US ipa-dict candidates. Original example sentences and translations. Verify senses in context. Existing published cards always win.",
+  "sources": [
+    "https://github.com/JoseLlarena/Britfone",
+    "https://github.com/open-dict-data/ipa-dict",
+    "https://github.com/pekoqq/ReadLoops"
+  ],
+  "words": [
+    {
+      "id": "mwv26-cet4-reason",
+      "headword": "reason",
+      "partOfSpeech": "n.",
+      "meaningZh": "原因；理由",
+      "phoneticUk": "/ˈriːzən/",
+      "phoneticUs": "/ˈɹizən/",
+      "exampleEn": "She explained the reason for leaving the company.",
+      "exampleZh": "她解释了离开公司的原因。",
+      "collocations": [
+        {
+          "en": "for this reason",
+          "zh": "因此；由于这个原因"
+        }
+      ],
+      "examHeadwordStatus": "SOURCE_DERIVED_CET4_FORM_MATCH",
+      "editorialStatus": "CONTEXT_EXAMPLE_CHECKED_FOR_STORY_PACKAGE"
+    },
+    {
+      "id": "mwv26-cet4-review",
+      "headword": "review",
+      "partOfSpeech": "n.",
+      "meaningZh": "审核；复核",
+      "phoneticUk": "/rɪˈvjuː/",
+      "phoneticUs": "/ˌɹivˈju/",
+      "exampleEn": "The team requested an independent review of the documents.",
+      "exampleZh": "团队要求对文件进行独立审核。",
+      "collocations": [
+        {
+          "en": "a detailed review",
+          "zh": "详细审核"
+        }
+      ],
+      "examHeadwordStatus": "SOURCE_DERIVED_CET4_FORM_MATCH",
+      "editorialStatus": "CONTEXT_EXAMPLE_CHECKED_FOR_STORY_PACKAGE"
+    },
+    {
+      "id": "mwv26-cet4-budget",
+      "headword": "budget",
+      "partOfSpeech": "n.",
+      "meaningZh": "预算",
+      "phoneticUk": "/ˈbʌdʒɪt/",
+      "phoneticUs": "/ˈbədʒɪt/",
+      "exampleEn": "Their budget was too small to repair the entire building.",
+      "exampleZh": "他们的预算不足以修复整栋建筑。",
+      "collocations": [
+        {
+          "en": "within budget",
+          "zh": "在预算范围内"
+        }
+      ],
+      "examHeadwordStatus": "SOURCE_DERIVED_CET4_FORM_MATCH",
+      "editorialStatus": "CONTEXT_EXAMPLE_CHECKED_FOR_STORY_PACKAGE"
+    },
+    {
+      "id": "mwv26-cet4-reputation",
+      "headword": "reputation",
+      "partOfSpeech": "n.",
+      "meaningZh": "声誉；名声",
+      "phoneticUk": "/ˌrepjʊˈteɪʃən/",
+      "phoneticUs": "/ˌɹɛpjəˈteɪʃən/",
+      "exampleEn": "A false rumor damaged her professional reputation.",
+      "exampleZh": "一则虚假传闻损害了她的职业声誉。",
+      "collocations": [
+        {
+          "en": "protect one's reputation",
+          "zh": "维护某人的声誉"
+        }
+      ],
+      "examHeadwordStatus": "SOURCE_DERIVED_CET4_FORM_MATCH",
+      "editorialStatus": "CONTEXT_EXAMPLE_CHECKED_FOR_STORY_PACKAGE"
+    },
+    {
+      "id": "mwv26-cet4-work",
+      "headword": "work",
+      "partOfSpeech": "n.",
+      "meaningZh": "工作",
+      "phoneticUk": "/wɜːk/",
+      "phoneticUs": "/ˈwɝk/",
+      "exampleEn": "She wanted her work to speak for itself.",
+      "exampleZh": "她希望用自己的工作成果证明自己。",
+      "collocations": [
+        {
+          "en": "hard work",
+          "zh": "努力工作"
+        }
+      ],
+      "examHeadwordStatus": "SOURCE_DERIVED_CET4_FORM_MATCH",
+      "editorialStatus": "CONTEXT_EXAMPLE_CHECKED_FOR_STORY_PACKAGE"
+    },
+    {
+      "id": "mwv26-cet4-respect",
+      "headword": "respect",
+      "partOfSpeech": "v.",
+      "meaningZh": "尊重",
+      "phoneticUk": "/rɪˈspekt/",
+      "phoneticUs": "/ɹɪˈspɛkt/",
+      "exampleEn": "They learned to respect each other's decisions.",
+      "exampleZh": "他们学会了尊重彼此的决定。",
+      "collocations": [
+        {
+          "en": "respect boundaries",
+          "zh": "尊重边界"
+        }
+      ],
+      "examHeadwordStatus": "SOURCE_DERIVED_CET4_FORM_MATCH",
+      "editorialStatus": "CONTEXT_EXAMPLE_CHECKED_FOR_STORY_PACKAGE"
+    },
+    {
+      "id": "mwv26-cet4-realize",
+      "headword": "realize",
+      "partOfSpeech": "v.",
+      "meaningZh": "意识到；领悟",
+      "phoneticUk": "/ˈrɪəlaɪz/",
+      "phoneticUs": "/ˈɹiəˌɫaɪz/",
+      "exampleEn": "He finally realized why she had refused the agreement.",
+      "exampleZh": "他终于意识到她为何拒绝那份协议。",
+      "collocations": [
+        {
+          "en": "come to realize",
+          "zh": "逐渐意识到"
+        }
+      ],
+      "examHeadwordStatus": "SOURCE_DERIVED_CET4_FORM_MATCH",
+      "editorialStatus": "CONTEXT_EXAMPLE_CHECKED_FOR_STORY_PACKAGE"
+    },
+    {
+      "id": "mwv26-cet4-boundary",
+      "headword": "boundary",
+      "partOfSpeech": "n.",
+      "meaningZh": "边界；界限",
+      "phoneticUk": "/ˈbaʊndəri/",
+      "phoneticUs": "/ˈbaʊndɝi/",
+      "exampleEn": "She established a clear boundary between work and family.",
+      "exampleZh": "她在工作和家庭之间设立了清晰的界限。",
+      "collocations": [
+        {
+          "en": "personal boundary",
+          "zh": "个人边界"
+        }
+      ],
+      "examHeadwordStatus": "SOURCE_DERIVED_CET4_FORM_MATCH",
+      "editorialStatus": "CONTEXT_EXAMPLE_CHECKED_FOR_STORY_PACKAGE"
+    },
+    {
+      "id": "mwv26-cet4-expect",
+      "headword": "expect",
+      "partOfSpeech": "v.",
+      "meaningZh": "期待；预期",
+      "phoneticUk": "/ɪkˈspekt/",
+      "phoneticUs": "/ɪkˈspɛkt/",
+      "exampleEn": "They did not expect the report to arrive that morning.",
+      "exampleZh": "他们没有料到报告会在那天上午送到。",
+      "collocations": [
+        {
+          "en": "expect a reply",
+          "zh": "期待回复"
+        }
+      ],
+      "examHeadwordStatus": "SOURCE_DERIVED_CET4_FORM_MATCH",
+      "editorialStatus": "CONTEXT_EXAMPLE_CHECKED_FOR_STORY_PACKAGE"
+    },
+    {
+      "id": "mwv26-cet4-control",
+      "headword": "control",
+      "partOfSpeech": "n./v.",
+      "meaningZh": "控制；掌控",
+      "phoneticUk": "/kənˈtrəʊl/",
+      "phoneticUs": "/kənˈtɹoʊɫ/",
+      "exampleEn": "She refused to let anyone control her career.",
+      "exampleZh": "她拒绝让任何人掌控自己的事业。",
+      "collocations": [
+        {
+          "en": "under control",
+          "zh": "处于控制之中"
+        }
+      ],
+      "examHeadwordStatus": "SOURCE_DERIVED_CET4_FORM_MATCH",
+      "editorialStatus": "CONTEXT_EXAMPLE_CHECKED_FOR_STORY_PACKAGE"
+    },
+    {
+      "id": "mwv26-cet4-reward",
+      "headword": "reward",
+      "partOfSpeech": "n.",
+      "meaningZh": "奖励；回报",
+      "phoneticUk": "/rɪˈwɔːd/",
+      "phoneticUs": "/ɹɪˈwɔɹd/",
+      "exampleEn": "Her reward was the chance to complete the project herself.",
+      "exampleZh": "她获得的回报是亲自完成项目的机会。",
+      "collocations": [
+        {
+          "en": "receive a reward",
+          "zh": "获得奖励"
+        }
+      ],
+      "examHeadwordStatus": "SOURCE_DERIVED_CET4_FORM_MATCH",
+      "editorialStatus": "CONTEXT_EXAMPLE_CHECKED_FOR_STORY_PACKAGE"
+    }
+  ]
+}
