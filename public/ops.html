@@ -3,8 +3,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>妙屋英语 · 运营出版台</title>
-<link rel="stylesheet" href="/ops-console.css?v=20261104-v19-direct-publish-tags">
-<script src="/ops-console.js?v=20261104-v19-direct-publish-tags" defer></script>
+<link rel="stylesheet" href="/ops-console.css?v=20261104-v22-directory-filter">
+<script src="/ops-console.js?v=20261104-v22-directory-filter" defer></script>
 </head><body>
 <header><div class="brand">喵 · 妙屋英语 <span>THE STORY & WORD LIBRARY</span></div>
   <div class="strap">运营出版台 <span class="pill">受控操作</span></div></header>
@@ -90,9 +90,27 @@
     </div>
   </section>
   <div class="cols">
-    <section class="panel"><div class="panel-heading"><h2>④ 书籍目录</h2><button id="refresh" class="secondary" disabled>刷新</button></div>
-      <p class="hint">仅显示草稿和已发布书籍；不会包含付费正文。</p>
+    <section class="panel" aria-label="书籍目录">
+      <div class="panel-heading"><h2>④ 书籍目录</h2><button id="refresh" class="secondary" disabled>刷新</button></div>
+      <p class="hint">搜索书名，按分类或状态筛选；每页最多显示 6 本。选择后在右侧操作，不会加载付费正文。</p>
+      <div class="ops-book-filters" role="group" aria-label="筛选书籍">
+        <label for="bookSearch">搜索书名
+          <input id="bookSearch" type="search" placeholder="输入小说名称…" autocomplete="off" disabled></label>
+        <label for="bookCategory">学习分类
+          <select id="bookCategory" disabled><option value="">全部分类</option></select></label>
+        <label for="bookStatus">上架状态
+          <select id="bookStatus" disabled><option value="">全部状态</option><option value="published">已发布</option><option value="draft">草稿未发布</option></select></label>
+      </div>
+      <div class="ops-book-result-bar">
+        <span id="bookDirectorySummary" class="soft" role="status" aria-live="polite">连接后显示书目。</span>
+        <button id="bookClearFilters" class="secondary" type="button" disabled>清空筛选</button>
+      </div>
       <div id="books" class="books"><p class="soft">连接后显示书目。</p></div>
+      <nav class="ops-book-pagination" aria-label="书籍目录分页">
+        <button id="bookPagePrev" class="secondary" type="button" disabled>上一页</button>
+        <span id="bookPageInfo" class="soft" aria-live="polite">第 0 / 0 页</span>
+        <button id="bookPageNext" class="secondary" type="button" disabled>下一页</button>
+      </nav>
     </section>
     <section class="panel"><h2>⑤ 发布与下架</h2>
       <div id="selected" class="book-title">请选择左侧一本书</div>
