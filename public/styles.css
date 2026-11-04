@@ -2115,3 +2115,68 @@ html[data-theme="dark"] #view-library .story-home-hero .hero-actions .secondary-
     image-rendering:auto;
   }
 }
+
+
+/* V27: user-facing paginated story shelf; visually secondary to book covers. */
+#view-library .home-shelf-layout .shelf-pagination{
+  grid-column:1/-1;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:19px 4px 5px;
+  margin-top:5px;
+  border-top:1px solid #e8d9c9;
+}
+#view-library .home-shelf-layout .shelf-page-summary{
+  font-size:12px;
+  color:#8b7068;
+}
+#view-library .home-shelf-layout .shelf-page-controls{
+  display:flex;align-items:center;justify-content:flex-end;
+  flex-wrap:wrap;gap:6px;
+}
+#view-library .home-shelf-layout .shelf-page-button{
+  min-height:36px;min-width:36px;
+  border-radius:10px;padding:7px 11px;
+  border:1px solid #e4cdbb;
+  background:#fffaf5;color:#78454d;
+  font-size:12px;font-weight:600;cursor:pointer;
+}
+#view-library .home-shelf-layout .shelf-page-button:hover:not(:disabled),
+#view-library .home-shelf-layout .shelf-page-button:focus-visible{
+  background:#f4e8df;border-color:#ab7a74;
+}
+#view-library .home-shelf-layout .shelf-page-button.is-current{
+  color:#fff9f2;background:#733747;border-color:#733747;
+  cursor:default;opacity:1;
+}
+#view-library .home-shelf-layout .shelf-page-button:disabled:not(.is-current){
+  color:#9e8d83;background:#f7f1ea;cursor:default;opacity:.65;
+}
+#view-library .home-shelf-layout .shelf-page-ellipsis{
+  padding:0 2px;color:#998377;
+  font-size:14px;
+}
+html[data-theme="dark"] #view-library .home-shelf-layout .shelf-pagination{
+  border-top-color:#59464b;
+}
+html[data-theme="dark"] #view-library .home-shelf-layout .shelf-page-summary,
+html[data-theme="dark"] #view-library .home-shelf-layout .shelf-page-ellipsis{
+  color:#ceb6ac;
+}
+html[data-theme="dark"] #view-library .home-shelf-layout .shelf-page-button{
+  border-color:#71535e;background:#3f333b;color:#ead0c1;
+}
+html[data-theme="dark"] #view-library .home-shelf-layout .shelf-page-button.is-current{
+  background:#a66d79;color:#fff;border-color:#a66d79;
+}
+@media(max-width:620px){
+  #view-library .home-shelf-layout .shelf-pagination{
+    flex-direction:column;align-items:stretch;gap:9px;padding-top:15px;
+  }
+  #view-library .home-shelf-layout .shelf-page-summary{text-align:center}
+  #view-library .home-shelf-layout .shelf-page-controls{justify-content:center}
+  #view-library .home-shelf-layout .shelf-page-button{min-height:40px;min-width:40px}
+}

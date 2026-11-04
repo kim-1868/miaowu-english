@@ -697,13 +697,28 @@ async function api(req, env) {
     return json({ categories: data.results || [] });
   }
   if (path === "/api/books" && req.method === "GET") {
-    const slug = new URL(req.url).searchParams.get("category");
+    const params = new URL(req.url).searchParams;
+    const slug = params.get("category");
     if (!slug || !/^[a-z0-9-]{2,36}$/.test(slug)) return reject("INVALID_CATEGORY", 400);
+    // Keep older API clients compatible; the customer bookshelf explicitly
+    // requests numbered 9-book pages so all published books remain reachable.
+    const requestedPage=params.get("page");
+    const paged=requestedPage!==null;
+    if(paged&&!/^[1-9][0-9]{0,5}$/.test(requestedPage))
+      return reject("INVALID_PAGE",400);
+    const page=paged?Number(requestedPage):1;
+    const pageSize=9;
+    const offset=(page-1)*pageSize;
+    const total=paged?
+      Number((await dbStmt(env.DB,"SELECT COUNT(*) AS total FROM books b "+
+        "JOIN categories c ON c.id=b.category_id WHERE c.slug=? "+
+        "AND c.is_visible=1 AND b.status='published'",slug).first())?.total||0):null;
     const data = await dbStmt(env.DB, `SELECT b.id,b.title,b.description,b.cover_key,b.sort_order,
       (SELECT COUNT(*) FROM chapters ch WHERE ch.book_id=b.id
         AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP) AS chapter_count
       FROM books b JOIN categories c ON c.id=b.category_id WHERE c.slug=?
-      AND c.is_visible=1 AND b.status='published' ORDER BY b.sort_order LIMIT 100`, slug).all();
+      AND c.is_visible=1 AND b.status='published'
+      ORDER BY b.sort_order,b.id LIMIT ${paged?pageSize:100} OFFSET ${paged?offset:0}`, slug).all();
 
     const books=data.results||[];
     if(books.length){
@@ -724,7 +739,9 @@ async function api(req, env) {
         for(const item of books)item.cover_tags=[];
       }
     }
-    return json({ books });
+    return json(paged?
+      {books,pagination:{page,pageSize,total,totalPages:Math.ceil(total/pageSize)}}:
+      {books});
   }
   const bookChaptersMatch = path.match(/^\/api\/books\/([^/]+)\/chapters$/);
   if (bookChaptersMatch && req.method === "GET") {

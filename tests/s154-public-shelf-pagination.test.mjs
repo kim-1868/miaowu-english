@@ -1,0 +1,50 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {Script} from "node:vm";
+const read=p=>readFileSync(new URL(p,import.meta.url),"utf8");
+const html=read("../public/index.html");
+const app=read("../public/app.js");
+const css=read("../public/styles.css");
+const api=read("../src/worker.js");
+test("S154 public shelf fetches nine books per category page without losing access permissions",()=>{
+  assert.match(api,/const requestedPage=params\.get\("page"\)/);
+  assert.match(api,/const pageSize=9;/);
+  assert.match(api,/const offset=\(page-1\)\*pageSize;/);
+  assert.match(api,/SELECT COUNT\(\*\) AS total FROM books b/);
+  assert.match(api,/c\.is_visible=1 AND b\.status='published'/);
+  assert.match(api,/ORDER BY b\.sort_order,b\.id LIMIT/);
+  assert.match(api,/pagination:\{page,pageSize,total,totalPages:Math\.ceil\(total\/pageSize\)\}/);
+  assert.match(api,/return reject\("INVALID_PAGE",400\)/);
+  // Legacy clients still get the old catalog shape when page isn't supplied.
+  assert.match(api,/const paged=requestedPage!==null/);
+  assert.match(api,/\{books\}\);/);
+});
+test("S154 pagination controls are native, bounded and do not render all book pages at once",()=>{
+  new Script(app,{filename:"app.js"});
+  assert.match(app,/let shelfPage=1/);
+  assert.match(app,/const SHELF_PAGE_SIZE=9/);
+  assert.match(app,/const response=await serverRequest\('\/api\/books\?category='/);
+  assert.ok(app.includes("'&page='+shelfPage"));
+  assert.match(app,/function renderShelfPagination\(slug,meta\)/);
+  assert.match(app,/nav\.setAttribute\('aria-label','小说书架分页'\)/);
+  assert.match(app,/button\.setAttribute\('aria-current','page'\)/);
+  assert.match(app,/addPage\('上一页'/);
+  assert.match(app,/addPage\('下一页'/);
+  assert.match(app,/list\.append\(nav\)/);
+  assert.match(app,/renderShelfPagination\(slug,meta\);/);
+  assert.match(app,/category=el\.dataset\.category;shelfPage=1;cloudBooks=\[\];renderLibrary\(\);/);
+  assert.match(app,/if\(meta\.totalPages>0&&shelfPage>meta\.totalPages\)/);
+  assert.match(css,/\.shelf-pagination\{/);
+  assert.match(css,/@media\(max-width:620px\)/);
+  assert.match(html,/styles\.css\?v=20261104-v27-shelf-pages/);
+  assert.match(html,/app\.js\?v=20261104-v27-shelf-pages/);
+});
+test("S154 existing cover tags and reading progress remain attached to page books",()=>{
+  assert.match(app,/book\.cover_tags/);
+  assert.match(app,/data-live-progress/);
+  assert.match(app,/updateCloudShelfProgress\(\)/);
+  assert.match(app,/openCloudBook\(book,slug\)/);
+  assert.match(api,/SELECT book_id,label,color FROM book_cover_tags/);
+  assert.match(api,/WHERE book_id IN/);
+});

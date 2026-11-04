@@ -21,8 +21,8 @@ test("S138 full-bleed hero keeps native text, buttons and the reminder below the
  assert.ok(html.includes('id="bookGrid"'));
  assert.ok(html.includes('srcset="/cat-reading-hd.avif?v=20261104-v26-standard 1x, /cat-reading-tablet-2x.avif?v=20261104-v26-retina 2x"'));
  assert.ok(html.includes('src="/cat-reading-tablet-1x.webp?v=20261104-v26-standard"'));
- assert.ok(html.includes('href="/styles.css?v=20261104-v26-retina-banner"'));
- assert.ok(html.includes('src="/app.js?v=20261104-v24-resume-reading"'));
+ assert.ok(html.includes('href="/styles.css?v=20261104-v27-shelf-pages"'));
+ assert.ok(html.includes('src="/app.js?v=20261104-v27-shelf-pages"'));
 });
 
 test("S138 art dissolves into the background, rather than ending at a fixed 2-column boundary",()=>{
