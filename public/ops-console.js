@@ -82,33 +82,84 @@ async function verify(){
   await loadBooks();
   try{await loadSaleCategories();}catch(e){saleStatus('发码功能暂不可用：'+e.message);}
 }
+// The catalog is kept in page memory only. Filters never alter D1 data or
+// the current publishing selection; page-size is capped to avoid long lists.
+let catalogBooks=[],catalogPage=1;
+const DIRECTORY_PAGE_SIZE=6;
+function updateBookCategoryOptions(){
+  const menu=$("bookCategory"),previous=menu.value;
+  const categories=[...new Set(catalogBooks.map(x=>String(x.category_id||"")).filter(Boolean))]
+    .sort((a,b)=>a.localeCompare(b,"zh-CN"));
+  menu.replaceChildren(new Option("全部分类",""));
+  for(const id of categories)menu.add(new Option(id.toUpperCase(),id));
+  menu.value=categories.includes(previous)?previous:"";
+}
+function renderBookDirectory(){
+  const root=$("books");root.replaceChildren();
+  const active=connected();
+  const query=$("bookSearch").value.trim().toLocaleLowerCase();
+  const category=$("bookCategory").value;
+  const state=$("bookStatus").value;
+  for(const id of ["bookSearch","bookCategory","bookStatus"])$(id).disabled=!active;
+  const filtered=active?catalogBooks.filter(book=>
+    (!query||String(book.title||"").toLocaleLowerCase().includes(query))&&
+    (!category||book.category_id===category)&&
+    (!state||book.status===state)):[];
+  const totalPages=filtered.length?Math.ceil(filtered.length/DIRECTORY_PAGE_SIZE):0;
+  catalogPage=Math.min(Math.max(1,catalogPage),Math.max(1,totalPages));
+  const first=(catalogPage-1)*DIRECTORY_PAGE_SIZE;
+  $("bookDirectorySummary").textContent=!active?"验证运营身份后查看书籍":
+    "共 "+catalogBooks.length+" 本 · 符合筛选 "+filtered.length+" 本";
+  $("bookPageInfo").textContent="第 "+(totalPages?catalogPage:0)+" / "+totalPages+" 页";
+  $("bookPagePrev").disabled=!active||catalogPage<=1;
+  $("bookPageNext").disabled=!active||catalogPage>=totalPages;
+  $("bookClearFilters").disabled=!active||(!query&&!category&&!state);
+  if(!filtered.length){
+    root.append(byId("p",!active?"请先验证运营身份。":
+      !catalogBooks.length?"暂无草稿或已发布书籍。请先导入原创草稿。":
+      "没有找到符合条件的小说，可清空筛选重新查看。","ops-book-empty"));
+    return;
+  }
+  for(const book of filtered.slice(first,first+DIRECTORY_PAGE_SIZE)){
+    const selected=book.id===chosen?.id;
+    const card=byId("div",undefined,"book-entry"+(selected?" is-selected":""));
+    const details=byId("div",undefined,"ops-book-entry-copy");
+    details.append(byId("strong",book.title));
+    details.append(byId("p",book.category_id+" · "+book.chapter_count+" 章 · "+
+      (book.status==="published"?"已发布":"草稿未发布")));
+    card.append(details);
+    const select=byId("button",selected?"当前书籍":"选择",selected?"secondary is-current":"secondary");
+    select.type="button";
+    select.setAttribute("aria-pressed",String(selected));
+    select.setAttribute("aria-label",(selected?"当前选中《":"选择《")+book.title+"》");
+    select.addEventListener("click",()=>{if(!selected)void openBook(book).catch(e=>status(e.message||"加载书籍失败"));});
+    card.append(select);
+    root.append(card);
+  }
+}
 async function loadBooks(keepId=chosen?.id){
   if(!connected())return;
   const data=await api("/api/ops/books");
-  const root=$("books");root.replaceChildren();
-  if(!Array.isArray(data.books)||!data.books.length){
-    root.append(byId("p","暂无草稿或已发布书籍。请先到内容编辑后台导入原创草稿。","hint"));
-    clearActions();return;
+  catalogBooks=Array.isArray(data.books)?data.books.filter(x=>x&&x.id&&x.title):[];
+  updateBookCategoryOptions();
+  if(!catalogBooks.length){
+    chosen=null;clearActions();$("selected").textContent="请选择一本书";
+    $("bookSummary").textContent="";$("audit").replaceChildren();
+    renderBookDirectory();return;
   }
-  for(const book of data.books){
-    const card=byId("div",undefined,"book-entry");
-    card.append(byId("strong",book.title));
-    card.append(byId("p",book.category_id+" · "+book.chapter_count+"章 · "+
-      (book.status==="published"?"已发布":"草稿未发布")));
-    const select=byId("button","选择这本书",book.status==="published"?"":"secondary");
-    select.type="button";select.addEventListener("click",()=>openBook(book));
-    card.append(select);root.append(card);
-  }
-  if(keepId&&data.books.some(x=>x.id===keepId)){
-    await openBook(data.books.find(x=>x.id===keepId));
-  }else if(!chosen){
-    await openBook(data.books[0]);
+  // Keep a legitimate selection after refresh. The visible page stays filtered.
+  const next=catalogBooks.find(x=>x.id===keepId)||
+    (!chosen?catalogBooks[0]:null);
+  if(next){
+    await openBook(next);
   }else{
     chosen=null;clearActions();$("selected").textContent="请选择一本书";
+    $("bookSummary").textContent="";
   }
+  renderBookDirectory();
 }
 async function openBook(book){
-  chosen=book;clearActions();
+  chosen=book;renderBookDirectory();clearActions();
   $("selectedCoverFile").value="";
   void loadCurrentCover(book);
   void loadCoverTags(book);
@@ -741,10 +792,29 @@ button("categoryCreateButton",async()=>{
   "」。它不会出现在读者书架，也不能发码；请先上传小说并完成内容审核。";
  await loadSaleCategories();
 });
+// Local filtering: no extra API calls or updates to publication state.
+for(const id of ["bookSearch","bookCategory","bookStatus"]){
+  $(id).addEventListener(id==="bookSearch"?"input":"change",()=>{
+    catalogPage=1;renderBookDirectory();
+  });
+}
+$("bookClearFilters").addEventListener("click",()=>{
+  $("bookSearch").value="";$("bookCategory").value="";$("bookStatus").value="";
+  catalogPage=1;renderBookDirectory();
+});
+$("bookPagePrev").addEventListener("click",()=>{
+  if(catalogPage>1){catalogPage--;renderBookDirectory();}
+});
+$("bookPageNext").addEventListener("click",()=>{
+  catalogPage++;renderBookDirectory();
+});
 button("connect",verify);button("refresh",()=>loadBooks());
 button("publish",doPublish);button("withdraw",doWithdraw);
 button("disconnect",async()=>{
   key="";identity=null;chosen=null;clearActions();clearSaleReceipt();
+  catalogBooks=[];catalogPage=1;
+  $("bookSearch").value="";$("bookStatus").value="";updateBookCategoryOptions();
+  renderBookDirectory();
   saleReady=false;categoryCatalog=[];renderCategoryCatalog();
   syncSaleButtons();$("opsKey").value="";
   $("operatorIdentity").textContent="未登录";$("books").replaceChildren(byId("p","已清除密钥。","soft"));
