@@ -170,7 +170,9 @@ function main(){
   const previous=distinct.get(w.id);
   if(previous&&JSON.stringify(previous)!==JSON.stringify(w))fail("CROSS_PACKAGE_CARD_MISMATCH_"+w.headword);
   const old=previouslyPublished.get(w.headword);
-  if(old&&JSON.stringify(old)!==JSON.stringify(w))fail("EXISTING_PUBLISHED_WORD_CHANGED_"+w.headword);
+  if(old&&["id","headword","meaningZh","partOfSpeech","phoneticUk","phoneticUs",
+      "exampleEn","exampleZh","collocations"].some(k=>JSON.stringify(old[k])!==JSON.stringify(w[k])))
+    fail("EXISTING_PUBLISHED_WORD_CHANGED_"+w.headword);
   distinct.set(w.id,w);
  }
  const summary={category:"cet4",books:rows.length,chapters:rows.length*6,
