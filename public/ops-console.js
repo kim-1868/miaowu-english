@@ -289,6 +289,112 @@ button("saveSelectedCover",async()=>{
   $("coverUploadStatus").textContent="封面已保存，书架重新打开后会展示高清图片。";
  }
 });
+// Cover tags stay separate from artwork; changes update the shelf immediately.
+const defaultTagColors=[
+  ["新书上架","#a34a52"],["已完结","#526e68"],["高能反转","#713848"],
+  ["甜宠","#af6078"],["悬疑","#455a78"],["治愈","#7d8a5b"],
+  ["热门推荐","#9f753e"],["持续更新","#507e9a"]
+];
+let coverTags=[],tagPresets=[],editingTag=null;
+const validTagColor=x=>/^#[0-9a-fA-F]{6}$/.test(x||"")?x:"#713848";
+function renderCoverTagOverlay(){
+  const root=$("selectedCoverTagOverlay");
+  root.replaceChildren();
+  for(const tag of coverTags){
+    const pill=byId("span",tag.label,"ops-tag-pill");
+    pill.style.setProperty("--tag-color",validTagColor(tag.color));
+    root.append(pill);
+  }
+}
+function renderTagChoices(){
+  const input=$("tagPreset"),selected=input.value;
+  input.replaceChildren(new Option("自己输入标签",""));
+  const known=new Map(defaultTagColors);
+  for(const p of tagPresets)known.set(p.label,p.color);
+  for(const [label] of known)input.add(new Option(label,label));
+  if(known.has(selected))input.value=selected;
+}
+function renderTags(){
+  renderCoverTagOverlay();
+  const root=$("tagList");
+  root.replaceChildren();
+  if(!chosen){root.append(byId("span","请选择一本书。","hint"));return}
+  if(!coverTags.length){root.append(byId("span","这本书还没有标签。","hint"));return}
+  for(const entry of coverTags){
+    const row=byId("div",undefined,"ops-tag-entry");
+    const pill=byId("span",entry.label,"ops-tag-pill");
+    pill.style.setProperty("--tag-color",validTagColor(entry.color));
+    const color=document.createElement("input");
+    color.type="color";color.value=validTagColor(entry.color);
+    color.title="修改「"+entry.label+"」的颜色";
+    color.addEventListener("change",async()=>{
+      try{await saveTag(entry.label,color.value)}catch(e){$("tagStatus").textContent=e.message}
+    });
+    const edit=byId("button","改名","secondary");
+    edit.type="button";edit.onclick=()=>{
+      editingTag=entry.label;$("tagText").value=entry.label;
+      $("tagColor").value=validTagColor(entry.color);
+      $("tagSave").textContent="保存修改";
+      syncButtons();$("tagText").focus();
+    };
+    const remove=byId("button","删除","secondary");
+    remove.type="button";
+    remove.onclick=async()=>{
+      try{
+        const result=await api("/api/ops/books/"+encodeURIComponent(chosen.id)+"/tags","DELETE",
+          {label:entry.label,requestId:requestId()});
+        coverTags=result.tags;tagPresets=result.presets;editingTag=null;
+        $("tagSave").textContent="添加标签";renderTagChoices();renderTags();
+        $("tagStatus").textContent="已删除标签「"+entry.label+"」。";
+      }catch(e){$("tagStatus").textContent=e.message}
+    };
+    row.append(pill,color,edit,remove);root.append(row);
+  }
+}
+async function loadCoverTags(book){
+  coverTags=[];tagPresets=[];editingTag=null;
+  $("tagText").value="";$("tagColor").value="#713848";
+  $("tagSave").textContent="添加标签";
+  renderTagChoices();renderTags();syncButtons();
+  try{
+    const result=await api("/api/ops/books/"+encodeURIComponent(book.id)+"/tags");
+    if(chosen?.id!==book.id)return;
+    coverTags=result.tags||[];tagPresets=result.presets||[];
+    renderTagChoices();renderTags();
+    $("tagStatus").textContent="标签已加载；可选择现有标签，也可输入新标签。";
+  }catch(e){
+    if(chosen?.id===book.id)
+      $("tagStatus").textContent="标签管理暂不可用："+e.message+"。可能需要先执行005标签数据库迁移。";
+  }
+  syncButtons();
+}
+async function saveTag(label,color,previousLabel=null){
+  if(!chosen)throw Error("请先选择书籍");
+  const id=chosen.id;
+  const result=await api("/api/ops/books/"+encodeURIComponent(id)+"/tags","POST",{
+    label,color,previousLabel,requestId:requestId()
+  });
+  if(chosen?.id!==id)return;
+  coverTags=result.tags||[];tagPresets=result.presets||[];
+  editingTag=null;$("tagText").value="";$("tagPreset").value="";
+  $("tagSave").textContent="添加标签";
+  renderTagChoices();renderTags();syncButtons();
+  $("tagStatus").textContent="封面标签已保存，用户重新打开书架即可看到更新。";
+}
+$("tagPreset").addEventListener("change",()=>{
+  const label=$("tagPreset").value;
+  const selected=[...tagPresets,...defaultTagColors.map(([label,color])=>({label,color}))]
+    .find(x=>x.label===label);
+  if(label)$("tagText").value=label;
+  if(selected)$("tagColor").value=validTagColor(selected.color);
+  editingTag=null;$("tagSave").textContent="添加标签";syncButtons();
+});
+button("tagSave",async()=>{
+  const label=$("tagText").value.trim().replace(/\s+/gu," ");
+  if(!label||label.length>24)throw Error("标签文字需要1～24个字符");
+  await saveTag(label,$("tagColor").value,editingTag);
+});
+
 let pendingNovel=null;
 const uploadMsg=message=>{$("uploadStatus").textContent=message;};
 function resetNovel(){
