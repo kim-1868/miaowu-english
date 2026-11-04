@@ -72,23 +72,25 @@ jobs:
           grep -Fq '20261104-v28-night-selection' /tmp/home-before
           curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/edge-before
           node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/edge-before","utf8"));if(!x.ok||!x.productionBindingPresent)process.exit(1)'
-      - name: Require existing Cloudflare deploy and D1 credentials
+      - name: Require existing deployment token and dedicated production D1 token
         env:
           HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_API_TOKEN != '' }}
           HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         shell: bash
         run: |
           set -euo pipefail
-          test "$HAS_TOKEN" = "true"
-          test "$HAS_ACCOUNT" = "true"
+          test "$HAS_TOKEN" = "true" || { echo "Missing CLOUDFLARE_API_TOKEN (existing Worker deploy token)"; exit 1; }
+          test "$HAS_ACCOUNT" = "true" || { echo "Missing CLOUDFLARE_ACCOUNT_ID"; exit 1; }
+          test "$HAS_D1_TOKEN" = "true" || { echo "BLOCKED: Add GitHub Actions secret CLOUDFLARE_D1_API_TOKEN with D1 Read/Write access to production D1 account. No migration or deploy performed."; exit 1; }
           npx wrangler secret list --config deploy/production.wrangler.jsonc > /tmp/ops-secrets-before
           grep -Fq '"OPS_WITHDRAWAL_ENABLED"' /tmp/ops-secrets-before
       - name: Inspect existing production D1 schema without reading customer records
         shell: bash
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
@@ -101,7 +103,7 @@ jobs:
       - name: Record D1 Time Travel recovery bookmark BEFORE migration
         shell: bash
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
@@ -117,7 +119,7 @@ jobs:
       - name: Apply ONLY additive immutable version-history schema to production D1
         shell: bash
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
