@@ -1,0 +1,22 @@
+{
+  "source_file": "考研英语真题词频词汇表.pdf",
+  "file_sha256": "896655331eeb91c4f1ae6cc0aca197183775e3dc780eabf3e1d94dc18894cddf",
+  "pdf_pages": 90,
+  "source_date_claim": "2026-09-17",
+  "source_author_claim": "于铭博",
+  "source_coverage_claim": "English I 1998-2026 (29 papers), English II 2010-2026 (17 papers), total 46",
+  "total_entries": 6082,
+  "counts": {
+    "core": 500,
+    "high": 1000,
+    "mid": 1500,
+    "coverage": 2297,
+    "supplement": 545,
+    "function": 240
+  },
+  "frequency_stats_parsed": 4966,
+  "untested_count": 1116,
+  "unmatched_entries": 0,
+  "distinct_headwords_casefold": 6082,
+  "source_warning": "User-supplied third-party study reference, not independently validated against official exam papers; keep separate from live word cards."
+}
