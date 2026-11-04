@@ -47,3 +47,30 @@ button.secondary{background:#5c4852;color:#f9e8eb}hr{border-color:#674d5a}.audit
 .book-cover-admin-preview img{height:100%;width:100%;object-fit:cover;display:block;border-radius:6px}
 .book-cover-admin-preview #selectedCoverEmpty{font-size:12px;line-height:1.65;padding:10px}
 @media(max-width:640px){.book-cover-admin-preview{width:130px}.book-cover-admin-preview+.stretch{min-width:190px;flex:1}}
+
+/* S147: customizable cover tags. All labels remain live metadata, not image pixels. */
+.book-cover-admin-preview{position:relative}
+.ops-cover-tag-overlay{
+ position:absolute;right:9px;top:9px;z-index:2;max-width:85%;
+ display:flex;flex-direction:column;align-items:flex-end;gap:5px;pointer-events:none
+}
+.ops-cover-tag-overlay .ops-tag-pill,.ops-tag-list .ops-tag-pill{
+ padding:5px 9px;border-radius:7px;color:#fff;font-size:11px;font-weight:650;
+ background:rgba(111,48,61,.76);
+ background:color-mix(in srgb,var(--tag-color,#713848) 76%,transparent);
+ text-shadow:0 1px 2px #0009;border:1px solid #ffffff33;
+ backdrop-filter:blur(5px);overflow-wrap:anywhere;max-width:100%;
+}
+.ops-tag-editor{border-top:1px solid #e8dbce;margin-top:20px;padding-top:6px}
+.ops-tag-editor select{font:inherit;display:block;width:100%;border-radius:9px;border:1px solid #d7c7b9;background:#fff;color:#352c29;padding:11px 12px;margin-top:7px}
+.ops-tag-editor input[type=color]{height:42px;width:58px;padding:3px;cursor:pointer}
+.ops-tag-list{display:flex;flex-wrap:wrap;gap:10px;margin:15px 0}
+.ops-tag-entry{display:flex;align-items:center;gap:8px;border:1px solid #e6d8cb;border-radius:9px;padding:7px 9px;background:#faf3eb}
+.ops-tag-entry input[type=color]{width:36px;height:30px}
+.ops-tag-entry button{padding:5px 8px;font-size:11px}
+.ops-tag-editor #tagStatus{margin-top:10px}
+@media(max-width:790px){.ops-tag-editor .row{align-items:end}.ops-tag-editor .stretch{min-width:150px}}
+@media(prefers-color-scheme:dark){
+ .ops-tag-editor{border-color:#644d58}.ops-tag-editor select{background:#29252b;color:#fff;border-color:#78606b}
+ .ops-tag-entry{background:#3e343c;border-color:#5a4651}
+}
