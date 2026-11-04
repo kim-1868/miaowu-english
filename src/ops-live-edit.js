@@ -79,12 +79,23 @@ export function checkLivePackage(valid,current,existingWords){
       throw Error("EXISTING_WORD_CARD_CHANGED");
   }
   const changedChapters=[];
+  const paragraphLine=p=>p.segments.map(s=>s.wordId?s.surface:s.text).join("");
+  const excerpt=parts=>parts.slice(0,1).join(" ").slice(0,180);
   for(const ch of chapters){
     const oldCh=old.get(ch.id);
-    if(!oldCh){changedChapters.push({number:ch.number,title:ch.title,kind:"added"});continue}
+    if(!oldCh){
+      changedChapters.push({number:ch.number,title:ch.title,kind:"added",
+        beforeExcerpt:"",afterExcerpt:excerpt(ch.paragraphs.map(paragraphLine))});
+      continue;
+    }
     if(oldCh.title!==ch.title||Boolean(oldCh.is_preview)!==ch.preview||
       oldCh.content_json!==packChapter(ch)){
-      changedChapters.push({number:ch.number,title:ch.title,kind:"revised"});
+      const before=JSON.parse(oldCh.content_json).paragraphs.map(paragraphLine);
+      const after=ch.paragraphs.map(paragraphLine);
+      const firstChanged=before.findIndex((line,i)=>line!==after[i]);
+      const index=firstChanged<0?0:firstChanged;
+      changedChapters.push({number:ch.number,title:ch.title,kind:"revised",
+        beforeExcerpt:excerpt(before.slice(index)),afterExcerpt:excerpt(after.slice(index))});
     }
   }
   const metadataChanged=current.book.title!==book.title||
