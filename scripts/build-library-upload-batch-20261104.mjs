@@ -118,13 +118,13 @@ function createPackage(spec,lex,rules,regex){
    const p=enrich(original,improve,lex,rules,regex);
    let cursor=0;const segments=[];
    for(const m of p.matchAll(anchor)){
-    if(m.index>cursor)segments.push({text:p.slice(cursor,m.index)});
+    if(m.index>cursor&&p.slice(cursor,m.index).trim())segments.push({text:p.slice(cursor,m.index)});
     const card=lex.get(m[1]);if(!card)fail("MISSING_CARD_"+id+"_"+m[1]);
     used.add(m[1]);
     segments.push({wordId:card.id,surface:card.headword,gloss:card.meaningZh.split("；")[0]});
     cursor=m.index+m[0].length;
    }
-   if(cursor<p.length)segments.push({text:p.slice(cursor)});
+   if(cursor<p.length&&p.slice(cursor).trim())segments.push({text:p.slice(cursor)});
    if(!segments.length||segments.length>100)fail("INVALID_SEGMENTS_"+id);
    return {segments};
   });
