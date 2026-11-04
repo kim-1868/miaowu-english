@@ -30,7 +30,11 @@ async function api(path,method="GET",body){
   try{data=await result.json();}
   catch{throw Error("服务器未返回有效 JSON（HTTP "+result.status+"）。");}
   if(!result.ok){
-    if(result.status===401){key="";identity=null;$("operatorIdentity").textContent="身份已失效";}
+    if(result.status===401){
+      key="";identity=null;catalogBooks=[];catalogPage=1;chosen=null;
+      $("operatorIdentity").textContent="身份已失效";
+      clearActions();renderBookDirectory();
+    }
     throw Error("操作被拒绝："+(typeof data.error==="string"?data.error:"UNKNOWN")+
       "（HTTP "+result.status+"）。");
   }
@@ -94,17 +98,21 @@ function updateBookCategoryOptions(){
   for(const id of categories)menu.add(new Option(id.toUpperCase(),id));
   menu.value=categories.includes(previous)?previous:"";
 }
+function filterCatalogBooks(books,query,category,state){
+  const normalized=String(query||"").trim().toLocaleLowerCase();
+  return books.filter(book=>
+    (!normalized||String(book.title||"").toLocaleLowerCase().includes(normalized))&&
+    (!category||book.category_id===category)&&
+    (!state||book.status===state));
+}
 function renderBookDirectory(){
   const root=$("books");root.replaceChildren();
   const active=connected();
-  const query=$("bookSearch").value.trim().toLocaleLowerCase();
+  const query=$("bookSearch").value.trim();
   const category=$("bookCategory").value;
   const state=$("bookStatus").value;
   for(const id of ["bookSearch","bookCategory","bookStatus"])$(id).disabled=!active;
-  const filtered=active?catalogBooks.filter(book=>
-    (!query||String(book.title||"").toLocaleLowerCase().includes(query))&&
-    (!category||book.category_id===category)&&
-    (!state||book.status===state)):[];
+  const filtered=active?filterCatalogBooks(catalogBooks,query,category,state):[];
   const totalPages=filtered.length?Math.ceil(filtered.length/DIRECTORY_PAGE_SIZE):0;
   catalogPage=Math.min(Math.max(1,catalogPage),Math.max(1,totalPages));
   const first=(catalogPage-1)*DIRECTORY_PAGE_SIZE;
