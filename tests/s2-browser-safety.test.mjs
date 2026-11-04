@@ -59,7 +59,7 @@ test("S7 retains original design foundation, but public shelf shows only actuall
  assert.ok(ref);
  assert.ok(css.startsWith(ref[1]));
  for(const marker of ["function updateCloudShelfProgress","book.chapter_count",
-    "p.completed_at","data-live-progress","function openFirstCloudBook",
+    "p.completed_at","data-live-progress","function resumeLatestReading",
     "activeCloud.rawParagraphs","token.surface","rainy-night-cover-v2.svg"]){
   assert.ok(script.includes(marker),marker);
  }
