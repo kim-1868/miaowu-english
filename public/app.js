@@ -626,7 +626,7 @@
         return '<button class="category '+(c.id===category?'selected':'')+
           ' available" data-category="'+safe(c.id)+'"><span class="category-en">'+english+
           '</span>'+art+'<strong>'+safe(c.name)+
-          '</strong><small>'+safe(String(c.sub||'').replace(/\\s*[·•-]?\\s*待推出/g,'').trim())+'</small><span class="category-tag">'+
+          '</strong><small>'+safe(String(c.sub||'').replace(/待推出/g,'').trim())+'</small><span class="category-tag">'+
           (has(c.id)?'✓ 已解锁':'● 可查看书架')+'</span></button>';
       }).join('');
       cat.querySelectorAll('[data-category]').forEach(el=>el.onclick=()=>{
