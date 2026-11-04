@@ -84,7 +84,7 @@ test("V1.2.1 iOS study tray never shades the screen without a visible learning c
  assert.match(js,/tray\.style\.setProperty\('z-index','2147483000','important'\)/);
  assert.match(css,/#wordBackdrop\.on\{display:none!important;pointer-events:none!important\}/);
  assert.match(css,/#wordPop\.on\{/);
- assert.match(html,/styles\.css\?v=20261104-v27-shelf-pages/);
+ assert.match(html,/styles\.css\?v=20261104-v28-night-selection/);
  assert.match(html,/app\.js\?v=20261104-v27-shelf-pages/);
 });
 
@@ -102,5 +102,5 @@ test("V1.2.3 mobile reader tools use a uniform four-column grid",()=>{
  assert.match(css,/\.read-top \.tool-row\{[\s\S]*?grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
  assert.match(css,/height:44px!important;min-height:44px!important/);
  assert.match(html,/id="topRead"[^>]*>♫ 朗读<\/button>/);
- assert.match(html,/styles\.css\?v=20261104-v27-shelf-pages/);
+ assert.match(html,/styles\.css\?v=20261104-v28-night-selection/);
 });

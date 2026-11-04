@@ -2180,3 +2180,60 @@ html[data-theme="dark"] #view-library .home-shelf-layout .shelf-page-button.is-c
   #view-library .home-shelf-layout .shelf-page-controls{justify-content:center}
   #view-library .home-shelf-layout .shelf-page-button{min-height:40px;min-width:40px}
 }
+
+
+/* V28: readable text and tapped vocabulary in the night-time story reader.
+   Explicit ::selection colors are required on selected descendants (not only
+   the global light-theme selection rule) in Safari, Firefox and Chromium. */
+html[data-theme="dark"] #view-reader .story-text::selection,
+html[data-theme="dark"] #view-reader .story-text *::selection,
+#view-reader .reader-layout.night .story-text::selection,
+#view-reader .reader-layout.night .story-text *::selection,
+#view-reader .reader-layout[data-reader-tone="night"] .story-text::selection,
+#view-reader .reader-layout[data-reader-tone="night"] .story-text *::selection{
+  background:#855067!important;
+  color:#fffaf5!important;
+}
+html[data-theme="dark"] #view-reader .story-text::-moz-selection,
+html[data-theme="dark"] #view-reader .story-text *::-moz-selection,
+#view-reader .reader-layout.night .story-text::-moz-selection,
+#view-reader .reader-layout.night .story-text *::-moz-selection,
+#view-reader .reader-layout[data-reader-tone="night"] .story-text::-moz-selection,
+#view-reader .reader-layout[data-reader-tone="night"] .story-text *::-moz-selection{
+  background:#855067!important;
+  color:#fffaf5!important;
+}
+/* A clicked English word must remain clearly legible against the dark
+   paragraph. This also handles focus for keyboard and touch readers. */
+html[data-theme="dark"] #view-reader .story-text [data-cloud-word].study-word-active,
+#view-reader .reader-layout.night .story-text [data-cloud-word].study-word-active,
+#view-reader .reader-layout[data-reader-tone="night"] .story-text [data-cloud-word].study-word-active{
+  background:#684052!important;
+  color:#fff5ed!important;
+  border-bottom-color:#f5bfd0!important;
+  border-radius:4px;
+  box-shadow:0 0 0 2px rgba(196,138,164,.24);
+}
+html[data-theme="dark"] #view-reader .story-text .word:hover,
+html[data-theme="dark"] #view-reader .story-text [data-cloud-word]:focus-visible,
+#view-reader .reader-layout.night .story-text .word:hover,
+#view-reader .reader-layout.night .story-text [data-cloud-word]:focus-visible,
+#view-reader .reader-layout[data-reader-tone="night"] .story-text .word:hover,
+#view-reader .reader-layout[data-reader-tone="night"] .story-text [data-cloud-word]:focus-visible{
+  background:#593748!important;
+  color:#fff2ea!important;
+}
+/* Spoken paragraph highlight: never pair the daylight peach background with
+   the night palette's near-white body text. */
+html[data-theme="dark"] #view-reader .story-text p[data-audio-paragraph].reading-current,
+#view-reader .reader-layout.night .story-text p[data-audio-paragraph].reading-current,
+#view-reader .reader-layout[data-reader-tone="night"] .story-text p[data-audio-paragraph].reading-current{
+  background:#45404c!important;
+  box-shadow:0 0 0 6px #45404c!important;
+  color:#fff2e9!important;
+}
+@media (pointer:coarse){
+  #view-reader .story-text [data-cloud-word]{
+    -webkit-tap-highlight-color:rgba(189,125,157,.36);
+  }
+}

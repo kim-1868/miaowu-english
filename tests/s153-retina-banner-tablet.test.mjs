@@ -34,7 +34,7 @@ test("S153: picture srcset chooses density appropriate assets and preserves old 
   assert.match(html,/srcset="\/cat-reading-hd\.avif\?v=20261104-v26-standard 1x, \/cat-reading-tablet-2x\.avif\?v=20261104-v26-retina 2x"/);
   assert.match(html,/src="\/cat-reading-tablet-1x\.webp\?v=20261104-v26-standard"/);
   assert.match(html,/srcset="\/cat-reading-tablet-1x\.webp\?v=20261104-v26-standard 1x, \/cat-reading-tablet-2x\.webp\?v=20261104-v26-retina 2x"/);
-  assert.match(html,/href="\/styles\.css\?v=20261104-v27-shelf-pages"/);
+  assert.match(html,/href="\/styles\.css\?v=20261104-v28-night-selection"/);
   assert.match(html,/src="\/app\.js\?v=20261104-v27-shelf-pages"/);
   assert.match(css,/V26: tablet banner sharpness/);
   assert.match(css,/@media \(hover:none\), \(pointer:coarse\)/);

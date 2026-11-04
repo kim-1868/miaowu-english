@@ -31,7 +31,7 @@ test("S135: English course levels share one stable row and baseline",()=>{
 test("S135: banner, live book data, and paid gating are unchanged",()=>{
  const app=read("app.js"),html=read("index.html");
  assert.ok(html.includes("cat-reading-hd.avif"));
- assert.ok(html.includes("href=\"/styles.css?v=20261104-v27-shelf-pages\""));
+ assert.ok(html.includes("href=\"/styles.css?v=20261104-v28-night-selection\""));
  assert.ok(html.includes("src=\"/app.js?v=20261104-v27-shelf-pages\""));
  assert.ok(app.includes("data-category"));
  assert.ok(app.includes("has(c.id)?'✓ 已解锁'"));
