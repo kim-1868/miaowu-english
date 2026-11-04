@@ -37,7 +37,7 @@ async function fixture({enabled=true,withTagMigration=true}={}){
     "008_ops_release_workflow"])db.exec(read("../db/"+file+".sql"));
   if(withTagMigration)db.exec(read("../db/production/005_book_cover_tags.sql"));
   const pkg=structuredClone(JSON.parse(read("../content/examples/cet4-sample-draft.json")));
-  pkg.book.id="owner-live-test-novel";pkg.book.title="一封迟到的信";
+  pkg.book.id="owner-live-story-novel";pkg.book.title="一封迟到的信";
   for(const [i,c] of pkg.chapters.entries())c.id="owner-v19-ch-"+(i+1);
   db.exec(generateSql(pkg).sql);
   db.prepare("UPDATE categories SET is_visible=1 WHERE slug='cet4'").run();
