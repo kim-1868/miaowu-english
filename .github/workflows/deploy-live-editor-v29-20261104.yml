@@ -92,7 +92,11 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
-          npx wrangler d1 execute miaowu-english-prod --config deploy/production.wrangler.jsonc --remote --yes --json --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('books','chapters','ops_audit_events','ops_book_content_versions') ORDER BY name" > /tmp/d1-preflight.json
+          if ! npx wrangler d1 execute miaowu-english-prod --config deploy/production.wrangler.jsonc --remote --yes --json --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('books','chapters','ops_audit_events','ops_book_content_versions') ORDER BY name" > /tmp/d1-preflight.json 2> /tmp/d1-preflight-err.txt; then
+            echo "Remote D1 schema verification failed before any migration or deployment."
+            node --input-type=module -e 'import fs from "node:fs";for(const path of ["/tmp/d1-preflight-err.txt","/tmp/d1-preflight.json"]){let s=fs.readFileSync(path,"utf8").slice(0,3000);s=s.replace(/mwops_[a-f0-9]{64}/ig,"[REDACTED]").replace(/[a-f0-9]{64}/ig,"[HASH_REDACTED]");console.log(path+": "+s)}'
+            exit 1
+          fi
           node --input-type=module -e 'import fs from "node:fs";const x=fs.readFileSync("/tmp/d1-preflight.json","utf8");for(const k of ["books","chapters","ops_audit_events","ops_book_content_versions"])if(!x.includes(String.fromCharCode(34)+k+String.fromCharCode(34)))throw Error("Missing established schema: "+k)'
       - name: Record D1 Time Travel recovery bookmark BEFORE migration
         shell: bash
