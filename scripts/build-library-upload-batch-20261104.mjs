@@ -48,7 +48,8 @@ function dictionary(){
  const extras=json("content/editorial/20261104-shared-45-word-cards-WORKING-COPY-NOT-APPROVED.json").words;
  const more=json("content/editorial/20261104-library-11-additional-cards.json").words;
  const everyday=json("content/editorial/20261104-library-41-basic-cards.json").words;
- for(const w of [...extras,...more,...everyday])
+ const theme=json("content/editorial/20261104-library-25-theme-cards.json").words;
+ for(const w of [...extras,...more,...everyday,...theme])
   lex.set(w.headword,{id:"mwv26-cet4-"+w.headword,headword:w.headword,
    meaningZh:w.meaningZh,partOfSpeech:w.partOfSpeech,phoneticUk:w.phoneticUk,
    phoneticUs:w.phoneticUs,exampleEn:w.exampleEn,exampleZh:w.exampleZh,
@@ -91,6 +92,13 @@ function forbidden(s,i,zh){
  if(zh==="晚上"&&/^(好|见)/u.test(after))return true;
  if(zh==="夜里"&&/^(了|一直|还|又|没有)/u.test(after))return true;
  if(zh==="书本"&&/^(业|来|上)/u.test(after))return true;
+ if(zh==="工作"&&/^(了|着|到|以来|完成|者|安排|过程|日|岗位|时间|方式)/u.test(after))return true;
+ if(zh==="工作"&&/(继续|开始|正在|不停|在|去|来|快点|努力|一起)$/u.test(before))return true;
+ if(zh==="竞争"&&/^(对手|者|性|优势|力)/u.test(after))return true;
+ if(zh==="测试"&&/^(员|仪|人员|环境|工具)/u.test(after))return true;
+ if(zh==="基金"&&/^(会|经理|业务|事务)/u.test(after))return true;
+ if(zh==="现场"&&/^(感|演员|录音|表演)/u.test(after))return true;
+ if(zh==="图纸"&&/^(上|里|中)/u.test(after))return false;
  if(zh==="审核"&&/^(请|可|能|来|要|会|由|得)$/u.test(before.slice(-1)))return true;
  if(["承诺","决定","选择"].includes(zh)&&
     /^(我|你|他|她|还|也|就|才|终于|忽然|随后)$/u.test(before.slice(-2)))return true;
