@@ -45,7 +45,7 @@ test("S131 covers are chosen by book, compressed in the browser and uploaded usi
  assert.ok(html.includes('id="selectedCoverImage"'));
  assert.match(ops,/canvas\.width=900;canvas\.height=1200/);
  assert.match(ops,/URL\.createObjectURL/);
- assert.match(ops,/uploadCoverForBook\(result\.bookId,coverFile\)/);
+ assert.match(ops,/uploadCoverForBook\(created\.bookId,coverFile\)/);
  assert.match(ops,/X-Mw-Ops-Key/);
  assert.match(worker,/handleBookCover/);
  assert.ok(read("../db/production/004_book_cover_images.sql").includes("CREATE TABLE IF NOT EXISTS book_cover_images"));
