@@ -390,15 +390,19 @@ export async function handleOpsLiveEdit(req,env,path){
   try{
     if(!(await schemaReady(env.DB)))return fail("LIVE_EDIT_SCHEMA_REQUIRED",503);
     if(action==="history")return await listHistory(env.DB,id);
-    if(action==="overview"||action==="export"){
-      const result=await exportPackage(env.DB,id);
-      if(action==="export")return reply(result);
-      return reply({book:{id:result.bookId,title:result.package.book.title,
-        description:result.package.book.description,category:result.package.book.category},
-        version:result.version,chapterCount:result.package.chapters.length,
+    if(action==="overview"){
+      const book=await getBook(env.DB,id);
+      if(!book)return fail("BOOK_NOT_FOUND",404);
+      if(book.status!=="published")return fail("BOOK_NOT_PUBLISHED",409);
+      const number=await stmt(env.DB,
+        "SELECT COUNT(*) AS n FROM chapters WHERE book_id=?",id).first();
+      return reply({book:{id:book.id,title:book.title,
+        description:book.description||"",category:book.category_id},
+        version:book.version,chapterCount:Number(number?.n||0),
         editable:env.OPS_PUBLICATION_ENABLED==="true",
         note:"保留章节与词汇 ID；修订前系统会保存不可更改的历史版本。"});
     }
+    if(action==="export")return reply(await exportPackage(env.DB,id));
     if(action==="preview")return await preview(req,env,id);
     if(action==="metadata"){
       if(env.OPS_PUBLICATION_ENABLED!=="true")return fail("LIVE_EDIT_DISABLED",403);
