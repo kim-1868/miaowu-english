@@ -1,7 +1,7 @@
 # Operational dispatcher intentionally lives on repository default main branch.
 # The production source remains on the separate, release-reviewed branch.
-# Home V1.8 immersive rainy-night cat panorama and subtle responsive motion: CI green; protected manual-only deployment retained.
-# No database writes and no private manuscript assets.
+# V1.9 publisher workflow and cover labels: CI green; protected manual-only deployment retained.
+# Only additive book_cover_tags table migration, followed by Worker code deploy. No user/novel writes.
 name: Deploy Miaowu CET4 members-only site (production Worker)
 run-name: CET4 protected Worker · V1.9 publisher flow and cover tags · ${{ github.actor }}
 
@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       confirmation:
-        description: "Type DEPLOY_CET4_PROTECTED_SITE to confirm production Worker code rollout only"
+        description: "Type DEPLOY_CET4_PROTECTED_SITE to confirm additive tag-table migration and production Worker rollout"
         required: true
         type: string
 
