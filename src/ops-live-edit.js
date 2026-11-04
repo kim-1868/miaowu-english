@@ -389,7 +389,7 @@ export async function handleOpsLiveEdit(req,env,path){
   if(!hasOpsRole(auth.operator,"publisher"))return fail("OPS_ROLE_FORBIDDEN",403);
   try{
     if(!(await schemaReady(env.DB)))return fail("LIVE_EDIT_SCHEMA_REQUIRED",503);
-    if(action==="history")return listHistory(env.DB,id);
+    if(action==="history")return await listHistory(env.DB,id);
     if(action==="overview"||action==="export"){
       const result=await exportPackage(env.DB,id);
       if(action==="export")return reply(result);
@@ -399,13 +399,13 @@ export async function handleOpsLiveEdit(req,env,path){
         editable:env.OPS_PUBLICATION_ENABLED==="true",
         note:"保留章节与词汇 ID；修订前系统会保存不可更改的历史版本。"});
     }
-    if(action==="preview")return preview(req,env,id);
+    if(action==="preview")return await preview(req,env,id);
     if(action==="metadata"){
       if(env.OPS_PUBLICATION_ENABLED!=="true")return fail("LIVE_EDIT_DISABLED",403);
-      return writeMetadata(req,env,id,auth.operator.id);
+      return await writeMetadata(req,env,id,auth.operator.id);
     }
-    if(action==="publish")return publishRevision(req,env,id,auth.operator.id);
-    return restoreVersion(req,env,id,auth.operator.id);
+    if(action==="publish")return await publishRevision(req,env,id,auth.operator.id);
+    return await restoreVersion(req,env,id,auth.operator.id);
   }catch(err){
     const expected=["BOOK_NOT_FOUND","BOOK_NOT_PUBLISHED","INVALID_CONTENT_TYPE",
       "PAYLOAD_TOO_LARGE","INVALID_JSON","INVALID_EDIT_CONFIRMATION","INVALID_REVISED_PACKAGE",
