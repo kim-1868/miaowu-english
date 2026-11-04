@@ -22,7 +22,7 @@ test("S138 full-bleed hero keeps native text, buttons and the reminder below the
  assert.ok(html.includes('srcset="/cat-reading-hd.avif?v=20261103-hd-v15"'));
  assert.ok(html.includes('src="/cat-reading-watercolor.webp?v=20261103-watercolor"'));
  assert.ok(html.includes('href="/styles.css?v=20261104-v21-cover-led-shelf"'));
- assert.ok(html.includes('src="/app.js?v=20261104-v21-cover-led-shelf"'));
+ assert.ok(html.includes('src="/app.js?v=20261104-v24-resume-reading"'));
 });
 
 test("S138 art dissolves into the background, rather than ending at a fixed 2-column boundary",()=>{
@@ -58,7 +58,7 @@ test("S138 no regressions in dynamic vocabulary reminders or paid book UI",()=>{
  assert.match(app,/const due=user\?cloudDue\(\):0,seen=cloudSaved\.size/);
  assert.match(app,/renderHomeStudyStats\(\)/);
  assert.ok(app.includes("navigate('echo')"));
- assert.ok(app.includes("openFirstCloudBook"));
+ assert.ok(app.includes("resumeLatestReading"));
  assert.ok(html.includes('id="homeDueCount"'));
  assert.ok(html.includes('id="topAccount"'));
  assert.ok(html.includes('id="view-reader"'));
