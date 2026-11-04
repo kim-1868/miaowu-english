@@ -1964,13 +1964,7 @@ html[data-theme="dark"] #view-library .story-home-hero .hero-actions .secondary-
   font-size:9px;
   padding:3px 7px;
 }
-#view-library .home-shelf-layout .cloud-book-item .book-cover .book-tag{
-  max-width:calc(100% - 12px);
-  right:6px;
-  top:6px;
-  font-size:9px;
-  padding:3px 6px;
-}
+#view-library .home-shelf-layout .cloud-book-item .book-cover .book-tag{max-width:calc(100% - 12px);font-size:9px;padding:3px 6px}
 @media(max-width:1300px){
   #view-library .home-shelf-layout > .book-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   #view-library .home-shelf-layout .cloud-book-item{grid-template-columns:minmax(0,40%) minmax(0,1fr)}
