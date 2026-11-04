@@ -42,7 +42,7 @@ test("S132 visual: a unique sleepy cat banner and a cat-shaped bookmark clip are
   assert.ok(image.includes("<svg"));
   assert.doesNotMatch(image,/<script\b|foreignObject|onload=|xlink:href=/i);
  }
- assert.ok(html.includes('srcset="/cat-reading-hd.avif?v=20261103-hd-v15"'));
+ assert.ok(html.includes('srcset="/cat-reading-hd.avif?v=20261104-v26-standard 1x, /cat-reading-tablet-2x.avif?v=20261104-v26-retina 2x"'));
  assert.ok(html.includes('src="/cat-bookmark-clip.svg"'));
  assert.ok(html.includes('class="home-study-card"'));
  assert.ok(css.includes("html[data-theme=\"dark\"] #view-library .story-home-hero"));
@@ -67,5 +67,5 @@ test("S132 production builds only approved SVG and customer assets",()=>{
    "shelf-cet4.svg","shelf-cet6.svg","shelf-postgrad.svg","shelf-ielts.svg"]){
   assert.ok(report.assets.includes(f));
  }
- assert.equal(report.assets.length,28);
+ assert.equal(report.assets.length,31);
 });
