@@ -3,7 +3,7 @@
 # Home V1.8 immersive rainy-night cat panorama and subtle responsive motion: CI green; protected manual-only deployment retained.
 # No database writes and no private manuscript assets.
 name: Deploy Miaowu CET4 members-only site (production Worker)
-run-name: CET4 protected Worker · Home V1.8 immersive cat banner and gentle motion · ${{ github.actor }}
+run-name: CET4 protected Worker · V1.9 publisher flow and cover tags · ${{ github.actor }}
 
 on:
   workflow_dispatch:
@@ -29,14 +29,14 @@ jobs:
       - name: Checkout fixed, reviewed release (not default main)
         uses: actions/checkout@v4
         with:
-          ref: 46cb0cda4c56ee81e6e0cab5439e1ee893a4ae3a
+          ref: 9264318e7b2550717344b4b20f740bd3f9249253
           persist-credentials: false
 
       - name: Guard exact release SHA and target config
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "46cb0cda4c56ee81e6e0cab5439e1ee893a4ae3a"
+          test "$(git rev-parse HEAD)" = "9264318e7b2550717344b4b20f740bd3f9249253"
           grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
           grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
           test ! -e private-output
@@ -101,6 +101,43 @@ jobs:
         run: |
           test "$TOKEN_PRESENT" = "true" || { echo "Missing repo secret CLOUDFLARE_API_TOKEN"; exit 1; }
           test "$ACCOUNT_PRESENT" = "true" || { echo "Missing repo secret CLOUDFLARE_ACCOUNT_ID"; exit 1; }
+
+      - name: Fail closed if production D1 migration credentials are not configured
+        shell: bash
+        env:
+          D1_TOKEN_PRESENT: ${{ secrets.CLOUDFLARE_D1_API_TOKEN != '' }}
+        run: test "$D1_TOKEN_PRESENT" = "true"
+
+      - name: Apply idempotent, additive book cover tag table to production D1
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -f db/production/005_book_cover_tags.sql
+          grep -Fq 'CREATE TABLE IF NOT EXISTS book_cover_tags' db/production/005_book_cover_tags.sql
+          npx wrangler d1 execute miaowu-english-prod \
+            --config deploy/production.wrangler.jsonc --remote --yes \
+            --file=db/production/005_book_cover_tags.sql
+
+      - name: Verify only expected new book-tag metadata table exists
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute miaowu-english-prod \
+            --config deploy/production.wrangler.jsonc --remote --json \
+            --command "SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name='book_cover_tags'" > /tmp/book-cover-tags-check.json
+          node --input-type=module -e '
+            import assert from "node:assert/strict";
+            import {readFileSync} from "node:fs";
+            const data=JSON.parse(readFileSync("/tmp/book-cover-tags-check.json","utf8"));
+            const row=(Array.isArray(data)?data:[data]).flatMap(x=>x.results||[])[0];
+            assert.equal(Number(row?.n),1,"Cover tag migration missing");
+          '
 
       - name: Deploy reviewed Worker with protected CET4 library and public metadata-only book page
         env:
