@@ -3,15 +3,15 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>妙屋英语 · 运营出版台</title>
-<link rel="stylesheet" href="/ops-console.css?v=20261103-v12-review-cover">
-<script src="/ops-console.js?v=20261103-v12-review-cover" defer></script>
+<link rel="stylesheet" href="/ops-console.css?v=20261104-v19-direct-publish-tags">
+<script src="/ops-console.js?v=20261104-v19-direct-publish-tags" defer></script>
 </head><body>
 <header><div class="brand">喵 · 妙屋英语 <span>THE STORY & WORD LIBRARY</span></div>
   <div class="strap">运营出版台 <span class="pill">受控操作</span></div></header>
 <main>
   <p class="crumb"><a href="/">← 返回阅读首页</a></p>
   <h1>故事出版台</h1>
-  <p class="intro">从内容复核到正式上架，每一步都有明确记录。请先完成审核，再独立确认上架；测试或示例书不允许出售。</p>
+  <p class="intro">上传完整内容包，检查预览，选择封面，确认无误后即可一键上架；现有草稿也可以直接确认发布。</p>
   <div class="notice"><strong>运营安全提示：</strong>这里只接受独立运营密钥，不使用普通读者密码或旧版 S3 测试密钥。密钥只保留在当前页面的内存中；不写入本地存储。正式生产还需要 Cloudflare Access 等独立入口保护。</div>
   <section class="panel" aria-label="运营身份">
     <div class="panel-heading"><h2>① 运营身份</h2><span id="operatorIdentity" class="soft">未登录</span></div>
@@ -63,7 +63,8 @@
     <p class="hint">先从书籍目录选择一本书，再上传高清封面。发布中的书会更新书架图片，不影响正文、购买权限和学习记录。推荐 3:4 竖版，900×1200 像素以上。</p>
     <div class="row">
       <div class="book-cover-admin-preview"><img id="selectedCoverImage" alt="当前选择小说的封面预览" hidden>
-        <span id="selectedCoverEmpty">选择书籍后显示现有封面</span></div>
+        <span id="selectedCoverEmpty">选择书籍后显示现有封面</span>
+        <div id="selectedCoverTagOverlay" class="ops-cover-tag-overlay" aria-label="封面标签预览"></div></div>
       <div class="stretch">
         <label for="selectedCoverFile">选择新封面（JPG / PNG / WEBP）</label>
         <input id="selectedCoverFile" type="file" accept="image/jpeg,image/png,image/webp">
@@ -72,31 +73,35 @@
         <div id="coverUploadStatus" class="status" role="status" aria-live="polite">请先选择书籍。</div>
       </div>
     </div>
+    <div class="ops-tag-editor">
+      <h3>封面标签 · 自由添加和修改</h3>
+      <p class="hint">可选常用标签，也能自己输入；每本书可添加多枚，颜色独立设置，右上角半透明显示。已发布的书也可随时修改。</p>
+      <div class="row">
+        <label class="stretch" for="tagPreset">从已有标签选择
+          <select id="tagPreset"><option value="">自定义标签</option></select></label>
+        <label class="stretch" for="tagText">标签文字
+          <input id="tagText" maxlength="24" placeholder="如：高能反转"></label>
+        <label for="tagColor">标签颜色
+          <input id="tagColor" type="color" value="#713848"></label>
+        <button id="tagSave" type="button" disabled>添加标签</button>
+      </div>
+      <div id="tagList" class="ops-tag-list" aria-live="polite">选择书籍后管理标签。</div>
+      <div id="tagStatus" class="status" role="status">标签修改会立即保存，无须重新上传封面。</div>
+    </div>
   </section>
   <div class="cols">
     <section class="panel"><div class="panel-heading"><h2>④ 书籍目录</h2><button id="refresh" class="secondary" disabled>刷新</button></div>
       <p class="hint">仅显示草稿和已发布书籍；不会包含付费正文。</p>
       <div id="books" class="books"><p class="soft">连接后显示书目。</p></div>
     </section>
-    <section class="panel"><h2>⑤ 操作与审核</h2>
+    <section class="panel"><h2>⑤ 发布与下架</h2>
       <div id="selected" class="book-title">请选择左侧一本书</div>
       <div id="bookSummary" class="hint"></div>
       <div id="draftActions" hidden>
-        <div class="notice mini">单人双步骤审核：① 核实真实内容并保存审核记录；② 再次输入完整书名确认上架。改稿后之前的审核自动失效。</div>
-        <h3>审核报告</h3>
+        <p class="hint">内容预检通过并上传封面后，点击一次即可发布。无需勾选三项、填写审核说明或再次输入书名。技术安全和付费权限仍会检查。</p>
+        <h3>内容预检</h3>
         <div id="report" class="report"></div>
-        <fieldset id="checks"><legend>人工复核（只能勾选实际检查过的项目）</legend>
-          <label><input type="checkbox" value="ORIGINALITY_AND_RIGHTS"> 已核对原创性、版权与封面使用授权</label>
-          <label><input type="checkbox" value="LANGUAGE_PROOFREADING"> 已复核英语句法、单词释义和语境自然度</label>
-          <label><input type="checkbox" value="PRODUCT_SCOPE"> 已确认故事完整、目标词量和免费／付费边界</label>
-        </fieldset>
-        <label for="reviewNote">复核记录（具体说明你检查的范围）</label>
-        <textarea id="reviewNote" rows="3" minlength="12" maxlength="800" placeholder="例如：已逐章检查所有正文和词汇…"></textarea>
-        <div class="row"><button id="approve" disabled>保存本版审核（不上架）</button></div>
-        <hr><h3>独立发布确认</h3>
-        <p class="hint">请再次输入下方书名，不允许使用旧版本审核或系统自动发布。</p>
-        <label for="publishTitle">完整书名</label><input id="publishTitle" autocomplete="off" placeholder="输入当前书名">
-        <div class="row"><button id="publish" disabled>二次确认并正式上架</button></div>
+        <div class="row"><button id="publish" disabled>确认当前草稿并上架</button></div>
       </div>
       <div id="liveActions" hidden>
         <div class="notice mini">下架会立即阻断所有公开章节，包括免费试读。不会删除已购用户权益和历史学习记录；需要自行履行售后承诺。</div>
@@ -111,8 +116,8 @@
     </section>
   </div>
   <section class="panel" aria-label="上传新小说">
-    <div class="panel-heading"><h2>⑥ 上传新小说（保存为草稿）</h2><span class="soft">仅限已验证发布者</span></div>
-    <p class="hint">支持现有完整书籍 JSON 内容包，或 Markdown/TXT 小说。自动匹配已收录词卡；缺失音标、词义、例句的内容会提示修正。导入不会自动发布，也不会更改用户购买权益。</p>
+    <div class="panel-heading"><h2>⑥ 上传并发布新小说</h2><span class="soft">仅限已验证发布者</span></div>
+    <p class="hint">上传 JSON / Markdown / TXT，识别预览，选择封面，点击「确认上传并上架」。系统会核对章节、词卡资料、权益边界，不通过时保留草稿并提示修正。</p>
     <div class="row">
       <label class="stretch" for="uploadNovel">选择小说文件（JSON / Markdown / TXT）
         <input id="uploadNovel" type="file" accept=".json,.md,.markdown,.txt,application/json,text/plain,text/markdown"></label>
@@ -137,7 +142,7 @@
     <textarea id="uploadBookDescription" rows="2" maxlength="2000" placeholder="输入书籍简介，用于书架卡片"></textarea>
     <div class="row">
       <button id="checkNovel" class="secondary" disabled type="button">识别文件并检查内容</button>
-      <button id="importNovel" disabled type="button">导入为新草稿（不上架）</button>
+      <button id="importNovel" disabled type="button">确认上传并上架</button>
       <button id="useSelectedDraft" class="secondary" disabled type="button">使用当前选中草稿的书名和编号</button>
       <button id="reviseNovel" disabled type="button">替换当前未发布草稿（不上架）</button>
     </div>
@@ -148,7 +153,7 @@
       <div id="uploadPreviewSample"></div>
       <p id="uploadPreviewWord" class="hint">点击预览里的英文单词，可检查词义、音标与浏览器发音。</p>
     </div>
-    <p class="hint">单词发音继续使用浏览器语音合成；英美音标、释义和例句须随词卡保存。创建草稿后请在上方完成真实内容审核，再独立确认上架。</p>
+    <p class="hint">发音沿用浏览器语音合成。建议优先上传已加工、审核过的完整 JSON；这里的技术预检不会代替作品版权与语言质量判断。</p>
   </section>
   <section class="panel"><h2>⑦ 操作审计</h2><p class="hint">最近最多30条操作；审核和上架动作分别留痕，日志不会记录原始密钥或小说正文。</p>
     <div id="audit" class="audit"><p class="soft">请选择书目查看。</p></div></section>
