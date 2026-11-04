@@ -26,6 +26,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          test "$(stat -c%s public/cat-reading-tablet-1x.webp)" -gt 20000
           test "$(stat -c%s public/cat-reading-tablet-2x.webp)" -gt 20000
           test "$(stat -c%s public/cat-reading-tablet-2x.avif)" -gt 20000
           test "$(stat -c%s public/cat-reading-tablet-2x.webp)" -lt 950000
@@ -34,9 +35,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git add -- public/cat-reading-tablet-2x.webp public/cat-reading-tablet-2x.avif
-          test "$(git diff --cached --name-only | wc -l)" = "2"
+          git add -- public/cat-reading-tablet-1x.webp public/cat-reading-tablet-2x.webp public/cat-reading-tablet-2x.avif
+          git diff --cached --name-only | grep -Fxq 'public/cat-reading-tablet-1x.webp'
+          ! git diff --cached --name-only | grep -vEx 'public/cat-reading-tablet-(1x.webp|2x.webp|2x.avif)'
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "assets: add 2800px retina-friendly cat reading artwork variants"
+          git commit -m "assets: add 1400px fallback and 2800px retina cat reading artwork"
           git push origin HEAD:refs/heads/fix/tablet-banner-retina-assets-20261104
