@@ -22,6 +22,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: de88910db0cd69b7c4407a1b1d6b2284f4d9b3e0
+          fetch-depth: 0
           persist-credentials: false
       - name: Guard source commit, UI-only diff and target
         shell: bash
