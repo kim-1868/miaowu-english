@@ -2098,3 +2098,20 @@ html[data-theme="dark"] #view-library .story-home-hero .hero-actions .secondary-
     font-size:16px;
   }
 }
+
+
+/* V26: tablet banner sharpness.
+   Touch/tablet devices should use their full-resolution bitmap directly,
+   rather than a perpetually promoted, transformable compositor texture.
+   Desktop fine-pointer parallax and the original watercolor fade remain. */
+@media (hover:none), (pointer:coarse) {
+  #view-library .story-home-hero .story-home-art .home-scene-picture {
+    transform:none!important;
+    transition:none!important;
+    will-change:auto!important;
+  }
+  #view-library .story-home-hero .story-home-art .home-scene-picture img {
+    transform:none!important;
+    image-rendering:auto;
+  }
+}
