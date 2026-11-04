@@ -30,6 +30,6 @@ test('tablet and phone cover widths are responsive and production assets are cac
   assert.match(coverLayout,/grid-template-columns:minmax\(0,49%\) minmax\(0,1fr\)/);
   assert.match(coverLayout,/@media\(max-width:370px\)/);
   assert.match(coverLayout,/grid-template-columns:minmax\(0,47%\) minmax\(0,1fr\)/);
-  assert.match(html,/styles\.css\?v=20261104-v21-cover-led-shelf/);
+  assert.match(html,/styles\.css\?v=20261104-v26-retina-banner/);
   assert.match(html,/app\.js\?v=20261104-v24-resume-reading/);
 });
