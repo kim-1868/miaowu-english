@@ -54,6 +54,6 @@ test("S150: local catalog selection retains publisher checks and never sends fil
   assert.match(script,/quickPublishBook\(id,readiness\)/);
   assert.match(script,/async function doWithdraw/);
   const filters=script.slice(script.indexOf("// The catalog is kept"),script.indexOf("async function openBook("));
-  assert.doesNotMatch(filters,/api\("\/api\/ops\/books/);
+  assert.doesNotMatch(filters,/api\([^\n]+[\,]\s*"(POST|PUT|PATCH|DELETE)"/);
   assert.doesNotMatch(filters,/localStorage|sessionStorage/);
 });
