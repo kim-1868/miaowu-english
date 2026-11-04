@@ -35,7 +35,7 @@ jobs:
             assert.equal(data.chapters,48);
             assert.equal(data.metadataComplete,true);
             assert.ok(data.outputs.every(x=>x.freeChapters===0 && x.paidChapters===6));
-            console.log(data.outputs.map(x=>x.title+" "+x.wordMentions+" anchors "+x.anchorsPerParagraph+" avg").join("\n"));
+            console.log(data.outputs.map(x=>x.title+" "+x.wordMentions+" anchors "+x.anchorsPerParagraph+" avg; chapters="+x.chapterStats.map(c=>c.chapter+":"+c.anchors).join(",")).join("\n"));
           '
       - name: Upload files as one downloadable ZIP artifact
         uses: actions/upload-artifact@v4
