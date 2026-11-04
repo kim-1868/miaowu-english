@@ -3,8 +3,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>妙屋英语 · 运营出版台</title>
-<link rel="stylesheet" href="/ops-console.css?v=20261104-v22-directory-filter">
-<script src="/ops-console.js?v=20261104-v22-directory-filter" defer></script>
+<link rel="stylesheet" href="/ops-console.css?v=20261104-v23-withdraw-ready">
+<script src="/ops-console.js?v=20261104-v23-withdraw-ready" defer></script>
 </head><body>
 <header><div class="brand">喵 · 妙屋英语 <span>THE STORY & WORD LIBRARY</span></div>
   <div class="strap">运营出版台 <span class="pill">受控操作</span></div></header>
@@ -124,12 +124,13 @@
       <div id="liveActions" hidden>
         <div class="notice mini">下架会立即阻断所有公开章节，包括免费试读。不会删除已购用户权益和历史学习记录；需要自行履行售后承诺。</div>
         <div id="withdrawSummary" class="report"></div>
-        <label for="withdrawTitle">再次输入完整书名确认下架</label>
-        <input id="withdrawTitle" autocomplete="off" placeholder="输入当前书名">
+        <label for="withdrawTitle">将要下架的小说（自动匹配当前选中书籍）</label>
+        <input id="withdrawTitle" autocomplete="off" readonly aria-readonly="true" placeholder="先从书籍目录选择已发布小说">
         <label for="withdrawReason">下架原因（至少12字；不要填写密码、密钥或其他敏感信息）</label>
-        <textarea id="withdrawReason" rows="3" minlength="12" maxlength="400" placeholder="记录原因以及对已购买用户的处理计划"></textarea>
-        <label class="checkline"><input type="checkbox" id="withdrawConfirm"> 我理解下架会使已购买者暂时无法阅读该书，我会处理后续售后。</label>
-        <div class="row"><button id="withdraw" disabled class="danger">确认下架该书</button></div>
+        <textarea id="withdrawReason" rows="3" minlength="12" maxlength="400" placeholder="说明下架原因，以及对已购用户的处理计划"></textarea>
+        <label class="checkline"><input type="checkbox" id="withdrawConfirm"> 我确认下架后公开章节将无法阅读，已有购买权益及学习记录不会删除，我会处理后续售后。</label>
+        <p id="withdrawHelp" class="ops-withdraw-help" role="status" aria-live="polite">选择已发布小说后，填写原因并确认即可下架。</p>
+        <div class="row"><button id="withdraw" type="button" disabled class="danger">确认下架并从书架移除</button></div>
       </div>
     </section>
   </div>
