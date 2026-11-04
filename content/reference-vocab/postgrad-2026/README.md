@@ -23,11 +23,10 @@
 
 ## 文件
 
-- `postgrad_2026_vocabulary_source.jsonl`: 逐条、保留原数据的机器可读 JSONL，按原词频排序。
-- `postgrad_2026_vocabulary_source.csv`: 对同样数据的表格整理版本。
+- `postgrad_2026_vocabulary_source.csv`: **当前 GitHub 仓库中的完整 6,082 条参考词表**，保留 PDF 可识别的词汇、词频、音标、中文释义和原始页码。
 - `manifest.json`: 统计、来源及校验信息。
-- `source_quality_flags.json`: 机械检查提示；不代表全面词典校对。
-- `考研英语真题词频词汇表.pdf`: 原版 PDF，便于复核与人工校对。
+
+**文件库中的源资料**：`/开发英语单词学习网站/考研英语词库/` 另存有原版 `考研英语真题词频词汇表.pdf`、结构化 `postgrad_2026_vocabulary_source.jsonl` 和说明文档。原始 PDF 及 JSONL 未提交到 GitHub 仓库；如需复核词义，请使用文件库中的原 PDF。
 
 ## 关键字段
 
