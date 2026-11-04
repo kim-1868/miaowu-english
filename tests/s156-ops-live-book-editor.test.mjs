@@ -252,9 +252,9 @@ test("S156 publisher UI offers a standalone inline editor without ever changing 
   assert.match(html,/v=20261104-v29-live-editor/);
   assert.match(js,/function loadLiveEditor/);
   assert.match(js,/function renderLiveHistory/);
-  assert.match(js,/\\/live-editor\\/preview/);
-  assert.match(js,/\\/live-editor\\/publish/);
-  assert.match(js,/\\/live-editor\\/restore/);
-  assert.match(js,/\\/live-editor\\/export/);
+  assert.ok(js.includes("/live-editor/preview"));
+  assert.ok(js.includes("/live-editor/publish"));
+  assert.ok(js.includes("/live-editor/restore"));
+  assert.ok(js.includes("/live-editor/export"));
   assert.match(css,/V29: versioned publisher editor/);
 });
