@@ -1,0 +1,668 @@
+{
+  "version": 1,
+  "status": "SOURCE_REFERENCED_CONTEXTUAL_EDITORIAL_CARDS",
+  "notes": "41 additional common CET4 headword forms. Source-based UK/US IPA; original contextual English examples, Chinese translations and collocations. No copied dictionary example sentences.",
+  "sources": [
+    "https://github.com/JoseLlarena/Britfone",
+    "https://github.com/open-dict-data/ipa-dict",
+    "https://github.com/pekoqq/ReadLoops"
+  ],
+  "words": [
+    {
+      "headword": "today",
+      "partOfSpeech": "adv.",
+      "meaningZh": "今天",
+      "exampleEn": "Today she would make the final decision herself.",
+      "exampleZh": "今天她要亲自作出最后的决定。",
+      "collocations": [
+        {
+          "en": "later today",
+          "zh": "今天晚些时候"
+        }
+      ],
+      "id": "mwv26-cet4-today",
+      "phoneticUk": "/tədˈeɪ/",
+      "phoneticUs": "/təˈdeɪ/"
+    },
+    {
+      "headword": "tomorrow",
+      "partOfSpeech": "adv.",
+      "meaningZh": "明天",
+      "exampleEn": "Tomorrow they would meet at the old workshop.",
+      "exampleZh": "明天他们将在旧工作室见面。",
+      "collocations": [
+        {
+          "en": "see you tomorrow",
+          "zh": "明天见"
+        }
+      ],
+      "id": "mwv26-cet4-tomorrow",
+      "phoneticUk": "/təmˈɒɹˌəʊ/",
+      "phoneticUs": "/təˈmɑˌɹoʊ/"
+    },
+    {
+      "headword": "morning",
+      "partOfSpeech": "n.",
+      "meaningZh": "早晨；上午",
+      "exampleEn": "The morning light fell across the empty desk.",
+      "exampleZh": "晨光落在空荡荡的书桌上。",
+      "collocations": [
+        {
+          "en": "early morning",
+          "zh": "清晨"
+        }
+      ],
+      "id": "mwv26-cet4-morning",
+      "phoneticUk": "/mˈɔːnɪŋ/",
+      "phoneticUs": "/ˈmɔɹnɪŋ/"
+    },
+    {
+      "headword": "evening",
+      "partOfSpeech": "n.",
+      "meaningZh": "傍晚；晚上",
+      "exampleEn": "They talked quietly throughout the evening.",
+      "exampleZh": "他们整个晚上都在安静地交谈。",
+      "collocations": [
+        {
+          "en": "this evening",
+          "zh": "今天晚上"
+        }
+      ],
+      "id": "mwv26-cet4-evening",
+      "phoneticUk": "/ˈiːvnɪŋ/",
+      "phoneticUs": "/ˈivnɪŋ/"
+    },
+    {
+      "headword": "night",
+      "partOfSpeech": "n.",
+      "meaningZh": "夜晚",
+      "exampleEn": "She heard footsteps outside the door at night.",
+      "exampleZh": "夜里她听见门外有脚步声。",
+      "collocations": [
+        {
+          "en": "late at night",
+          "zh": "深夜"
+        }
+      ],
+      "id": "mwv26-cet4-night",
+      "phoneticUk": "/nˈaɪt/",
+      "phoneticUs": "/ˈnaɪt/"
+    },
+    {
+      "headword": "year",
+      "partOfSpeech": "n.",
+      "meaningZh": "年；一年",
+      "exampleEn": "A year later, the old library reopened.",
+      "exampleZh": "一年后，旧图书馆重新开放。",
+      "collocations": [
+        {
+          "en": "next year",
+          "zh": "明年"
+        }
+      ],
+      "id": "mwv26-cet4-year",
+      "phoneticUk": "/jˈɪə/",
+      "phoneticUs": "/ˈjɪɹ/"
+    },
+    {
+      "headword": "family",
+      "partOfSpeech": "n.",
+      "meaningZh": "家庭；家人",
+      "exampleEn": "Her family had not asked what she truly wanted.",
+      "exampleZh": "她的家人从未问过她真正想要什么。",
+      "collocations": [
+        {
+          "en": "family members",
+          "zh": "家庭成员"
+        }
+      ],
+      "id": "mwv26-cet4-family",
+      "phoneticUk": "/fˈæmli/",
+      "phoneticUs": "/ˈfæməɫi/"
+    },
+    {
+      "headword": "friend",
+      "partOfSpeech": "n.",
+      "meaningZh": "朋友",
+      "exampleEn": "Her friend offered to review the design for free.",
+      "exampleZh": "她的朋友提出免费审核这份设计。",
+      "collocations": [
+        {
+          "en": "close friend",
+          "zh": "密友"
+        }
+      ],
+      "id": "mwv26-cet4-friend",
+      "phoneticUk": "/fɹˈɛnd/",
+      "phoneticUs": "/ˈfɹɛnd/"
+    },
+    {
+      "headword": "school",
+      "partOfSpeech": "n.",
+      "meaningZh": "学校",
+      "exampleEn": "The school kept a record of every donated book.",
+      "exampleZh": "学校保存了每本捐赠图书的记录。",
+      "collocations": [
+        {
+          "en": "after school",
+          "zh": "放学后"
+        }
+      ],
+      "id": "mwv26-cet4-school",
+      "phoneticUk": "/skˈuːl/",
+      "phoneticUs": "/ˈskuɫ/"
+    },
+    {
+      "headword": "student",
+      "partOfSpeech": "n.",
+      "meaningZh": "学生",
+      "exampleEn": "Each student chose a book to take home.",
+      "exampleZh": "每名学生都挑了一本书带回家。",
+      "collocations": [
+        {
+          "en": "college student",
+          "zh": "大学生"
+        }
+      ],
+      "id": "mwv26-cet4-student",
+      "phoneticUk": "/stjˈuːdənt/",
+      "phoneticUs": "/ˈstudənt/"
+    },
+    {
+      "headword": "book",
+      "partOfSpeech": "n.",
+      "meaningZh": "书；书籍",
+      "exampleEn": "She returned the book to its original shelf.",
+      "exampleZh": "她把书放回原来的书架。",
+      "collocations": [
+        {
+          "en": "a new book",
+          "zh": "一本新书"
+        }
+      ],
+      "id": "mwv26-cet4-book",
+      "phoneticUk": "/bˈʊk/",
+      "phoneticUs": "/ˈbʊk/"
+    },
+    {
+      "headword": "letter",
+      "partOfSpeech": "n.",
+      "meaningZh": "信；信件",
+      "exampleEn": "The letter had remained unopened for seven years.",
+      "exampleZh": "那封信七年来一直没有被拆开。",
+      "collocations": [
+        {
+          "en": "write a letter",
+          "zh": "写信"
+        }
+      ],
+      "id": "mwv26-cet4-letter",
+      "phoneticUk": "/lˈɛtə/",
+      "phoneticUs": "/ˈɫɛtɝ/"
+    },
+    {
+      "headword": "window",
+      "partOfSpeech": "n.",
+      "meaningZh": "窗户",
+      "exampleEn": "Rain was running down the window.",
+      "exampleZh": "雨水正顺着窗户流下。",
+      "collocations": [
+        {
+          "en": "by the window",
+          "zh": "在窗边"
+        }
+      ],
+      "id": "mwv26-cet4-window",
+      "phoneticUk": "/wˈɪndəʊ/",
+      "phoneticUs": "/ˈwɪndoʊ/"
+    },
+    {
+      "headword": "table",
+      "partOfSpeech": "n.",
+      "meaningZh": "桌子",
+      "exampleEn": "She laid the agreement on the table.",
+      "exampleZh": "她把协议放在桌上。",
+      "collocations": [
+        {
+          "en": "dinner table",
+          "zh": "餐桌"
+        }
+      ],
+      "id": "mwv26-cet4-table",
+      "phoneticUk": "/tˈeɪbəl/",
+      "phoneticUs": "/ˈteɪbəɫ/"
+    },
+    {
+      "headword": "street",
+      "partOfSpeech": "n.",
+      "meaningZh": "街道",
+      "exampleEn": "The street was quiet when they left the studio.",
+      "exampleZh": "他们离开工作室时，街道很安静。",
+      "collocations": [
+        {
+          "en": "across the street",
+          "zh": "街对面"
+        }
+      ],
+      "id": "mwv26-cet4-street",
+      "phoneticUk": "/stɹˈiːt/",
+      "phoneticUs": "/ˈstɹit/"
+    },
+    {
+      "headword": "city",
+      "partOfSpeech": "n.",
+      "meaningZh": "城市",
+      "exampleEn": "She found a new client in another city.",
+      "exampleZh": "她在另一座城市找到了新客户。",
+      "collocations": [
+        {
+          "en": "city center",
+          "zh": "市中心"
+        }
+      ],
+      "id": "mwv26-cet4-city",
+      "phoneticUk": "/sˈɪti/",
+      "phoneticUs": "/ˈsɪti/"
+    },
+    {
+      "headword": "building",
+      "partOfSpeech": "n.",
+      "meaningZh": "建筑物；大楼",
+      "exampleEn": "The old building needed careful repairs.",
+      "exampleZh": "那栋旧建筑需要仔细修复。",
+      "collocations": [
+        {
+          "en": "public building",
+          "zh": "公共建筑"
+        }
+      ],
+      "id": "mwv26-cet4-building",
+      "phoneticUk": "/bˈɪldɪŋ/",
+      "phoneticUs": "/ˈbɪɫdɪŋ/"
+    },
+    {
+      "headword": "life",
+      "partOfSpeech": "n.",
+      "meaningZh": "生活；生命",
+      "exampleEn": "She wanted to build a life beyond the family business.",
+      "exampleZh": "她想在家族生意之外建立自己的生活。",
+      "collocations": [
+        {
+          "en": "daily life",
+          "zh": "日常生活"
+        }
+      ],
+      "id": "mwv26-cet4-life",
+      "phoneticUk": "/lˈaɪf/",
+      "phoneticUs": "/ˈɫaɪf/"
+    },
+    {
+      "headword": "question",
+      "partOfSpeech": "n.",
+      "meaningZh": "问题；疑问",
+      "exampleEn": "He asked a question she could not answer immediately.",
+      "exampleZh": "他问了一个她无法立即回答的问题。",
+      "collocations": [
+        {
+          "en": "ask a question",
+          "zh": "提问"
+        }
+      ],
+      "id": "mwv26-cet4-question",
+      "phoneticUk": "/kwˈɛstʃən/",
+      "phoneticUs": "/ˈkwɛstʃən/"
+    },
+    {
+      "headword": "answer",
+      "partOfSpeech": "n.",
+      "meaningZh": "答案；回答",
+      "exampleEn": "The answer was hidden in an old financial report.",
+      "exampleZh": "答案藏在一份旧财务报告中。",
+      "collocations": [
+        {
+          "en": "find the answer",
+          "zh": "找到答案"
+        }
+      ],
+      "id": "mwv26-cet4-answer",
+      "phoneticUk": "/ˈɑːnsə/",
+      "phoneticUs": "/ˈænsɝ/"
+    },
+    {
+      "headword": "idea",
+      "partOfSpeech": "n.",
+      "meaningZh": "想法；主意",
+      "exampleEn": "Her idea could give the empty room a new purpose.",
+      "exampleZh": "她的想法能让空房间拥有新的用途。",
+      "collocations": [
+        {
+          "en": "a good idea",
+          "zh": "好主意"
+        }
+      ],
+      "id": "mwv26-cet4-idea",
+      "phoneticUk": "/aɪdˈɪə/",
+      "phoneticUs": "/aɪˈdiə/"
+    },
+    {
+      "headword": "computer",
+      "partOfSpeech": "n.",
+      "meaningZh": "计算机；电脑",
+      "exampleEn": "She saved the original design files on her computer.",
+      "exampleZh": "她把原始设计文件保存在电脑里。",
+      "collocations": [
+        {
+          "en": "computer screen",
+          "zh": "电脑屏幕"
+        }
+      ],
+      "id": "mwv26-cet4-computer",
+      "phoneticUk": "/kəmpjˈuːtə/",
+      "phoneticUs": "/kəmˈpjutɝ/"
+    },
+    {
+      "headword": "father",
+      "partOfSpeech": "n.",
+      "meaningZh": "父亲",
+      "exampleEn": "Her father refused to discuss the missing funds.",
+      "exampleZh": "她的父亲拒绝讨论失踪的资金。",
+      "collocations": [
+        {
+          "en": "father and daughter",
+          "zh": "父女"
+        }
+      ],
+      "id": "mwv26-cet4-father",
+      "phoneticUk": "/fˈɑːðə/",
+      "phoneticUs": "/ˈfɑðɝ/"
+    },
+    {
+      "headword": "mother",
+      "partOfSpeech": "n.",
+      "meaningZh": "母亲",
+      "exampleEn": "Her mother placed the old key beside the letter.",
+      "exampleZh": "她的母亲把旧钥匙放在信旁。",
+      "collocations": [
+        {
+          "en": "her mother",
+          "zh": "她的母亲"
+        }
+      ],
+      "id": "mwv26-cet4-mother",
+      "phoneticUk": "/mˈɐðə/",
+      "phoneticUs": "/ˈməðɝ/"
+    },
+    {
+      "headword": "sister",
+      "partOfSpeech": "n.",
+      "meaningZh": "姐姐；妹妹",
+      "exampleEn": "Her sister asked whether the wedding could be cancelled.",
+      "exampleZh": "她的姐妹问婚礼能否取消。",
+      "collocations": [
+        {
+          "en": "older sister",
+          "zh": "姐姐"
+        }
+      ],
+      "id": "mwv26-cet4-sister",
+      "phoneticUk": "/sˈɪstə/",
+      "phoneticUs": "/ˈsɪstɝ/"
+    },
+    {
+      "headword": "brother",
+      "partOfSpeech": "n.",
+      "meaningZh": "哥哥；弟弟",
+      "exampleEn": "Her brother promised to repay the debt himself.",
+      "exampleZh": "她的兄弟答应亲自偿还债务。",
+      "collocations": [
+        {
+          "en": "younger brother",
+          "zh": "弟弟"
+        }
+      ],
+      "id": "mwv26-cet4-brother",
+      "phoneticUk": "/bɹˈɐðə/",
+      "phoneticUs": "/ˈbɹəðɝ/"
+    },
+    {
+      "headword": "grandmother",
+      "partOfSpeech": "n.",
+      "meaningZh": "祖母；外祖母",
+      "exampleEn": "Her grandmother had founded the repair workshop.",
+      "exampleZh": "她的祖母创办了这家修复工坊。",
+      "collocations": [
+        {
+          "en": "her grandmother",
+          "zh": "她的祖母"
+        }
+      ],
+      "id": "mwv26-cet4-grandmother",
+      "phoneticUk": "/gɹˈænmˌɐðə/",
+      "phoneticUs": "/ˈɡɹændˌməðɝ/"
+    },
+    {
+      "headword": "lawyer",
+      "partOfSpeech": "n.",
+      "meaningZh": "律师",
+      "exampleEn": "The lawyer checked the contract before she signed it.",
+      "exampleZh": "律师在她签字前核查了合同。",
+      "collocations": [
+        {
+          "en": "consult a lawyer",
+          "zh": "咨询律师"
+        }
+      ],
+      "id": "mwv26-cet4-lawyer",
+      "phoneticUk": "/lˈɔɪə/",
+      "phoneticUs": "/ˈɫɔɪɝ/"
+    },
+    {
+      "headword": "library",
+      "partOfSpeech": "n.",
+      "meaningZh": "图书馆",
+      "exampleEn": "The library opened its doors to local children.",
+      "exampleZh": "图书馆向当地孩子开放。",
+      "collocations": [
+        {
+          "en": "public library",
+          "zh": "公共图书馆"
+        }
+      ],
+      "id": "mwv26-cet4-library",
+      "phoneticUk": "/lˈaɪbɹəɹi/",
+      "phoneticUs": "/ˈɫaɪbɹɛˌɹi/"
+    },
+    {
+      "headword": "lamp",
+      "partOfSpeech": "n.",
+      "meaningZh": "灯；台灯",
+      "exampleEn": "He moved the lamp closer to the drawing table.",
+      "exampleZh": "他把台灯移近绘图桌。",
+      "collocations": [
+        {
+          "en": "desk lamp",
+          "zh": "台灯"
+        }
+      ],
+      "id": "mwv26-cet4-lamp",
+      "phoneticUk": "/lˈæmp/",
+      "phoneticUs": "/ˈɫæmp/"
+    },
+    {
+      "headword": "light",
+      "partOfSpeech": "n.",
+      "meaningZh": "光；灯光",
+      "exampleEn": "Soft light filled the room after sunset.",
+      "exampleZh": "日落后，柔和的灯光充满了房间。",
+      "collocations": [
+        {
+          "en": "natural light",
+          "zh": "自然光"
+        }
+      ],
+      "id": "mwv26-cet4-light",
+      "phoneticUk": "/lˈaɪt/",
+      "phoneticUs": "/ˈɫaɪt/"
+    },
+    {
+      "headword": "clock",
+      "partOfSpeech": "n.",
+      "meaningZh": "时钟",
+      "exampleEn": "The clock had stopped at four in the morning.",
+      "exampleZh": "时钟停在凌晨四点。",
+      "collocations": [
+        {
+          "en": "wall clock",
+          "zh": "挂钟"
+        }
+      ],
+      "id": "mwv26-cet4-clock",
+      "phoneticUk": "/klˈɒk/",
+      "phoneticUs": "/ˈkɫɑk/"
+    },
+    {
+      "headword": "desk",
+      "partOfSpeech": "n.",
+      "meaningZh": "书桌；办公桌",
+      "exampleEn": "An old envelope lay at the edge of her desk.",
+      "exampleZh": "一只旧信封放在她书桌边缘。",
+      "collocations": [
+        {
+          "en": "office desk",
+          "zh": "办公桌"
+        }
+      ],
+      "id": "mwv26-cet4-desk",
+      "phoneticUk": "/dˈɛsk/",
+      "phoneticUs": "/ˈdɛsk/"
+    },
+    {
+      "headword": "box",
+      "partOfSpeech": "n.",
+      "meaningZh": "箱子；盒子",
+      "exampleEn": "She discovered a second letter inside the box.",
+      "exampleZh": "她在盒子里发现了第二封信。",
+      "collocations": [
+        {
+          "en": "cardboard box",
+          "zh": "纸箱"
+        }
+      ],
+      "id": "mwv26-cet4-box",
+      "phoneticUk": "/bˈɒks/",
+      "phoneticUs": "/ˈbɑks/"
+    },
+    {
+      "headword": "key",
+      "partOfSpeech": "n.",
+      "meaningZh": "钥匙",
+      "exampleEn": "She left the key on the kitchen table.",
+      "exampleZh": "她把钥匙留在厨房桌上。",
+      "collocations": [
+        {
+          "en": "spare key",
+          "zh": "备用钥匙"
+        }
+      ],
+      "id": "mwv26-cet4-key",
+      "phoneticUk": "/kˈiː/",
+      "phoneticUs": "/ˈki/"
+    },
+    {
+      "headword": "shop",
+      "partOfSpeech": "n.",
+      "meaningZh": "商店；店铺",
+      "exampleEn": "The shop reopened after the renovation.",
+      "exampleZh": "店铺装修后重新开业。",
+      "collocations": [
+        {
+          "en": "small shop",
+          "zh": "小店"
+        }
+      ],
+      "id": "mwv26-cet4-shop",
+      "phoneticUk": "/ʃˈɒp/",
+      "phoneticUs": "/ˈʃɑp/"
+    },
+    {
+      "headword": "chance",
+      "partOfSpeech": "n.",
+      "meaningZh": "机会；可能性",
+      "exampleEn": "She deserved a chance to explain her own decision.",
+      "exampleZh": "她应该有机会解释自己的决定。",
+      "collocations": [
+        {
+          "en": "second chance",
+          "zh": "第二次机会"
+        }
+      ],
+      "id": "mwv26-cet4-chance",
+      "phoneticUk": "/tʃˈɑːns/",
+      "phoneticUs": "/ˈtʃæns/"
+    },
+    {
+      "headword": "effort",
+      "partOfSpeech": "n.",
+      "meaningZh": "努力",
+      "exampleEn": "Their effort finally brought the old reading room back to life.",
+      "exampleZh": "他们的努力终于让旧阅览室重获生机。",
+      "collocations": [
+        {
+          "en": "make an effort",
+          "zh": "作出努力"
+        }
+      ],
+      "id": "mwv26-cet4-effort",
+      "phoneticUk": "/ˈɛfət/",
+      "phoneticUs": "/ˈɛfɝt/"
+    },
+    {
+      "headword": "person",
+      "partOfSpeech": "n.",
+      "meaningZh": "人；个人",
+      "exampleEn": "Every person in the project had a different role.",
+      "exampleZh": "项目中的每个人都有不同的职责。",
+      "collocations": [
+        {
+          "en": "one person",
+          "zh": "一个人"
+        }
+      ],
+      "id": "mwv26-cet4-person",
+      "phoneticUk": "/pˈɜːsən/",
+      "phoneticUs": "/ˈpɝsən/"
+    },
+    {
+      "headword": "people",
+      "partOfSpeech": "n.",
+      "meaningZh": "人们",
+      "exampleEn": "The people in the neighborhood helped restore the clock.",
+      "exampleZh": "街坊们帮助修复了那座钟。",
+      "collocations": [
+        {
+          "en": "young people",
+          "zh": "年轻人"
+        }
+      ],
+      "id": "mwv26-cet4-people",
+      "phoneticUk": "/pˈiːpəl/",
+      "phoneticUs": "/ˈpipəɫ/"
+    },
+    {
+      "headword": "story",
+      "partOfSpeech": "n.",
+      "meaningZh": "故事",
+      "exampleEn": "She no longer wanted someone else to write her story.",
+      "exampleZh": "她不再想让别人书写自己的人生故事。",
+      "collocations": [
+        {
+          "en": "tell a story",
+          "zh": "讲故事"
+        }
+      ],
+      "id": "mwv26-cet4-story",
+      "phoneticUk": "/stˈɔːɹi/",
+      "phoneticUs": "/ˈstɔɹi/"
+    }
+  ]
+}
