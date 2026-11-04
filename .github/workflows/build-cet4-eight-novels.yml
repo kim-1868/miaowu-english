@@ -1,0 +1,46 @@
+name: Package eight original CET4 story uploads (private artifact)
+on:
+  push:
+    branches:
+      - feature/v18-immersive-cat-banner-20261103
+    paths:
+      - scripts/build-library-upload-batch-20261104.mjs
+      - content/editorial/20261104-library-density-enrichment-map.json
+      - content/editorial/20261104-library-11-additional-cards.json
+      - content/drafts/season-cet4-v1/**
+      - .github/workflows/build-cet4-eight-novels.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify editorial builder syntax
+        run: node --check scripts/build-library-upload-batch-20261104.mjs
+      - name: Build private content packages and audit manifest
+        run: |
+          set -euo pipefail
+          node scripts/build-library-upload-batch-20261104.mjs --write > /tmp/cet4-eight-novels-result.json
+          node --input-type=module -e '
+            import assert from "node:assert/strict";
+            import {readFileSync} from "node:fs";
+            const data=JSON.parse(readFileSync("/tmp/cet4-eight-novels-result.json","utf8"));
+            assert.equal(data.books,8);
+            assert.equal(data.chapters,48);
+            assert.equal(data.metadataComplete,true);
+            assert.ok(data.outputs.every(x=>x.freeChapters===0 && x.paidChapters===6));
+            console.log(data.outputs.map(x=>x.title+" "+x.wordMentions+" anchors "+x.anchorsPerParagraph+" avg").join("\n"));
+          '
+      - name: Upload files as one downloadable ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: miaowu-cet4-eight-novels-20261104
+          path: private-output/cet4-eight-novels-20261104/
+          if-no-files-found: error
+          retention-days: 30
