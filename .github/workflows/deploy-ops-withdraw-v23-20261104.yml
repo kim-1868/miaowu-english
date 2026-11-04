@@ -1,0 +1,123 @@
+# One-time production UI and feature-flag release authorized by the owner.
+# Does not withdraw any book, issue codes, or modify D1 records.
+name: Enable controlled Miaowu book withdrawal (one-time)
+run-name: Publisher withdrawal UI and permission V23 · ec8e7e488459
+on:
+  push:
+    branches:
+      - release/one-shot-ops-withdraw-v23-20261104
+    paths:
+      - '.github/workflows/deploy-ops-withdraw-v23-20261104.yml'
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  v23-ops-withdraw:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/release/one-shot-ops-withdraw-v23-20261104' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout immutable, approved UI release
+        uses: actions/checkout@v4
+        with:
+          ref: ec8e7e488459fcafc47c35b127a688401f6769ee
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Guard exact source, changes and production deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "ec8e7e488459fcafc47c35b127a688401f6769ee"
+          grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
+          test ! -e private-output
+          test ! -e private-input
+          git diff --name-only de88910db0cd69b7c4407a1b1d6b2284f4d9b3e0 HEAD | sort > /tmp/actual-files
+          printf '%s\n' public/ops-console.css public/ops-console.js public/ops.html tests/s150-ops-book-directory-filter.test.mjs tests/s151-withdrawal-operator-ui.test.mjs | sort > /tmp/allowed-files
+          diff -u /tmp/allowed-files /tmp/actual-files
+          test "$(node -p 'JSON.parse(require("fs").readFileSync("deploy/production.wrangler.jsonc","utf8")).vars.APP_ENV')" = "production"
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Wrangler without application install hooks
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Test all code and prepare production-only assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm run assets:production:build
+          test -f dist-production/public/ops.html
+          grep -Fq 'v=20261104-v23-withdraw-ready' dist-production/public/ops.html
+          grep -Fq 'id="withdrawHelp"' dist-production/public/ops.html
+          grep -Fq '当前下架权限尚未启用' dist-production/public/ops-console.js
+          grep -Fq 'ops-withdraw-help' dist-production/public/ops-console.css
+          grep -Fq 'V21 cover-led bookshelf' dist-production/public/styles.css
+          npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/dryrun-production
+      - name: Verify current online production is the expected V22 UI
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/ops.html -o /tmp/live-ops-before.html
+          grep -Fq '20261104-v22-directory-filter' /tmp/live-ops-before.html
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/ops-console.js -o /tmp/live-ops-before.js
+          grep -Fq 'function filterCatalogBooks' /tmp/live-ops-before.js
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/styles.css -o /tmp/live-style-before.css
+          grep -Fq 'V21 cover-led bookshelf' /tmp/live-style-before.css
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/live-edge-before.json
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/live-edge-before.json","utf8"));if(!x.ok||!x.productionBindingPresent)process.exit(1)'
+      - name: Require existing Cloudflare deployment credentials
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$HAS_TOKEN" = "true"
+          test "$HAS_ACCOUNT" = "true"
+      - name: Deploy UI-only changes with unchanged Worker settings and D1
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc
+      - name: Verify the published UI before turning on withdrawal
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 15); do
+            curl -fsSL --max-time 20 "https://miaowu-english-pages.pages.dev/ops-console.js?withdraw-v23=$i" -o /tmp/live-v23.js || true
+            if grep -Fq '当前下架权限尚未启用' /tmp/live-v23.js; then break; fi
+            sleep 4
+          done
+          grep -Fq '当前下架权限尚未启用' /tmp/live-v23.js
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops.html -o /tmp/live-v23.html
+          grep -Fq '20261104-v23-withdraw-ready' /tmp/live-v23.html
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops-console.css -o /tmp/live-v23.css
+          grep -Fq 'V23: a clear withdrawal control' /tmp/live-v23.css
+      - name: Enable publisher-only book withdrawal using secure Worker binding
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          # The flag is not a credential. Set it as a private Worker binding,
+          # never weakening the production config check or exposing API keys.
+          printf '%s' 'true' | npx wrangler secret put OPS_WITHDRAWAL_ENABLED --config deploy/production.wrangler.jsonc
+          npx wrangler secret list --config deploy/production.wrangler.jsonc > /tmp/live-secret-names.json
+          grep -Fq '"OPS_WITHDRAWAL_ENABLED"' /tmp/live-secret-names.json
+      - name: Verify edge and authorization boundaries are still healthy
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/live-edge-after.json
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/live-edge-after.json","utf8"));if(!x.ok||!x.productionBindingPresent)process.exit(1)'
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops-console.js -o /tmp/ops-final.js
+          grep -Fq '当前下架权限尚未启用' /tmp/ops-final.js
+          http=$(curl -sSL -o /dev/null -w '%{http_code}' --max-time 30 https://miaowu-english-pages.pages.dev/api/ops/books)
+          test "$http" = "401"
