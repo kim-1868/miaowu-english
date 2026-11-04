@@ -19,7 +19,7 @@ authoring: Original story written directly for Miaowu; no model API used
 
 “你怎么在这儿？”两个人同时问。
 
-房东发来一条[[confirm]]消息：新房间独立上锁，租期一个月，押金仍由原合同处理。江望核对完[[document]]，只能拖着箱子进门。
+房东发来一条 [[message]]，正式 [[confirm]]：新房间独立上锁，租期一个月，押金仍由原合同处理。江望核对完[[document]]，只能拖着箱子进门。
 
 沈行舟接过箱子，见他手背贴着创可贴，问：“搬东西弄的？”
 
