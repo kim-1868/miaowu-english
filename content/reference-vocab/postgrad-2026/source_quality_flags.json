@@ -1,0 +1,3294 @@
+[
+  {
+    "id": "10",
+    "headword": "find",
+    "flags": [
+      "potential_domain_definition_noise"
+    ],
+    "page": 1
+  },
+  {
+    "id": "11",
+    "headword": "paragraph",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 1
+  },
+  {
+    "id": "14",
+    "headword": "according",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 1
+  },
+  {
+    "id": "22",
+    "headword": "time",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 1
+  },
+  {
+    "id": "36",
+    "headword": "go",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 1
+  },
+  {
+    "id": "37",
+    "headword": "come",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 1
+  },
+  {
+    "id": "41",
+    "headword": "last",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 1
+  },
+  {
+    "id": "53",
+    "headword": "include",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 2
+  },
+  {
+    "id": "58",
+    "headword": "concern",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 2
+  },
+  {
+    "id": "59",
+    "headword": "base",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 2
+  },
+  {
+    "id": "61",
+    "headword": "look",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 2
+  },
+  {
+    "id": "68",
+    "headword": "share",
+    "flags": [
+      "potential_domain_definition_noise"
+    ],
+    "page": 2
+  },
+  {
+    "id": "81",
+    "headword": "line",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 2
+  },
+  {
+    "id": "89",
+    "headword": "issue",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 2
+  },
+  {
+    "id": "91",
+    "headword": "interest",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 2
+  },
+  {
+    "id": "109",
+    "headword": "off",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 3
+  },
+  {
+    "id": "119",
+    "headword": "improve",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 3
+  },
+  {
+    "id": "124",
+    "headword": "reduce",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 3
+  },
+  {
+    "id": "133",
+    "headword": "pay",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 3
+  },
+  {
+    "id": "160",
+    "headword": "condition",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 3
+  },
+  {
+    "id": "165",
+    "headword": "challenge",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 3
+  },
+  {
+    "id": "170",
+    "headword": "risk",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 4
+  },
+  {
+    "id": "182",
+    "headword": "process",
+    "flags": [
+      "potential_domain_definition_noise",
+      "source_gloss_truncated"
+    ],
+    "page": 4
+  },
+  {
+    "id": "200",
+    "headword": "power",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 4
+  },
+  {
+    "id": "201",
+    "headword": "average",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 4
+  },
+  {
+    "id": "203",
+    "headword": "impact",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 4
+  },
+  {
+    "id": "208",
+    "headword": "depend",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 4
+  },
+  {
+    "id": "215",
+    "headword": "program",
+    "flags": [
+      "potential_domain_definition_noise",
+      "source_gloss_truncated"
+    ],
+    "page": 4
+  },
+  {
+    "id": "218",
+    "headword": "record",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 4
+  },
+  {
+    "id": "222",
+    "headword": "action",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 4
+  },
+  {
+    "id": "230",
+    "headword": "price",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 4
+  },
+  {
+    "id": "246",
+    "headword": "fail",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 5
+  },
+  {
+    "id": "250",
+    "headword": "approach",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 5
+  },
+  {
+    "id": "259",
+    "headword": "man",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 5
+  },
+  {
+    "id": "273",
+    "headword": "subject",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 5
+  },
+  {
+    "id": "296",
+    "headword": "identify",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 5
+  },
+  {
+    "id": "314",
+    "headword": "add",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 6
+  },
+  {
+    "id": "318",
+    "headword": "serve",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 6
+  },
+  {
+    "id": "320",
+    "headword": "choice",
+    "flags": [
+      "potential_domain_definition_noise"
+    ],
+    "page": 6
+  },
+  {
+    "id": "347",
+    "headword": "regard",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 6
+  },
+  {
+    "id": "350",
+    "headword": "house",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 6
+  },
+  {
+    "id": "412",
+    "headword": "position",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 7
+  },
+  {
+    "id": "417",
+    "headword": "save",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 7
+  },
+  {
+    "id": "474",
+    "headword": "refer",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 8
+  },
+  {
+    "id": "480",
+    "headword": "image",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 8
+  },
+  {
+    "id": "495",
+    "headword": "basic",
+    "flags": [
+      "potential_domain_definition_noise",
+      "english_in_zh_gloss"
+    ],
+    "page": 8
+  },
+  {
+    "id": "496",
+    "headword": "reward",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 8
+  },
+  {
+    "id": "497",
+    "headword": "fear",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 8
+  },
+  {
+    "id": "501",
+    "headword": "respond",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 9
+  },
+  {
+    "id": "548",
+    "headword": "directly",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 9
+  },
+  {
+    "id": "549",
+    "headword": "letter",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 9
+  },
+  {
+    "id": "554",
+    "headword": "internet",
+    "flags": [
+      "potential_domain_definition_noise"
+    ],
+    "page": 9
+  },
+  {
+    "id": "556",
+    "headword": "trade",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 9
+  },
+  {
+    "id": "557",
+    "headword": "computer",
+    "flags": [
+      "potential_domain_definition_noise"
+    ],
+    "page": 9
+  },
+  {
+    "id": "567",
+    "headword": "period",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 10
+  },
+  {
+    "id": "575",
+    "headword": "field",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 10
+  },
+  {
+    "id": "590",
+    "headword": "worth",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 10
+  },
+  {
+    "id": "621",
+    "headword": "appeal",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 10
+  },
+  {
+    "id": "626",
+    "headword": "threaten",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 10
+  },
+  {
+    "id": "649",
+    "headword": "woman",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 11
+  },
+  {
+    "id": "650",
+    "headword": "site",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 11
+  },
+  {
+    "id": "651",
+    "headword": "team",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 11
+  },
+  {
+    "id": "655",
+    "headword": "content",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 11
+  },
+  {
+    "id": "708",
+    "headword": "graduate",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 12
+  },
+  {
+    "id": "712",
+    "headword": "landscape",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 12
+  },
+  {
+    "id": "723",
+    "headword": "justify",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 12
+  },
+  {
+    "id": "742",
+    "headword": "welcome",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 12
+  },
+  {
+    "id": "759",
+    "headword": "tree",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 12
+  },
+  {
+    "id": "767",
+    "headword": "task",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 13
+  },
+  {
+    "id": "773",
+    "headword": "application",
+    "flags": [
+      "potential_domain_definition_noise"
+    ],
+    "page": 13
+  },
+  {
+    "id": "777",
+    "headword": "assess",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 13
+  },
+  {
+    "id": "796",
+    "headword": "oppose",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 13
+  },
+  {
+    "id": "831",
+    "headword": "survive",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 13
+  },
+  {
+    "id": "870",
+    "headword": "relieve",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 14
+  },
+  {
+    "id": "878",
+    "headword": "water",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 14
+  },
+  {
+    "id": "883",
+    "headword": "signal",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 14
+  },
+  {
+    "id": "890",
+    "headword": "hour",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 14
+  },
+  {
+    "id": "896",
+    "headword": "impose",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 14
+  },
+  {
+    "id": "923",
+    "headword": "forward",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 15
+  },
+  {
+    "id": "938",
+    "headword": "finance",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 15
+  },
+  {
+    "id": "960",
+    "headword": "father",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 15
+  },
+  {
+    "id": "961",
+    "headword": "walk",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 15
+  },
+  {
+    "id": "966",
+    "headword": "procedure",
+    "flags": [
+      "potential_domain_definition_noise"
+    ],
+    "page": 15
+  },
+  {
+    "id": "971",
+    "headword": "race",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 15
+  },
+  {
+    "id": "993",
+    "headword": "hide",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 16
+  },
+  {
+    "id": "995",
+    "headword": "wall",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 16
+  },
+  {
+    "id": "1022",
+    "headword": "host",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 16
+  },
+  {
+    "id": "1030",
+    "headword": "entitle",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 16
+  },
+  {
+    "id": "1033",
+    "headword": "owe",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 16
+  },
+  {
+    "id": "1039",
+    "headword": "please",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 16
+  },
+  {
+    "id": "1049",
+    "headword": "peer",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 17
+  },
+  {
+    "id": "1051",
+    "headword": "staff",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 17
+  },
+  {
+    "id": "1071",
+    "headword": "transform",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 17
+  },
+  {
+    "id": "1090",
+    "headword": "escape",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 17
+  },
+  {
+    "id": "1099",
+    "headword": "tie",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 17
+  },
+  {
+    "id": "1102",
+    "headword": "advise",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 17
+  },
+  {
+    "id": "1109",
+    "headword": "page",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 17
+  },
+  {
+    "id": "1136",
+    "headword": "attribute",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 18
+  },
+  {
+    "id": "1152",
+    "headword": "sector",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 18
+  },
+  {
+    "id": "1155",
+    "headword": "code",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 18
+  },
+  {
+    "id": "1187",
+    "headword": "medicine",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 18
+  },
+  {
+    "id": "1189",
+    "headword": "privilege",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 19
+  },
+  {
+    "id": "1195",
+    "headword": "reference",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 19
+  },
+  {
+    "id": "1204",
+    "headword": "couple",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 19
+  },
+  {
+    "id": "1224",
+    "headword": "thought",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 19
+  },
+  {
+    "id": "1235",
+    "headword": "total",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 19
+  },
+  {
+    "id": "1255",
+    "headword": "driver",
+    "flags": [
+      "potential_domain_definition_noise"
+    ],
+    "page": 20
+  },
+  {
+    "id": "1282",
+    "headword": "weigh",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 20
+  },
+  {
+    "id": "1297",
+    "headword": "commit",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 20
+  },
+  {
+    "id": "1299",
+    "headword": "undermine",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 20
+  },
+  {
+    "id": "1301",
+    "headword": "section",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 20
+  },
+  {
+    "id": "1302",
+    "headword": "traffic",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 20
+  },
+  {
+    "id": "1317",
+    "headword": "partner",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 20
+  },
+  {
+    "id": "1320",
+    "headword": "frequent",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 20
+  },
+  {
+    "id": "1336",
+    "headword": "volume",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 21
+  },
+  {
+    "id": "1340",
+    "headword": "interview",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 21
+  },
+  {
+    "id": "1342",
+    "headword": "brief",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 21
+  },
+  {
+    "id": "1377",
+    "headword": "leaf",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 21
+  },
+  {
+    "id": "1396",
+    "headword": "appreciate",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 22
+  },
+  {
+    "id": "1397",
+    "headword": "salary",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 22
+  },
+  {
+    "id": "1408",
+    "headword": "heat",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 22
+  },
+  {
+    "id": "1413",
+    "headword": "score",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 22
+  },
+  {
+    "id": "1438",
+    "headword": "poll",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 22
+  },
+  {
+    "id": "1443",
+    "headword": "window",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 22
+  },
+  {
+    "id": "1446",
+    "headword": "register",
+    "flags": [      "source_gloss_truncated"
+    ],
+    "page": 22
+  },
+  {
+    "id": "1474",
+    "headword": "parallel",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 23
+  },
+  {
+    "id": "1506",
+    "headword": "box",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 24
+  },
+  {
+    "id": "1518",
+    "headword": "document",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 24
+  },
+  {
+    "id": "1536",
+    "headword": "underlie",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 24
+  },
+  {
+    "id": "1548",
+    "headword": "table",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 24
+  },
+  {
+    "id": "1569",
+    "headword": "approve",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 25
+  },
+  {
+    "id": "1575",
+    "headword": "smell",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 25
+  },
+  {
+    "id": "1580",
+    "headword": "map",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 25
+  },
+  {
+    "id": "1595",
+    "headword": "provision",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 25
+  },
+  {
+    "id": "1608",
+    "headword": "core",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 25
+  },
+  {
+    "id": "1618",
+    "headword": "clothe",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 25
+  },
+  {
+    "id": "1619",
+    "headword": "resident",
+    "flags": [
+      "potential_domain_definition_noise"
+    ],
+    "page": 25
+  },
+  {
+    "id": "1622",
+    "headword": "sex",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 25
+  },
+  {
+    "id": "1623",
+    "headword": "seed",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 25
+  },
+  {
+    "id": "1633",
+    "headword": "marry",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 25
+  },
+  {
+    "id": "1641",
+    "headword": "schedule",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 26
+  },
+  {
+    "id": "1643",
+    "headword": "motivate",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 26
+  },
+  {
+    "id": "1653",
+    "headword": "regret",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 26
+  },
+  {
+    "id": "1711",
+    "headword": "pride",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 27
+  },
+  {
+    "id": "1716",
+    "headword": "channel",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 27
+  },
+  {
+    "id": "1728",
+    "headword": "proof",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 27
+  },
+  {
+    "id": "1729",
+    "headword": "underline",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 27
+  },
+  {
+    "id": "1771",
+    "headword": "construct",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 27
+  },
+  {
+    "id": "1772",
+    "headword": "headline",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 27
+  },
+  {
+    "id": "1796",
+    "headword": "wood",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 28
+  },
+  {
+    "id": "1813",
+    "headword": "smoke",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 28
+  },
+  {
+    "id": "1823",
+    "headword": "season",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 28
+  },
+  {
+    "id": "1832",
+    "headword": "seat",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 28
+  },
+  {
+    "id": "1834",
+    "headword": "shoe",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 28
+  },
+  {
+    "id": "1835",
+    "headword": "match",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 28
+  },
+  {
+    "id": "1836",
+    "headword": "pledge",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 28
+  },
+  {
+    "id": "1858",
+    "headword": "foot",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 29
+  },
+  {
+    "id": "1861",
+    "headword": "cue",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 29
+  },
+  {
+    "id": "1870",
+    "headword": "saving",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 29
+  },
+  {
+    "id": "1888",
+    "headword": "combat",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 29
+  },
+  {
+    "id": "1906",
+    "headword": "tempt",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 29
+  },
+  {
+    "id": "1949",
+    "headword": "taste",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 30
+  },
+  {
+    "id": "1952",
+    "headword": "resistant",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 30
+  },
+  {
+    "id": "1966",
+    "headword": "excuse",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 30
+  },
+  {
+    "id": "1979",
+    "headword": "ground",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 30
+  },
+  {
+    "id": "1998",
+    "headword": "pave",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 30
+  },
+  {
+    "id": "2002",
+    "headword": "bottom",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 31
+  },
+  {
+    "id": "2023",
+    "headword": "precede",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 31
+  },
+  {
+    "id": "2040",
+    "headword": "plate",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 31
+  },
+  {
+    "id": "2042",
+    "headword": "rail",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 31
+  },
+  {
+    "id": "2053",
+    "headword": "import",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 31
+  },
+  {
+    "id": "2054",
+    "headword": "crash",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 31
+  },
+  {
+    "id": "2084",
+    "headword": "tooth",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 32
+  },
+  {
+    "id": "2099",
+    "headword": "dress",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 32
+  },
+  {
+    "id": "2101",
+    "headword": "truck",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 32
+  },
+  {
+    "id": "2104",
+    "headword": "accompany",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 32
+  },
+  {
+    "id": "2170",
+    "headword": "portray",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 33
+  },
+  {
+    "id": "2172",
+    "headword": "plane",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 33
+  },
+  {
+    "id": "2188",
+    "headword": "shore",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 33
+  },
+  {
+    "id": "2196",
+    "headword": "consult",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 33
+  },
+  {
+    "id": "2207",
+    "headword": "tap",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 33
+  },
+  {
+    "id": "2305",
+    "headword": "mission",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 35
+  },
+  {
+    "id": "2320",
+    "headword": "portion",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 35
+  },
+  {
+    "id": "2324",
+    "headword": "humble",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 35
+  },
+  {
+    "id": "2327",
+    "headword": "tone",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 35
+  },
+  {
+    "id": "2342",
+    "headword": "contradict",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 35
+  },
+  {
+    "id": "2351",
+    "headword": "patent",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 35
+  },
+  {
+    "id": "2360",
+    "headword": "divorce",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 35
+  },
+  {
+    "id": "2370",
+    "headword": "king",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 36
+  },
+  {
+    "id": "2380",
+    "headword": "nearby",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 36
+  },
+  {
+    "id": "2382",
+    "headword": "wing",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 36
+  },
+  {
+    "id": "2408",
+    "headword": "stereotype",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 36
+  },
+  {
+    "id": "2413",
+    "headword": "mail",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 36
+  },
+  {
+    "id": "2424",
+    "headword": "refuge",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 36
+  },
+  {
+    "id": "2435",
+    "headword": "venture",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 37
+  },
+  {
+    "id": "2455",
+    "headword": "premise",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 37
+  },
+  {
+    "id": "2457",
+    "headword": "skin",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 37
+  },
+  {
+    "id": "2501",
+    "headword": "damn",
+    "flags": [
+      "english_in_zh_gloss",
+      "source_gloss_truncated"
+    ],
+    "page": 37
+  },
+  {
+    "id": "2527",
+    "headword": "rid",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 38
+  },
+  {
+    "id": "2545",
+    "headword": "silence",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 38
+  },
+  {
+    "id": "2553",
+    "headword": "crown",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 38
+  },
+  {
+    "id": "2572",
+    "headword": "coat",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 38
+  },
+  {
+    "id": "2585",
+    "headword": "receipt",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 39
+  },
+  {
+    "id": "2587",
+    "headword": "plead",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 39
+  },
+  {
+    "id": "2608",
+    "headword": "contend",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 39
+  },
+  {
+    "id": "2609",
+    "headword": "prone",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 39
+  },
+  {
+    "id": "2652",
+    "headword": "border",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 39
+  },
+  {
+    "id": "2676",
+    "headword": "hail",
+    "flags": [
+      "english_in_zh_gloss",
+      "source_gloss_truncated"
+    ],
+    "page": 40
+  },
+  {
+    "id": "2683",
+    "headword": "pocket",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 40
+  },
+  {
+    "id": "2711",
+    "headword": "characterise",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 40
+  },
+  {
+    "id": "2728",
+    "headword": "rank",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 41
+  },
+  {
+    "id": "2787",
+    "headword": "chamber",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 41
+  },
+  {
+    "id": "2817",
+    "headword": "ticket",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 42
+  },
+  {
+    "id": "2840",
+    "headword": "rice",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 42
+  },
+  {
+    "id": "2883",
+    "headword": "hazard",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 43
+  },
+  {
+    "id": "2887",
+    "headword": "hook",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 43
+  },
+  {
+    "id": "2901",
+    "headword": "color",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 43
+  },
+  {
+    "id": "2939",
+    "headword": "pit",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 43
+  },
+  {
+    "id": "2943",
+    "headword": "archive",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 43
+  },
+  {
+    "id": "2962",
+    "headword": "dry",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 44
+  },
+  {
+    "id": "2964",
+    "headword": "mount",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 44
+  },
+  {
+    "id": "2967",
+    "headword": "palm",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 44
+  },
+  {
+    "id": "2968",
+    "headword": "compile",
+    "flags": [
+      "potential_domain_definition_noise"
+    ],
+    "page": 44
+  },
+  {
+    "id": "2976",
+    "headword": "hum",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 44
+  },
+  {
+    "id": "2989",
+    "headword": "slot",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 44
+  },
+  {
+    "id": "2994",
+    "headword": "limb",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 44
+  },
+  {
+    "id": "3011",
+    "headword": "profile",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 45
+  },
+  {
+    "id": "3020",
+    "headword": "package",
+    "flags": [
+      "potential_domain_definition_noise"
+    ],
+    "page": 45
+  },
+  {
+    "id": "3023",
+    "headword": "cat",
+    "flags": [
+      "potential_domain_definition_noise"
+    ],
+    "page": 45
+  },
+  {
+    "id": "3025",
+    "headword": "angle",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 45
+  },
+  {
+    "id": "3096",
+    "headword": "nest",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 46
+  },
+  {
+    "id": "3111",
+    "headword": "harness",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 46
+  },
+  {
+    "id": "3169",
+    "headword": "preface",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 47
+  },
+  {
+    "id": "3200",
+    "headword": "aboard",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 47
+  },
+  {
+    "id": "3223",
+    "headword": "mute",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 48
+  },
+  {
+    "id": "3227",
+    "headword": "feed",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 48
+  },
+  {
+    "id": "3250",
+    "headword": "susceptible",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 48
+  },
+  {
+    "id": "3277",
+    "headword": "overlap",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 48
+  },
+  {
+    "id": "3294",
+    "headword": "wander",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 49
+  },
+  {
+    "id": "3312",
+    "headword": "accommodate",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 49
+  },
+  {
+    "id": "3323",
+    "headword": "assimilate",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 49
+  },
+  {
+    "id": "3333",
+    "headword": "indicative",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 49
+  },
+  {
+    "id": "3368",
+    "headword": "helmet",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 50
+  },
+  {
+    "id": "3388",
+    "headword": "tune",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 50
+  },
+  {
+    "id": "3390",
+    "headword": "cup",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 50
+  },
+  {
+    "id": "3401",
+    "headword": "zip",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 50
+  },
+  {
+    "id": "3405",
+    "headword": "shutter",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 50
+  },
+  {
+    "id": "3413",
+    "headword": "hi",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 50
+  },
+  {
+    "id": "3436",
+    "headword": "gut",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 50
+  },
+  {
+    "id": "3447",    "headword": "hip",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 51
+  },
+  {
+    "id": "3457",
+    "headword": "posture",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 51
+  },
+  {
+    "id": "3491",
+    "headword": "trench",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 51
+  },
+  {
+    "id": "3504",
+    "headword": "mortgage",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 51
+  },
+  {
+    "id": "3505",
+    "headword": "hello",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 51
+  },
+  {
+    "id": "3526",
+    "headword": "skirt",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 52
+  },
+  {
+    "id": "3529",
+    "headword": "drunk",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 52
+  },
+  {
+    "id": "3534",
+    "headword": "offset",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 52
+  },
+  {
+    "id": "3543",
+    "headword": "tan",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 52
+  },
+  {
+    "id": "3546",
+    "headword": "mat",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 52
+  },
+  {
+    "id": "3551",
+    "headword": "specialise",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 52
+  },
+  {
+    "id": "3564",
+    "headword": "lens",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 52
+  },
+  {
+    "id": "3565",
+    "headword": "tin",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 52
+  },
+  {
+    "id": "3573",
+    "headword": "bowel",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 52
+  },
+  {
+    "id": "3616",
+    "headword": "duck",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 53
+  },
+  {
+    "id": "3630",
+    "headword": "weed",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 53
+  },
+  {
+    "id": "3633",
+    "headword": "ditch",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 53
+  },
+  {
+    "id": "3689",
+    "headword": "intrigue",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 54
+  },
+  {
+    "id": "3714",
+    "headword": "hat",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 54
+  },
+  {
+    "id": "3717",
+    "headword": "jacket",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 54
+  },
+  {
+    "id": "3730",
+    "headword": "mess",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 54
+  },
+  {
+    "id": "3746",
+    "headword": "hedge",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 55
+  },
+  {
+    "id": "3816",
+    "headword": "roof",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 56
+  },
+  {
+    "id": "3855",
+    "headword": "pin",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 56
+  },
+  {
+    "id": "3869",
+    "headword": "rope",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 56
+  },
+  {
+    "id": "3872",
+    "headword": "proposition",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 56
+  },
+  {
+    "id": "3873",
+    "headword": "sandwich",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 56
+  },
+  {
+    "id": "3916",
+    "headword": "apt",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 57
+  },
+  {
+    "id": "3924",
+    "headword": "nickname",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 57
+  },
+  {
+    "id": "3990",
+    "headword": "flesh",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 58
+  },
+  {
+    "id": "4030",
+    "headword": "telegraph",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 58
+  },
+  {
+    "id": "4068",
+    "headword": "dear",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 59
+  },
+  {
+    "id": "4092",
+    "headword": "lodge",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 59
+  },
+  {
+    "id": "4187",
+    "headword": "owing to",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 60
+  },
+  {
+    "id": "4193",
+    "headword": "o’clock",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 61
+  },
+  {
+    "id": "4219",
+    "headword": "left",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 61
+  },
+  {
+    "id": "4257",
+    "headword": "wet",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 61
+  },
+  {
+    "id": "4277",
+    "headword": "emphasise",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 62
+  },
+  {
+    "id": "4278",
+    "headword": "tube",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 62
+  },
+  {
+    "id": "4279",
+    "headword": "provided",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 62
+  },
+  {
+    "id": "4290",
+    "headword": "tongue",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 62
+  },
+  {
+    "id": "4302",
+    "headword": "rabbit",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 62
+  },
+  {
+    "id": "4313",
+    "headword": "bound",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 62
+  },
+  {
+    "id": "4314",
+    "headword": "flame",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 62
+  },
+  {
+    "id": "4323",
+    "headword": "liable",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 62
+  },
+  {
+    "id": "4327",
+    "headword": "chase",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 62
+  },
+  {
+    "id": "4344",
+    "headword": "toilet",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 63
+  },
+  {
+    "id": "4364",
+    "headword": "delegate",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 63
+  },
+  {
+    "id": "4374",
+    "headword": "tutor",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 63
+  },
+  {
+    "id": "4407",
+    "headword": "lap",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 64
+  },
+  {
+    "id": "4412",
+    "headword": "cave",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 64
+  },
+  {
+    "id": "4423",
+    "headword": "collar",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 64
+  },
+  {
+    "id": "4427",
+    "headword": "sauce",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 64
+  },
+  {
+    "id": "4460",
+    "headword": "drown",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 64
+  },
+  {
+    "id": "4465",
+    "headword": "reassure",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 64
+  },
+  {
+    "id": "4466",
+    "headword": "glove",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 64
+  },
+  {
+    "id": "4467",
+    "headword": "lid",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 64
+  },
+  {
+    "id": "4488",
+    "headword": "sack",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 65
+  },
+  {
+    "id": "4518",
+    "headword": "queue",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 65
+  },
+  {
+    "id": "4524",
+    "headword": "trunk",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 65
+  },
+  {
+    "id": "4537",
+    "headword": "sock",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 65
+  },
+  {
+    "id": "4576",
+    "headword": "dive",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 66
+  },
+  {
+    "id": "4586",
+    "headword": "apologise",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 66
+  },
+  {
+    "id": "4592",
+    "headword": "honey",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 66
+  },
+  {
+    "id": "4610",
+    "headword": "pillow",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 66
+  },
+  {
+    "id": "4618",
+    "headword": "batch",
+    "flags": [
+      "potential_domain_definition_noise"
+    ],
+    "page": 67
+  },
+  {
+    "id": "4628",
+    "headword": "ribbon",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 67
+  },
+  {
+    "id": "4650",
+    "headword": "goodbye",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 67
+  },
+  {
+    "id": "4654",
+    "headword": "mug",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 67
+  },
+  {
+    "id": "4678",
+    "headword": "rack",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 67
+  },
+  {
+    "id": "4694",
+    "headword": "goose",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 68
+  },
+  {
+    "id": "4700",
+    "headword": "stack",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 68
+  },
+  {
+    "id": "4713",
+    "headword": "orbit",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 68
+  },
+  {
+    "id": "4715",
+    "headword": "franchise",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 68
+  },
+  {
+    "id": "4748",
+    "headword": "peel",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 68
+  },
+  {
+    "id": "4774",
+    "headword": "stove",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 69
+  },
+  {
+    "id": "4811",
+    "headword": "rim",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 69
+  },
+  {
+    "id": "4812",
+    "headword": "farewell",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 69
+  },
+  {
+    "id": "4876",
+    "headword": "unload",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 70
+  },
+  {
+    "id": "4927",
+    "headword": "bloom",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 71
+  },
+  {
+    "id": "4984",
+    "headword": "spade",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 72
+  },
+  {
+    "id": "5038",
+    "headword": "hinge",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 72
+  },
+  {
+    "id": "5045",
+    "headword": "deplore",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 73
+  },
+  {
+    "id": "5053",
+    "headword": "reel",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 73
+  },
+  {
+    "id": "5083",
+    "headword": "huddle",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 73
+  },
+  {
+    "id": "5095",
+    "headword": "howl",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 73
+  },
+  {
+    "id": "5097",
+    "headword": "paw",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 73
+  },
+  {
+    "id": "5101",
+    "headword": "modernisation",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 73
+  },
+  {
+    "id": "5105",
+    "headword": "alloy",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 73
+  },
+  {
+    "id": "5136",
+    "headword": "salute",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 74
+  },
+  {
+    "id": "5168",
+    "headword": "closet",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 74
+  },
+  {
+    "id": "5178",
+    "headword": "inaugurate",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 74
+  },
+  {
+    "id": "5203",
+    "headword": "persecute",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 75
+  },
+  {
+    "id": "5206",
+    "headword": "riddle",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 75
+  },
+  {
+    "id": "5207",
+    "headword": "pretext",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 75
+  },
+  {
+    "id": "5216",
+    "headword": "distil",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 75
+  },
+  {
+    "id": "5232",
+    "headword": "nap",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 75
+  },
+  {
+    "id": "5236",
+    "headword": "generalise",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 75
+  },
+  {
+    "id": "5289",
+    "headword": "normalisation",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 76
+  },
+  {
+    "id": "S27",
+    "headword": "thousands",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 77
+  },
+  {
+    "id": "S54",
+    "headword": "ifs",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 77
+  },
+  {
+    "id": "S98",
+    "headword": "previously",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 78
+  },
+  {
+    "id": "S123",
+    "headword": "san",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 78
+  },
+  {
+    "id": "S132",
+    "headword": "ceo",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 78
+  },
+  {
+    "id": "S152",
+    "headword": "billions",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 78
+  },
+  {
+    "id": "S160",
+    "headword": "characterize",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 78
+  },
+  {
+    "id": "S173",
+    "headword": "mid",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 79
+  },
+  {
+    "id": "S241",
+    "headword": "programme",
+    "flags": [
+      "potential_domain_definition_noise",
+      "source_gloss_truncated"
+    ],
+    "page": 79
+  },
+  {
+    "id": "S350",
+    "headword": "francisco",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 81
+  },
+  {
+    "id": "S356",
+    "headword": "specialize",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 81
+  },
+  {
+    "id": "S377",
+    "headword": "app",
+    "flags": [
+      "potential_domain_definition_noise",
+      "english_in_zh_gloss"
+    ],
+    "page": 81
+  },
+  {
+    "id": "S388",
+    "headword": "los",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 81
+  },
+  {
+    "id": "S421",
+    "headword": "eric",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 81
+  },
+  {
+    "id": "S436",
+    "headword": "maximise",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 82
+  },
+  {
+    "id": "S469",
+    "headword": "ftc",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 82
+  },
+  {
+    "id": "S517",
+    "headword": "outweigh",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 83
+  },
+  {
+    "id": "S537",
+    "headword": "populate",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 83
+  },
+  {
+    "id": "F7",
+    "headword": "in",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 84
+  },
+  {
+    "id": "F12",
+    "headword": "as",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 84
+  },
+  {
+    "id": "F13",
+    "headword": "on",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 84
+  },
+  {
+    "id": "F14",
+    "headword": "with",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 84
+  },
+  {
+    "id": "F18",
+    "headword": "by",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 84
+  },
+  {
+    "id": "F30",
+    "headword": "about",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 84
+  },
+  {
+    "id": "F34",
+    "headword": "than",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 84
+  },
+  {
+    "id": "F35",
+    "headword": "what",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 84
+  },  {
+    "id": "F38",
+    "headword": "when",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 84
+  },
+  {
+    "id": "F44",
+    "headword": "so",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 84
+  },
+  {
+    "id": "F49",
+    "headword": "up",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 84
+  },
+  {
+    "id": "F52",
+    "headword": "into",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 84
+  },
+  {
+    "id": "F64",
+    "headword": "over",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 84
+  },
+  {
+    "id": "F70",
+    "headword": "between",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 85
+  },
+  {
+    "id": "F78",
+    "headword": "while",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 85
+  },
+  {
+    "id": "F80",
+    "headword": "after",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 85
+  },
+  {
+    "id": "F87",
+    "headword": "before",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 85
+  },
+  {
+    "id": "F89",
+    "headword": "since",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 85
+  },
+  {
+    "id": "F90",
+    "headword": "without",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 85
+  },
+  {
+    "id": "F93",
+    "headword": "around",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 85
+  },
+  {
+    "id": "F94",
+    "headword": "among",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 85
+  },
+  {
+    "id": "F106",
+    "headword": "within",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 85
+  },
+  {
+    "id": "F107",
+    "headword": "enough",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 85
+  },
+  {
+    "id": "F112",
+    "headword": "until",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 85
+  },
+  {
+    "id": "F114",
+    "headword": "under",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 85
+  },
+  {
+    "id": "F115",
+    "headword": "during",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 85
+  },
+  {
+    "id": "F122",
+    "headword": "unless",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 85
+  },
+  {
+    "id": "F123",
+    "headword": "across",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 85
+  },
+  {
+    "id": "F126",
+    "headword": "second",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 85
+  },
+  {
+    "id": "F144",
+    "headword": "behind",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 86
+  },
+  {
+    "id": "F149",
+    "headword": "nothing",
+    "flags": [
+      "english_in_zh_gloss"
+    ],
+    "page": 86
+  },
+  {
+    "id": "F161",
+    "headword": "besides",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 86
+  },
+  {
+    "id": "F165",
+    "headword": "unlike",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 86
+  },
+  {
+    "id": "F166",
+    "headword": "except",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 86
+  },
+  {
+    "id": "F167",
+    "headword": "upon",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 86
+  },
+  {
+    "id": "F179",
+    "headword": "inside",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 86
+  },
+  {
+    "id": "F181",
+    "headword": "alongside",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 86
+  },
+  {
+    "id": "F187",
+    "headword": "onto",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 86
+  },
+  {
+    "id": "F192",
+    "headword": "till",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 86
+  },
+  {
+    "id": "F197",
+    "headword": "beneath",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 86
+  },
+  {
+    "id": "F199",
+    "headword": "mine",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 86
+  },
+  {
+    "id": "F209",
+    "headword": "versus",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 86
+  },
+  {
+    "id": "F223",
+    "headword": "midst",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 86
+  },
+  {
+    "id": "F230",
+    "headword": "fore",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 87
+  },
+  {
+    "id": "F238",
+    "headword": "underneath",
+    "flags": [
+      "source_gloss_truncated"
+    ],
+    "page": 87
+  }
+]
