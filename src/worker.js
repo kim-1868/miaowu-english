@@ -8,6 +8,7 @@ import { handleOpsConsole } from "./ops-console.js";
 import { handleOpsSales } from "./ops-sales.js";
 import { handleOpsImport } from "./ops-import.js";
 import { handleOpsDraftRevision } from "./ops-draft-revision.js";
+import { handleOpsLiveEdit } from "./ops-live-edit.js";
 import { handleBookCover } from "./book-covers.js";
 import { handleBookCoverTags } from "./book-cover-tags.js";
 import { handleLearningState } from "./reading-library.js";
@@ -641,6 +642,8 @@ async function api(req, env) {
     if(path.startsWith("/api/ops/sales/"))return handleOpsSales(req,env,path);
     if(path==="/api/ops/import"||path==="/api/ops/lexicon")return handleOpsImport(req,env,path);
     if(path==="/api/ops/import/revise")return handleOpsDraftRevision(req,env,path);
+    if(/^\/api\/ops\/books\/[a-z][a-z0-9_-]{2,79}\/live-editor(?:\/|$)/.test(path))
+      return handleOpsLiveEdit(req,env,path);
     if(path==="/api/ops/books"||path.endsWith("/withdraw-readiness")||
        path.endsWith("/withdraw")||path.endsWith("/audit"))
       return handleOpsConsole(req,env,path);
