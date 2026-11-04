@@ -1,0 +1,122 @@
+# One-time user-requested nighttime reader contrast release.
+# Scope: static reading UI and regression tests only. No migrations or D1 mutations.
+name: Publish Miaowu night reader selection contrast (one-time)
+run-name: Night reading selection contrast V28 · 6cd16ffbd335
+on:
+  push:
+    branches: [release/one-shot-dark-reader-contrast-20261104]
+    paths: ['.github/workflows/deploy-dark-reader-contrast-20261104.yml']
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  night-reader-ui-only:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/release/one-shot-dark-reader-contrast-20261104' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout reviewed immutable commit
+        uses: actions/checkout@v4
+        with:
+          ref: 6cd16ffbd3356e8ce9435c17c5fdbf3d154105fc
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Guard exact approved static-only diff and deployment target
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "6cd16ffbd3356e8ce9435c17c5fdbf3d154105fc"
+          grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
+          test ! -e private-output
+          test ! -e private-input
+          git diff --name-only 625cb8336af1b5ebc9806dff2bd5cf3a2441b727 HEAD | sort > /tmp/actual-changes
+          printf '%s\n' 'public/index.html' 'public/live-reader.css' 'public/live.html' 'public/styles.css' 'tests/s124-v1-customer-experience.test.mjs' 'tests/s133-watercolor-reference-art.test.mjs' 'tests/s135-category-svg-alignment.test.mjs' 'tests/s137-home-paw-reminder-and-baseline.test.mjs' 'tests/s138-immersive-home-scene.test.mjs' 'tests/s149-cover-led-responsive-bookshelf.test.mjs' 'tests/s152-home-resume-last-read.test.mjs' 'tests/s153-retina-banner-tablet.test.mjs' 'tests/s154-public-shelf-pagination.test.mjs' 'tests/s155-night-reader-selection-contrast.test.mjs' | sort > /tmp/approved-changes
+          diff -u /tmp/approved-changes /tmp/actual-changes
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Wrangler without application install hooks
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Full tests, production-only assets and Wrangler dry run
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm run assets:production:build
+          grep -Fq '20261104-v28-night-selection' dist-production/public/index.html
+          grep -Fq '20261104-v28-night-selection' dist-production/public/live.html
+          grep -Fq 'V28: readable text and tapped vocabulary' dist-production/public/styles.css
+          grep -Fq 'V28: readable drag/long-press selection' dist-production/public/live-reader.css
+          grep -Fq '20261104-v27-shelf-pages' dist-production/public/index.html
+          grep -Fq '20261104-v23-withdraw-ready' dist-production/public/ops.html
+          npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/dryrun-production
+      - name: Guard current production state and auth
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ -o /tmp/home-before
+          grep -Fq '20261104-v27-shelf-pages' /tmp/home-before
+          if grep -Fq '20261104-v28-night-selection' /tmp/home-before; then
+            echo "Night contrast already deployed; refusing duplicate"; exit 1
+          fi
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops.html -o /tmp/ops-before
+          grep -Fq '20261104-v23-withdraw-ready' /tmp/ops-before
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/styles.css -o /tmp/style-before
+          grep -Fq 'V27: user-facing paginated story shelf' /tmp/style-before
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/edge-before
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/edge-before","utf8"));if(!x.ok||!x.productionBindingPresent)process.exit(1)'
+      - name: Require production Cloudflare credentials and existing withdrawal flag
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$HAS_TOKEN" = "true"
+          test "$HAS_ACCOUNT" = "true"
+          npx wrangler secret list --config deploy/production.wrangler.jsonc > /tmp/secret-names-before
+          grep -Fq '"OPS_WITHDRAWAL_ENABLED"' /tmp/secret-names-before
+      - name: Deploy only tested UI with existing Worker bindings preserved
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc
+      - name: Verify published night contrast and previous bookshelf/ops functionality
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 20); do
+            curl -fsSL --max-time 25 "https://miaowu-english-pages.pages.dev/?night-v28=$i" -o /tmp/home-after || true
+            if grep -Fq '20261104-v28-night-selection' /tmp/home-after; then break; fi
+            sleep 4
+          done
+          grep -Fq '20261104-v28-night-selection' /tmp/home-after
+          grep -Fq '20261104-v27-shelf-pages' /tmp/home-after
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/styles.css -o /tmp/style-after
+          grep -Fq 'V28: readable text and tapped vocabulary' /tmp/style-after
+          grep -Fq 'V27: user-facing paginated story shelf' /tmp/style-after
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/live.html -o /tmp/live-after
+          grep -Fq 'live-reader.css?v=20261104-v28-night-selection' /tmp/live-after
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/live-reader.css -o /tmp/live-style-after
+          grep -Fq 'V28: readable drag/long-press selection' /tmp/live-style-after
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops.html -o /tmp/ops-after
+          grep -Fq '20261104-v23-withdraw-ready' /tmp/ops-after
+          curl -fsSL --retry 3 --max-time 30 'https://miaowu-english-pages.pages.dev/api/books?category=cet4&page=1' -o /tmp/paged-books
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/paged-books","utf8"));if(!Array.isArray(x.books)||x.books.length>9||x.pagination?.pageSize!==9)process.exit(1)'
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/edge-after
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/edge-after","utf8"));if(!x.ok||!x.productionBindingPresent)process.exit(1)'
+          npx wrangler secret list --config deploy/production.wrangler.jsonc > /tmp/secret-names-after
+          grep -Fq '"OPS_WITHDRAWAL_ENABLED"' /tmp/secret-names-after
+          code=$(curl -sSL -o /dev/null -w '%{http_code}' --max-time 30 https://miaowu-english-pages.pages.dev/api/me/progress)
+          test "$code" = "401"
