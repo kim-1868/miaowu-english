@@ -1,0 +1,121 @@
+# One-time production release for the owner's tablet banner clarity improvement.
+# Changes reviewed static assets only: no DB migrations, no user/content writes.
+name: Publish Miaowu tablet retina banner (one-time)
+run-name: HD responsive homepage artwork · ae8b74b1b24a
+on:
+  push:
+    branches: [release/one-shot-tablet-banner-retina-20261104]
+    paths: ['.github/workflows/deploy-tablet-retina-20261104.yml']
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  tablet-banner-ui-only:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/release/one-shot-tablet-banner-retina-20261104' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact reviewed source revision
+        uses: actions/checkout@v4
+        with:
+          ref: ae8b74b1b24a7c3cb3a2f33fe95b0e677296087d
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify immutable source, exact asset-only diff and production target
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "ae8b74b1b24a7c3cb3a2f33fe95b0e677296087d"
+          grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
+          test ! -e private-output
+          test ! -e private-input
+          git diff --name-only 509856bf29dcb873c78be2856f0a7185def2c10c HEAD | sort > /tmp/changed-files
+          printf '%s\n' 'public/cat-reading-tablet-1x.webp' 'public/cat-reading-tablet-2x.avif' 'public/cat-reading-tablet-2x.webp' 'public/index.html' 'public/styles.css' 'scripts/build-production-assets.mjs' 'scripts/build-retina-home-banner.py' 'tests/s124-v1-customer-experience.test.mjs' 'tests/s132-cat-storybook-home.test.mjs' 'tests/s133-watercolor-reference-art.test.mjs' 'tests/s134-hd-paw-reader-toolbar.test.mjs' 'tests/s135-category-svg-alignment.test.mjs' 'tests/s137-home-paw-reminder-and-baseline.test.mjs' 'tests/s138-immersive-home-scene.test.mjs' 'tests/s149-cover-led-responsive-bookshelf.test.mjs' 'tests/s152-home-resume-last-read.test.mjs' 'tests/s153-retina-banner-tablet.test.mjs' 'tests/s22-production-assets.test.mjs' | sort > /tmp/approved-files
+          diff -u /tmp/approved-files /tmp/changed-files
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Wrangler without application install scripts
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Full tests and reviewed production assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm run assets:production:build
+          grep -Fq '20261104-v26-retina-banner' dist-production/public/index.html
+          grep -Fq 'cat-reading-tablet-2x.avif' dist-production/public/index.html
+          grep -Fq 'V26: tablet banner sharpness' dist-production/public/styles.css
+          grep -Fq '20261104-v24-resume-reading' dist-production/public/index.html
+          grep -Fq '20261104-v23-withdraw-ready' dist-production/public/ops.html
+          test -s dist-production/public/cat-reading-tablet-1x.webp
+          test -s dist-production/public/cat-reading-tablet-2x.webp
+          test -s dist-production/public/cat-reading-tablet-2x.avif
+          npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/dryrun-production
+      - name: Verify old online version and production binding before rollout
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ -o /tmp/old-home
+          grep -Fq '20261104-v24-resume-reading' /tmp/old-home
+          if grep -Fq '20261104-v26-retina-banner' /tmp/old-home; then
+            echo 'Responsive banner already deployed; stopping repeat';exit 1
+          fi
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops.html -o /tmp/old-ops
+          grep -Fq '20261104-v23-withdraw-ready' /tmp/old-ops
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/styles.css -o /tmp/old-css
+          grep -Fq 'V21 cover-led bookshelf' /tmp/old-css
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/old-edge
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/old-edge","utf8"));if(!x.ok||!x.productionBindingPresent)process.exit(1)'
+      - name: Require Cloudflare credentials and preserved withdrawal permission
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$HAS_TOKEN" = "true"
+          test "$HAS_ACCOUNT" = "true"
+          npx wrangler secret list --config deploy/production.wrangler.jsonc > /tmp/binding-names-before
+          grep -Fq '"OPS_WITHDRAWAL_ENABLED"' /tmp/binding-names-before
+      - name: Deploy only static artwork, preserve D1 and existing secret bindings
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc
+      - name: Verify actual live responsive artwork and auth boundaries
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 25); do
+            curl -fsSL --max-time 25 "https://miaowu-english-pages.pages.dev/?banner-v26=$i" -o /tmp/new-home || true
+            if grep -Fq '20261104-v26-retina-banner' /tmp/new-home; then break; fi
+            sleep 4
+          done
+          grep -Fq '20261104-v26-retina-banner' /tmp/new-home
+          grep -Fq 'cat-reading-tablet-2x.avif' /tmp/new-home
+          curl -fsSL --retry 3 --max-time 35 https://miaowu-english-pages.pages.dev/styles.css -o /tmp/new-css
+          grep -Fq 'V26: tablet banner sharpness' /tmp/new-css
+          for file in cat-reading-tablet-1x.webp cat-reading-tablet-2x.webp cat-reading-tablet-2x.avif; do
+            curl -fsSL --retry 3 --max-time 45 "https://miaowu-english-pages.pages.dev/$file" -o "/tmp/$file"
+            test "$(stat -c%s "/tmp/$file")" -gt 20000
+          done
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops.html -o /tmp/ops-after
+          grep -Fq '20261104-v23-withdraw-ready' /tmp/ops-after
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/edge-after
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/edge-after","utf8"));if(!x.ok||!x.productionBindingPresent)process.exit(1)'
+          npx wrangler secret list --config deploy/production.wrangler.jsonc > /tmp/binding-names-after
+          grep -Fq '"OPS_WITHDRAWAL_ENABLED"' /tmp/binding-names-after
+          code=$(curl -sSL -o /dev/null -w '%{http_code}' --max-time 30 https://miaowu-english-pages.pages.dev/api/me/progress)
+          test "$code" = "401"
