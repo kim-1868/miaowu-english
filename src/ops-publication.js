@@ -99,6 +99,8 @@ async function readiness(env,id){
   const r=result.report;
   const unsafe=isNonProductionManuscript(r.book);
   const learningMetadata=await learningMetadataGaps(env.DB,id);
+  const cover=await stmt(env.DB,"SELECT cover_key FROM books WHERE id=?",id).first();
+  const coverReady=Boolean(cover?.cover_key);
   const approval=await stmt(env.DB,
     "SELECT id,operator_id,content_fingerprint,content_version,created_at "+
     "FROM ops_publication_approvals WHERE book_id=? ORDER BY rowid DESC LIMIT 1",id).first();
@@ -108,10 +110,12 @@ async function readiness(env,id){
     blockers:r.blockers,warnings:r.warnings,manualChecks:r.manualChecks,
     contentFingerprint:r.contentFingerprint,contentVersion:versionRow?.version??null,
     approval:{id:approval?.id||null,current:approvalValid,createdAt:approval?.created_at||null},
-    sampleBlocked:unsafe,learningMetadata,
+    sampleBlocked:unsafe,learningMetadata,coverReady,
+    quickPublishAvailable:env.OPS_PUBLICATION_ENABLED==="true"&&
+      r.book.status==="draft"&&r.technicalCheckPassed&&!unsafe&&learningMetadata.complete&&coverReady,
     publishAvailable:env.OPS_PUBLICATION_ENABLED==="true"&&
       r.technicalCheckPassed&&!unsafe&&learningMetadata.complete&&approvalValid,
-    note:"人工复核必须真实完成。预检不会发布内容。"});
+    note:"审核预览只读。发布者点击确认上架后才会提交原子发布事务。"});
 }
 async function approve(req,env,operator,id){
   let d;try{d=await body(req)}catch(e){return fail(e.message,400)}
@@ -208,9 +212,63 @@ async function publish(req,env,operator,id){
     note:"Paid chapters remain subject to server-side category entitlement checks."},201);
 }
 
+
+async function publishReviewed(req,env,operator,id){
+  // Exactly one explicit publisher click after reviewing the preview and cover.
+  // A stale content fingerprint, an incomplete word card, or missing artwork fails closed.
+  let d;try{d=await body(req)}catch(e){return fail(e.message,400)}
+  if(!HEX.test(d.expectedFingerprint||"")||!REQUEST_ID.test(d.requestId||"")||
+      d.confirmed!==true||d.bookId!==id)return fail("INVALID_PUBLICATION_CONFIRMATION",400);
+  const existing=await auditForRequest(env.DB,d.requestId);
+  if(existing){
+    if(existing.actor_id===operator.id&&existing.resource_id===id&&
+       existing.content_fingerprint===d.expectedFingerprint)
+      return respond({published:true,alreadyApplied:true,bookId:id},200);
+    return fail("REQUEST_ALREADY_USED",409);
+  }
+  const ver=await version(env.DB,id);
+  if(!ver)return fail("BOOK_VERSION_REQUIRED",409);
+  const checked=await review(env,id);
+  if(checked.error)return fail(checked.error,checked.status);
+  const r=checked.report;
+  if(r.book.id!==id||r.book.status!=="draft"||isNonProductionManuscript(r.book))
+    return fail("BOOK_NOT_ELIGIBLE_FOR_PUBLICATION",409);
+  if(!r.technicalCheckPassed||r.blockerCount>0)return fail("EDITORIAL_CHECKS_FAILED",409);
+  if(!(await learningMetadataGaps(env.DB,id)).complete)return fail("LEARNING_METADATA_INCOMPLETE",409);
+  const cover=await stmt(env.DB,"SELECT cover_key FROM books WHERE id=?",id).first();
+  if(!cover?.cover_key)return fail("BOOK_COVER_REQUIRED",409);
+  if(r.contentFingerprint!==d.expectedFingerprint)return fail("CONTENT_CHANGED",409);
+  const auditId=crypto.randomUUID();
+  try{
+    await env.DB.batch([
+      stmt(env.DB,"UPDATE books SET status='published',last_release_request_id=? "+
+        "WHERE id=? AND status='draft' AND EXISTS "+
+        "(SELECT 1 FROM ops_book_content_versions WHERE book_id=? AND version=?) "+
+        "AND TRIM(COALESCE(cover_key,''))<>'' "+
+        "AND EXISTS(SELECT 1 FROM chapters WHERE book_id=? AND published_at IS NULL) "+
+        "AND NOT EXISTS(SELECT 1 FROM chapters WHERE book_id=? AND published_at IS NOT NULL)",
+        d.requestId,id,id,ver.version,id,id),
+      stmt(env.DB,"UPDATE chapters SET published_at=CURRENT_TIMESTAMP "+
+        "WHERE book_id=? AND published_at IS NULL AND EXISTS "+
+        "(SELECT 1 FROM books WHERE id=? AND status='published' AND last_release_request_id=?)",
+        id,id,d.requestId),
+      stmt(env.DB,"INSERT INTO ops_audit_events "+
+        "(id,actor_id,event_type,resource_type,resource_id,request_id,content_fingerprint,reason_code) "+
+        "VALUES(?,?,CASE WHEN EXISTS(SELECT 1 FROM books WHERE id=? AND status='published' "+
+        "AND last_release_request_id=?) AND "+
+        "(SELECT COUNT(*) FROM chapters WHERE book_id=? AND published_at IS NULL)=0 AND "+
+        "(SELECT COUNT(*) FROM chapters WHERE book_id=?)>0 "+
+        "THEN 'book.publish' ELSE NULL END,'book',?,?,?,'OWNER_PREVIEW_CONFIRMED')",
+        auditId,operator.id,id,d.requestId,id,id,id,d.requestId,r.contentFingerprint)
+    ]);
+  }catch{return fail("PUBLICATION_CONFLICT",409)}
+  return respond({published:true,bookId:id,approvalMode:"single-owner-confirmation",
+    note:"Paid content remains guarded by category entitlements."},201);
+}
+
 export async function handleOpsPublication(req,env,path){
   if(!["staging","production"].includes(env.APP_ENV))return fail("NOT_FOUND",404);
-  const match=path.match(/^\/api\/ops\/books\/([a-z][a-z0-9_-]{2,79})\/(readiness|approve|publish)$/);
+  const match=path.match(/^\/api\/ops\/books\/([a-z][a-z0-9_-]{2,79})\/(readiness|approve|publish|publish-reviewed)$/);
   if(!match)return fail("NOT_FOUND",404);
   const [,id,action]=match;
   if((action==="readiness"&&req.method!=="GET")||
@@ -223,5 +281,6 @@ export async function handleOpsPublication(req,env,path){
   // Fail closed until the operator and environment are intentionally enabled.
   if(env.OPS_PUBLICATION_ENABLED!=="true")return fail("OPS_PUBLICATION_DISABLED",403);
   if(action==="approve")return approve(req,env,auth.operator,id);
+  if(action==="publish-reviewed")return publishReviewed(req,env,auth.operator,id);
   return publish(req,env,auth.operator,id);
 }
