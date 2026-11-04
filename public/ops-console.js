@@ -13,10 +13,8 @@ const byId=(tag,text,className)=>{
 function status(msg){$("status").textContent=msg;}
 function clearActions(){
   readiness=null;$("draftActions").hidden=true;$("liveActions").hidden=true;
-  $("approve").disabled=true;$("publish").disabled=true;$("withdraw").disabled=true;
+  $("publish").disabled=true;$("withdraw").disabled=true;
   $("report").textContent="";$("withdrawSummary").textContent="";
-  $("checks").querySelectorAll("input").forEach(x=>x.checked=false);
-  $("reviewNote").value="";$("publishTitle").value="";
   $("withdrawTitle").value="";$("withdrawReason").value="";$("withdrawConfirm").checked=false;
 }
 function connected(){return key.startsWith("mwops_")&&identity!==null}
@@ -48,6 +46,8 @@ function button(id,fn){
 function syncButtons(){
   syncSaleButtons();
   $("checkNovel").disabled=!connected()||!$("uploadNovel").files?.length;
+  $("importNovel").disabled=!(connected()&&pendingNovel&&$("uploadCoverWithNovel").files?.length);
+  $("tagSave").disabled=!connected()||!chosen||!$("tagText").value.trim();
   $("useSelectedDraft").disabled=!connected()||chosen?.status!=="draft";
   $("reviseNovel").disabled=!(connected()&&pendingNovel&&chosen?.status==="draft"&&
     pendingNovel.book?.id===chosen.id&&pendingNovel.book?.title===chosen.title&&
@@ -55,20 +55,16 @@ function syncButtons(){
   $("refresh").disabled=!connected();
   $("saveSelectedCover").disabled=!connected()||!chosen||!$("selectedCoverFile").files?.length;
   syncCategoryCreateButton();
-  if(!readiness){$("approve").disabled=true;$("publish").disabled=true;$("withdraw").disabled=true;return}
+  if(!readiness){$("publish").disabled=true;$("withdraw").disabled=true;return}
   if(chosen?.status==="draft"){
-    const checks=[...$("checks").querySelectorAll("input")];
-    $("approve").disabled=!(readiness.technicalCheckPassed&&!readiness.sampleBlocked&&
-      checks.every(x=>x.checked)&&$("reviewNote").value.trim().length>=12);
-    $("publish").disabled=!(readiness.publishAvailable&&readiness.approval?.current&&
-      $("publishTitle").value===chosen.title);
+    $("publish").disabled=!(readiness.quickPublishAvailable&&readiness.contentFingerprint);
   }else{
     $("withdraw").disabled=!($("withdrawConfirm").checked&&
       $("withdrawTitle").value===chosen?.title&&$("withdrawReason").value.trim().length>=12&&
       readiness.canWithdraw);
   }
 }
-["checks","reviewNote","publishTitle","withdrawTitle","withdrawReason","withdrawConfirm"]
+["withdrawTitle","withdrawReason","withdrawConfirm","tagText"]
   .forEach(id=>$(id).addEventListener("input",syncButtons));
 async function verify(){
   // Remove token from the input immediately after reading. It lives only in
@@ -114,6 +110,7 @@ async function openBook(book){
   chosen=book;clearActions();
   $("selectedCoverFile").value="";
   void loadCurrentCover(book);
+  void loadCoverTags(book);
   $("selected").textContent="《"+book.title+"》";
   $("bookSummary").textContent=book.category_id+" · "+book.chapter_count+"章 · "+
     (book.status==="published"?"已发布":"未发布");
@@ -125,9 +122,9 @@ async function openBook(book){
     const entries=[
       "自动技术检查："+(result.technicalCheckPassed?"通过":"未通过"),
       "章节："+result.metrics.chapters+"；目标词："+result.metrics.distinctWords,
-      "当前人工审核："+(result.approval?.current?"有效":"未批准／版本已变化"),
+      "封面："+(result.coverReady?"已上传":"请先上传对应封面"),
       "是否测试内容："+(result.sampleBlocked?"是，禁止上架":"否"),
-      "发布能力："+(result.publishAvailable?"已开启":"当前关闭或未满足条件")
+      "一键发布："+(result.quickPublishAvailable?"可以确认上架":"当前未满足发布条件")
     ];
     for(const b of result.blockers||[])entries.push("必须修复："+b.message);
     for(const w of (result.warnings||[]).slice(0,8))entries.push("需复核："+w.message);
@@ -157,27 +154,20 @@ async function loadAudit(bookId){
   }
 }
 function requestId(){return crypto.randomUUID();}
-async function doApprove(){
-  if(!chosen||chosen.status!=="draft"||!readiness)return;
-  const checks=[...$("checks").querySelectorAll("input")];
-  if(!checks.every(x=>x.checked))throw Error("请完成真实的人工复核。");
-  const data=await api("/api/ops/books/"+encodeURIComponent(chosen.id)+"/approve","POST",{
-    expectedFingerprint:readiness.contentFingerprint,checks:checks.map(x=>x.value),
-    note:$("reviewNote").value.trim(),requestId:requestId()
+async function quickPublishBook(bookId,snapshot){
+  if(!snapshot?.quickPublishAvailable)throw Error("当前草稿仍存在阻止上架的项目，请查看预检报告");
+  return api("/api/ops/books/"+encodeURIComponent(bookId)+"/publish-reviewed","POST",{
+    expectedFingerprint:snapshot.contentFingerprint,bookId,
+    confirmed:true,requestId:requestId()
   });
-  status("已保存本版内容审核。尚未上架。审批 ID："+data.approvalId);
-  await openBook(chosen);
 }
 async function doPublish(){
-  if(!chosen||!readiness?.approval?.current||$("publishTitle").value!==chosen.title)
-    throw Error("请先完成当前版本审核，并再次准确填写书名。");
-  if(!window.confirm("确认上架《"+chosen.title+"》？免费章节将公开，付费章节仍需要分类授权。"))return;
-  const result=await api("/api/ops/books/"+encodeURIComponent(chosen.id)+"/publish","POST",{
-    approvalId:readiness.approval.id,expectedFingerprint:readiness.contentFingerprint,
-    confirmTitle:$("publishTitle").value,requestId:requestId()
-  });
-  status("上架成功："+result.bookId+"。请检查读者端免费试读和付费权限。");
-  await loadBooks(chosen.id);
+  if(!chosen||chosen.status!=="draft"||!readiness?.quickPublishAvailable)
+    throw Error("请先完成预检并上传封面");
+  const id=chosen.id;
+  const result=await quickPublishBook(id,readiness);
+  status("《"+chosen.title+"》上架成功；"+(result.alreadyApplied?"本次为重试确认。":"现在可以在前台书架查看。"));
+  await loadBooks(id);
 }
 async function doWithdraw(){
   if(!chosen||chosen.status!=="published"||!readiness?.canWithdraw||
@@ -632,7 +622,7 @@ button("categoryCreateButton",async()=>{
   "」。它不会出现在读者书架，也不能发码；请先上传小说并完成内容审核。";
  await loadSaleCategories();
 });
-button("connect",verify);button("refresh",()=>loadBooks());button("approve",doApprove);
+button("connect",verify);button("refresh",()=>loadBooks());
 button("publish",doPublish);button("withdraw",doWithdraw);
 button("disconnect",async()=>{
   key="";identity=null;chosen=null;clearActions();clearSaleReceipt();
