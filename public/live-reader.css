@@ -9,3 +9,24 @@
 @media(max-width:1150px){.reader-columns{grid-template-columns:210px minmax(0,1fr)}.details{display:none}}
 @media(max-width:750px){.nav-header{gap:11px;padding:12px 15px;flex-wrap:wrap}.nav-header nav{order:3;width:100%;justify-content:center;margin:0}.logo b{font-size:20px}.logo small{font-size:8px}.cat{width:35px;height:35px}.nav-right{margin-left:auto}.container{padding:23px 14px 55px}.hero{padding:36px 22px}.hero:after{right:0;opacity:.05}.hero h1{font-size:34px}.section-title h2{font-size:27px}.reader-columns{display:block}.toc{position:static;margin-bottom:14px}.chapter-card{padding:29px 20px}.story{font-size:18px}.book-grid{grid-template-columns:1fr 1fr}.book-cover{height:170px;font-size:23px}}
 @media(max-width:470px){.book-grid{grid-template-columns:1fr}.nav-right button{font-size:12px;padding:8px 11px}.section-title{align-items:center}.hero-note{font-size:12px}.reader-bar{gap:7px}}
+
+
+/* V28: readable drag/long-press selection in the standalone reader too. */
+:root[data-theme="dark"] .story::selection,
+:root[data-theme="dark"] .story *::selection{
+  background:#855067;
+  color:#fffaf5;
+}
+:root[data-theme="dark"] .story::-moz-selection,
+:root[data-theme="dark"] .story *::-moz-selection{
+  background:#855067;
+  color:#fffaf5;
+}
+:root[data-theme="dark"] .story .inline-word:hover,
+:root[data-theme="dark"] .story .inline-word:focus-visible{
+  color:#fff2e8;
+  background:#593748;
+}
+@media (pointer:coarse){
+  .story .inline-word{-webkit-tap-highlight-color:rgba(189,125,157,.36)}
+}
