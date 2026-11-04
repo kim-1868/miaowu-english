@@ -1,0 +1,406 @@
+{
+  "version": 1,
+  "notes": "25 CET4 headwords crosschecked against official-derived lexicon, original context examples and source-backed UK/US IPA. Content reviewer should double-check sense in story contexts.",
+  "words": [
+    {
+      "headword": "email",
+      "partOfSpeech": "n.",
+      "meaningZh": "电子邮件",
+      "exampleEn": "She sent the revised design by email.",
+      "exampleZh": "她通过电子邮件发送了修改后的设计。",
+      "collocations": [
+        {
+          "en": "send an email",
+          "zh": "发送邮件"
+        }
+      ],
+      "id": "mwv26-cet4-email",
+      "phoneticUk": "/ˈiːmeɪl/",
+      "phoneticUs": "/iˈmeɪɫ/"
+    },
+    {
+      "headword": "theater",
+      "partOfSpeech": "n.",
+      "meaningZh": "剧场；戏院",
+      "exampleEn": "The theater reopened after the sound system was repaired.",
+      "exampleZh": "音响系统修好后，剧场重新开放。",
+      "collocations": [
+        {
+          "en": "local theater",
+          "zh": "本地剧场"
+        }
+      ],
+      "id": "mwv26-cet4-theater",
+      "phoneticUk": "/θˈɪətə/",
+      "phoneticUs": "/ˈθiətɝ/"
+    },
+    {
+      "headword": "landlord",
+      "partOfSpeech": "n.",
+      "meaningZh": "房东",
+      "exampleEn": "The landlord agreed to extend the lease for one month.",
+      "exampleZh": "房东同意把租期延长一个月。",
+      "collocations": [
+        {
+          "en": "contact the landlord",
+          "zh": "联系房东"
+        }
+      ],
+      "id": "mwv26-cet4-landlord",
+      "phoneticUk": "/lˈændlˌɔːd/",
+      "phoneticUs": "/ˈɫændˌɫɔɹd/"
+    },
+    {
+      "headword": "stage",
+      "partOfSpeech": "n.",
+      "meaningZh": "舞台",
+      "exampleEn": "The old recording had been made near the stage.",
+      "exampleZh": "那段旧录音是在舞台附近录制的。",
+      "collocations": [
+        {
+          "en": "on stage",
+          "zh": "在舞台上"
+        }
+      ],
+      "id": "mwv26-cet4-stage",
+      "phoneticUk": "/stˈeɪdʒ/",
+      "phoneticUs": "/ˈsteɪdʒ/"
+    },
+    {
+      "headword": "studio",
+      "partOfSpeech": "n.",
+      "meaningZh": "工作室；录音室",
+      "exampleEn": "They rented a small studio for their design work.",
+      "exampleZh": "他们租下一间小工作室进行设计。",
+      "collocations": [
+        {
+          "en": "design studio",
+          "zh": "设计工作室"
+        }
+      ],
+      "id": "mwv26-cet4-studio",
+      "phoneticUk": "/stjˈuːdɪˌəʊ/",
+      "phoneticUs": "/ˈstudiˌoʊ/"
+    },
+    {
+      "headword": "university",
+      "partOfSpeech": "n.",
+      "meaningZh": "大学",
+      "exampleEn": "They had first met at university seven years earlier.",
+      "exampleZh": "他们七年前在大学里初次相识。",
+      "collocations": [
+        {
+          "en": "university student",
+          "zh": "大学生"
+        }
+      ],
+      "id": "mwv26-cet4-university",
+      "phoneticUk": "/jˌuːnɪvˈɜːsɪti/",
+      "phoneticUs": "/ˌjunəˈvɝsəti/"
+    },
+    {
+      "headword": "competition",
+      "partOfSpeech": "n.",
+      "meaningZh": "比赛；竞争",
+      "exampleEn": "The design competition gave them a chance to work together.",
+      "exampleZh": "那场设计比赛让他们有机会合作。",
+      "collocations": [
+        {
+          "en": "design competition",
+          "zh": "设计比赛"
+        }
+      ],
+      "id": "mwv26-cet4-competition",
+      "phoneticUk": "/kˌɒmpɪtˈɪʃən/",
+      "phoneticUs": "/ˌkɑmpəˈtɪʃən/"
+    },
+    {
+      "headword": "tool",
+      "partOfSpeech": "n.",
+      "meaningZh": "工具",
+      "exampleEn": "She placed the repair tool carefully in its box.",
+      "exampleZh": "她小心地把修复工具放进盒子里。",
+      "collocations": [
+        {
+          "en": "repair tool",
+          "zh": "修复工具"
+        }
+      ],
+      "id": "mwv26-cet4-tool",
+      "phoneticUk": "/tˈuːl/",
+      "phoneticUs": "/ˈtuɫ/"
+    },
+    {
+      "headword": "test",
+      "partOfSpeech": "n./v.",
+      "meaningZh": "测试；检验",
+      "exampleEn": "The first test revealed a problem with the lamp.",
+      "exampleZh": "第一次测试发现台灯存在问题。",
+      "collocations": [
+        {
+          "en": "safety test",
+          "zh": "安全测试"
+        }
+      ],
+      "id": "mwv26-cet4-test",
+      "phoneticUk": "/tˈɛst/",
+      "phoneticUs": "/ˈtɛst/"
+    },
+    {
+      "headword": "site",
+      "partOfSpeech": "n.",
+      "meaningZh": "现场；地点",
+      "exampleEn": "The team visited the site before preparing the plan.",
+      "exampleZh": "团队在制订方案前查看了现场。",
+      "collocations": [
+        {
+          "en": "construction site",
+          "zh": "施工现场"
+        }
+      ],
+      "id": "mwv26-cet4-site",
+      "phoneticUk": "/sˈaɪt/",
+      "phoneticUs": "/ˈsaɪt/"
+    },
+    {
+      "headword": "career",
+      "partOfSpeech": "n.",
+      "meaningZh": "职业；事业",
+      "exampleEn": "She chose to protect her career rather than accept the deal.",
+      "exampleZh": "她选择保护自己的事业，而不是接受交易。",
+      "collocations": [
+        {
+          "en": "career development",
+          "zh": "职业发展"
+        }
+      ],
+      "id": "mwv26-cet4-career",
+      "phoneticUk": "/kəɹˈɪə/",
+      "phoneticUs": "/kɝˈɪɹ/"
+    },
+    {
+      "headword": "process",
+      "partOfSpeech": "n.",
+      "meaningZh": "过程；流程",
+      "exampleEn": "The process was fair and open to everyone involved.",
+      "exampleZh": "整个流程公平，且向相关人员公开。",
+      "collocations": [
+        {
+          "en": "review process",
+          "zh": "审核流程"
+        }
+      ],
+      "id": "mwv26-cet4-process",
+      "phoneticUk": "/pɹˈəʊsˌɛs/",
+      "phoneticUs": "/ˈpɹɑˌsɛs/"
+    },
+    {
+      "headword": "fee",
+      "partOfSpeech": "n.",
+      "meaningZh": "费用",
+      "exampleEn": "The lawyer explained every fee before the meeting.",
+      "exampleZh": "律师在会面前解释了每项费用。",
+      "collocations": [
+        {
+          "en": "service fee",
+          "zh": "服务费"
+        }
+      ],
+      "id": "mwv26-cet4-fee",
+      "phoneticUk": "/fˈiː/",
+      "phoneticUs": "/ˈfi/"
+    },
+    {
+      "headword": "cost",
+      "partOfSpeech": "n.",
+      "meaningZh": "成本；费用",
+      "exampleEn": "The cost of repairing the building was higher than expected.",
+      "exampleZh": "修复大楼的成本比预期更高。",
+      "collocations": [
+        {
+          "en": "reduce costs",
+          "zh": "降低成本"
+        }
+      ],
+      "id": "mwv26-cet4-cost",
+      "phoneticUk": "/kˈɒst/",
+      "phoneticUs": "/ˈkɑst/"
+    },
+    {
+      "headword": "drawing",
+      "partOfSpeech": "n.",
+      "meaningZh": "图纸；绘图",
+      "exampleEn": "The original drawing showed a safer route through the building.",
+      "exampleZh": "原始图纸展示了一条更安全的建筑通道。",
+      "collocations": [
+        {
+          "en": "technical drawing",
+          "zh": "技术图纸"
+        }
+      ],
+      "id": "mwv26-cet4-drawing",
+      "phoneticUk": "/dɹˈɔːɪŋ/",
+      "phoneticUs": "/ˈdɹɔɪŋ/"
+    },
+    {
+      "headword": "name",
+      "partOfSpeech": "n.",
+      "meaningZh": "名字；名称",
+      "exampleEn": "Her name was missing from the final project report.",
+      "exampleZh": "最终项目报告里没有她的名字。",
+      "collocations": [
+        {
+          "en": "write a name",
+          "zh": "写下名字"
+        }
+      ],
+      "id": "mwv26-cet4-name",
+      "phoneticUk": "/nˈeɪm/",
+      "phoneticUs": "/ˈneɪm/"
+    },
+    {
+      "headword": "note",
+      "partOfSpeech": "n.",
+      "meaningZh": "便条；笔记",
+      "exampleEn": "She found a handwritten note inside the old book.",
+      "exampleZh": "她在旧书中发现了一张手写便条。",
+      "collocations": [
+        {
+          "en": "leave a note",
+          "zh": "留便条"
+        }
+      ],
+      "id": "mwv26-cet4-note",
+      "phoneticUk": "/nˈəʊt/",
+      "phoneticUs": "/ˈnoʊt/"
+    },
+    {
+      "headword": "paper",
+      "partOfSpeech": "n.",
+      "meaningZh": "纸；文件",
+      "exampleEn": "The agreement was written on a single sheet of paper.",
+      "exampleZh": "协议写在一张纸上。",
+      "collocations": [
+        {
+          "en": "a piece of paper",
+          "zh": "一张纸"
+        }
+      ],
+      "id": "mwv26-cet4-paper",
+      "phoneticUk": "/pˈeɪpə/",
+      "phoneticUs": "/ˈpeɪpɝ/"
+    },
+    {
+      "headword": "business",
+      "partOfSpeech": "n.",
+      "meaningZh": "生意；商业",
+      "exampleEn": "She wanted to run her own business without family interference.",
+      "exampleZh": "她想在不受家庭干涉的情况下经营自己的生意。",
+      "collocations": [
+        {
+          "en": "start a business",
+          "zh": "创业"
+        }
+      ],
+      "id": "mwv26-cet4-business",
+      "phoneticUk": "/bˈɪznɪs/",
+      "phoneticUs": "/ˈbɪznəs/"
+    },
+    {
+      "headword": "staff",
+      "partOfSpeech": "n.",
+      "meaningZh": "员工；全体工作人员",
+      "exampleEn": "The staff checked every donated item before opening.",
+      "exampleZh": "工作人员在开馆前核查了所有捐赠物品。",
+      "collocations": [
+        {
+          "en": "staff member",
+          "zh": "员工"
+        }
+      ],
+      "id": "mwv26-cet4-staff",
+      "phoneticUk": "/stˈɑːf/",
+      "phoneticUs": "/ˈstæf/"
+    },
+    {
+      "headword": "worker",
+      "partOfSpeech": "n.",
+      "meaningZh": "工人；工作人员",
+      "exampleEn": "A worker found the missing document during the repair.",
+      "exampleZh": "一名工人在维修过程中发现了失踪的文件。",
+      "collocations": [
+        {
+          "en": "skilled worker",
+          "zh": "熟练工人"
+        }
+      ],
+      "id": "mwv26-cet4-worker",
+      "phoneticUk": "/wˈɜːkə/",
+      "phoneticUs": "/ˈwɝkɝ/"
+    },
+    {
+      "headword": "method",
+      "partOfSpeech": "n.",
+      "meaningZh": "方法；办法",
+      "exampleEn": "They found a safer method to restore the damaged object.",
+      "exampleZh": "他们找到了一种更安全的办法修复受损物品。",
+      "collocations": [
+        {
+          "en": "research method",
+          "zh": "研究方法"
+        }
+      ],
+      "id": "mwv26-cet4-method",
+      "phoneticUk": "/mˈɛθəd/",
+      "phoneticUs": "/ˈmɛθəd/"
+    },
+    {
+      "headword": "equipment",
+      "partOfSpeech": "n.",
+      "meaningZh": "设备",
+      "exampleEn": "The recording equipment had been stored for seven years.",
+      "exampleZh": "录音设备已经存放了七年。",
+      "collocations": [
+        {
+          "en": "recording equipment",
+          "zh": "录音设备"
+        }
+      ],
+      "id": "mwv26-cet4-equipment",
+      "phoneticUk": "/ɪkwˈɪpmənt/",
+      "phoneticUs": "/ɪˈkwɪpmənt/"
+    },
+    {
+      "headword": "expense",
+      "partOfSpeech": "n.",
+      "meaningZh": "开支；费用",
+      "exampleEn": "She kept a record of every project expense.",
+      "exampleZh": "她记录了项目的每一笔开支。",
+      "collocations": [
+        {
+          "en": "travel expense",
+          "zh": "差旅费"
+        }
+      ],
+      "id": "mwv26-cet4-expense",
+      "phoneticUk": "/ɪkspˈɛns/",
+      "phoneticUs": "/ɪkˈspɛns/"
+    },
+    {
+      "headword": "fund",
+      "partOfSpeech": "n.",
+      "meaningZh": "基金；资金",
+      "exampleEn": "The education fund was created to help local students.",
+      "exampleZh": "教育基金设立的目的是帮助当地学生。",
+      "collocations": [
+        {
+          "en": "education fund",
+          "zh": "教育基金"
+        }
+      ],
+      "id": "mwv26-cet4-fund",
+      "phoneticUk": "/fˈɐnd/",
+      "phoneticUs": "/ˈfənd/"
+    }
+  ]
+}
