@@ -1,0 +1,2628 @@
+{
+  "version": 1,
+  "sourceLabel": "miaowu-cet4-20261104-import-compatibility-v2",
+  "book": {
+    "id": "s82-ex-husband-business-client",
+    "category": "cet4",
+    "title": "离婚后，前夫公司成了我的客户",
+    "description": "离婚后，独立设计师苏晚知凭专业方案接到前夫公司的业务邀请。她和团队面对盲评、材料质量危机与旧日关系，选择靠真实实力赢得事业和未来。",
+    "coverKey": null
+  },
+  "words": [
+    {
+      "id": "mwv26-cet4-agreement",
+      "headword": "agreement",
+      "meaningZh": "协议；约定",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/əˈɡriːmənt/",
+      "phoneticUs": "/əˈɡɹimənt/",
+      "exampleEn": "Both teams reached an agreement after the meeting.",
+      "exampleZh": "双方团队在会议后达成了协议。",
+      "collocations": [
+        {
+          "en": "reach an agreement",
+          "zh": "达成协议"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-calculate",
+      "headword": "calculate",
+      "partOfSpeech": "v.",
+      "meaningZh": "计算",
+      "exampleEn": "She calculated the time difference.",
+      "exampleZh": "她计算了时间差。",
+      "phoneticUk": "/ˈkælkjʊleɪt/",
+      "phoneticUs": "/ˈkæɫkjəˌɫeɪt/",
+      "collocations": [
+        {
+          "en": "calculate the cost",
+          "zh": "计算费用"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-choice",
+      "headword": "choice",
+      "phoneticUk": "/ˈtʃɔɪs/",
+      "phoneticUs": "/ˈtʃɔɪs/",
+      "partOfSpeech": "n.",
+      "meaningZh": "选择",
+      "exampleEn": "It was her choice to stay.",
+      "exampleZh": "留下是她自己的选择。",
+      "collocations": [
+        {
+          "en": "make a choice",
+          "zh": "作出选择"
+        },
+        {
+          "en": "a difficult choice",
+          "zh": "艰难的选择"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-client",
+      "headword": "client",
+      "meaningZh": "客户；委托方",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈklaɪənt/",
+      "phoneticUs": "/ˈkɫaɪənt/",
+      "exampleEn": "The client asked for a written progress report.",
+      "exampleZh": "客户要求提交一份书面进度报告。",
+      "collocations": [
+        {
+          "en": "meet a client",
+          "zh": "会见客户"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-company",
+      "headword": "company",
+      "meaningZh": "公司",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈkʌmpəni/",
+      "phoneticUs": "/ˈkəmpəˌni/",
+      "exampleEn": "The company agreed to review the proposal.",
+      "exampleZh": "公司同意重新审核这份提案。",
+      "collocations": [
+        {
+          "en": "start a company",
+          "zh": "创办公司"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-confirm",
+      "headword": "confirm",
+      "phoneticUk": "/kənˈfɜːm/",
+      "phoneticUs": "/kənˈfɝm/",
+      "partOfSpeech": "v.",
+      "meaningZh": "确认",
+      "exampleEn": "The security footage could confirm when he entered the shop.",
+      "exampleZh": "监控录像可以证实他何时走进了店里。",
+      "collocations": [
+        {
+          "en": "confirm the details",
+          "zh": "确认细节"
+        },
+        {
+          "en": "confirm an appointment",
+          "zh": "确认预约"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-contract",
+      "headword": "contract",
+      "meaningZh": "合同；契约",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈkɒntrækt/",
+      "phoneticUs": "/ˈkɑnˌtɹækt/",
+      "exampleEn": "She read every clause of the contract before signing.",
+      "exampleZh": "她签字前阅读了合同的每一项条款。",
+      "collocations": [
+        {
+          "en": "sign a contract",
+          "zh": "签署合同"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-customer",
+      "headword": "customer",
+      "meaningZh": "顾客",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈkʌstəmə/",
+      "phoneticUs": "/ˈkəstəmɝ/",
+      "exampleEn": "Every customer could return the empty bottle.",
+      "exampleZh": "每位顾客都可以归还空瓶。",
+      "collocations": [
+        {
+          "en": "customer service",
+          "zh": "客户服务"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-date",
+      "headword": "date",
+      "partOfSpeech": "n.",
+      "meaningZh": "日期",
+      "exampleEn": "Check the date at the top of the receipt.",
+      "exampleZh": "核对收据顶部的日期。",
+      "phoneticUk": "/ˈdeɪt/",
+      "phoneticUs": "/ˈdeɪt/",
+      "collocations": [
+        {
+          "en": "a delivery date",
+          "zh": "交付日期"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-decision",
+      "headword": "decision",
+      "partOfSpeech": "n.",
+      "meaningZh": "决定",
+      "exampleEn": "She made a careful decision.",
+      "exampleZh": "她作出了慎重的决定。",
+      "phoneticUk": "/dɪˈsɪʒən/",
+      "phoneticUs": "/dɪˈsɪʒən/",
+      "collocations": [
+        {
+          "en": "make a decision",
+          "zh": "作出决定"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-design",
+      "headword": "design",
+      "meaningZh": "设计；设计作品",
+      "partOfSpeech": "n./v.",
+      "phoneticUk": "/dɪˈzaɪn/",
+      "phoneticUs": "/dɪˈzaɪn/",
+      "exampleEn": "Her design made the package easier to recycle.",
+      "exampleZh": "她的设计让包装更容易回收。",
+      "collocations": [
+        {
+          "en": "packaging design",
+          "zh": "包装设计"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-document",
+      "headword": "document",
+      "phoneticUk": "/ˈdɒkjʊmənt/",
+      "phoneticUs": "/ˈdɑkjəmɛnt/",
+      "partOfSpeech": "n.",
+      "meaningZh": "文件；文档",
+      "exampleEn": "The document was dated two years earlier.",
+      "exampleZh": "文件上的日期是两年前。",
+      "collocations": [
+        {
+          "en": "official document",
+          "zh": "官方文件"
+        },
+        {
+          "en": "check a document",
+          "zh": "核查文件"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-evidence",
+      "headword": "evidence",
+      "phoneticUk": "/ˈevɪdəns/",
+      "phoneticUs": "/ˈɛvədəns/",
+      "partOfSpeech": "n.",
+      "meaningZh": "证据",
+      "exampleEn": "We need evidence, not a guess.",
+      "exampleZh": "我们需要证据，而不是猜测。",
+      "collocations": [
+        {
+          "en": "collect evidence",
+          "zh": "收集证据"
+        },
+        {
+          "en": "strong evidence",
+          "zh": "有力证据"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-explain",
+      "headword": "explain",
+      "partOfSpeech": "v.",
+      "meaningZh": "解释",
+      "exampleEn": "She tried to explain her decision.",
+      "exampleZh": "她试着解释自己的决定。",
+      "phoneticUk": "/ɪkˈspleɪn/",
+      "phoneticUs": "/ɪksˈpɫeɪn/",
+      "collocations": [
+        {
+          "en": "explain clearly",
+          "zh": "清楚解释"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-future",
+      "headword": "future",
+      "partOfSpeech": "n.",
+      "meaningZh": "未来",
+      "exampleEn": "For the first time in two years, she could imagine a future with her sister.",
+      "exampleZh": "两年来，她第一次能想象和姐姐共度未来的生活。",
+      "phoneticUk": "/ˈfjuːtʃə/",
+      "phoneticUs": "/ˈfjutʃɝ/",
+      "collocations": [
+        {
+          "en": "in the future",
+          "zh": "在未来"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-identity",
+      "headword": "identity",
+      "phoneticUk": "/aɪˈdentɪti/",
+      "phoneticUs": "/aɪˈdɛntɪˌti/",
+      "partOfSpeech": "n.",
+      "meaningZh": "身份",
+      "exampleEn": "She wanted to know the visitor's identity.",
+      "exampleZh": "她想知道访客的身份。",
+      "collocations": [
+        {
+          "en": "confirm an identity",
+          "zh": "确认身份"
+        },
+        {
+          "en": "hide an identity",
+          "zh": "隐藏身份"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-information",
+      "headword": "information",
+      "meaningZh": "信息",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˌɪnfəˈmeɪʃən/",
+      "phoneticUs": "/ˌɪnfɝˈmeɪʃən/",
+      "exampleEn": "The report contained important information.",
+      "exampleZh": "报告中包含重要信息。",
+      "collocations": [
+        {
+          "en": "share information",
+          "zh": "分享信息"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-manager",
+      "headword": "manager",
+      "meaningZh": "经理；负责人",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈmænɪdʒə/",
+      "phoneticUs": "/ˈmænɪdʒɝ/",
+      "exampleEn": "The manager asked for another safety test.",
+      "exampleZh": "经理要求再进行一次安全测试。",
+      "collocations": [
+        {
+          "en": "project manager",
+          "zh": "项目经理"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-market",
+      "headword": "market",
+      "meaningZh": "市场",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈmɑːkɪt/",
+      "phoneticUs": "/ˈmɑɹkɪt/",
+      "exampleEn": "The product entered the market in autumn.",
+      "exampleZh": "这款产品于秋季进入市场。",
+      "collocations": [
+        {
+          "en": "enter the market",
+          "zh": "进入市场"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-meeting",
+      "headword": "meeting",
+      "meaningZh": "会议",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈmiːtɪŋ/",
+      "phoneticUs": "/ˈmitɪŋ/",
+      "exampleEn": "The meeting began at ten o'clock.",
+      "exampleZh": "会议在十点开始。",
+      "collocations": [
+        {
+          "en": "attend a meeting",
+          "zh": "参加会议"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-message",
+      "headword": "message",
+      "meaningZh": "消息；信息",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈmesɪdʒ/",
+      "phoneticUs": "/ˈmɛsɪdʒ/",
+      "exampleEn": "A new message appeared on her phone.",
+      "exampleZh": "她的手机收到一条新消息。",
+      "collocations": [
+        {
+          "en": "send a message",
+          "zh": "发送消息"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-model",
+      "headword": "model",
+      "meaningZh": "模型",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈmɒdəl/",
+      "phoneticUs": "/ˈmɑdəɫ/",
+      "exampleEn": "The team built a small model before production.",
+      "exampleZh": "团队在生产前制作了一个小模型。",
+      "collocations": [
+        {
+          "en": "build a model",
+          "zh": "制作模型"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-money",
+      "headword": "money",
+      "meaningZh": "钱；款项",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈmʌni/",
+      "phoneticUs": "/ˈməni/",
+      "exampleEn": "The money belonged to the company, not to him.",
+      "exampleZh": "这笔钱属于公司，而不是他个人。",
+      "collocations": [
+        {
+          "en": "save money",
+          "zh": "存钱"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-notice",
+      "headword": "notice",
+      "phoneticUk": "/ˈnəʊtɪs/",
+      "phoneticUs": "/ˈnoʊtɪs/",
+      "partOfSpeech": "v.",
+      "meaningZh": "注意到",
+      "exampleEn": "I noticed a letter on the desk.",
+      "exampleZh": "我注意到桌上有一封信。",
+      "collocations": [
+        {
+          "en": "notice a change",
+          "zh": "注意到变化"
+        },
+        {
+          "en": "take notice of",
+          "zh": "注意到；留意"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-office",
+      "headword": "office",
+      "meaningZh": "办公室",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈɒfɪs/",
+      "phoneticUs": "/ˈɔfɪs/",
+      "exampleEn": "She arrived at the office before everyone else.",
+      "exampleZh": "她比其他人都早到办公室。",
+      "collocations": [
+        {
+          "en": "leave the office",
+          "zh": "离开办公室"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-option",
+      "headword": "option",
+      "partOfSpeech": "n.",
+      "meaningZh": "选择；选项",
+      "exampleEn": "They considered another option.",
+      "exampleZh": "他们考虑了另一种选择。",
+      "phoneticUk": "/ˈɒpʃən/",
+      "phoneticUs": "/ˈɑpʃən/",
+      "collocations": [
+        {
+          "en": "another option",
+          "zh": "另一个选择"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-partner",
+      "headword": "partner",
+      "meaningZh": "合伙人；伙伴",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈpɑːtnə/",
+      "phoneticUs": "/ˈpɑɹtnɝ/",
+      "exampleEn": "Her business partner checked the budget.",
+      "exampleZh": "她的生意合伙人核对了预算。",
+      "collocations": [
+        {
+          "en": "business partner",
+          "zh": "商业合伙人"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-pen",
+      "headword": "pen",
+      "meaningZh": "钢笔；笔",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈpen/",
+      "phoneticUs": "/ˈpɛn/",
+      "exampleEn": "She signed the final page with a black pen.",
+      "exampleZh": "她用一支黑色钢笔签署了最后一页。",
+      "collocations": [
+        {
+          "en": "pick up a pen",
+          "zh": "拿起笔"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-phone",
+      "headword": "phone",
+      "meaningZh": "手机；电话",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈfəʊn/",
+      "phoneticUs": "/ˈfoʊn/",
+      "exampleEn": "Her phone rang during the meeting.",
+      "exampleZh": "她的手机在会议期间响了。",
+      "collocations": [
+        {
+          "en": "answer the phone",
+          "zh": "接电话"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-picture",
+      "headword": "picture",
+      "meaningZh": "图片",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈpɪktʃə/",
+      "phoneticUs": "/ˈpɪktʃɝ/",
+      "exampleEn": "She sent a picture of the completed project.",
+      "exampleZh": "她发了一张已完成项目的照片。",
+      "collocations": [
+        {
+          "en": "take a picture",
+          "zh": "拍照片"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-plan",
+      "headword": "plan",
+      "meaningZh": "计划；方案",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈplæn/",
+      "phoneticUs": "/ˈpɫæn/",
+      "exampleEn": "They prepared a new plan for the project.",
+      "exampleZh": "他们为这个项目准备了新计划。",
+      "collocations": [
+        {
+          "en": "make a plan",
+          "zh": "制订计划"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-price",
+      "headword": "price",
+      "meaningZh": "价格",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈpraɪs/",
+      "phoneticUs": "/ˈpɹaɪs/",
+      "exampleEn": "The new material increased the price.",
+      "exampleZh": "新材料提高了价格。",
+      "collocations": [
+        {
+          "en": "at a fair price",
+          "zh": "以合理价格"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-problem",
+      "headword": "problem",
+      "meaningZh": "问题",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈprɒbləm/",
+      "phoneticUs": "/ˈpɹɑbɫəm/",
+      "exampleEn": "They found a problem with the first sample.",
+      "exampleZh": "他们发现第一份样品存在问题。",
+      "collocations": [
+        {
+          "en": "solve a problem",
+          "zh": "解决问题"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-project",
+      "headword": "project",
+      "meaningZh": "项目",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈprɒdʒekt/",
+      "phoneticUs": "/ˈpɹɑdʒɛkt/",
+      "exampleEn": "The project required two more weeks.",
+      "exampleZh": "这个项目还需要两周时间。",
+      "collocations": [
+        {
+          "en": "complete a project",
+          "zh": "完成项目"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-promise",
+      "headword": "promise",
+      "partOfSpeech": "n.",
+      "meaningZh": "承诺",
+      "exampleEn": "She kept her promise to her sister.",
+      "exampleZh": "她信守了对姐姐的承诺。",
+      "phoneticUk": "/ˈprɒmɪs/",
+      "phoneticUs": "/ˈpɹɑməs/",
+      "collocations": [
+        {
+          "en": "make a promise",
+          "zh": "许下承诺"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-record",
+      "headword": "record",
+      "phoneticUk": "/ˈrekɔːd/",
+      "phoneticUs": "/ˈɹɛkɝd/",
+      "partOfSpeech": "n.",
+      "meaningZh": "记录",
+      "exampleEn": "The old record showed a different name.",
+      "exampleZh": "旧记录上写着另一个名字。",
+      "collocations": [
+        {
+          "en": "keep a record",
+          "zh": "保留记录"
+        },
+        {
+          "en": "a written record",
+          "zh": "书面记录"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-regret",
+      "headword": "regret",
+      "partOfSpeech": "n./v.",
+      "meaningZh": "遗憾；后悔",
+      "exampleEn": "She regretted her angry words.",
+      "exampleZh": "她后悔自己说过的气话。",
+      "phoneticUk": "/rɪˈɡret/",
+      "phoneticUs": "/ɹəˈɡɹɛt/",
+      "collocations": [
+        {
+          "en": "feel regret",
+          "zh": "感到后悔"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-report",
+      "headword": "report",
+      "meaningZh": "报告",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/rɪˈpɔːt/",
+      "phoneticUs": "/ɹɪˈpɔɹt/",
+      "exampleEn": "The engineer submitted a report on the test.",
+      "exampleZh": "工程师提交了一份测试报告。",
+      "collocations": [
+        {
+          "en": "write a report",
+          "zh": "撰写报告"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-request",
+      "headword": "request",
+      "partOfSpeech": "n.",
+      "meaningZh": "请求；申请",
+      "exampleEn": "She submitted a written request.",
+      "exampleZh": "她提交了一份书面申请。",
+      "phoneticUk": "/rɪˈkwest/",
+      "phoneticUs": "/ɹɪˈkwɛst/",
+      "collocations": [
+        {
+          "en": "submit a request",
+          "zh": "提交申请"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-respond",
+      "headword": "respond",
+      "phoneticUk": "/rɪˈspɒnd/",
+      "phoneticUs": "/ɹɪˈspɑnd/",
+      "partOfSpeech": "v.",
+      "meaningZh": "回应；回答",
+      "exampleEn": "He refused to respond to her question.",
+      "exampleZh": "他拒绝回答她的问题。",
+      "collocations": [
+        {
+          "en": "respond to a question",
+          "zh": "回答问题"
+        },
+        {
+          "en": "respond quickly",
+          "zh": "迅速回应"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-result",
+      "headword": "result",
+      "meaningZh": "结果",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/rɪˈzʌlt/",
+      "phoneticUs": "/ɹɪˈzəɫt/",
+      "exampleEn": "The final result surprised the judges.",
+      "exampleZh": "最终结果让评委们感到意外。",
+      "collocations": [
+        {
+          "en": "test result",
+          "zh": "测试结果"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-risk",
+      "headword": "risk",
+      "phoneticUk": "/ˈrɪsk/",
+      "phoneticUs": "/ˈɹɪsk/",
+      "partOfSpeech": "n.",
+      "meaningZh": "风险",
+      "exampleEn": "She knew the risk of trusting him.",
+      "exampleZh": "她知道信任他意味着风险。",
+      "collocations": [
+        {
+          "en": "take a risk",
+          "zh": "承担风险"
+        },
+        {
+          "en": "reduce the risk",
+          "zh": "降低风险"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-schedule",
+      "headword": "schedule",
+      "partOfSpeech": "n.",
+      "meaningZh": "时间表",
+      "exampleEn": "She checked the maintenance schedule.",
+      "exampleZh": "她核对了维护时间表。",
+      "phoneticUk": "/ˈʃedjuːl/",
+      "phoneticUs": "/ˈskɛdʒuɫ/",
+      "collocations": [
+        {
+          "en": "a daily schedule",
+          "zh": "每日时间表"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-screen",
+      "headword": "screen",
+      "meaningZh": "屏幕",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈskriːn/",
+      "phoneticUs": "/ˈskɹin/",
+      "exampleEn": "The results appeared on the large screen.",
+      "exampleZh": "结果显示在大屏幕上。",
+      "collocations": [
+        {
+          "en": "computer screen",
+          "zh": "电脑屏幕"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-signature",
+      "headword": "signature",
+      "partOfSpeech": "n.",
+      "meaningZh": "签名",
+      "exampleEn": "The signature was not hers.",
+      "exampleZh": "那个签名不是她的。",
+      "phoneticUk": "/ˈsɪɡnətʃə/",
+      "phoneticUs": "/ˈsɪɡnətʃɝ/",
+      "collocations": [
+        {
+          "en": "handwritten signature",
+          "zh": "手写签名"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-structure",
+      "headword": "structure",
+      "meaningZh": "结构",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈstrʌktʃə/",
+      "phoneticUs": "/ˈstɹəktʃɝ/",
+      "exampleEn": "The new structure made the package stronger.",
+      "exampleZh": "新结构使包装更加结实。",
+      "collocations": [
+        {
+          "en": "a clear structure",
+          "zh": "清晰的结构"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-team",
+      "headword": "team",
+      "meaningZh": "团队",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈtiːm/",
+      "phoneticUs": "/ˈtim/",
+      "exampleEn": "The team discussed the risks together.",
+      "exampleZh": "团队一起讨论了风险。",
+      "collocations": [
+        {
+          "en": "work as a team",
+          "zh": "作为团队合作"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-time",
+      "headword": "time",
+      "meaningZh": "时间",
+      "partOfSpeech": "n.",
+      "phoneticUk": "/ˈtaɪm/",
+      "phoneticUs": "/ˈtaɪm/",
+      "exampleEn": "She needed more time to review the document.",
+      "exampleZh": "她需要更多时间审核文件。",
+      "collocations": [
+        {
+          "en": "on time",
+          "zh": "准时"
+        }
+      ]
+    },
+    {
+      "id": "mwv26-cet4-trust",
+      "headword": "trust",
+      "partOfSpeech": "v./n.",
+      "meaningZh": "信任",
+      "exampleEn": "It was difficult to trust him again.",
+      "exampleZh": "再次信任他很困难。",
+      "phoneticUk": "/ˈtrʌst/",
+      "phoneticUs": "/ˈtɹəst/",
+      "collocations": [
+        {
+          "en": "earn trust",
+          "zh": "赢得信任"
+        }
+      ]
+    }
+  ],
+  "chapters": [
+    {
+      "id": "s82-ex-husband-business-client-ch01",
+      "number": 1,
+      "title": "离婚协议的最后一页",
+      "preview": false,
+      "paragraphs": [
+        {
+          "segments": [
+            {
+              "text": "离婚当天，苏晚知提前十分钟到达律师的 "
+            },
+            {
+              "wordId": "mwv26-cet4-office",
+              "surface": "office",
+              "gloss": "办公室"
+            },
+            {
+              "text": "。她带着自己的 "
+            },
+            {
+              "wordId": "mwv26-cet4-document",
+              "surface": "document",
+              "gloss": "文件"
+            },
+            {
+              "text": "、最近两年的银行 "
+            },
+            {
+              "wordId": "mwv26-cet4-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": "，以及一份详细的财务 "
+            },
+            {
+              "wordId": "mwv26-cet4-report",
+              "surface": "report",
+              "gloss": "报告"
+            },
+            {
+              "text": "。她没有化妆，只在外套口袋里放了一支 "
+            },
+            {
+              "wordId": "mwv26-cet4-pen",
+              "surface": "pen",
+              "gloss": "钢笔"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "前夫顾承礼推门进来，把一份新 "
+            },
+            {
+              "wordId": "mwv26-cet4-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": " 放在桌上。“只要你签了这份保密 "
+            },
+            {
+              "wordId": "mwv26-cet4-agreement",
+              "surface": "agreement",
+              "gloss": "协议"
+            },
+            {
+              "text": "，这笔 "
+            },
+            {
+              "wordId": "mwv26-cet4-money",
+              "surface": "money",
+              "gloss": "钱"
+            },
+            {
+              "text": " 就归你。”他的 "
+            },
+            {
+              "wordId": "mwv26-cet4-manager",
+              "surface": "manager",
+              "gloss": "经理"
+            },
+            {
+              "text": " 紧跟在后面，像是笃定她一定会接受。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "苏晚知没有碰那张支票。她先 "
+            },
+            {
+              "wordId": "mwv26-cet4-notice",
+              "surface": "notice",
+              "gloss": "注意到"
+            },
+            {
+              "text": " 到一个熟悉的图案：几年前由她设计的品牌包装，竟然被列在顾氏 "
+            },
+            {
+              "wordId": "mwv26-cet4-company",
+              "surface": "company",
+              "gloss": "公司"
+            },
+            {
+              "text": " 的“独立资产”清单里。相关原始 "
+            },
+            {
+              "wordId": "mwv26-cet4-design",
+              "surface": "design",
+              "gloss": "设计"
+            },
+            {
+              "text": " 文件和创作 "
+            },
+            {
+              "wordId": "mwv26-cet4-date",
+              "surface": "date",
+              "gloss": "日期"
+            },
+            {
+              "text": "，她一直保存在个人电脑上。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“婚姻可以结束，但作品归属不能凭你一句话就作出 "
+            },
+            {
+              "wordId": "mwv26-cet4-decision",
+              "surface": "decision",
+              "gloss": "决定"
+            },
+            {
+              "text": "。”她把资料推回去，“我的 "
+            },
+            {
+              "wordId": "mwv26-cet4-signature",
+              "surface": "signature",
+              "gloss": "签名"
+            },
+            {
+              "text": " 只会出现在核对完成的离婚文件上，不会出现在一份未经审核的权利转让 "
+            },
+            {
+              "wordId": "mwv26-cet4-agreement",
+              "surface": "agreement",
+              "gloss": "协议"
+            },
+            {
+              "text": " 上。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "顾承礼脸色一冷。“你以为离开我，还能接到这么大的 "
+            },
+            {
+              "wordId": "mwv26-cet4-project",
+              "surface": "project",
+              "gloss": "项目"
+            },
+            {
+              "text": "？”他看向自己的助理，示意结束这场 "
+            },
+            {
+              "wordId": "mwv26-cet4-meeting",
+              "surface": "meeting",
+              "gloss": "会议"
+            },
+            {
+              "text": "，仿佛苏晚知的 "
+            },
+            {
+              "wordId": "mwv26-cet4-future",
+              "surface": "future",
+              "gloss": "未来"
+            },
+            {
+              "text": " 早已被写好。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "苏晚知的 "
+            },
+            {
+              "wordId": "mwv26-cet4-phone",
+              "surface": "phone",
+              "gloss": "手机"
+            },
+            {
+              "text": " 亮起，她向律师展示了一条 "
+            },
+            {
+              "wordId": "mwv26-cet4-message",
+              "surface": "message",
+              "gloss": "消息"
+            },
+            {
+              "text": "：她和合伙人创办的独立品牌工作室“微光”，刚收到一家新 "
+            },
+            {
+              "wordId": "mwv26-cet4-client",
+              "surface": "client",
+              "gloss": "客户"
+            },
+            {
+              "text": " 的合作邀请。对方并不知道她的婚姻情况，只看过作品 "
+            },
+            {
+              "wordId": "mwv26-cet4-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": " 和公开案例。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "她不想拿那条 "
+            },
+            {
+              "wordId": "mwv26-cet4-message",
+              "surface": "message",
+              "gloss": "消息"
+            },
+            {
+              "text": " 来证明自己赢了。过去两年，她有过太多不被认真对待的 "
+            },
+            {
+              "wordId": "mwv26-cet4-request",
+              "surface": "request",
+              "gloss": "请求"
+            },
+            {
+              "text": "，如今终于明白，不用得到丈夫的 "
+            },
+            {
+              "wordId": "mwv26-cet4-trust",
+              "surface": "trust",
+              "gloss": "信任"
+            },
+            {
+              "text": "，也能为自己作出 "
+            },
+            {
+              "wordId": "mwv26-cet4-choice",
+              "surface": "choice",
+              "gloss": "选择"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "签完离婚文件，她走出 "
+            },
+            {
+              "wordId": "mwv26-cet4-office",
+              "surface": "office",
+              "gloss": "办公室"
+            },
+            {
+              "text": "，看到外面落下第一场秋雨。她的 "
+            },
+            {
+              "wordId": "mwv26-cet4-phone",
+              "surface": "phone",
+              "gloss": "手机"
+            },
+            {
+              "text": " 响了，来电人是合伙人唐音：“我们接到的那个大项目，下周就要开第一次 "
+            },
+            {
+              "wordId": "mwv26-cet4-meeting",
+              "surface": "meeting",
+              "gloss": "会议"
+            },
+            {
+              "text": "。你能来吗？”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“当然。”苏晚知笑起来，“把 "
+            },
+            {
+              "wordId": "mwv26-cet4-schedule",
+              "surface": "schedule",
+              "gloss": "时间表"
+            },
+            {
+              "text": " 发给我，我会带着新的 "
+            },
+            {
+              "wordId": "mwv26-cet4-plan",
+              "surface": "plan",
+              "gloss": "计划"
+            },
+            {
+              "text": " 来。”她挂断电话，第一次觉得一份 "
+            },
+            {
+              "wordId": "mwv26-cet4-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": " 的结束，也可以是另一种生活的开始。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s82-ex-husband-business-client-ch02",
+      "number": 2,
+      "title": "一个没有署名的提案",
+      "preview": false,
+      "paragraphs": [
+        {
+          "segments": [
+            {
+              "text": "微光工作室只有四个人，租在旧楼的顶层 "
+            },
+            {
+              "wordId": "mwv26-cet4-office",
+              "surface": "office",
+              "gloss": "办公室"
+            },
+            {
+              "text": "。唐音把新的 "
+            },
+            {
+              "wordId": "mwv26-cet4-project",
+              "surface": "project",
+              "gloss": "项目"
+            },
+            {
+              "text": " 文件摊在桌上，提醒大家先别兴奋：邀请来自一家 "
+            },
+            {
+              "wordId": "mwv26-cet4-company",
+              "surface": "company",
+              "gloss": "公司"
+            },
+            {
+              "text": " 的采购平台，报名采用匿名设计方案评审。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "苏晚知打开 "
+            },
+            {
+              "wordId": "mwv26-cet4-document",
+              "surface": "document",
+              "gloss": "文件"
+            },
+            {
+              "text": "，一眼看到客户的产品系列。是顾氏旗下的新日化品牌。她的前夫，竟然成了潜在的 "
+            },
+            {
+              "wordId": "mwv26-cet4-client",
+              "surface": "client",
+              "gloss": "客户"
+            },
+            {
+              "text": "，而双方眼下只通过第三方平台交换 "
+            },
+            {
+              "wordId": "mwv26-cet4-message",
+              "surface": "message",
+              "gloss": "消息"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“要退出吗？”唐音问，“这种关系可能有 "
+            },
+            {
+              "wordId": "mwv26-cet4-risk",
+              "surface": "risk",
+              "gloss": "风险"
+            },
+            {
+              "text": "，我们需要考虑回避或者披露。”苏晚知点头，决定先把事实写进 "
+            },
+            {
+              "wordId": "mwv26-cet4-report",
+              "surface": "report",
+              "gloss": "报告"
+            },
+            {
+              "text": "，让平台按既定 "
+            },
+            {
+              "wordId": "mwv26-cet4-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": " 规则判断是否存在利益冲突。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "合规人员 "
+            },
+            {
+              "wordId": "mwv26-cet4-respond",
+              "surface": "respond",
+              "gloss": "回应"
+            },
+            {
+              "text": " 得很快：只要披露曾经的婚姻关系，不接触非公开 "
+            },
+            {
+              "wordId": "mwv26-cet4-information",
+              "surface": "information",
+              "gloss": "信息"
+            },
+            {
+              "text": "，且由独立 "
+            },
+            {
+              "wordId": "mwv26-cet4-team",
+              "surface": "team",
+              "gloss": "团队"
+            },
+            {
+              "text": " 完成盲评，就可以继续提交方案。苏晚知保存这份 "
+            },
+            {
+              "wordId": "mwv26-cet4-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": "，没有要求任何特殊待遇。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "第一轮 "
+            },
+            {
+              "wordId": "mwv26-cet4-meeting",
+              "surface": "meeting",
+              "gloss": "会议"
+            },
+            {
+              "text": " 上，唐音提出豪华金属包装，其他同事讨论 "
+            },
+            {
+              "wordId": "mwv26-cet4-price",
+              "surface": "price",
+              "gloss": "价格"
+            },
+            {
+              "text": " 和运输成本。苏晚知却拿出一张普通顾客的回收调查 "
+            },
+            {
+              "wordId": "mwv26-cet4-report",
+              "surface": "report",
+              "gloss": "报告"
+            },
+            {
+              "text": "，指出真正的 "
+            },
+            {
+              "wordId": "mwv26-cet4-problem",
+              "surface": "problem",
+              "gloss": "问题"
+            },
+            {
+              "text": " 是包装漂亮却不方便重复使用。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“我们不是在卖一张好看的 "
+            },
+            {
+              "wordId": "mwv26-cet4-picture",
+              "surface": "picture",
+              "gloss": "图片"
+            },
+            {
+              "text": "。”她把旧瓶子放在桌上，“要让真实 "
+            },
+            {
+              "wordId": "mwv26-cet4-customer",
+              "surface": "customer",
+              "gloss": "顾客"
+            },
+            {
+              "text": " 愿意用，先解决如何拆开、清洗和再次灌装。这个 "
+            },
+            {
+              "wordId": "mwv26-cet4-design",
+              "surface": "design",
+              "gloss": "设计"
+            },
+            {
+              "text": " 才能长久。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "小组先做了两个 "
+            },
+            {
+              "wordId": "mwv26-cet4-model",
+              "surface": "model",
+              "gloss": "模型"
+            },
+            {
+              "text": "，又重新 "
+            },
+            {
+              "wordId": "mwv26-cet4-calculate",
+              "surface": "calculate",
+              "gloss": "计算"
+            },
+            {
+              "text": " 了材料、运输和回收成本。提交前一晚，有同事问苏晚知怕不怕输给大 "
+            },
+            {
+              "wordId": "mwv26-cet4-company",
+              "surface": "company",
+              "gloss": "公司"
+            },
+            {
+              "text": " 的关系网。她看着电脑 "
+            },
+            {
+              "wordId": "mwv26-cet4-screen",
+              "surface": "screen",
+              "gloss": "屏幕"
+            },
+            {
+              "text": "，回答：“正因为我曾是那个人的妻子，我才更要让 "
+            },
+            {
+              "wordId": "mwv26-cet4-evidence",
+              "surface": "evidence",
+              "gloss": "证据"
+            },
+            {
+              "text": " 说话。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "方案发送成功的 "
+            },
+            {
+              "wordId": "mwv26-cet4-message",
+              "surface": "message",
+              "gloss": "消息"
+            },
+            {
+              "text": " 弹出时，苏晚知没有给顾承礼打电话。她对唐音说：“先去睡觉，明天还有自己的 "
+            },
+            {
+              "wordId": "mwv26-cet4-project",
+              "surface": "project",
+              "gloss": "项目"
+            },
+            {
+              "text": " 要做。”"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s82-ex-husband-business-client-ch03",
+      "number": 3,
+      "title": "他认出了那种颜色",
+      "preview": false,
+      "paragraphs": [
+        {
+          "segments": [
+            {
+              "text": "顾氏采购会上，匿名方案按编号排列在大 "
+            },
+            {
+              "wordId": "mwv26-cet4-screen",
+              "surface": "screen",
+              "gloss": "屏幕"
+            },
+            {
+              "text": " 上。顾承礼原本只是来旁听，看到第三份 "
+            },
+            {
+              "wordId": "mwv26-cet4-design",
+              "surface": "design",
+              "gloss": "设计"
+            },
+            {
+              "text": " 时，却忽然坐直了身子：那种暖灰色和清晰的图形 "
+            },
+            {
+              "wordId": "mwv26-cet4-structure",
+              "surface": "structure",
+              "gloss": "结构"
+            },
+            {
+              "text": "，像极了苏晚知从前喜欢的风格。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“是谁的方案？”他向 "
+            },
+            {
+              "wordId": "mwv26-cet4-manager",
+              "surface": "manager",
+              "gloss": "经理"
+            },
+            {
+              "text": " 发问。对方提醒：盲评尚未结束，参与者的 "
+            },
+            {
+              "wordId": "mwv26-cet4-identity",
+              "surface": "identity",
+              "gloss": "身份"
+            },
+            {
+              "text": " 暂时保密。顾承礼只好收回 "
+            },
+            {
+              "wordId": "mwv26-cet4-request",
+              "surface": "request",
+              "gloss": "请求"
+            },
+            {
+              "text": "，把 "
+            },
+            {
+              "wordId": "mwv26-cet4-decision",
+              "surface": "decision",
+              "gloss": "决定"
+            },
+            {
+              "text": " 交还评审小组。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "另一份提案主打华丽外观，却没有完整 "
+            },
+            {
+              "wordId": "mwv26-cet4-price",
+              "surface": "price",
+              "gloss": "价格"
+            },
+            {
+              "text": " 估算；微光提交的 "
+            },
+            {
+              "wordId": "mwv26-cet4-report",
+              "surface": "report",
+              "gloss": "报告"
+            },
+            {
+              "text": " 则详细列明材料、重量和回收流程。评审并不知道作者是谁，只把真实 "
+            },
+            {
+              "wordId": "mwv26-cet4-result",
+              "surface": "result",
+              "gloss": "结果"
+            },
+            {
+              "text": " 写进系统。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "晚上，顾承礼收到前妻的 "
+            },
+            {
+              "wordId": "mwv26-cet4-message",
+              "surface": "message",
+              "gloss": "消息"
+            },
+            {
+              "text": "：离婚财务部分的确认文件已发律师，请按 "
+            },
+            {
+              "wordId": "mwv26-cet4-schedule",
+              "surface": "schedule",
+              "gloss": "时间表"
+            },
+            {
+              "text": " 回复。他突然问：“你现在还在做包装 "
+            },
+            {
+              "wordId": "mwv26-cet4-design",
+              "surface": "design",
+              "gloss": "设计"
+            },
+            {
+              "text": " 吗？”苏晚知只回复：“我的工作只向团队提交 "
+            },
+            {
+              "wordId": "mwv26-cet4-report",
+              "surface": "report",
+              "gloss": "报告"
+            },
+            {
+              "text": "，不会再单独向你解释。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "他盯着 "
+            },
+            {
+              "wordId": "mwv26-cet4-phone",
+              "surface": "phone",
+              "gloss": "手机"
+            },
+            {
+              "text": " 很久，想起婚后那几年，苏晚知总在客厅桌上画 "
+            },
+            {
+              "wordId": "mwv26-cet4-plan",
+              "surface": "plan",
+              "gloss": "计划"
+            },
+            {
+              "text": "，他却以为那只是消遣。她曾请求参加一次重要的设计 "
+            },
+            {
+              "wordId": "mwv26-cet4-meeting",
+              "surface": "meeting",
+              "gloss": "会议"
+            },
+            {
+              "text": "，还正式提交过 "
+            },
+            {
+              "wordId": "mwv26-cet4-request",
+              "surface": "request",
+              "gloss": "请求"
+            },
+            {
+              "text": "，他却说家里的晚宴比什么工作都重要。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "最终评审 "
+            },
+            {
+              "wordId": "mwv26-cet4-result",
+              "surface": "result",
+              "gloss": "结果"
+            },
+            {
+              "text": " 出来，微光排名第一，顾氏采购部准备发正式合作 "
+            },
+            {
+              "wordId": "mwv26-cet4-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": "。合规小组在揭开匿名信息前再次检查，确认关联披露的 "
+            },
+            {
+              "wordId": "mwv26-cet4-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": " 已完整保存，没有发现异常干预。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "顾承礼看到工作室负责人姓名时，终于明白自己错过了什么。他拨通了苏晚知的 "
+            },
+            {
+              "wordId": "mwv26-cet4-phone",
+              "surface": "phone",
+              "gloss": "手机"
+            },
+            {
+              "text": "，第一句话是：“我想为过去道歉。”她没有立刻 "
+            },
+            {
+              "wordId": "mwv26-cet4-respond",
+              "surface": "respond",
+              "gloss": "回应"
+            },
+            {
+              "text": "，只平静地说：“合作的事请联系我的 "
+            },
+            {
+              "wordId": "mwv26-cet4-team",
+              "surface": "team",
+              "gloss": "团队"
+            },
+            {
+              "text": "。”"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s82-ex-husband-business-client-ch04",
+      "number": 4,
+      "title": "这份合同只谈工作",
+      "preview": false,
+      "paragraphs": [
+        {
+          "segments": [
+            {
+              "text": "微光接到中标 "
+            },
+            {
+              "wordId": "mwv26-cet4-message",
+              "surface": "message",
+              "gloss": "消息"
+            },
+            {
+              "text": " 时，全 "
+            },
+            {
+              "wordId": "mwv26-cet4-team",
+              "surface": "team",
+              "gloss": "团队"
+            },
+            {
+              "text": " 正围着打印机改下一个 "
+            },
+            {
+              "wordId": "mwv26-cet4-design",
+              "surface": "design",
+              "gloss": "设计"
+            },
+            {
+              "text": "。唐音先检查了中标 "
+            },
+            {
+              "wordId": "mwv26-cet4-document",
+              "surface": "document",
+              "gloss": "文件"
+            },
+            {
+              "text": " 和报价 "
+            },
+            {
+              "wordId": "mwv26-cet4-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": "，才把好消息告诉大家：这是他们成立以来最大的 "
+            },
+            {
+              "wordId": "mwv26-cet4-project",
+              "surface": "project",
+              "gloss": "项目"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "顾承礼提出亲自谈 "
+            },
+            {
+              "wordId": "mwv26-cet4-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": "，苏晚知却要求采购 "
+            },
+            {
+              "wordId": "mwv26-cet4-manager",
+              "surface": "manager",
+              "gloss": "经理"
+            },
+            {
+              "text": "、法务及双方项目负责人都参加 "
+            },
+            {
+              "wordId": "mwv26-cet4-meeting",
+              "surface": "meeting",
+              "gloss": "会议"
+            },
+            {
+              "text": "。“我们要的是明确的 "
+            },
+            {
+              "wordId": "mwv26-cet4-plan",
+              "surface": "plan",
+              "gloss": "计划"
+            },
+            {
+              "text": " 和 "
+            },
+            {
+              "wordId": "mwv26-cet4-price",
+              "surface": "price",
+              "gloss": "价格"
+            },
+            {
+              "text": "，不是一段私人对话。”她说。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "会议上，顾承礼问她是否还记得过去的 "
+            },
+            {
+              "wordId": "mwv26-cet4-promise",
+              "surface": "promise",
+              "gloss": "承诺"
+            },
+            {
+              "text": "。苏晚知把产品 "
+            },
+            {
+              "wordId": "mwv26-cet4-model",
+              "surface": "model",
+              "gloss": "模型"
+            },
+            {
+              "text": " 轻轻放到桌上：“如果与今天的 "
+            },
+            {
+              "wordId": "mwv26-cet4-project",
+              "surface": "project",
+              "gloss": "项目"
+            },
+            {
+              "text": " 无关，请不要让其他人浪费 "
+            },
+            {
+              "wordId": "mwv26-cet4-time",
+              "surface": "time",
+              "gloss": "时间"
+            },
+            {
+              "text": "。我们先谈交付 "
+            },
+            {
+              "wordId": "mwv26-cet4-schedule",
+              "surface": "schedule",
+              "gloss": "时间表"
+            },
+            {
+              "text": "。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "顾承礼沉默片刻，终于翻到正式合作 "
+            },
+            {
+              "wordId": "mwv26-cet4-document",
+              "surface": "document",
+              "gloss": "文件"
+            },
+            {
+              "text": "。他的 "
+            },
+            {
+              "wordId": "mwv26-cet4-team",
+              "surface": "team",
+              "gloss": "团队"
+            },
+            {
+              "text": " 提出不合理的无限修改条款，唐音立即解释风险，并给出分阶段评审的 "
+            },
+            {
+              "wordId": "mwv26-cet4-option",
+              "surface": "option",
+              "gloss": "选择"
+            },
+            {
+              "text": "。苏晚知则把额外修改的 "
+            },
+            {
+              "wordId": "mwv26-cet4-price",
+              "surface": "price",
+              "gloss": "价格"
+            },
+            {
+              "text": " 和验收 "
+            },
+            {
+              "wordId": "mwv26-cet4-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": " 写明。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "“你变得很会谈 "
+            },
+            {
+              "wordId": "mwv26-cet4-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": " 了。”散会后，顾承礼轻声说。苏晚知看着他，回答：“我一直会。只是以前你不 "
+            },
+            {
+              "wordId": "mwv26-cet4-notice",
+              "surface": "notice",
+              "gloss": "注意到"
+            },
+            {
+              "text": "。每次我想 "
+            },
+            {
+              "wordId": "mwv26-cet4-explain",
+              "surface": "explain",
+              "gloss": "解释"
+            },
+            {
+              "text": "，你都没有认真听。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "回到工作室，几位同事担心她的私人关系影响业务 "
+            },
+            {
+              "wordId": "mwv26-cet4-result",
+              "surface": "result",
+              "gloss": "结果"
+            },
+            {
+              "text": "。苏晚知主动提出，由唐音担任客户的日常 "
+            },
+            {
+              "wordId": "mwv26-cet4-manager",
+              "surface": "manager",
+              "gloss": "经理"
+            },
+            {
+              "text": "，自己只负责技术 "
+            },
+            {
+              "wordId": "mwv26-cet4-design",
+              "surface": "design",
+              "gloss": "设计"
+            },
+            {
+              "text": " 与最终质量审核。她把分工决定发给项目组，请所有负责人 "
+            },
+            {
+              "wordId": "mwv26-cet4-confirm",
+              "surface": "confirm",
+              "gloss": "确认"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "唐音端来两杯热茶：“你真的一点都不 "
+            },
+            {
+              "wordId": "mwv26-cet4-regret",
+              "surface": "regret",
+              "gloss": "遗憾"
+            },
+            {
+              "text": "？”苏晚知望着桌上的新 "
+            },
+            {
+              "wordId": "mwv26-cet4-project",
+              "surface": "project",
+              "gloss": "项目"
+            },
+            {
+              "text": " 计划，笑了一下：“离婚不是我的失败。放弃自己的 "
+            },
+            {
+              "wordId": "mwv26-cet4-future",
+              "surface": "future",
+              "gloss": "未来"
+            },
+            {
+              "text": " 才是。”"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s82-ex-husband-business-client-ch05",
+      "number": 5,
+      "title": "真正的翻盘不靠前夫",
+      "preview": false,
+      "paragraphs": [
+        {
+          "segments": [
+            {
+              "text": "样品测试前一天，供应商发来一条紧急 "
+            },
+            {
+              "wordId": "mwv26-cet4-message",
+              "surface": "message",
+              "gloss": "消息"
+            },
+            {
+              "text": "：其中一批材料强度不达标，原定 "
+            },
+            {
+              "wordId": "mwv26-cet4-schedule",
+              "surface": "schedule",
+              "gloss": "时间表"
+            },
+            {
+              "text": " 必须调整。唐音担心错过验收 "
+            },
+            {
+              "wordId": "mwv26-cet4-date",
+              "surface": "date",
+              "gloss": "日期"
+            },
+            {
+              "text": "，所有人都围着 "
+            },
+            {
+              "wordId": "mwv26-cet4-model",
+              "surface": "model",
+              "gloss": "模型"
+            },
+            {
+              "text": " 发愁。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "苏晚知先让 "
+            },
+            {
+              "wordId": "mwv26-cet4-team",
+              "surface": "team",
+              "gloss": "团队"
+            },
+            {
+              "text": " 保留所有检测 "
+            },
+            {
+              "wordId": "mwv26-cet4-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": "，再向 "
+            },
+            {
+              "wordId": "mwv26-cet4-client",
+              "surface": "client",
+              "gloss": "客户"
+            },
+            {
+              "text": " 发送风险 "
+            },
+            {
+              "wordId": "mwv26-cet4-report",
+              "surface": "report",
+              "gloss": "报告"
+            },
+            {
+              "text": "，没有遮掩问题。她同时提出两个 "
+            },
+            {
+              "wordId": "mwv26-cet4-option",
+              "surface": "option",
+              "gloss": "选择"
+            },
+            {
+              "text": "：更换材料延迟交付，或者保留设计但降低首批数量，重新评估 "
+            },
+            {
+              "wordId": "mwv26-cet4-price",
+              "surface": "price",
+              "gloss": "价格"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "顾氏的采购 "
+            },
+            {
+              "wordId": "mwv26-cet4-manager",
+              "surface": "manager",
+              "gloss": "经理"
+            },
+            {
+              "text": " 询问能否省略测试，“我们相信你们的 "
+            },
+            {
+              "wordId": "mwv26-cet4-design",
+              "surface": "design",
+              "gloss": "设计"
+            },
+            {
+              "text": "。”苏晚知明确拒绝：“"
+            },
+            {
+              "wordId": "mwv26-cet4-trust",
+              "surface": "trust",
+              "gloss": "信任"
+            },
+            {
+              "text": " 不代表可以忽略安全 "
+            },
+            {
+              "wordId": "mwv26-cet4-evidence",
+              "surface": "evidence",
+              "gloss": "证据"
+            },
+            {
+              "text": "，这会给真正的 "
+            },
+            {
+              "wordId": "mwv26-cet4-customer",
+              "surface": "customer",
+              "gloss": "顾客"
+            },
+            {
+              "text": " 带来 "
+            },
+            {
+              "wordId": "mwv26-cet4-risk",
+              "surface": "risk",
+              "gloss": "风险"
+            },
+            {
+              "text": "。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "顾承礼得知后没有越权干预，而是让团队按 "
+            },
+            {
+              "wordId": "mwv26-cet4-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": " 召开正式 "
+            },
+            {
+              "wordId": "mwv26-cet4-meeting",
+              "surface": "meeting",
+              "gloss": "会议"
+            },
+            {
+              "text": "。会上微光提交最新 "
+            },
+            {
+              "wordId": "mwv26-cet4-report",
+              "surface": "report",
+              "gloss": "报告"
+            },
+            {
+              "text": "，双方确认延长交付两周。所有 "
+            },
+            {
+              "wordId": "mwv26-cet4-decision",
+              "surface": "decision",
+              "gloss": "决定"
+            },
+            {
+              "text": " 均被记录。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "那两周，苏晚知从清晨守到深夜，和 "
+            },
+            {
+              "wordId": "mwv26-cet4-team",
+              "surface": "team",
+              "gloss": "团队"
+            },
+            {
+              "text": " 一遍遍测量、比较、调整 "
+            },
+            {
+              "wordId": "mwv26-cet4-model",
+              "surface": "model",
+              "gloss": "模型"
+            },
+            {
+              "text": "。唐音看着她发红的眼睛：“我们会不会失败？”她回答：“失败是一个可能的 "
+            },
+            {
+              "wordId": "mwv26-cet4-result",
+              "surface": "result",
+              "gloss": "结果"
+            },
+            {
+              "text": "，但隐瞒才是不能接受的 "
+            },
+            {
+              "wordId": "mwv26-cet4-choice",
+              "surface": "choice",
+              "gloss": "选择"
+            },
+            {
+              "text": "。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "最终新材料顺利通过验收，第一批产品按修订 "
+            },
+            {
+              "wordId": "mwv26-cet4-schedule",
+              "surface": "schedule",
+              "gloss": "时间表"
+            },
+            {
+              "text": " 投入 "
+            },
+            {
+              "wordId": "mwv26-cet4-market",
+              "surface": "market",
+              "gloss": "市场"
+            },
+            {
+              "text": "。用户试用 "
+            },
+            {
+              "wordId": "mwv26-cet4-report",
+              "surface": "report",
+              "gloss": "报告"
+            },
+            {
+              "text": " 显示，回收操作比旧版简单得多。微光终于拥有一个可以独立展示的成功 "
+            },
+            {
+              "wordId": "mwv26-cet4-project",
+              "surface": "project",
+              "gloss": "项目"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "产品发布后的那个晚上，顾承礼送来一束花，说愿意重新开始。苏晚知把花礼貌地留在 "
+            },
+            {
+              "wordId": "mwv26-cet4-office",
+              "surface": "office",
+              "gloss": "办公室"
+            },
+            {
+              "text": " 前台：“谢谢。我们已经 "
+            },
+            {
+              "wordId": "mwv26-cet4-confirm",
+              "surface": "confirm",
+              "gloss": "确认"
+            },
+            {
+              "text": " 了合作的交付，但这不意味着我应该回到过去。”"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s82-ex-husband-business-client-ch06",
+      "number": 6,
+      "title": "她不再是任何人的附属品",
+      "preview": false,
+      "paragraphs": [
+        {
+          "segments": [
+            {
+              "text": "半年后，微光搬进新的 "
+            },
+            {
+              "wordId": "mwv26-cet4-office",
+              "surface": "office",
+              "gloss": "办公室"
+            },
+            {
+              "text": "，增加了两位年轻的设计师，新的 "
+            },
+            {
+              "wordId": "mwv26-cet4-design",
+              "surface": "design",
+              "gloss": "设计"
+            },
+            {
+              "text": " 项目也逐渐多了起来。墙上挂着所有员工的作品 "
+            },
+            {
+              "wordId": "mwv26-cet4-picture",
+              "surface": "picture",
+              "gloss": "图片"
+            },
+            {
+              "text": "，没有一张把客户的 "
+            },
+            {
+              "wordId": "mwv26-cet4-company",
+              "surface": "company",
+              "gloss": "公司"
+            },
+            {
+              "text": " 名称写在创作者前面。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "唐音拿着季度 "
+            },
+            {
+              "wordId": "mwv26-cet4-report",
+              "surface": "report",
+              "gloss": "报告"
+            },
+            {
+              "text": " 快步走进会议室：“我们有新 "
+            },
+            {
+              "wordId": "mwv26-cet4-client",
+              "surface": "client",
+              "gloss": "客户"
+            },
+            {
+              "text": " 了！不是别人介绍的，是看了我们公开的产品 "
+            },
+            {
+              "wordId": "mwv26-cet4-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": "，主动发来合作 "
+            },
+            {
+              "wordId": "mwv26-cet4-message",
+              "surface": "message",
+              "gloss": "消息"
+            },
+            {
+              "text": "。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "苏晚知打开新的 "
+            },
+            {
+              "wordId": "mwv26-cet4-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": "，认真检查交付范围、预算 "
+            },
+            {
+              "wordId": "mwv26-cet4-price",
+              "surface": "price",
+              "gloss": "价格"
+            },
+            {
+              "text": " 和保密约定。她仍然谨慎，却不再用“我是不是不够好”来解释任何 "
+            },
+            {
+              "wordId": "mwv26-cet4-problem",
+              "surface": "problem",
+              "gloss": "问题"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "顾氏项目收尾前，微光与律师终于核清了她当年的作品授权范围。顾氏同意依据原始创作 "
+            },
+            {
+              "wordId": "mwv26-cet4-record",
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": " 和委托文件签署补充 "
+            },
+            {
+              "wordId": "mwv26-cet4-agreement",
+              "surface": "agreement",
+              "gloss": "协议"
+            },
+            {
+              "text": "，明确旧版包装的使用边界；新项目的知识产权则以独立 "
+            },
+            {
+              "wordId": "mwv26-cet4-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": " 写清。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "最后一次 "
+            },
+            {
+              "wordId": "mwv26-cet4-meeting",
+              "surface": "meeting",
+              "gloss": "会议"
+            },
+            {
+              "text": " 上，顾承礼正式向微光 "
+            },
+            {
+              "wordId": "mwv26-cet4-team",
+              "surface": "team",
+              "gloss": "团队"
+            },
+            {
+              "text": " 道谢。他没有再提婚姻，只说：“这份 "
+            },
+            {
+              "wordId": "mwv26-cet4-design",
+              "surface": "design",
+              "gloss": "设计"
+            },
+            {
+              "text": " 为产品带来了真实的价值。”苏晚知微笑着 "
+            },
+            {
+              "wordId": "mwv26-cet4-respond",
+              "surface": "respond",
+              "gloss": "回应"
+            },
+            {
+              "text": "：“谢谢认可，希望以后也能按照专业标准合作。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "会后，唐音问她以后还要不要接顾氏的 "
+            },
+            {
+              "wordId": "mwv26-cet4-project",
+              "surface": "project",
+              "gloss": "项目"
+            },
+            {
+              "text": "。苏晚知想了想：“只要 "
+            },
+            {
+              "wordId": "mwv26-cet4-price",
+              "surface": "price",
+              "gloss": "价格"
+            },
+            {
+              "text": " 合理、 "
+            },
+            {
+              "wordId": "mwv26-cet4-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": " 清楚，又没有利益冲突，就由我们整个 "
+            },
+            {
+              "wordId": "mwv26-cet4-team",
+              "surface": "team",
+              "gloss": "团队"
+            },
+            {
+              "text": " 作 "
+            },
+            {
+              "wordId": "mwv26-cet4-decision",
+              "surface": "decision",
+              "gloss": "决定"
+            },
+            {
+              "text": "。”"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "傍晚她走出写字楼，手机跳出一条母亲的 "
+            },
+            {
+              "wordId": "mwv26-cet4-message",
+              "surface": "message",
+              "gloss": "消息"
+            },
+            {
+              "text": "，问她一个人生活会不会孤单。她发了张工作室窗边的 "
+            },
+            {
+              "wordId": "mwv26-cet4-picture",
+              "surface": "picture",
+              "gloss": "图片"
+            },
+            {
+              "text": "：今天很忙，但过得很好，周末回家吃饭。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "路灯亮起来时，她想起离婚那天律师桌上那支 "
+            },
+            {
+              "wordId": "mwv26-cet4-pen",
+              "surface": "pen",
+              "gloss": "钢笔"
+            },
+            {
+              "text": "。她曾以为一份 "
+            },
+            {
+              "wordId": "mwv26-cet4-document",
+              "surface": "document",
+              "gloss": "文件"
+            },
+            {
+              "text": " 的结束会带走全部 "
+            },
+            {
+              "wordId": "mwv26-cet4-future",
+              "surface": "future",
+              "gloss": "未来"
+            },
+            {
+              "text": "，现在才明白，真正重要的是她从此可以自己选择下一份 "
+            },
+            {
+              "wordId": "mwv26-cet4-contract",
+              "surface": "contract",
+              "gloss": "合同"
+            },
+            {
+              "text": "、下一位 "
+            },
+            {
+              "wordId": "mwv26-cet4-partner",
+              "surface": "partner",
+              "gloss": "合伙人"
+            },
+            {
+              "text": " 和下一段生活。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "苏晚知打开备忘录，在新的年度 "
+            },
+            {
+              "wordId": "mwv26-cet4-plan",
+              "surface": "plan",
+              "gloss": "计划"
+            },
+            {
+              "text": " 上写下一句话：以后所有重要的 "
+            },
+            {
+              "wordId": "mwv26-cet4-decision",
+              "surface": "decision",
+              "gloss": "决定"
+            },
+            {
+              "text": "，都不需要依附谁的名字。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
