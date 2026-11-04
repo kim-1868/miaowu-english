@@ -12,9 +12,9 @@ test("S134 banner has a genuine higher resolution AVIF plus fallback, without fr
  assert.ok(PRODUCTION_ASSET_ALLOWLIST.includes("cat-reading-hd.avif"));
  const built=buildProductionAssets();
  assert.ok(built.assets.includes("cat-reading-hd.avif"));
- assert.equal(built.assets.length,28);
- assert.ok(html.includes('srcset="/cat-reading-hd.avif?v=20261103-hd-v15"'));
- assert.ok(html.includes('src="/cat-reading-watercolor.webp?v=20261103-watercolor"'));
+ assert.equal(built.assets.length,31);
+ assert.ok(html.includes('srcset="/cat-reading-hd.avif?v=20261104-v26-standard 1x, /cat-reading-tablet-2x.avif?v=20261104-v26-retina 2x"'));
+ assert.ok(html.includes('src="/cat-reading-tablet-1x.webp?v=20261104-v26-standard"'));
  assert.ok(html.includes('width="1400" height="512"'));
  assert.ok(html.includes('id="reviewReminder"'));
  assert.match(app,/const due=user\?cloudDue\(\):0/);
