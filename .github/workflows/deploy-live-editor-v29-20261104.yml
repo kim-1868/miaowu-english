@@ -92,7 +92,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
-          npx wrangler d1 execute miaowu-english-prod --config deploy/production.wrangler.jsonc --remote --json --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('books','chapters','ops_audit_events','ops_book_content_versions') ORDER BY name" > /tmp/d1-preflight.json
+          npx wrangler d1 execute miaowu-english-prod --config deploy/production.wrangler.jsonc --remote --yes --json --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('books','chapters','ops_audit_events','ops_book_content_versions') ORDER BY name" > /tmp/d1-preflight.json
           node --input-type=module -e 'import fs from "node:fs";const x=fs.readFileSync("/tmp/d1-preflight.json","utf8");for(const k of ["books","chapters","ops_audit_events","ops_book_content_versions"])if(!x.includes(String.fromCharCode(34)+k+String.fromCharCode(34)))throw Error("Missing established schema: "+k)'
       - name: Record D1 Time Travel recovery bookmark BEFORE migration
         shell: bash
@@ -119,7 +119,7 @@ jobs:
           set -euo pipefail
           test -s production-d1-recovery-bookmark.json
           npx wrangler d1 execute miaowu-english-prod --config deploy/production.wrangler.jsonc --remote --yes --file db/production/006_live_book_versions.sql
-          npx wrangler d1 execute miaowu-english-prod --config deploy/production.wrangler.jsonc --remote --json --command "SELECT name FROM sqlite_master WHERE name IN ('ops_live_book_versions','ops_live_versions_no_update','ops_live_versions_no_delete') ORDER BY name" > /tmp/d1-live-schema.json
+          npx wrangler d1 execute miaowu-english-prod --config deploy/production.wrangler.jsonc --remote --yes --json --command "SELECT name FROM sqlite_master WHERE name IN ('ops_live_book_versions','ops_live_versions_no_update','ops_live_versions_no_delete') ORDER BY name" > /tmp/d1-live-schema.json
           node --input-type=module -e 'import fs from "node:fs";const x=fs.readFileSync("/tmp/d1-live-schema.json","utf8");for(const k of ["ops_live_book_versions","ops_live_versions_no_update","ops_live_versions_no_delete"])if(!x.includes(String.fromCharCode(34)+k+String.fromCharCode(34)))throw Error("Additive version schema missing: "+k)'
       - name: Deploy reviewed V29 admin UI and authenticated API preserving existing D1 bindings
         shell: bash
