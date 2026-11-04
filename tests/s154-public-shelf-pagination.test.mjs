@@ -25,7 +25,7 @@ test("S154 pagination controls are native, bounded and do not render all book pa
   assert.match(app,/let shelfPage=1/);
   assert.match(app,/const SHELF_PAGE_SIZE=9/);
   assert.match(app,/const response=await serverRequest\('\/api\/books\?category='/);
-  assert.match(app,/\+'&page='\+shelfPage/);
+  assert.ok(app.includes("'&page='+shelfPage"));
   assert.match(app,/function renderShelfPagination\(slug,meta\)/);
   assert.match(app,/nav\.setAttribute\('aria-label','小说书架分页'\)/);
   assert.match(app,/button\.setAttribute\('aria-current','page'\)/);
