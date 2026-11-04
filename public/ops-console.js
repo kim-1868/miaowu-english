@@ -46,7 +46,8 @@ function button(id,fn){
 function syncButtons(){
   syncSaleButtons();
   $("checkNovel").disabled=!connected()||!$("uploadNovel").files?.length;
-  $("importNovel").disabled=!(connected()&&pendingNovel&&$("uploadCoverWithNovel").files?.length);
+  $("importNovel").disabled=!(connected()&&pendingNovel&&$("uploadCoverWithNovel").files?.length&&
+    pendingNovel.words?.every(w=>w.phoneticUk&&w.phoneticUs&&w.partOfSpeech&&w.meaningZh&&w.exampleEn&&w.exampleZh));
   $("tagSave").disabled=!connected()||!chosen||!$("tagText").value.trim();
   $("useSelectedDraft").disabled=!connected()||chosen?.status!=="draft";
   $("reviseNovel").disabled=!(connected()&&pendingNovel&&chosen?.status==="draft"&&
@@ -494,8 +495,8 @@ async function examineNovel(){
  if(report.anchors===0)throw Error("没有可点击的英文词汇标注，请检查词库匹配");
  if(JSON.stringify(pkg).length>1_500_000)throw Error("内容包过大，请缩短单次上传文件");
  if(report.metadataIncomplete.length)uploadMsg("预检发现"+report.metadataIncomplete.length+"个词卡缺少音标/例句。可以导入草稿，但必须补齐后才能正式上架。");
- else uploadMsg("文件识别成功。预览报告如下，确认后点击“导入为新草稿”。");
- pendingNovel=pkg;$("importNovel").disabled=false;
+ else uploadMsg("文件识别成功。请检查下面的预览，选择封面，然后点击「确认上传并上架」。");
+ pendingNovel=pkg;
  syncButtons();
  const lines=[
   "书籍："+pkg.book.title+"（"+pkg.book.category+"）",
@@ -524,23 +525,35 @@ $("uploadNovel").addEventListener("change",()=>{
 button("checkNovel",async()=>{
  resetNovel();await examineNovel();
 });
+$("uploadCoverWithNovel").addEventListener("change",syncButtons);
 button("importNovel",async()=>{
- if(!pendingNovel)throw Error("请先点击文件检查");
- const coverFile=$("uploadCoverWithNovel").files?.[0];
- const result=await api("/api/ops/import","POST",{package:pendingNovel});
- let coverNote="";
- if(coverFile){
+  if(!pendingNovel)throw Error("请先识别并预览小说内容");
+  const coverFile=$("uploadCoverWithNovel").files?.[0];
+  if(!coverFile)throw Error("请先选择小说封面");
+  const title=pendingNovel.book.title;
+  let created=null;
   try{
-   await uploadCoverForBook(result.bookId,coverFile);
-   coverNote="；封面已上传";
-   $("uploadCoverWithNovel").value="";
+    uploadMsg("正在保存《"+title+"》的正文和词卡……");
+    created=await api("/api/ops/import","POST",{package:pendingNovel});
+    uploadMsg("草稿已保存，正在上传封面……");
+    await uploadCoverForBook(created.bookId,coverFile);
+    uploadMsg("封面上传成功，正在核对上架条件……");
+    const snapshot=await api("/api/ops/books/"+encodeURIComponent(created.bookId)+"/readiness");
+    if(!snapshot.quickPublishAvailable){
+      const problems=(snapshot.blockers||[]).map(x=>x.message).join("；");
+      throw Error(problems||"当前发布条件未满足，请在⑤查看报告");
+    }
+    await quickPublishBook(created.bookId,snapshot);
+    $("uploadCoverWithNovel").value="";
+    resetNovel();await loadBooks(created.bookId);
+    uploadMsg("《"+title+"》已成功上架，"+created.chapters+"章、"+
+      created.wordCards+"个词卡。已上传封面，付费章节仍由会员权限保护。");
   }catch(e){
-   coverNote="；注意：草稿已导入，但封面上传失败（"+e.message+"）。请在「封面管理」重试";
+    if(!created)throw e;
+    resetNovel();await loadBooks(created.bookId);
+    uploadMsg("《"+title+"》已保存为草稿，但尚未上架："+e.message+
+      "。无需重复导入，请在④选择该书，修复问题后在⑤点击确认上架。");
   }
- }
- uploadMsg("草稿导入成功：《"+result.title+"》，"+result.chapters+"章、"+
-  result.wordCards+"词卡"+coverNote+"。未发布；请在书籍目录中完成审核和上架。");
- resetNovel();await loadBooks(result.bookId);
 });
 
 button("useSelectedDraft",async()=>{
