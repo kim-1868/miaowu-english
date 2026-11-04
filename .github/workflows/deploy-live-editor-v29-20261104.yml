@@ -1,0 +1,157 @@
+# One-time, owner-requested published book editor release with safe additive D1 schema.
+# No existing novel, user, paid entitlement, wordbook or reading state is modified.
+name: Publish Miaowu live book version editor (one-time)
+run-name: Versioned published novels editor V29 · e6dfd92bb776
+on:
+  push:
+    branches: [release/one-shot-live-editor-v29-20261104]
+    paths: ['.github/workflows/deploy-live-editor-v29-20261104.yml']
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  live-editor-production:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/release/one-shot-live-editor-v29-20261104' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout immutable tested source
+        uses: actions/checkout@v4
+        with:
+          ref: e6dfd92bb776ee830131cc62253da6b87da576ea
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify fixed source, reviewed changes and exact D1 identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "e6dfd92bb776ee830131cc62253da6b87da576ea"
+          grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_id": "649c71b3-340c-49bf-b806-3d39256851d3"' deploy/production.wrangler.jsonc
+          test ! -e private-output
+          test ! -e private-input
+          git diff --name-only 6cd16ffbd3356e8ce9435c17c5fdbf3d154105fc HEAD | sort > /tmp/revision-diff
+          printf '%s\n' 'db/production/006_live_book_versions.sql' 'public/ops-console.css' 'public/ops-console.js' 'public/ops.html' 'src/ops-live-edit.js' 'src/worker.js' 'tests/s150-ops-book-directory-filter.test.mjs' 'tests/s151-withdrawal-operator-ui.test.mjs' 'tests/s156-ops-live-book-editor.test.mjs' | sort > /tmp/approved-diff
+          diff -u /tmp/approved-diff /tmp/revision-diff
+          ! grep -Eiq 'DROP TABLE|ALTER TABLE|DELETE FROM|UPDATE (users|books|chapters|words|entitlements|reading_progress)' db/production/006_live_book_versions.sql
+          grep -Fq 'CREATE TABLE IF NOT EXISTS ops_live_book_versions' db/production/006_live_book_versions.sql
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Wrangler without project installation hooks
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Run all tests, build reviewed assets and dry-run production Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm run assets:production:build
+          grep -Fq '20261104-v29-live-editor' dist-production/public/ops.html
+          grep -Fq 'id="liveEditorPanel"' dist-production/public/ops.html
+          grep -Fq 'function loadLiveEditor' dist-production/public/ops-console.js
+          grep -Fq 'V29: versioned publisher editor' dist-production/public/ops-console.css
+          grep -Fq '20261104-v28-night-selection' dist-production/public/index.html
+          grep -Fq 'V27: user-facing paginated story shelf' dist-production/public/styles.css
+          npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/dryrun-live-editor
+      - name: Confirm currently deployed site and production edge
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops.html -o /tmp/ops-before
+          grep -Fq '20261104-v23-withdraw-ready' /tmp/ops-before
+          if grep -Fq '20261104-v29-live-editor' /tmp/ops-before; then
+            echo 'Live editor already deployed: refuse duplicate execution';exit 1
+          fi
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ -o /tmp/home-before
+          grep -Fq '20261104-v28-night-selection' /tmp/home-before
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/edge-before
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/edge-before","utf8"));if(!x.ok||!x.productionBindingPresent)process.exit(1)'
+      - name: Require existing Cloudflare deploy and D1 credentials
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$HAS_TOKEN" = "true"
+          test "$HAS_ACCOUNT" = "true"
+          npx wrangler secret list --config deploy/production.wrangler.jsonc > /tmp/ops-secrets-before
+          grep -Fq '"OPS_WITHDRAWAL_ENABLED"' /tmp/ops-secrets-before
+      - name: Inspect existing production D1 schema without reading customer records
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute miaowu-english-prod --config deploy/production.wrangler.jsonc --remote --json --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('books','chapters','ops_audit_events','ops_book_content_versions') ORDER BY name" > /tmp/d1-preflight.json
+          node --input-type=module -e 'import fs from "node:fs";const x=fs.readFileSync("/tmp/d1-preflight.json","utf8");for(const k of ["books","chapters","ops_audit_events","ops_book_content_versions"])if(!x.includes(String.fromCharCode(34)+k+String.fromCharCode(34)))throw Error("Missing established schema: "+k)'
+      - name: Record D1 Time Travel recovery bookmark BEFORE migration
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 time-travel info miaowu-english-prod --config deploy/production.wrangler.jsonc --json > /tmp/d1-bookmark-raw.json
+          node --input-type=module -e 'import fs from "node:fs";const j=JSON.parse(fs.readFileSync("/tmp/d1-bookmark-raw.json","utf8"));function walk(x){if(x&&typeof x==="object"){for(const [k,v] of Object.entries(x)){if(k.toLowerCase().includes("bookmark")&&typeof v==="string"&&v.length>3)return v;const n=walk(v);if(n)return n}}return null}const bookmark=walk(j);if(!bookmark)throw Error("D1_RECOVERY_BOOKMARK_UNAVAILABLE");fs.writeFileSync("production-d1-recovery-bookmark.json",JSON.stringify({target:"miaowu-english-prod",databaseId:"649c71b3-340c-49bf-b806-3d39256851d3",bookmark,recordedAt:new Date().toISOString()},null,2),{mode:0o600});console.log("Production D1 Time Travel recovery bookmark recorded (no customer data exported).")'
+      - name: Preserve protected recovery bookmark for owner
+        uses: actions/upload-artifact@v4
+        with:
+          name: miaowu-d1-recovery-bookmark-before-v29
+          path: production-d1-recovery-bookmark.json
+          retention-days: 14
+          if-no-files-found: error
+      - name: Apply ONLY additive immutable version-history schema to production D1
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -s production-d1-recovery-bookmark.json
+          npx wrangler d1 execute miaowu-english-prod --config deploy/production.wrangler.jsonc --remote --yes --file db/production/006_live_book_versions.sql
+          npx wrangler d1 execute miaowu-english-prod --config deploy/production.wrangler.jsonc --remote --json --command "SELECT name FROM sqlite_master WHERE name IN ('ops_live_book_versions','ops_live_versions_no_update','ops_live_versions_no_delete') ORDER BY name" > /tmp/d1-live-schema.json
+          node --input-type=module -e 'import fs from "node:fs";const x=fs.readFileSync("/tmp/d1-live-schema.json","utf8");for(const k of ["ops_live_book_versions","ops_live_versions_no_update","ops_live_versions_no_delete"])if(!x.includes(String.fromCharCode(34)+k+String.fromCharCode(34)))throw Error("Additive version schema missing: "+k)'
+      - name: Deploy reviewed V29 admin UI and authenticated API preserving existing D1 bindings
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc
+      - name: Verify live editor, existing public pages, D1 and ops security
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 20); do
+            curl -fsSL --max-time 25 "https://miaowu-english-pages.pages.dev/ops.html?ops-v29=$i" -o /tmp/ops-after || true
+            if grep -Fq '20261104-v29-live-editor' /tmp/ops-after; then break; fi
+            sleep 4
+          done
+          grep -Fq '20261104-v29-live-editor' /tmp/ops-after
+          grep -Fq 'id="liveRevisionFile"' /tmp/ops-after
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops-console.js -o /tmp/ops-js
+          grep -Fq 'function loadLiveEditor' /tmp/ops-js
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops-console.css -o /tmp/ops-css
+          grep -Fq 'V29: versioned publisher editor' /tmp/ops-css
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ -o /tmp/home-after
+          grep -Fq '20261104-v28-night-selection' /tmp/home-after
+          curl -fsSL --retry 3 --max-time 30 'https://miaowu-english-pages.pages.dev/api/books?category=cet4&page=1' -o /tmp/books-after
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/books-after","utf8"));if(!Array.isArray(x.books)||x.books.length>9||x.pagination?.pageSize!==9)process.exit(1)'
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/edge-after
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/edge-after","utf8"));if(!x.ok||!x.productionBindingPresent)process.exit(1)'
+          status=$(curl -sSL -o /dev/null -w '%{http_code}' --max-time 30 https://miaowu-english-pages.pages.dev/api/ops/books/published-story-01/live-editor)
+          test "$status" = "401"
+          npx wrangler secret list --config deploy/production.wrangler.jsonc > /tmp/ops-secrets-after
+          grep -Fq '"OPS_WITHDRAWAL_ENABLED"' /tmp/ops-secrets-after
