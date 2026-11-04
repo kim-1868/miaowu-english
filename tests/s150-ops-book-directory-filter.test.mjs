@@ -43,7 +43,7 @@ test("S150: operational directory contains interactive filters, compact paging a
   assert.match(script,/renderBookDirectory\(\)/);
   assert.match(css,/ops-book-filters/);
   assert.match(css,/ops-book-pagination/);
-  assert.match(html,/v=20261104-v23-withdraw-ready/);
+  assert.match(html,/v=20261104-v29-live-editor/);
 });
 
 test("S150: local catalog selection retains publisher checks and never sends filter values to a write API",()=>{
