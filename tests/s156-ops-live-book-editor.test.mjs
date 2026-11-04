@@ -139,6 +139,8 @@ test("S156 full live revision previews changes and atomically preserves purchase
     assert.equal(diff.changedChapters.length,2);
     assert.equal(diff.newWords,1);
     assert.equal(diff.metadataChanged,true);
+    assert.match(diff.changedChapters[0].beforeExcerpt,/那个夜晚/);
+    assert.match(diff.changedChapters[0].afterExcerpt,/凌晨/);
     assert.match(digest,/^[a-f0-9]{64}$/);
     assert.equal(db.prepare("SELECT COUNT(*) n FROM ops_live_book_versions").get().n,0,
       "read-only preview must not touch history");
