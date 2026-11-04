@@ -1,0 +1,113 @@
+# Single-use, owner-requested homepage resume-reading rollout. No database migrations.
+name: Publish Miaowu resume-last-story (one-time)
+run-name: Home continue reading from latest chapter · 509856bf29dc
+on:
+  push:
+    branches: [release/one-shot-hero-resume-20261104]
+    paths: ['.github/workflows/deploy-hero-resume-20261104.yml']
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  homepage-resume-ui:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/release/one-shot-hero-resume-20261104' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact reviewed release
+        uses: actions/checkout@v4
+        with:
+          ref: 509856bf29dcb873c78be2856f0a7185def2c10c
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Enforce exact source, approved UI-only diff, and production target
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "509856bf29dcb873c78be2856f0a7185def2c10c"
+          grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
+          test ! -e private-output
+          test ! -e private-input
+          git diff --name-only ec8e7e488459fcafc47c35b127a688401f6769ee HEAD | sort > /tmp/actual-files
+          printf '%s\n' public/app.js public/index.html tests/s124-v1-customer-experience.test.mjs tests/s133-watercolor-reference-art.test.mjs tests/s135-category-svg-alignment.test.mjs tests/s137-home-paw-reminder-and-baseline.test.mjs tests/s138-immersive-home-scene.test.mjs tests/s149-cover-led-responsive-bookshelf.test.mjs tests/s152-home-resume-last-read.test.mjs tests/s2-browser-safety.test.mjs | sort > /tmp/allowed-files
+          diff -u /tmp/allowed-files /tmp/actual-files
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Wrangler safely without repository install hooks
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Full regression tests, safe production bundle, dry-run
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm run assets:production:build
+          grep -Fq '20261104-v24-resume-reading' dist-production/public/index.html
+          grep -Fq 'function resumeLatestReading' dist-production/public/app.js
+          grep -Fq 'latestReadableProgress' dist-production/public/app.js
+          grep -Fq '20261104-v23-withdraw-ready' dist-production/public/ops.html
+          grep -Fq 'V21 cover-led bookshelf' dist-production/public/styles.css
+          npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/dryrun-production
+      - name: Check currently live site is V21/V23 and has protected backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ -o /tmp/before-index
+          grep -Fq '20261104-v21-cover-led-shelf' /tmp/before-index
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/app.js -o /tmp/before-app
+          if grep -Fq 'function resumeLatestReading' /tmp/before-app; then
+            echo "Last-story resume is already deployed; refusing redundant deployment";exit 1
+          fi
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops.html -o /tmp/before-ops
+          grep -Fq '20261104-v23-withdraw-ready' /tmp/before-ops
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/styles.css -o /tmp/before-css
+          grep -Fq 'V21 cover-led bookshelf' /tmp/before-css
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/before-edge
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/before-edge","utf8"));if(!x.ok||!x.productionBindingPresent)process.exit(1)'
+      - name: Require existing production account, token and withdrawal flag
+        shell: bash
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test "$HAS_TOKEN" = "true"
+          test "$HAS_ACCOUNT" = "true"
+          npx wrangler secret list --config deploy/production.wrangler.jsonc > /tmp/secrets-before.json
+          grep -Fq '"OPS_WITHDRAWAL_ENABLED"' /tmp/secrets-before.json
+      - name: Deploy UI only, preserve Worker variables and D1 binding
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc
+      - name: Verify live home script, operator console and edge remain working
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 16); do
+            curl -fsSL --max-time 20 "https://miaowu-english-pages.pages.dev/app.js?resume-v24=$i" -o /tmp/live-resume.js || true
+            if grep -Fq 'function resumeLatestReading' /tmp/live-resume.js; then break; fi
+            sleep 4
+          done
+          grep -Fq 'function resumeLatestReading' /tmp/live-resume.js
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ -o /tmp/live-resume-index
+          grep -Fq '20261104-v24-resume-reading' /tmp/live-resume-index
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops.html -o /tmp/live-ops-after
+          grep -Fq '20261104-v23-withdraw-ready' /tmp/live-ops-after
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/live-edge-after
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/live-edge-after","utf8"));if(!x.ok||!x.productionBindingPresent)process.exit(1)'
+          npx wrangler secret list --config deploy/production.wrangler.jsonc > /tmp/secrets-after.json
+          grep -Fq '"OPS_WITHDRAWAL_ENABLED"' /tmp/secrets-after.json
+          http=$(curl -sSL -o /dev/null -w '%{http_code}' --max-time 30 https://miaowu-english-pages.pages.dev/api/me/progress)
+          test "$http" = "401"
