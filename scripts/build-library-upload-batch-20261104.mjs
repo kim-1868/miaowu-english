@@ -47,7 +47,8 @@ function dictionary(){
  }
  const extras=json("content/editorial/20261104-shared-45-word-cards-WORKING-COPY-NOT-APPROVED.json").words;
  const more=json("content/editorial/20261104-library-11-additional-cards.json").words;
- for(const w of [...extras,...more])
+ const everyday=json("content/editorial/20261104-library-41-basic-cards.json").words;
+ for(const w of [...extras,...more,...everyday])
   lex.set(w.headword,{id:"mwv26-cet4-"+w.headword,headword:w.headword,
    meaningZh:w.meaningZh,partOfSpeech:w.partOfSpeech,phoneticUk:w.phoneticUk,
    phoneticUs:w.phoneticUs,exampleEn:w.exampleEn,exampleZh:w.exampleZh,
@@ -82,6 +83,14 @@ function forbidden(s,i,zh){
  if(zh==="尊重"&&/^(的|感|是)/u.test(after))return true;
  if(zh==="关系"&&/^(户|部门|到|着)/u.test(after))return true;
  if(zh==="房间"&&/^(号|编号)/u.test(after))return true;
+ if(zh==="建筑"&&/^(师|院|学|行业|设计|公司|专业|结构|图纸)/u.test(after))return true;
+ if(zh==="生活"&&/^(着|过|在|中|条件|方式|习惯)/u.test(after))return true;
+ if(zh==="生活"&&/(一起|共同|好好|独立|继续|开始|重新)$/u.test(before))return true;
+ if(zh==="努力"&&/^(地|学习|工作|修复|生活|改变|争取|经营|解释|证明|赚钱|完成)/u.test(after))return true;
+ if(zh==="家人"&&/(一|两|全)$/u.test(before.slice(-1)))return true;
+ if(zh==="晚上"&&/^(好|见)/u.test(after))return true;
+ if(zh==="夜里"&&/^(了|一直|还|又|没有)/u.test(after))return true;
+ if(zh==="书本"&&/^(业|来|上)/u.test(after))return true;
  if(zh==="审核"&&/^(请|可|能|来|要|会|由|得)$/u.test(before.slice(-1)))return true;
  if(["承诺","决定","选择"].includes(zh)&&
     /^(我|你|他|她|还|也|就|才|终于|忽然|随后)$/u.test(before.slice(-2)))return true;
