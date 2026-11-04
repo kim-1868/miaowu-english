@@ -4,6 +4,7 @@
 // browser cookies, analytics or console logs. Page memory only, cleared on exit.
 const $=id=>document.getElementById(id);
 let key="",chosen=null,readiness=null,identity=null,busy=false;
+let liveEditorState=null,liveRevision=null,liveHistory=[];
 const byId=(tag,text,className)=>{
   const el=document.createElement(tag);
   if(text!==undefined)el.textContent=String(text);
@@ -12,6 +13,7 @@ const byId=(tag,text,className)=>{
 };
 function status(msg){$("status").textContent=msg;}
 function clearActions(){
+  resetLiveEditor();
   readiness=null;$("draftActions").hidden=true;$("liveActions").hidden=true;
   $("publish").disabled=true;$("withdraw").disabled=true;
   $("report").textContent="";$("withdrawSummary").textContent="";
@@ -49,7 +51,7 @@ function button(id,fn){
   });
 }
 function syncButtons(){
-  syncSaleButtons();
+  syncSaleButtons();syncLiveEditorButtons();
   $("checkNovel").disabled=!connected()||!$("uploadNovel").files?.length;
   $("importNovel").disabled=!(connected()&&pendingNovel&&$("uploadCoverWithNovel").files?.length&&
     pendingNovel.words?.every(w=>w.phoneticUk&&w.phoneticUs&&w.partOfSpeech&&w.meaningZh&&w.exampleEn&&w.exampleZh));
@@ -209,7 +211,9 @@ async function openBook(book){
       "\n下架权限："+(result.canWithdraw?"已启用":"尚未启用")+
       "\n"+(result.effects||[]).join("\n");
   }
-  await loadAudit(book.id);syncButtons();
+  await loadAudit(book.id);
+  if(book.status==="published")await loadLiveEditor(book);
+  syncButtons();
 }
 async function loadAudit(bookId){
   const data=await api("/api/ops/books/"+encodeURIComponent(bookId)+"/audit");
@@ -253,6 +257,227 @@ async function doWithdraw(){
   status("已撤回公开访问。"+(result.supportActionRequired?"该分类存在有效权益，请依售后政策处理已购用户。":""));
   await loadBooks(chosen.id);
 }
+// Published-book editor: all changes require the existing publisher-only
+// credential and a fresh content version. Never store novel text in storage.
+function resetLiveEditor(){
+  liveEditorState=null;liveRevision=null;liveHistory=[];
+  $("liveEditorControls").hidden=true;
+  $("liveEditorStatus").textContent="先在④书籍目录中选择一部已发布小说。";
+  $("liveRevisionDiff").hidden=true;
+  $("liveRevisionSample").hidden=true;
+  $("liveRevisionFile").value="";
+  $("liveHistory").replaceChildren(byId("p","尚未有修改记录。","soft"));
+}
+function syncLiveEditorButtons(){
+  const active=connected()&&chosen?.status==="published"&&
+    liveEditorState?.bookId===chosen?.id&&liveEditorState.editable;
+  $("liveDownloadSource").disabled=!active||busy;
+  $("liveEditTitle").disabled=!active||busy;
+  $("liveEditDescription").disabled=!active||busy;
+  $("liveRevisionFile").disabled=!active||busy;
+  $("liveRefreshHistory").disabled=!active||busy;
+  $("liveSaveMetadata").disabled=!active||busy||
+    (!$("liveEditTitle").value.trim()||
+     ($("liveEditTitle").value.trim()===liveEditorState?.book.title&&
+      $("liveEditDescription").value===liveEditorState?.book.description));
+  $("liveCheckRevision").disabled=!active||busy||!$("liveRevisionFile").files?.length;
+  $("livePublishRevision").disabled=!active||busy||!liveRevision||
+    liveRevision.bookId!==chosen?.id||liveRevision.version!==liveEditorState.version;
+}
+async function refreshLiveHistory(bookId){
+  const result=await api("/api/ops/books/"+encodeURIComponent(bookId)+"/live-editor/history");
+  if(chosen?.id!==bookId||liveEditorState?.bookId!==bookId)return;
+  liveHistory=result.versions||[];
+  renderLiveHistory();
+}
+function renderLiveHistory(){
+  const root=$("liveHistory");root.replaceChildren();
+  if(!liveHistory.length){
+    root.append(byId("p","暂无历史版本；第一次保存修改后会生成旧版备份。","soft"));return;
+  }
+  for(const item of liveHistory){
+    const entry=byId("div",undefined,"ops-live-history-entry");
+    const details=byId("div",undefined,"ops-live-history-text");
+    const actions={content:"正文修订",metadata:"资料修改",restore:"恢复操作"};
+    details.append(byId("strong",actions[item.action]||"版本变更"));
+    details.append(byId("small",item.createdAt+" · 原内容版本 "+item.baseVersion));
+    const summary=item.summary||{};
+    const description=summary.changedChapters?
+      summary.changedChapters.slice(0,5).map(ch=>"第"+ch.number+"章 "+ch.kind).join("、"):
+      summary.oldTitle?"原标题："+summary.oldTitle:
+      summary.restoredFrom?"恢复前的内容快照":"";
+    if(description)details.append(byId("p",description,"soft"));
+    const restore=byId("button","恢复到此版本","secondary");
+    restore.type="button";
+    restore.disabled=!connected()||!liveEditorState?.editable;
+    restore.addEventListener("click",async()=>{
+      if(busy||!chosen||!liveEditorState)return;
+      const id=chosen.id,title=chosen.title,version=liveEditorState.version;
+      if(!window.confirm("确认将《"+title+"》恢复至这个历史版本？\n恢复前会自动保存当前内容作为一个新版本。"+
+        "\n若涉及已被读者阅读的新增章节，系统将拒绝删除以保护进度。"))return;
+      busy=true;restore.disabled=true;syncLiveEditorButtons();
+      try{
+        const result=await api("/api/ops/books/"+encodeURIComponent(id)+
+          "/live-editor/restore","POST",{
+            historyId:item.id,expectedVersion:version,
+            confirmRestore:true,requestId:requestId()
+          });
+        await loadBooks(id);
+        $("liveEditorStatus").textContent="已恢复历史版本，当前版本也已自动保存。"+
+          "读者重新进入该书即可看到恢复后的正文。";
+        status("《"+title+"》历史版本恢复成功。");
+      }catch(e){
+        $("liveEditorStatus").textContent="恢复未执行："+e.message;
+      }finally{busy=false;syncButtons();}
+    });
+    entry.append(details,restore);root.append(entry);
+  }
+}
+async function loadLiveEditor(book){
+  if(book.status!=="published")return;
+  const id=book.id;
+  $("liveEditorStatus").textContent="正在读取已上架版本……";
+  try{
+    const data=await api("/api/ops/books/"+encodeURIComponent(id)+"/live-editor");
+    if(chosen?.id!==id)return;
+    liveEditorState={...data,bookId:id};
+    $("liveEditorControls").hidden=false;
+    $("liveEditorBook").textContent="《"+data.book.title+"》";
+    $("liveEditorVersion").textContent="内容版本 "+data.version+" · "+data.chapterCount+" 章";
+    $("liveEditTitle").value=data.book.title;
+    $("liveEditDescription").value=data.book.description||"";
+    $("liveEditorStatus").textContent=data.editable?
+      "可编辑已发布小说：资料修改直接保存；正文替换需先预览差异。":
+      "当前运营身份可以查看书籍，但尚未开放发布修订权限。";
+    await refreshLiveHistory(id);
+  }catch(e){
+    if(chosen?.id===id){
+      liveEditorState=null;
+      $("liveEditorControls").hidden=true;
+      $("liveEditorStatus").textContent=e.message.includes("LIVE_EDIT_SCHEMA_REQUIRED")?
+        "在线版本功能尚未初始化，需先完成数据库安全迁移。":
+        "无法读取版本管理："+e.message;
+    }
+  }
+  syncLiveEditorButtons();
+}
+function renderLiveRevisionSample(pkg){
+  const root=$("liveRevisionSample");root.replaceChildren();
+  root.append(byId("strong","新版本前两章内容抽样预览"));
+  for(const ch of (pkg.chapters||[]).slice(0,2)){
+    root.append(byId("h4","第"+ch.number+"章 · "+ch.title));
+    for(const para of (ch.paragraphs||[]).slice(0,3)){
+      const line=byId("p");
+      for(const seg of para.segments||[]){
+        if(seg.wordId){
+          const w=byId("span",seg.surface,"ops-live-word");
+          w.title=seg.gloss||seg.wordId;
+          line.append(w);
+        }else line.append(document.createTextNode(seg.text||""));
+      }
+      root.append(line);
+    }
+  }
+  root.hidden=false;
+}
+function liveRevisionSummary(data){
+  const diff=data.diff||{};
+  const changed=diff.changedChapters||[];
+  return [
+    "当前书籍版本："+data.expectedVersion,
+    "修订章节："+changed.filter(x=>x.kind==="revised").length+" 章",
+    "新增章节："+diff.addedChapters+" 章",
+    "新增词卡："+diff.newWords+" 个",
+    "新版本总章数："+diff.totalChapters+" 章",
+    "英文词汇标注："+diff.studyAnchors+" 处",
+    "书名或简介变更："+(diff.metadataChanged?"是":"否"),
+    changed.length?"变更清单："+changed.slice(0,25).map(x=>"第"+x.number+"章「"+x.title+"」("+x.kind+")").join("；"):"没有章节内容变更",
+    ...changed.slice(0,8).flatMap(x=>[
+      "【第"+x.number+"章 · 原文节选】"+(x.beforeExcerpt||"新增章节"),
+      "【第"+x.number+"章 · 修订节选】"+(x.afterExcerpt||"无")
+    ]),
+    ...(data.warnings||[])
+  ].join("\n");
+}
+$("liveEditTitle").addEventListener("input",syncLiveEditorButtons);
+$("liveEditDescription").addEventListener("input",syncLiveEditorButtons);
+$("liveRevisionFile").addEventListener("change",()=>{
+  liveRevision=null;
+  $("liveRevisionDiff").hidden=true;$("liveRevisionSample").hidden=true;
+  $("liveEditorStatus").textContent=$("liveRevisionFile").files?.length?
+    "文件已选择，请先点击「预览新旧内容差异」。":
+    "已清除修订稿。";
+  syncLiveEditorButtons();
+});
+button("liveSaveMetadata",async()=>{
+  if(!liveEditorState||!chosen||chosen.id!==liveEditorState.bookId)
+    throw Error("先从目录选择已发布小说。");
+  const id=chosen.id,version=liveEditorState.version;
+  const result=await api("/api/ops/books/"+encodeURIComponent(id)+
+    "/live-editor/metadata","POST",{
+      title:$("liveEditTitle").value.trim(),
+      description:$("liveEditDescription").value,
+      expectedVersion:version,requestId:requestId()
+    });
+  await loadBooks(id);
+  $("liveEditorStatus").textContent="书名和简介已更新，旧版已保存到历史记录。";
+  status("书籍资料修改成功。");
+});
+button("liveDownloadSource",async()=>{
+  if(!liveEditorState||!chosen)throw Error("请先选择已上架小说");
+  const id=chosen.id;
+  const data=await api("/api/ops/books/"+encodeURIComponent(id)+"/live-editor/export");
+  const blob=new Blob([JSON.stringify(data.package,null,2)],{type:"application/json;charset=utf-8"});
+  const link=document.createElement("a");
+  const url=URL.createObjectURL(blob);
+  link.href=url;link.download=id+"-revision-v"+data.version+".json";
+  document.body.append(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),3000);
+  $("liveEditorStatus").textContent="已导出当前内容包。可修改正文并保留原有章节/词汇编号后重新上传。";
+});
+button("liveCheckRevision",async()=>{
+  if(!chosen||!liveEditorState||chosen.id!==liveEditorState.bookId)
+    throw Error("请先选择已上架小说");
+  const file=$("liveRevisionFile").files?.[0];
+  if(!file)throw Error("请选择新版 JSON 文件。");
+  if(file.size>1_800_000)throw Error("修订稿超过1.8MB，请分批修改或联系管理员。");
+  let data;
+  try{data=JSON.parse(await file.text())}catch{throw Error("修订稿不是有效的 JSON 文件")}
+  const pkg=data?.package??data;
+  if(pkg?.book?.id!==chosen.id)throw Error("小说内部编号必须与选中书籍一致，不可创建另一部书。");
+  const id=chosen.id,version=liveEditorState.version;
+  const preview=await api("/api/ops/books/"+encodeURIComponent(id)+
+    "/live-editor/preview","POST",{package:pkg});
+  if(chosen?.id!==id||liveEditorState?.version!==version)return;
+  liveRevision={bookId:id,version,digest:preview.digest,package:pkg};
+  $("liveRevisionDiff").textContent=liveRevisionSummary(preview);
+  $("liveRevisionDiff").hidden=false;
+  renderLiveRevisionSample(pkg);
+  $("liveEditorStatus").textContent="预览检查通过。确认没有误改书籍编号、章节关联和学习词汇后，可以发布新版。";
+});
+button("livePublishRevision",async()=>{
+  if(!chosen||!liveEditorState||!liveRevision||
+    liveRevision.version!==liveEditorState.version||
+    liveRevision.bookId!==chosen.id)throw Error("预览已失效，请重新上传并检查。");
+  const id=chosen.id,version=liveRevision.version,doc=liveRevision.package;
+  if(!window.confirm("确认将《"+chosen.title+"》的已发布正文替换为刚才预览的新版本？"+
+    "\n旧版会自动保存；读者阅读权益、已学单词与章节进度不会被删除。"))return;
+  const result=await api("/api/ops/books/"+encodeURIComponent(id)+
+    "/live-editor/publish","POST",{
+      package:doc,expectedVersion:version,
+      previewDigest:liveRevision.digest,requestId:requestId()
+    });
+  await loadBooks(id);
+  $("liveEditorStatus").textContent="新版已正式生效，共"+
+    result.diff.totalChapters+"章，旧版本已保存到历史记录。";
+  status("《"+chosen.title+"》正文更新成功。");
+});
+button("liveRefreshHistory",async()=>{
+  if(!chosen||!liveEditorState)throw Error("请先选择已上架小说");
+  await refreshLiveHistory(chosen.id);
+  $("liveEditorStatus").textContent="历史版本列表已刷新。";
+});
+
 // Upload images are browser-resized and converted to safe raster formats.
 // No raw image filename or bytes are stored in cookies or persistent storage.
 let coverPreviewUrl=null;

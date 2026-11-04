@@ -15,7 +15,7 @@ test("S151: published book withdrawal uses a read-only matched title, reason, co
   assert.match(page,/<input type="checkbox" id="withdrawConfirm"/);
   assert.match(page,/id="withdrawHelp"/);
   assert.match(page,/确认下架并从书架移除/);
-  assert.match(page,/ops-console\.js\?v=20261104-v23-withdraw-ready/);
+  assert.match(page,/ops-console\.js\?v=20261104-v29-live-editor/);
   assert.match(ui,/\$\("withdrawTitle"\)\.value=book\.title/);
   assert.match(ui,/\$\("withdrawReason"\)\.value\.trim\(\)\.length>=12/);
   assert.match(ui,/\$\("withdrawConfirm"\)\.checked/);
