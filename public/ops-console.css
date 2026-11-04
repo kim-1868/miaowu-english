@@ -118,3 +118,28 @@ button.secondary{background:#5c4852;color:#f9e8eb}hr{border-color:#674d5a}.audit
   .ops-book-empty{background:#3e343c;border-color:#64515c;color:#e6d3c8}
   #books .book-entry .is-current{border-color:#a47884}
 }
+
+
+/* V23: a clear withdrawal control, without repeated title typing. */
+#withdrawTitle[readonly]{
+  background:#f6f0e9;
+  color:#654b46;
+  cursor:default;
+  font-weight:600;
+}
+.ops-withdraw-help{
+  font-size:12px;
+  line-height:1.7;
+  padding:10px 12px;
+  margin:10px 0 4px;
+  border-radius:9px;
+  border:1px solid #e4d3c5;
+  background:#f7f1eb;
+  color:#704f4d;
+}
+#liveActions .checkline{align-items:flex-start}
+#liveActions #withdraw{min-height:42px}
+@media(prefers-color-scheme:dark){
+  #withdrawTitle[readonly]{background:#40343c;color:#f2d9d9}
+  .ops-withdraw-help{background:#40343c;border-color:#6e505b;color:#f0d3da}
+}
