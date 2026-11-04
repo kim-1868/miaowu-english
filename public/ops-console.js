@@ -392,6 +392,10 @@ function liveRevisionSummary(data){
     "英文词汇标注："+diff.studyAnchors+" 处",
     "书名或简介变更："+(diff.metadataChanged?"是":"否"),
     changed.length?"变更清单："+changed.slice(0,25).map(x=>"第"+x.number+"章「"+x.title+"」("+x.kind+")").join("；"):"没有章节内容变更",
+    ...changed.slice(0,8).flatMap(x=>[
+      "【第"+x.number+"章 · 原文节选】"+(x.beforeExcerpt||"新增章节"),
+      "【第"+x.number+"章 · 修订节选】"+(x.afterExcerpt||"无")
+    ]),
     ...(data.warnings||[])
   ].join("\n");
 }
