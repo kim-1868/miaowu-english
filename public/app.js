@@ -129,6 +129,15 @@
     let cloudListSequence=0;
     let activeCloud=null;
     let cloudBooks=[],cloudSaved=new Map(),cloudProgress=[],cloudSessionKey=null,cloudLearningSequence=0;
+    let initialSessionPromise=Promise.resolve(),heroResumeBusy=false;
+    function updateHeroReadLabel(){
+      const btn=$('heroRead');if(!btn)return;
+      const title=user&&cloudProgress.length?'继续上次阅读':'开始阅读';
+      // Keep the existing arrow icon and visual treatment intact.
+      const label=btn.firstChild;
+      if(label&&label.nodeType===3)label.textContent=title+' ';
+      else btn.textContent=title+' →';
+    }
     const glossaryCache=new Map();
     let readingSaveTimer=0,readingLastSave=0,readingSavePending=null;
     function applyReadingPrefs(){
@@ -153,10 +162,10 @@
       const fraction=(viewport-start)/Math.max(1,content.offsetHeight-innerHeight*.4);
       return Math.min(.995,Math.max(.01,fraction));
     }
-    async function saveReadingProgress({complete=false,quiet=true}={}){
+    async function saveReadingProgress({complete=false,quiet=true,started=false}={}){
       if(!user||!activeCloud?.chapterId)return true;
-      const id=activeCloud.chapterId,amount=complete?1:readingFraction();
-      if(!complete&&amount<=.015)return true;
+      const id=activeCloud.chapterId,amount=complete?1:started?.01:readingFraction();
+      if(!complete&&!started&&amount<=.015)return true;
       try{
         if(readingSavePending)await readingSavePending;
         const job=serverRequest('/api/me/progress','POST',{chapterId:id,progress:amount});
@@ -166,9 +175,14 @@
         if(row){
           row.progress=Math.max(Number(row.progress)||0,amount);
           if(complete)row.completed_at=row.completed_at||new Date().toISOString();
+          row.updated_at=new Date().toISOString();
+          cloudProgress=[row,...cloudProgress.filter(p=>p.chapter_id!==id)];
         }else cloudProgress.unshift({chapter_id:id,book_id:activeCloud.bookId,chapter_no:
           activeCloud.chapters.find(x=>x.id===id)?.chapterNo||0,
-          progress:amount,completed_at:complete?new Date().toISOString():null});
+          book_title:activeCloud.title,category_slug:activeCloud.slug,
+          progress:amount,completed_at:complete?new Date().toISOString():null,
+          updated_at:new Date().toISOString()});
+        updateHeroReadLabel();
         // Never display "synced" before the server confirms the write.
         if(activeCloud?.chapterId===id)showCloudProgress(id);
         updateCloudShelfProgress();
@@ -210,6 +224,7 @@
         cloudSaved=new Map((words.words||[]).map(w=>[w.word_id,w]));
         cloudReviewDue=Number(stats.due)||0;
         cloudProgress=progress.progress||[];
+        updateHeroReadLabel();
         if(view==='library')updateCloudShelfProgress();
         renderReminder();
         if(view==='account')renderAccount();
@@ -232,10 +247,43 @@
         if(view==='library')renderLibrary();
       }catch{ /* Existing category labels are a harmless offline fallback. */ }
     }
-    function openFirstCloudBook(){
-      const book=cloudBooks[0];
-      if(book)openCloudBook(book,category);
-      else{navigate('library');toast('当前分类暂无已发布故事，请稍后再来')}
+    function latestReadableProgress(rows){
+      // /api/me/progress is newest-first and already filters out withdrawn or
+      // inaccessible chapters, so never use another user's local browser data.
+      return (Array.isArray(rows)?rows:[]).find(p=>
+        p&&typeof p.book_id==='string'&&p.book_id&&
+        typeof p.chapter_id==='string'&&p.chapter_id&&
+        typeof p.category_slug==='string'&&p.category_slug)||null;
+    }
+    function chooseFirstStory(){
+      navigate('library');
+      requestAnimationFrame(()=>$('bookGrid')?.scrollIntoView({behavior:'smooth',block:'start'}));
+      toast('挑选一本喜欢的小说开始阅读，登录后会自动记住进度。');
+    }
+    async function resumeLatestReading(){
+      if(heroResumeBusy)return;
+      heroResumeBusy=true;
+      const button=$('heroRead');button.disabled=true;
+      try{
+        // The homepage can be clicked before /api/auth/me finishes loading.
+        await initialSessionPromise;
+        if(!user){chooseFirstStory();return;}
+        const currentUser=user.name;
+        const result=await serverRequest('/api/me/progress');
+        if(user?.name!==currentUser)return;
+        const list=Array.isArray(result.progress)?result.progress:[];
+        cloudProgress=list;updateHeroReadLabel();updateCloudShelfProgress();
+        const recent=latestReadableProgress(list);
+        if(!recent){chooseFirstStory();return;}
+        category=recent.category_slug;
+        await openCloudBook({id:recent.book_id,title:recent.book_title||'继续阅读'},
+          recent.category_slug,{resumeChapterId:recent.chapter_id});
+      }catch(error){
+        toast('上次阅读记录暂时无法加载，请从书架选择小说。');
+        navigate('library');
+      }finally{
+        heroResumeBusy=false;button.disabled=false;
+      }
     }
     function updateCloudShelfProgress(){
       document.querySelectorAll('[data-live-progress]').forEach(node=>{
@@ -321,12 +369,16 @@
         }
       }
     }
-    async function openCloudBook(book,slug){
+    async function openCloudBook(book,slug,{resumeChapterId=null}={}){
       try{
         const catalog=await serverRequest('/api/books/'+encodeURIComponent(book.id)+'/chapters');
         const chapters=Array.isArray(catalog.chapters)?catalog.chapters:[];
         if(!chapters.length){toast('这本书尚无已发布章节');return;}
         activeCloud={bookId:book.id,title:book.title,slug,chapters,chapterId:null,parts:[]};
+        if(resumeChapterId){
+          const target=chapters.find(ch=>ch.id===resumeChapterId);
+          if(target&&(target.canRead||target.isPreview))return openCloudChapter(target.id);
+        }
         showModal(`<span class="eyebrow">MIAOWU · STORY CHAPTERS</span><h2 id="modalTitle">${safe(book.title)}</h2>
           <p>点击章节即可开始阅读。会员章节仅对已解锁该学习分类的账号开放。</p>
           <div class="cloud-chapter-options">${chapters.map(ch=>`<button class="chapter-btn" type="button" data-cloud-choose="${safe(ch.id)}">${String(ch.chapterNo).padStart(2,'0')} · ${safe(ch.title)} ${ch.isPreview?'· 免费试读':(ch.canRead?'':'· 🔒 未解锁')}</button>`).join('')}</div>`);
@@ -580,6 +632,10 @@
       $('chapterList').querySelectorAll('[data-cloud-chapter]').forEach(btn=>btn.onclick=()=>openCloudChapter(btn.dataset.cloudChapter));
       $('readingChapter').textContent='第'+page.chapterNo+'章';
       showCloudProgress(id);
+      // Opening a chapter is a reading event even if the user never scrolls.
+      // Saving 1% records the last opened book without overwriting an existing
+      // greater fraction or marking the chapter completed.
+      void saveReadingProgress({started:true,quiet:true});
       $('storyText').classList.toggle('no-gloss',!gloss);
       $('toggleGloss').disabled=false;
       $('sideToggleGloss').disabled=false;
@@ -829,6 +885,7 @@
         if(view==='reader'){navigate('library');$('storyText').textContent='';}
       }
       cloudSaved=new Map();cloudProgress=[];glossaryCache.clear();cloudSessionKey=user?.name||null;
+      updateHeroReadLabel();
       renderLibrary();renderAccount();renderReminder();
       refreshCloudLearning();
       if(view==='echo')renderQuiz();
@@ -908,8 +965,8 @@
       $('changePassword').onclick=showChangePassword;
       $('accountStartReview').onclick=()=>navigate('words');
       $('accountResumeRead').onclick=()=>{
-        if(recent)openCloudBook({id:recent.book_id,title:recent.book_title},recent.category_slug||category);
-        else navigate('library');
+        if(recent)void resumeLatestReading();
+        else chooseFirstStory();
       };
       $('logout').onclick=async()=>{
         try{await serverRequest('/api/auth/logout','POST',{});applyServerAccount(null,true);toast('已退出账号')}
@@ -1271,7 +1328,7 @@
         reduce.addEventListener('change',event=>{if(event.matches)reset()});
     }
     setupHomeSceneMotion();
-    document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=openFirstCloudBook;$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');
+    document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navigate(el.dataset.nav));$('goHome').onclick=e=>{e.preventDefault();navigate('library')};$('heroRead').onclick=resumeLatestReading;$('heroExplain').onclick=explain;$('readerBack').onclick=()=>navigate('library');
     $('mobileChapterOpen').onclick=()=>{
       $('readerLayout').classList.remove('vocab-drawer-open');
       $('mobileVocabOpen').setAttribute('aria-expanded','false');
@@ -1310,6 +1367,6 @@ $('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalO
       request:serverRequest,refresh:refreshCloudLearning,progress:()=>cloudProgress,
       showModal,closeModal,navigate,toast,speak:speakWord
     });
-    applyTheme();applyReadingPrefs();renderLibrary();renderReminder();renderWords();renderQuiz();renderAccount();loadServerSession();refreshCloudCategories();
+    applyTheme();applyReadingPrefs();renderLibrary();renderReminder();renderWords();renderQuiz();renderAccount();initialSessionPromise=loadServerSession();refreshCloudCategories();
   })();
   
