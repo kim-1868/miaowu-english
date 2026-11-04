@@ -47,8 +47,8 @@ test("S137 category illustration is minimal monochrome vintage SVG line art",()=
 });
 
 test("S137 v17 CSS/JS use cache-busted assets without affecting reader or ops",()=>{
- assert.ok(html.includes('href="/styles.css?v=20261103-immersive-v18"'));
- assert.ok(html.includes('src="/app.js?v=20261103-immersive-v18"'));
+ assert.ok(html.includes('href="/styles.css?v=20261104-v19-cover-tags"'));
+ assert.ok(html.includes('src="/app.js?v=20261104-v19-cover-tags"'));
  assert.ok(html.includes('id="view-reader"'));
  assert.ok(html.includes('id="view-echo"'));
  assert.ok(html.includes('id="bookGrid"'));
