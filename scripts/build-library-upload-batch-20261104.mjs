@@ -166,13 +166,17 @@ function createPackage(spec,lex,rules,regex){
   words:wordCards,chapters};
  const validated=validatePackage(pkg);
  const paras=chapStat.reduce((n,s)=>n+s.paragraphs,0),n=chapStat.reduce((n,s)=>n+s.han,0);
+ const pMean=validated.mentionCount/paras;
+ const upper=chapStat.some(ch=>ch.anchors>90);
+ const status=pMean>=3&&!upper?"PRIORITY_UPLOAD_CANDIDATE":
+    (pMean>=2.5&&upper?"NEEDS_CHAPTER_DENSITY_REBALANCING":"NEEDS_ENGLISH_DENSITY_REVISION");
  const report={id,title,chapters:chapters.length,paidChapters:6,freeChapters:0,
   uniqueWords:wordCards.length,wordMentions:validated.mentionCount,paragraphs:paras,
   han:n,anchorsPerParagraph:Number((validated.mentionCount/paras).toFixed(2)),
   mentionsPer100Han:Number((100*validated.mentionCount/n).toFixed(2)),
   chapterStats:chapStat,
   sourceRevision:improve?"CONSERVATIVE_CONTEXTUAL_EMBEDDING":"AS_DRAFTED_HIGH_DENSITY",
-  requiresFinalNaturalnessReview:true};
+  editorialStatus:status,requiresFinalNaturalnessReview:true};
  return {pkg,report};
 }
 function main(){
@@ -207,14 +211,16 @@ function main(){
    "",
    "包含八部、48章；全部付费章节（免费章节为0）。已上架的三部小说不在本批。",
    "文本中的英语标注由既有文本及上下文词汇替换生成；剧情主线与章节顺序未改。",
-   "本包已进行格式及词卡字段校验；部分增强后的中英混排仍需要最终人工抽检。",
+   "已通过离线格式和词卡字段校验，但不能将自动补词等同于故事审校。**优先上架候选2本：假千金退场后，全家都慌了；他认错白月光的那一年。**",
+   "**仍需要修订6本：重生后我不再讨好他们（第1章密度明显高于后续）；其余5部低于既定词密度，不建议直接正式售卖。**",
+   "上架前需由发布者检查预览、封面使用权和词汇在上下文中的实际表达。",
    "",
-   "| 书名 | 对应文件 | 英文标注 | 不同单词 | 每自然段平均英文数 |",
-   "|---|---|---:|---:|---:|",
+   "| 书名 | 对应文件 | 英文标注 | 不同单词 | 每自然段平均英文数 | 处理状态 |",
+   "|---|---|---:|---:|---:|---|",
    ...rows.map(x=>"|"+x.report.title+"|"+x.report.id+".json|"+x.report.wordMentions+
-    "|"+x.report.uniqueWords+"|"+x.report.anchorsPerParagraph+"|"),
+    "|"+x.report.uniqueWords+"|"+x.report.anchorsPerParagraph+"|"+x.report.editorialStatus+"|"),
    "",
-   "在运营台选择一个 JSON、检查预览、上传对应封面，然后点击确认上架。",
+   "建议优先取上表两本 PRIORITY_UPLOAD_CANDIDATE 文件，上架前看正文首章与结尾，上传封面后再确认。其余标记 NEEDS_* 的暂作待修订稿，不要直接面向购买者。",
    "请勿重复导入已上架小说。新的英语词卡ID采用 mwv26-cet4-*，对已上架两本里的同词严格复用相同ID与释义、例句。",
    "小说篇幅为短篇，请不要以多万字中长篇宣传。朗读使用网站浏览器语音合成而非预制音频。",
    "没有执行远程数据库迁移、账号操作或发布。",
