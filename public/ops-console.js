@@ -16,6 +16,7 @@ function clearActions(){
   $("publish").disabled=true;$("withdraw").disabled=true;
   $("report").textContent="";$("withdrawSummary").textContent="";
   $("withdrawTitle").value="";$("withdrawReason").value="";$("withdrawConfirm").checked=false;
+  $("withdrawHelp").textContent="选择已发布小说后，填写原因并确认即可下架。";
 }
 function connected(){return key.startsWith("mwops_")&&identity!==null}
 async function api(path,method="GET",body){
@@ -64,9 +65,16 @@ function syncButtons(){
   if(chosen?.status==="draft"){
     $("publish").disabled=!(readiness.quickPublishAvailable&&readiness.contentFingerprint);
   }else{
-    $("withdraw").disabled=!($("withdrawConfirm").checked&&
-      $("withdrawTitle").value===chosen?.title&&$("withdrawReason").value.trim().length>=12&&
-      readiness.canWithdraw);
+    const enabled=connected()&&Boolean(readiness.canWithdraw);
+    const reasonOk=$("withdrawReason").value.trim().length>=12;
+    const acknowledged=$("withdrawConfirm").checked;
+    const titleMatches=$("withdrawTitle").value===chosen?.title;
+    $("withdraw").disabled=!(enabled&&reasonOk&&acknowledged&&titleMatches);
+    $("withdrawHelp").textContent=!enabled?
+      "当前下架权限尚未启用，请联系管理员检查生产环境开关。":
+      !reasonOk?"请先填写至少 12 字的下架原因及已购用户处理计划。":
+      !acknowledged?"请先确认下架影响，已有购买权益和学习记录会保留。":
+      "已满足下架条件。点击按钮后会再次确认，不会自动退款或删除购买权益。";
   }
 }
 ["withdrawTitle","withdrawReason","withdrawConfirm","tagText"]
@@ -193,6 +201,9 @@ async function openBook(book){
     const result=await api(path+"/withdraw-readiness");
     if(chosen?.id!==book.id)return;
     readiness=result;$("liveActions").hidden=false;
+    // The backend still requires an exact title match, but the operator
+    // no longer has to type it again; the selected book is the source.
+    $("withdrawTitle").value=book.title;
     $("withdrawSummary").textContent="总章节："+result.chapters+" · 已发布："+result.publishedChapters+
       "\n该分类当前有效授权数："+result.activeCategoryGrants+
       "\n下架权限："+(result.canWithdraw?"已启用":"尚未启用")+
@@ -231,9 +242,10 @@ async function doPublish(){
 }
 async function doWithdraw(){
   if(!chosen||chosen.status!=="published"||!readiness?.canWithdraw||
-    $("withdrawTitle").value!==chosen.title||!$("withdrawConfirm").checked)
-    throw Error("请完整确认下架影响。");
-  if(!window.confirm("确认下架《"+chosen.title+"》？所有章节将立即无法访问，已购权益仍会保留。"))return;
+    $("withdrawTitle").value!==chosen.title||!$("withdrawConfirm").checked||
+    $("withdrawReason").value.trim().length<12)
+    throw Error("请先填写至少12字的下架原因并确认下架影响。");
+  if(!window.confirm("确定下架《"+chosen.title+"》？\n公开书架和全部章节将立即停止访问。\n已有购买权益与学习记录仍会保留，请按售后承诺处理。"))return;
   const result=await api("/api/ops/books/"+encodeURIComponent(chosen.id)+"/withdraw","POST",{
     confirmTitle:$("withdrawTitle").value,reason:$("withdrawReason").value.trim(),
     confirmAction:"WITHDRAW_PUBLIC_ACCESS",requestId:requestId()
