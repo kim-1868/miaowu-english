@@ -1,0 +1,21 @@
+name: Verify Miaowu operator quick publish and cover tags
+on:
+  push:
+    branches:
+      - feature/v18-immersive-cat-banner-20261103
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check source and build static assets
+        run: npm run check
+      - name: Run unit and integration tests with in-memory SQLite
+        run: npm test
