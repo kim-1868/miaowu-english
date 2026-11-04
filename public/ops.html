@@ -3,8 +3,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>妙屋英语 · 运营出版台</title>
-<link rel="stylesheet" href="/ops-console.css?v=20261104-v23-withdraw-ready">
-<script src="/ops-console.js?v=20261104-v23-withdraw-ready" defer></script>
+<link rel="stylesheet" href="/ops-console.css?v=20261104-v29-live-editor">
+<script src="/ops-console.js?v=20261104-v29-live-editor" defer></script>
 </head><body>
 <header><div class="brand">喵 · 妙屋英语 <span>THE STORY & WORD LIBRARY</span></div>
   <div class="strap">运营出版台 <span class="pill">受控操作</span></div></header>
@@ -134,8 +134,42 @@
       </div>
     </section>
   </div>
+  <section class="panel" id="liveEditorPanel" aria-label="编辑已上架小说">
+    <div class="panel-heading"><h2>⑥ 已上架书籍 · 编辑与历史版本</h2>
+      <span class="soft">不下架、不重新售卖</span></div>
+    <p class="hint">从④书籍目录选择已发布小说。可直接修改书名与简介；如需更新正文，请下载当前 JSON 内容包修改，再上传检查。系统会保存旧版，购买权益与学习记录不清空。</p>
+    <div id="liveEditorStatus" class="status" role="status" aria-live="polite">先验证身份，并在书籍目录中选择已发布小说。</div>
+    <div id="liveEditorControls" hidden>
+      <div class="ops-live-header"><strong id="liveEditorBook">当前未选书</strong>
+        <span id="liveEditorVersion" class="soft"></span></div>
+      <div class="ops-live-info-grid">
+        <label for="liveEditTitle">书名（修改后立即更新前台书架）
+          <input id="liveEditTitle" maxlength="120" autocomplete="off"></label>
+        <label for="liveEditDescription">小说简介
+          <textarea id="liveEditDescription" rows="3" maxlength="2000"></textarea></label>
+      </div>
+      <div class="row"><button id="liveSaveMetadata" type="button" disabled>保存书名与简介</button></div>
+      <hr>
+      <h3>修改正文或追加章节</h3>
+      <p class="hint">下载当前内容包，保留原有 book.id、章节 ID 和已有目标单词 ID。可以修改段落、章节标题或在末尾追加新章节。无法直接移除已有章节或该章节已使用的学习词汇。</p>
+      <div class="row"><button id="liveDownloadSource" class="secondary" type="button" disabled>下载当前小说 JSON</button></div>
+      <label for="liveRevisionFile">选择已修改的小说 JSON 文件
+        <input id="liveRevisionFile" type="file" accept=".json,application/json" disabled></label>
+      <div class="row">
+        <button id="liveCheckRevision" type="button" class="secondary" disabled>预览新旧内容差异</button>
+        <button id="livePublishRevision" type="button" disabled>确认替换已上架版本</button>
+      </div>
+      <div id="liveRevisionDiff" class="report" hidden aria-live="polite"></div>
+      <div id="liveRevisionSample" class="ops-live-sample" hidden></div>
+      <hr>
+      <div class="panel-heading"><h3>历史版本 · 可恢复</h3>
+        <button id="liveRefreshHistory" type="button" class="secondary" disabled>刷新版本</button></div>
+      <p class="hint">每次保存修改前都会保留旧版。恢复也会生成新的历史记录。若恢复需删除有读者进度的新章节，系统会阻止，避免损失学习数据。</p>
+      <div id="liveHistory" class="ops-live-history"><p class="soft">尚未有修改记录。</p></div>
+    </div>
+  </section>
   <section class="panel" aria-label="上传新小说">
-    <div class="panel-heading"><h2>⑥ 上传并发布新小说</h2><span class="soft">仅限已验证发布者</span></div>
+    <div class="panel-heading"><h2>⑦ 上传并发布新小说</h2><span class="soft">仅限已验证发布者</span></div>
     <p class="hint">上传 JSON / Markdown / TXT，识别预览，选择封面，点击「确认上传并上架」。系统会核对章节、词卡资料、权益边界，不通过时保留草稿并提示修正。</p>
     <div class="row">
       <label class="stretch" for="uploadNovel">选择小说文件（JSON / Markdown / TXT）
@@ -174,7 +208,7 @@
     </div>
     <p class="hint">发音沿用浏览器语音合成。建议优先上传已加工、审核过的完整 JSON；这里的技术预检不会代替作品版权与语言质量判断。</p>
   </section>
-  <section class="panel"><h2>⑦ 操作审计</h2><p class="hint">最近最多30条操作；审核和上架动作分别留痕，日志不会记录原始密钥或小说正文。</p>
+  <section class="panel"><h2>⑧ 操作审计</h2><p class="hint">最近最多30条操作；审核和上架动作分别留痕，日志不会记录原始密钥或小说正文。</p>
     <div id="audit" class="audit"><p class="soft">请选择书目查看。</p></div></section>
   <footer>妙屋英语 · 版本受控出版工具 · 正式销售前需完成生产配置、恢复演练及售后政策</footer>
 </main></body></html>
