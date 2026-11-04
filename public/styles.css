@@ -1861,3 +1861,28 @@ html[data-theme="dark"] #view-library .story-home-hero .hero-actions .secondary-
     transition:none!important;transform:none!important;
   }
 }
+
+/* S147: publisher-managed translucent cover labels. Access status stays bottom left. */
+.cloud-book-item .book-cover{position:relative}
+.cloud-book-item .book-cover .cover-custom-tags{
+  position:absolute;z-index:5;right:11px;top:11px;max-width:84%;
+  display:flex;flex-direction:column;align-items:flex-end;gap:5px;
+  pointer-events:none
+}
+.cloud-book-item .book-cover .cover-custom-tag{
+  display:inline-block;max-width:100%;padding:5px 10px;
+  border-radius:7px;color:#fff;font-size:11px;font-weight:650;line-height:1.3;
+  letter-spacing:.02em;text-align:right;overflow-wrap:anywhere;
+  background:rgba(95,43,55,.78);
+  background:color-mix(in srgb,var(--cover-tag-color,#713848) 76%,transparent);
+  border:1px solid rgba(255,255,255,.20);text-shadow:0 1px 2px rgba(0,0,0,.48);
+  box-shadow:0 2px 8px rgba(32,14,20,.13);backdrop-filter:blur(5px)
+}
+.cloud-book-item .book-cover .book-tag{
+  top:auto;right:auto;bottom:11px;left:11px;z-index:4;
+  pointer-events:none
+}
+@media(max-width:600px){
+ .cloud-book-item .book-cover .cover-custom-tags{top:9px;right:9px;gap:4px}
+ .cloud-book-item .book-cover .cover-custom-tag{font-size:10px;padding:4px 8px}
+}
