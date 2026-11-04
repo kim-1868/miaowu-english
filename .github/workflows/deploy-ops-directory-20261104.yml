@@ -1,0 +1,100 @@
+# One-time UI-only publisher catalog release. User authorized this change.
+name: Publish Miaowu publisher directory filters (one-time)
+run-name: Publisher catalog search and pagination · de88910db0cd
+on:
+  push:
+    branches:
+      - release/one-shot-ops-directory-20261104
+    paths:
+      - '.github/workflows/deploy-ops-directory-20261104.yml'
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  production-ops-ui:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/release/one-shot-ops-directory-20261104' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact reviewed release, not main
+        uses: actions/checkout@v4
+        with:
+          ref: de88910db0cd69b7c4407a1b1d6b2284f4d9b3e0
+          persist-credentials: false
+      - name: Guard source commit, UI-only diff and target
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "de88910db0cd69b7c4407a1b1d6b2284f4d9b3e0"
+          grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
+          test ! -e private-output
+          test ! -e private-input
+          git diff --name-only 73d360fc28039e200285971c77d54207246e089e HEAD | sort > /tmp/changed.txt
+          printf '%s\n' public/ops-console.css public/ops-console.js public/ops.html tests/s150-ops-book-directory-filter.test.mjs | sort > /tmp/allowed.txt
+          diff -u /tmp/allowed.txt /tmp/changed.txt
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Wrangler without repository install hooks
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Test complete suite and build reviewed production assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm run assets:production:build
+          grep -Fq '20261104-v22-directory-filter' dist-production/public/ops.html
+          grep -Fq 'id="bookSearch"' dist-production/public/ops.html
+          grep -Fq 'function filterCatalogBooks' dist-production/public/ops-console.js
+          grep -Fq 'V22: compact' dist-production/public/ops-console.css
+          grep -Fq '20261104-v21-cover-led-shelf' dist-production/public/index.html
+          npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/dryrun-production
+      - name: Check existing protected live site before applying UI-only update
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/styles.css -o /tmp/live-site.css
+          grep -Fq 'V21 cover-led bookshelf' /tmp/live-site.css
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops-console.js -o /tmp/live-ops.js
+          grep -Fq 'quickPublishBook' /tmp/live-ops.js
+          if grep -Fq 'function filterCatalogBooks' /tmp/live-ops.js; then
+            echo "Directory filters already published; skip duplicate deployment"
+            exit 1
+          fi
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/live-edge.json
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/live-edge.json","utf8"));if(!x.ok||!x.productionBindingPresent)process.exit(1)'
+      - name: Ensure existing Cloudflare credentials are configured
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          test "$HAS_TOKEN" = "true"
+          test "$HAS_ACCOUNT" = "true"
+      - name: Deploy existing production Worker with unchanged variables and D1
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc
+      - name: Verify live operator directory assets and production routing
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 20); do
+            curl -fsSL --retry 2 --max-time 20 "https://miaowu-english-pages.pages.dev/ops-console.js?ops-v22=$i" -o /tmp/live-ops-v22.js || true
+            if grep -Fq 'function filterCatalogBooks' /tmp/live-ops-v22.js; then break; fi
+            sleep 4
+          done
+          grep -Fq 'function filterCatalogBooks' /tmp/live-ops-v22.js
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops-console.css -o /tmp/live-ops-v22.css
+          grep -Fq 'V22: compact' /tmp/live-ops-v22.css
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops.html -o /tmp/live-ops-v22.html
+          grep -Fq '20261104-v22-directory-filter' /tmp/live-ops-v22.html
+          grep -Fq 'id="bookPageNext"' /tmp/live-ops-v22.html
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/live-edge-after.json
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/live-edge-after.json","utf8"));if(!x.ok||!x.productionBindingPresent)process.exit(1)'
