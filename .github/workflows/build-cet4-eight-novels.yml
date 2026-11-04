@@ -43,4 +43,34 @@ jobs:
           name: miaowu-cet4-eight-novels-20261104
           path: private-output/cet4-eight-novels-20261104/
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 90
+
+      - name: Split approved-priority and further-edit files
+        shell: bash
+        run: |
+          set -euo pipefail
+          dir=private-output/cet4-eight-novels-20261104
+          mkdir -p private-output/cet4-priority-two private-output/cet4-needs-review-six
+          cp "$dir/fake-heiress-refuses-game.json" "$dir/heartbreak-mistaken-love.json" private-output/cet4-priority-two/
+          for id in rejected-family-second-life revenge-heiress-returns contract-marriage-expires villainess-refuses-script rivals-secret-care roommate-secret-promise; do
+            cp "$dir/$id.json" private-output/cet4-needs-review-six/
+          done
+          for d in private-output/cet4-priority-two private-output/cet4-needs-review-six; do
+            cp "$dir/AUDIT-REPORT.json" "$dir/README-上传说明.md" "$d/"
+          done
+
+      - name: Downloadable first two priority novels
+        uses: actions/upload-artifact@v4
+        with:
+          name: miaowu-cet4-priority-two-upload-candidates-20261104
+          path: private-output/cet4-priority-two/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Downloadable six stories still requiring editorial density revisions
+        uses: actions/upload-artifact@v4
+        with:
+          name: miaowu-cet4-six-stories-NEEDS-REVIEW-20261104
+          path: private-output/cet4-needs-review-six/
+          if-no-files-found: error
+          retention-days: 90
