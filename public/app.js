@@ -223,6 +223,9 @@
           serverRequest('/api/me/echo/stats')
         ]);
         if(seq!==cloudLearningSequence||user?.name!==requested)return;
+        // Reading decisions change sense state even when the user has not bookmarked.
+        // Do not reuse a prior chapter's "new word" flags after choosing Remember.
+        glossaryCache.clear();
         cloudSaved=new Map((words.words||[]).map(w=>[w.word_id,w]));
         cloudReviewDue=Number(stats.due)||0;
         cloudFlashDue=Number(words.flashDue)||0;
@@ -711,7 +714,7 @@
       if(glossary.ok){
         if(!glossaryCache.has(key))glossaryCache.set(key,glossary.data);
         for(const row of (glossary.data.words||[])){
-          if(row?.word_id&&!book.words.has(row.word_id))book.words.set(row.word_id,row);
+          if(row?.word_id)book.words.set(row.word_id,row);
         }
         window.MiaowuChapterWords?.setWords([...book.words.values()]);
         showCloudProgress(id);
