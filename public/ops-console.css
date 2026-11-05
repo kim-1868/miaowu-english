@@ -203,3 +203,10 @@ button.secondary{background:#5c4852;color:#f9e8eb}hr{border-color:#674d5a}.audit
  .ops-customer-badge{background:#65545f;color:#f8e4e7}
  .ops-customer-badge.is-redeemed{background:#274b3e;color:#c4f0db}
 }
+
+/* V33: self-service reconciliation actions */
+.ops-claim-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.ops-claim-actions button{font-size:12px;padding:7px 11px;min-height:36px}
+.ops-claim-refresh{display:flex;align-items:end}
+#claimsList .ops-customer-entry p{line-height:1.8;font-size:12px;overflow-wrap:anywhere}
+@media(max-width:700px){.ops-claim-refresh{display:block}}
