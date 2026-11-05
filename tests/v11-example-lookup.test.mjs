@@ -24,8 +24,10 @@ class DB{
     "('w1','sample','n.','样本'),('w2','evidence','n.','证据'),"+
     "('w3','private','adj.','私人'),('w4','hidden','adj.','隐藏'),"+
     "('w5','evidence','v.','提供证据')");
-  this.db.exec("INSERT INTO chapter_words(chapter_id,word_id,context_anchor) VALUES"+
-    "('ch1','w1','a'),('ch2','w2','b'),('ch3','w3','c'),('ch4','w4','d'),('ch2','w5','e')");
+  this.db.exec("INSERT INTO chapter_words(chapter_id,word_id,context_sentence,context_anchor) VALUES"+
+    "('ch1','w1','A sample story.','a'),('ch2','w2','New evidence.','b'),"+
+    "('ch3','w3','A private room.','c'),('ch4','w4','The hidden file.','d'),"+
+    "('ch2','w5','Evidence of change.','e')");
  }
  prepare(q){const db=this.db;return {bind(...params){const s=db.prepare(q);return {
   async all(){return {results:s.all(...params)}},async first(){return s.get(...params)||null},
