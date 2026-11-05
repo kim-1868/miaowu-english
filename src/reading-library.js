@@ -150,14 +150,6 @@ const flashVisible=
 const flashScope=(scope)=>scope==="due"?
   "AND uw.status!='mastered' AND uw.due_at IS NOT NULL AND uw.due_at<=CURRENT_TIMESTAMP":
   scope==="learning"?"AND uw.status!='mastered'":"";
-const flashSource=(field)=>
-  "(SELECT "+field+" FROM chapter_words cw2 JOIN chapters ch2 ON ch2.id=cw2.chapter_id "+
-  "JOIN books b2 ON b2.id=ch2.book_id JOIN categories c2 ON c2.id=b2.category_id "+
-  "WHERE cw2.word_id=uw.word_id AND b2.status='published' AND c2.is_visible=1 "+
-  "AND ch2.published_at IS NOT NULL AND ch2.published_at<=CURRENT_TIMESTAMP "+
-  "AND (ch2.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e2 "+
-  "WHERE e2.user_id=uw.user_id AND e2.category_id=b2.category_id AND e2.revoked_at IS NULL)) "+
-  "ORDER BY ch2.chapter_no,ch2.id LIMIT 1)";
 async function flashcardPool(req,env,userId){
   const params=new URL(req.url).searchParams;
   const scope=params.get("scope")||"due";
@@ -172,10 +164,7 @@ async function flashcardPool(req,env,userId){
   const count=await sql(env,"SELECT COUNT(*) AS n "+from,userId).first();
   const result=await sql(env,
     "SELECT uw.word_id,uw.status,uw.due_at,w.headword,w.meaning_zh,w.phonetic_uk,"+
-    "w.phonetic_us,w.part_of_speech,w.example_en,w.example_zh,w.collocations_json,"+
-    flashSource("cw2.context_sentence")+" AS context_sentence,"+
-    flashSource("ch2.id")+" AS chapter_id,"+
-    flashSource("b2.title")+" AS book_title "+
+    "w.phonetic_us,w.part_of_speech,w.example_en,w.example_zh,w.collocations_json "+
     from+" ORDER BY "+
     (scope==="due"?"uw.due_at ASC,uw.word_id ASC":
       "w.headword COLLATE NOCASE ASC,uw.word_id ASC")+
