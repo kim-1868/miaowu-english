@@ -1,0 +1,101 @@
+name: Publish Miaowu voucher revoke and scoped entitlement restore V37
+on:
+  push:
+    branches: [release/voucher-control-v37-20261105]
+    paths: [.github/workflows/deploy-voucher-control-v37.yml]
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  verified-voucher-release:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/release/voucher-control-v37-20261105' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout immutable reviewed voucher-control revision
+        uses: actions/checkout@v4
+        with:
+          ref: 75f5c10265306e066aaf726b891700040740f9fb
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify approved source diff and no D1 migrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 75f5c10265306e066aaf726b891700040740f9fb
+          grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
+          git diff --name-only da1581651966f29caed934f1d86d142311adb2c8 HEAD | sort > /tmp/changed
+          printf '%s\n'             .github/workflows/test-voucher-control-v37.yml             public/ops-console.css public/ops-console.js public/ops-customers.js public/ops.html             src/echo-cloud.js src/ops-vouchers.js src/reading-library.js src/worker.js             tests/s162-voucher-control.test.mjs | sort > /tmp/allowed
+          diff -u /tmp/allowed /tmp/changed
+          grep -Fq '已有自定义标签' public/ops-console.js
+          grep -Fq 'restoreReceipt()' public/claim.js
+          test ! -e private-output
+          test ! -e private-input
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test voucher denial, restoration, all reader features and production assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check src/ops-vouchers.js
+          node --check src/reading-library.js
+          node --check src/echo-cloud.js
+          node --check public/ops-customers.js
+          node --test tests/s162-voucher-control.test.mjs
+          npm run check
+          npm test
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm run assets:production:build
+          grep -Fq '作废此兑换码' dist-production/public/ops.html
+          grep -Fq '/api/ops/customers/voucher-action' dist-production/public/ops-customers.js
+          grep -Fq '账号找回备用凭证' dist-production/public/claim.html
+      - name: Install Wrangler without lifecycle scripts
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Dry-run unchanged production D1 and secured Worker
+        run: npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc
+      - name: Confirm existing V36 customer page, V35 operator features and reader before deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/claim -o /tmp/claim-before
+          grep -Fq '<section id="recoveryDetails"' /tmp/claim-before
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/ops-console.js -o /tmp/ops-before
+          grep -Fq '已有自定义标签' /tmp/ops-before
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/ -o /tmp/home-before
+          grep -Fq 'v31-word-only' /tmp/home-before
+      - name: Verify existing restricted Cloudflare deploy credentials
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          test "$HAS_TOKEN" = true
+          test "$HAS_ACCOUNT" = true
+      - name: Deploy audited voucher-control feature with existing secrets and DB untouched
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc
+      - name: Verify live operator controls, unauthenticated mutation protection and current reader
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 15); do
+            curl -fsSL --max-time 20 "https://miaowu-english-pages.pages.dev/ops?voucher-v37=$i" -o /tmp/ops-after || true
+            if grep -Fq '作废此兑换码' /tmp/ops-after; then break; fi
+            sleep 3
+          done
+          grep -Fq '作废此兑换码' /tmp/ops-after
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/ops-customers.js -o /tmp/customer-after
+          grep -Fq '/api/ops/customers/voucher-action' /tmp/customer-after
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/ops-console.js -o /tmp/ops-script-after
+          grep -Fq '已有自定义标签' /tmp/ops-script-after
+          guest=$(curl -s -o /dev/null -w '%{http_code}' -X POST https://miaowu-english-pages.pages.dev/api/ops/customers/voucher-action -H 'Origin: https://miaowu-english-pages.pages.dev' -H 'Content-Type: application/json' -d '{"action":"revoke"}')
+          test "$guest" = 401
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/claim -o /tmp/claim-after
+          grep -Fq '<section id="recoveryDetails"' /tmp/claim-after
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/ -o /tmp/home-after
+          grep -Fq 'v31-word-only' /tmp/home-after
