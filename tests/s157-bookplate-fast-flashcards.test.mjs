@@ -226,5 +226,5 @@ test("S157: customer learning screen is reachable and original bookplate grid an
   assert.ok(PRODUCTION_ASSET_ALLOWLIST.includes("flashcards.js"));
   assert.ok(PRODUCTION_ASSET_ALLOWLIST.includes("flashcards.css"));
   const build=buildProductionAssets();
-  assert.equal(build.assets.length,44);
+  assert.equal(build.assets.length,45);
 });
