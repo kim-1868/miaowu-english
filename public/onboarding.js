@@ -29,17 +29,20 @@
     document.getElementById("mwWelcomeNext").disabled=busy;
     document.getElementById("mwWelcomeInstall").hidden=index!==cards.length-1||!window.MiaowuInstallGuide?.open;
     document.getElementById("mwWelcomeSkip").disabled=busy;
-    document.getElementById("mwWelcomeError").hidden=true;
   }
   function hide(){if(!root.open)return; if(typeof root.close==="function")root.close();else root.removeAttribute("open")}
   function show(){
     if(root.open)return;
-    index=0;busy=false;draw();
+    index=0;busy=false;
+    document.getElementById("mwWelcomeError").hidden=true;
+    draw();
     if(typeof root.showModal==="function")root.showModal();else root.setAttribute("open","");
   }
   async function complete(kind,showInstall=false){
     if(busy)return;
-    busy=true;draw();
+    busy=true;
+    document.getElementById("mwWelcomeError").hidden=true;
+    draw();
     try{
       await request("PUT",{complete:kind});
       pending=false;hide();
