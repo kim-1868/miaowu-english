@@ -1,0 +1,28 @@
+name: Check Miaowu operations tag presets V35
+on:
+  push:
+    branches: [feature/ops-tag-presets-v35-20261105]
+permissions:
+  contents: read
+jobs:
+  check-tags:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify grouped presets, preserved options and static asset output
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check public/ops-console.js
+          node --test tests/s161-ops-tag-presets-v35.test.mjs
+          npm run check
+          npm run assets:production:build
+          grep -Fq '已有自定义标签' dist-production/public/ops-console.js
+          grep -Fq '追妻火葬场' dist-production/public/ops-console.js
+      - name: Full site regression
+        run: npm test
