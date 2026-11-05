@@ -2,7 +2,7 @@ name: Verify Miaowu existing book tag application V38
 on:
   push:
     branches: [feature/bulk-story-tags-v38-20261106]
-    paths: [.github/workflows/test-bulk-tags-v38.yml]
+    paths: [.github/workflows/test-bulk-tags-v38.yml, public/ops-console.js, public/ops.html, tests/s163-batch-story-tags-v38.test.mjs]
 permissions:
   contents: read
 jobs:
