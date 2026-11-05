@@ -1,0 +1,32 @@
+name: Verify integrated sustainable tags and receipt archive V42
+on:
+  push:
+    branches: [feature/merge-tags-and-claim-v42-20261106]
+    paths: [.github/workflows/test-unified-tags-claims-v42.yml]
+permissions:
+  contents: read
+jobs:
+  check:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Targeted regression for tags, claims, vouchers and study senses
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test tests/s163-batch-story-tags-v38.test.mjs tests/s164-story-tag-suggestions-v40.test.mjs tests/v41-claim-archive.test.mjs tests/s162-voucher-control.test.mjs tests/v35-cross-novel-one-card.test.mjs
+          npm run check
+          npm run assets:production:build
+          test "$(find dist-production/public -maxdepth 1 -type f | wc -l)" -eq 38
+          grep -Fq 'id="uploadTagSuggestions"' dist-production/public/ops.html
+          grep -Fq 'id="suggestTags"' dist-production/public/ops.html
+          grep -Fq 'id="copyAll"' dist-production/public/claim.html
+          grep -Fq 'export function suggestStoryTags' dist-production/public/novel-file-parser.js
+          grep -Fq '已有自定义标签' dist-production/public/ops-console.js
+      - name: Entire regression suite
+        run: npm test
