@@ -30,11 +30,12 @@ async function getBook(db,id){
     FROM books b WHERE b.id=?`,id).first();
 }
 async function listBooks(env){
-  const rows=await env.DB.prepare(`SELECT b.id,b.title,b.status,b.category_id,
+  const rows=await env.DB.prepare(`SELECT b.id,b.title,b.description,b.status,b.category_id,
+    (SELECT group_concat(ch.title,' / ') FROM chapters ch WHERE ch.book_id=b.id ORDER BY ch.chapter_no) AS chapter_titles,
     (SELECT COUNT(*) FROM chapters c WHERE c.book_id=b.id) AS chapter_count,
     (SELECT COUNT(*) FROM chapters c WHERE c.book_id=b.id AND c.published_at IS NOT NULL) AS live_count
     FROM books b WHERE b.status IN ('draft','published')
-    ORDER BY b.rowid DESC LIMIT 100`).all();
+    ORDER BY b.rowid DESC LIMIT 500`).all();
   return answer({books:rows.results||[],scope:"operator-only",publishEnabled:env.OPS_PUBLICATION_ENABLED==="true",
     withdrawalEnabled:env.OPS_WITHDRAWAL_ENABLED==="true"});
 }
