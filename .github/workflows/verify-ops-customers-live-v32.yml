@@ -1,0 +1,33 @@
+name: Verify live customer activation console V32 (read-only)
+on:
+  push:
+    branches: [release/one-shot-ops-customers-v32-20261105]
+    paths: [.github/workflows/verify-ops-customers-live-v32.yml]
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Confirm live customer interface, guest protection and existing reader
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 8); do
+            status=$(curl -sSL --max-time 15 -o /tmp/ops-checked -w '%{http_code}' "https://miaowu-english-pages.pages.dev/ops?check=$i" || true)
+            if [ "$status" = "200" ] && grep -Fq 'id="customerPanel"' /tmp/ops-checked; then break; fi
+            sleep 3
+          done
+          grep -Fq 'id="customerPanel"' /tmp/ops-checked
+          curl -fsSL --retry 3 --max-time 20 'https://miaowu-english-pages.pages.dev/ops-customers.js' -o /tmp/customer-client
+          grep -Fq '/api/ops/customers/query' /tmp/customer-client
+          status=$(curl -sS --max-time 20 -o /tmp/customer-unauth -w '%{http_code}' \
+            -X POST 'https://miaowu-english-pages.pages.dev/api/ops/customers/query' \
+            -H 'Origin: https://miaowu-english-pages.pages.dev' \
+            -H 'Content-Type: application/json' \
+            --data '{"mode":"users"}')
+          echo "Unauthenticated operator query returned HTTP $status"
+          test "$status" = "401"
+          curl -fsSL --retry 3 --max-time 20 'https://miaowu-english-pages.pages.dev/' -o /tmp/home
+          grep -Fq 'v31-word-only' /tmp/home
