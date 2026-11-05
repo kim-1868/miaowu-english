@@ -183,7 +183,7 @@ test("S157: customer learning screen is reachable and original bookplate grid an
   assert.ok(app.includes("window.MiaowuFlashcards?.render"));
   assert.ok(ui.includes('"/api/me/flashcards/answer"'));
   assert.ok(ui.includes('crypto.randomUUID()'));
-  assert.ok(ui.includes('round.queue.splice(later,0,{word:w,retry:true})'));
+  assert.ok(ui.includes('local.queue.splice(later,0,{word:w,retry:true})'));
   assert.ok(ui.includes("inputmode=\"text\""));
   assert.ok(ui.includes("autocomplete=\"off\""));
   assert.ok(ui.includes("每张词卡只在提交成功后推进"));
