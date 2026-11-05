@@ -142,7 +142,12 @@ function draw(){
         '<button class="flash-primary" id="flashFlip" type="button">翻开词卡 · 查看释义</button>'))+
     '</div>'+
     '<p class="flash-footer-help">每张词卡只在提交成功后推进，退出时已提交的记录仍会保存。</p></div>';
-  $("flashExit").onclick=()=>{if(busy)return;closeSession();};
+  $("flashExit").onclick=()=>{
+    if(busy)return;
+    if(round?.answers.length&&round.index<round.queue.length&&
+       !window.confirm("确定结束本轮吗？已提交的单词复习会保留，下次可以重新开始。"))return;
+    closeSession();
+  };
   $("flashVoice").onclick=()=>api.speak(w.headword);
   if($("flashFlip"))$("flashFlip").onclick=()=>{round.shown=true;draw();};
   if($("flashKnown"))$("flashKnown").onclick=()=>void vote("known");
@@ -214,7 +219,12 @@ function finish(){
     (last.hasMore?'<button id="flashMore" type="button">下一组词卡 →</button>':'')+
     '<button id="flashBackList" type="button">返回全部藏书票</button></div></div>';
   $("flashAgain").onclick=()=>{clearRound();void begin(last.mode,1);};
-  if($("flashMore"))$("flashMore").onclick=()=>{clearRound();void begin(last.mode,last.page+1);};
+  if($("flashMore"))$("flashMore").onclick=()=>{
+    clearRound();
+    // Due cards leave today's pool after submission. Fetch the NEW first
+    // page instead of offsetting into a pool that has just shrunk.
+    void begin(last.mode,last.scope==="due"?1:last.page+1);
+  };
   $("flashBackList").onclick=closeSession;
   void api.refresh();
 }
