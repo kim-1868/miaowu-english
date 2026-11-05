@@ -75,13 +75,31 @@ test("S157: bookplate pools only contain purchased, still-published and bookmark
     assert.deepEqual(pool.body.words.map(x=>x.word_id),["word-a","word-b"]);
     assert.equal(pool.body.total,2);
     assert.equal((await call("/api/me/words")).body.flashDue,2);
-    assert.equal(pool.body.words[0].chapter_id,"ch-one");
-    assert.equal(pool.body.words[0].book_title,"accessible");
-    assert.ok(pool.body.words[0].context_sentence.includes("evidence"));
+    for(const card of pool.body.words){
+      assert.ok(!("chapter_id" in card),"practice cards must not bind to a chapter");
+      assert.ok(!("book_title" in card),"practice cards must not bind to a novel");
+      assert.ok(!("context_sentence" in card),"practice cards must not carry novel excerpts");
+    }
+    assert.ok(pool.body.words[0].example_en,"generic dictionary examples remain available");
     assert.equal((await call("/api/me/flashcards?scope=invalid")).status,400);
     assert.equal((await call("/api/me/flashcards?page=-1")).status,400);
     assert.equal((await call("/api/me/flashcards?size=1000")).status,400);
     assert.equal((await call("/api/me/flashcards","GET",null,null)).status,401);
+  }finally{db.close()}
+});
+
+test("S158: a word appearing in multiple novels remains a single sourced-neutral practice card",async()=>{
+  const {db,call}=createFixture();
+  try{
+    db.prepare("INSERT INTO books(id,category_id,title,status) VALUES('another-story','cet4','第二本小说','published')").run();
+    db.prepare("INSERT INTO chapters(id,book_id,chapter_no,title,content_json,is_preview,published_at) VALUES('another-chapter','another-story',1,'第一章','{}',0,CURRENT_TIMESTAMP)").run();
+    db.prepare("INSERT INTO chapter_words(chapter_id,word_id,context_sentence,context_anchor) VALUES('another-chapter','word-a','完全不同的小说原句','p9:s0')").run();
+    const response=await call("/api/me/flashcards?scope=all&page=1&size=10");
+    assert.equal(response.status,200);
+    assert.equal(response.body.total,2,"one saved word ID must count once despite multiple novels");
+    assert.equal(response.body.words.filter(x=>x.word_id==="word-a").length,1);
+    assert.equal(response.body.words[0].example_en,"Meaningful example.");
+    assert.ok(response.body.words.every(x=>!("book_title" in x)&&!("chapter_id" in x)&&!("context_sentence" in x)));
   }finally{db.close()}
 });
 
@@ -181,11 +199,18 @@ test("S157: customer learning screen is reachable and original bookplate grid an
   new Script(app,{filename:"app.js"});
   assert.ok(html.includes('id="flashcardTrainer"'));
   assert.ok(html.includes('id="vocabGrid"'));
-  assert.ok(html.includes('src="/flashcards.js?v=20261105-v30-flashcards"'));
-  assert.ok(html.includes('href="/flashcards.css?v=20261105-v30-flashcards"'));
+  assert.ok(html.includes('src="/flashcards.js?v=20261105-v31-word-only"'));
+  assert.ok(html.includes('href="/flashcards.css?v=20261105-v31-word-only"'));
   assert.ok(html.includes('src="/app.js?v=20261105-v30-flashcards"'));
   assert.ok(app.includes("window.MiaowuFlashcards?.configure"));
   assert.ok(app.includes("globalThis.MiaowuFlashcards?.render"));
+  assert.ok(!ui.includes("来自你的小说记忆"));
+  assert.ok(!ui.includes("w.book_title"));
+  assert.ok(!ui.includes("w.context_sentence"));
+  assert.ok(ui.includes("常用例句"));
+  assert.ok(!css.includes(".flash-context"));
+  assert.ok(css.includes(".flash-example"));
+  assert.ok(!read("../src/reading-library.js").includes("flashSource("));
   assert.ok(ui.includes('"/api/me/flashcards/answer"'));
   assert.ok(ui.includes('crypto.randomUUID()'));
   assert.ok(ui.includes('local.queue.splice(later,0,{word:w,retry:true})'));
