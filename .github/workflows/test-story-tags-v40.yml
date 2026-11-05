@@ -25,7 +25,7 @@ jobs:
           node --test tests/s163-batch-story-tags-v38.test.mjs tests/s164-story-tag-suggestions-v40.test.mjs tests/s162-voucher-control.test.mjs tests/v35-cross-novel-one-card.test.mjs
           npm run check
           npm run assets:production:build
-          grep -Fq 'story-tag-suggester.js' dist-production/public/story-tag-suggester.js
+          grep -Fq 'export function suggestStoryTags' dist-production/public/story-tag-suggester.js
           grep -Fq '为全部已上架小说补齐推荐标签' dist-production/public/ops.html
           grep -Fq 'id="uploadTagSuggestions"' dist-production/public/ops.html
           grep -Fq '已有自定义标签' dist-production/public/ops-console.js
