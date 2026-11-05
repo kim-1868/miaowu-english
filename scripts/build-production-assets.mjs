@@ -9,7 +9,7 @@ import {buildS86FreeChapter} from "./build-s86-free-first-chapter.mjs";
 const root=resolve(dirname(fileURLToPath(import.meta.url)),"..");
 const source=join(root,"public"),out=join(root,"dist-production","public");
 export const PRODUCTION_ASSET_ALLOWLIST=Object.freeze([
- "index.html","styles.css","flashcards.css","install-guide.css","app.js","install-guide.js","chapter-words.js","echo-cloud.js","flashcards.js",
+ "index.html","styles.css","flashcards.css","install-guide.css","onboarding.css","app.js","install-guide.js","onboarding.js","chapter-words.js","echo-cloud.js","flashcards.js",
  "live.html","live-reader.js","live-reader.css",
  "ops.html","ops-console.js","ops-customers.js","ops-claims.js","ops-console.css","novel-file-parser.js","rainy-night.html",
  "rainy-night-cover.webp","rainy-night-cover-v2.svg",
