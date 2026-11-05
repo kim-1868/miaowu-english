@@ -1,0 +1,29 @@
+name: Verify Miaowu customer redemption console V32
+on:
+  push:
+    branches:
+      - feature/ops-customer-activation-readonly-20261105
+permissions:
+  contents: read
+jobs:
+  integration:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JS syntax and production asset allowlist
+        run: |
+          node --check src/ops-customers.js
+          node --check public/ops-customers.js
+          npm run check
+      - name: Full regression suite, no production credentials
+        run: npm test
+      - name: Build production assets locally without deploying
+        run: |
+          npm run assets:production:build
+          test -f dist-production/public/ops-customers.js
+          grep -Fq 'id="customerPanel"' dist-production/public/ops.html
