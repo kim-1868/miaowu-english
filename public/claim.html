@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<title>妙屋英语 · 学习权益领取</title>
+<link rel="stylesheet" href="/claim.css?v=33">
+<script src="/claim.js?v=33" defer></script>
+</head>
+<body><div class="page">
+<header class="brand"><span aria-hidden="true">🐈</span><span><strong>妙屋英语</strong><small>WordLetter</small></span></header>
+<main class="paper">
+<p class="eyebrow">WORDLETTER · 领取中心</p>
+<h1>领取你的学习兑换码</h1>
+<p class="lead">填写小红书订单号，选择所购买的英语学习套餐，领取一次性兑换码。</p>
+<form id="claimForm" novalidate>
+<label for="order">小红书订单号</label>
+<input id="order" maxlength="64" autocomplete="off" placeholder="粘贴订单号" required>
+<p class="help">在小红书订单详情中复制完整订单号。</p>
+<label for="package">购买套餐</label>
+<select id="package" disabled required><option value="">加载中…</option></select>
+<p class="help">请选择实际购买的套餐，后台会进行人工对账。</p>
+<button class="primary" id="submit" type="submit" disabled>领取兑换码</button>
+</form>
+<div id="status" class="status" role="status" aria-live="polite">正在加载…</div>
+<section id="receipt" hidden>
+<h2>领取成功！</h2>
+<p>请立即保存，关闭后无法重新查看。</p>
+<label>学习兑换码：<strong id="packageName"></strong></label>
+<code id="voucher"></code>
+<button type="button" id="copyVoucher" class="outline">复制兑换码</button>
+<details><summary>查看订单找回凭证（建议保存）</summary>
+<code id="recovery"></code><button type="button" id="copyRecovery" class="outline">复制找回凭证</button>
+</details>
+<a href="/" class="primary go">前往妙屋英语，注册并兑换</a>
+</section>
+<p class="foot-note">每个订单号限领一次；当前不支持自动付款核验。错误订单及套餐可能被运营人员撤销，请按实际购买信息填写。</p>
+</main>
+<footer>妙屋英语 · WordLetter</footer></div></body></html>
