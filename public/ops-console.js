@@ -102,14 +102,14 @@ async function verify(){
 }
 async function mountClaimAdmin(){
   if(!claimAdmin){
-    const mod=await import("/ops-claims.js?v=20261105-v33");
+    const mod=await import("/ops-claims.js?v=20261106-v41-compact");
     claimAdmin=mod.initClaimsAdmin({api,connected});
   }
   await claimAdmin.refresh();
 }
 async function mountCustomerAdmin(){
   if(!customerAdmin){
-    const module=await import("/ops-customers.js?v=20261105-v37-voucher-control");
+    const module=await import("/ops-customers.js?v=20261106-v41-compact");
     customerAdmin=module.initCustomerAdmin({api,connected,onChanged:()=>claimAdmin?.refresh()});
   }
   customerAdmin.categories(categoryCatalog);
