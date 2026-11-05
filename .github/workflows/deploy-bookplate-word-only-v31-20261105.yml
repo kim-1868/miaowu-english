@@ -1,0 +1,76 @@
+name: Publish Miaowu source-neutral bookplate V31
+on:
+  push:
+    branches: [release/one-shot-bookplate-word-only-v31-20261105]
+    paths: [.github/workflows/deploy-bookplate-word-only-v31-20261105.yml]
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  approved-reader-update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout reviewed commit
+        uses: actions/checkout@v4
+        with:
+          ref: 951db1f9f9b5753a61205f1d78f70cd1c3c6548f
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate reviewed, source-neutral scope
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "951db1f9f9b5753a61205f1d78f70cd1c3c6548f"
+          git diff --name-only 56eb7a9cb30b3a5418aa8d87dd9d77aa54c58df1 HEAD | sort > /tmp/actual
+          printf '%s\n' public/flashcards.css public/flashcards.js public/index.html src/reading-library.js tests/s157-bookplate-fast-flashcards.test.mjs | sort > /tmp/allowed
+          diff -u /tmp/allowed /tmp/actual
+          grep -q '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
+          grep -q '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install release tool
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Verify build and complete regression suite
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm run assets:production:build
+          grep -q 'v31-word-only' dist-production/public/index.html
+          grep -q '常用例句' dist-production/public/flashcards.js
+          ! grep -q '来自你的小说记忆' dist-production/public/flashcards.js
+          ! grep -q 'w.book_title' dist-production/public/flashcards.js
+          ! grep -q 'w.context_sentence' dist-production/public/flashcards.js
+          npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc
+      - name: Guard live V30 public site
+        run: |
+          set -euo pipefail
+          curl -fsSL https://miaowu-english-pages.pages.dev/ > /tmp/before
+          grep -q 'flashcards.js?v=20261105-v30-flashcards' /tmp/before
+          ! grep -q 'v31-word-only' /tmp/before
+          curl -fsSL https://miaowu-english-pages.pages.dev/ops.html | grep -q 'v29-live-editor'
+      - name: Deploy approved version preserving production bindings
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc
+      - name: Confirm source-neutral cards and unchanged public access
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 12); do
+            curl -fsSL "https://miaowu-english-pages.pages.dev/?v31=$i" > /tmp/after
+            if grep -q 'flashcards.js?v=20261105-v31-word-only' /tmp/after; then break; fi
+            sleep 4
+          done
+          grep -q 'flashcards.js?v=20261105-v31-word-only' /tmp/after
+          curl -fsSL https://miaowu-english-pages.pages.dev/flashcards.js > /tmp/livejs
+          ! grep -q '来自你的小说记忆' /tmp/livejs
+          ! grep -q 'w.book_title' /tmp/livejs
+          ! grep -q 'w.context_sentence' /tmp/livejs
+          curl -fsSL https://miaowu-english-pages.pages.dev/ops.html | grep -q 'v29-live-editor'
+          status=$(curl -s -o /dev/null -w '%{http_code}' https://miaowu-english-pages.pages.dev/api/me/flashcards)
+          test "$status" = "401"
