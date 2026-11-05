@@ -23,7 +23,7 @@ test("S133 watercolor assets are real standalone WebP resources shipped in produ
   assert.equal(bytes.toString("ascii",0,4),"RIFF");
   assert.equal(bytes.toString("ascii",8,12),"WEBP");
  }
- assert.equal(result.assets.length,31);
+ assert.equal(result.assets.length,33);
 });
 test("S133 homepage uses watermark-free image crops without fake account stats",()=>{
  const html=text("index.html");
@@ -32,7 +32,7 @@ test("S133 homepage uses watermark-free image crops without fake account stats",
  assert.ok(html.includes('src="/cat-reading-tablet-1x.webp?v=20261104-v26-standard"'));
  assert.ok(html.includes('srcset="/cat-reading-hd.avif?v=20261104-v26-standard 1x, /cat-reading-tablet-2x.avif?v=20261104-v26-retina 2x"'));
  assert.ok(html.includes('href="/styles.css?v=20261104-v28-night-selection"'));
- assert.ok(html.includes('src="/app.js?v=20261104-v27-shelf-pages"'));
+ assert.ok(html.includes('src="/app.js?v=20261105-v30-flashcards"'));
  assert.match(app,/shelf-'\+c\.id\+'\.svg\?v=20261103-home-v17/);
  assert.ok(app.includes('const due=user?cloudDue():0'));
  assert.ok(app.includes('renderHomeStudyStats()'));
