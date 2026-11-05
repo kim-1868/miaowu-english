@@ -57,6 +57,7 @@ function syncButtons(){
   $("importNovel").disabled=!(connected()&&pendingNovel&&$("uploadCoverWithNovel").files?.length&&
     pendingNovel.words?.every(w=>w.phoneticUk&&w.phoneticUs&&w.partOfSpeech&&w.meaningZh&&w.exampleEn&&w.exampleZh));
   $("tagSave").disabled=!connected()||!chosen||!$("tagText").value.trim();
+  $("applyStoryTags").disabled=!connected()||catalogBooks.length===0;
   $("useSelectedDraft").disabled=!connected()||chosen?.status!=="draft";
   $("reviseNovel").disabled=!(connected()&&pendingNovel&&chosen?.status==="draft"&&
     pendingNovel.book?.id===chosen.id&&pendingNovel.book?.title===chosen.title&&
@@ -604,6 +605,384 @@ button("saveSelectedCover",async()=>{
   $("coverUploadStatus").textContent="封面已保存，书架重新打开后会展示高清图片。";
  }
 });
+// Curated suggestions for the 23 published books audited on 2026-11-06.
+// Every write uses the authenticated publisher tag API, never a DB bypass.
+const storyTagPlanV38=[
+  {
+    "id": "mw26-fresh-7bb98dbbe0c9",
+    "title": "他认错白月光的那一年",
+    "category": "cet4",
+    "tags": [
+      [
+        "白月光",
+        "#8d5262"
+      ],
+      [
+        "女性成长",
+        "#526e68"
+      ]
+    ]
+  },
+  {
+    "id": "mw26-fresh-581d2b8ed258",
+    "title": "假千金退场后，全家都慌了",
+    "category": "cet4",
+    "tags": [
+      [
+        "真假千金",
+        "#9f753e"
+      ],
+      [
+        "亲情",
+        "#7d8a5b"
+      ]
+    ]
+  },
+  {
+    "id": "postgrad-contract",
+    "title": "假婚沦陷：陆总的眼底星光",
+    "category": "postgrad",
+    "tags": [
+      [
+        "契约婚姻",
+        "#8d5262"
+      ],
+      [
+        "先婚后爱",
+        "#af6078"
+      ]
+    ]
+  },
+  {
+    "id": "mw-cet4-heiress-reveal-20261105-v1",
+    "title": "全家嫌我穷，没想到我是千亿继承人",
+    "category": "cet4",
+    "tags": [
+      [
+        "豪门",
+        "#9f753e"
+      ],
+      [
+        "打脸",
+        "#a34a52"
+      ]
+    ]
+  },
+  {
+    "id": "mw-cet4-actress-reversal-20261105-v1",
+    "title": "全网嘲我花瓶，颁奖夜我成了影后",
+    "category": "cet4",
+    "tags": [
+      [
+        "职场逆袭",
+        "#507e9a"
+      ],
+      [
+        "打脸",
+        "#a34a52"
+      ]
+    ]
+  },
+  {
+    "id": "mw26-fresh-96e7f1ee233c",
+    "title": "合租室友藏了七年的秘密",
+    "category": "cet4",
+    "tags": [
+      [
+        "合租日常",
+        "#7d8a5b"
+      ],
+      [
+        "暗恋",
+        "#af6078"
+      ]
+    ]
+  },
+  {
+    "id": "mw26-fresh-006ef86dab61",
+    "title": "契约婚姻到期那天",
+    "category": "cet4",
+    "tags": [
+      [
+        "契约婚姻",
+        "#8d5262"
+      ],
+      [
+        "女性成长",
+        "#526e68"
+      ]
+    ]
+  },
+  {
+    "id": "mw26-fresh-140d06599cec",
+    "title": "替嫁当天，我撕了婚约",
+    "category": "cet4",
+    "tags": [
+      [
+        "替嫁",
+        "#9f753e"
+      ],
+      [
+        "女主觉醒",
+        "#a34a52"
+      ]
+    ]
+  },
+  {
+    "id": "cet6-last-tram-reply-2026",
+    "title": "末班车前请回信",
+    "category": "cet6",
+    "tags": [
+      [
+        "治愈",
+        "#7d8a5b"
+      ],
+      [
+        "秘密揭晓",
+        "#455a78"
+      ]
+    ]
+  },
+  {
+    "id": "mw26-fresh-6f31e202e357",
+    "title": "死对头突然开始对我好",
+    "category": "cet4",
+    "tags": [
+      [
+        "死对头",
+        "#455a78"
+      ],
+      [
+        "误会",
+        "#8d5262"
+      ]
+    ]
+  },
+  {
+    "id": "mw-cet4-real-heir-old-street-20261105-v1",
+    "title": "真少爷回家那天，我把豪门群聊退了",
+    "category": "cet4",
+    "tags": [
+      [
+        "豪门逆袭",
+        "#9f753e"
+      ],
+      [
+        "打脸",
+        "#a34a52"
+      ],
+      [
+        "爽文",
+        "#9f753e"
+      ]
+    ]
+  },
+  {
+    "id": "postgrad-rise",
+    "title": "破光而上",
+    "category": "postgrad",
+    "tags": [
+      [
+        "职场",
+        "#507e9a"
+      ],
+      [
+        "女性成长",
+        "#526e68"
+      ]
+    ]
+  },
+  {
+    "id": "editorial-ex-husband-extended-8ch-v2",
+    "title": "离婚后，前夫公司成了我的客户",
+    "category": "cet4",
+    "tags": [
+      [
+        "离婚",
+        "#713848"
+      ],
+      [
+        "女性成长",
+        "#526e68"
+      ]
+    ]
+  },
+  {
+    "id": "mw26-fresh-166e2a985823",
+    "title": "穿成恶毒女配后，我不演了",
+    "category": "cet4",
+    "tags": [
+      [
+        "反套路",
+        "#713848"
+      ],
+      [
+        "女主觉醒",
+        "#a34a52"
+      ]
+    ]
+  },
+  {
+    "id": "postgrad-thirteenth-glass-2026",
+    "title": "第十三张底片",
+    "category": "postgrad",
+    "tags": [
+      [
+        "悬疑",
+        "#455a78"
+      ],
+      [
+        "中长篇",
+        "#526e68"
+      ]
+    ]
+  },
+  {
+    "id": "mw-cet4-office-20261105",
+    "title": "被开除当天，霸总买下了整栋楼",
+    "category": "cet4",
+    "tags": [
+      [
+        "霸总",
+        "#9f753e"
+      ],
+      [
+        "职场逆袭",
+        "#507e9a"
+      ]
+    ]
+  },
+  {
+    "id": "mw26-fresh-5517fc581a6e",
+    "title": "被赶出豪门后我成了继承人",
+    "category": "cet4",
+    "tags": [
+      [
+        "身份反转",
+        "#713848"
+      ],
+      [
+        "女性成长",
+        "#526e68"
+      ]
+    ]
+  },
+  {
+    "id": "mw-cet4-marriage-sweet-20261105-v1",
+    "title": "说好只领证，霸总却天天求亲亲",
+    "category": "cet4",
+    "tags": [
+      [
+        "先婚后爱",
+        "#af6078"
+      ],
+      [
+        "契约婚姻",
+        "#8d5262"
+      ]
+    ]
+  },
+  {
+    "id": "mw-cet4-jingquan-romance-20261105",
+    "title": "退婚后，京圈太子爷非要娶我",
+    "category": "cet4",
+    "tags": [
+      [
+        "退婚",
+        "#713848"
+      ],
+      [
+        "霸总",
+        "#9f753e"
+      ]
+    ]
+  },
+  {
+    "id": "postgrad-tide-signal-2026",
+    "title": "逆潮信号",
+    "category": "postgrad",
+    "tags": [
+      [
+        "悬疑",
+        "#455a78"
+      ],
+      [
+        "中长篇",
+        "#526e68"
+      ]
+    ]
+  },
+  {
+    "id": "mw26-fresh-43aa86b6b07f",
+    "title": "重生后我不再讨好他们",
+    "category": "cet4",
+    "tags": [
+      [
+        "女主觉醒",
+        "#a34a52"
+      ],
+      [
+        "家庭反击",
+        "#a34a52"
+      ]
+    ]
+  },
+  {
+    "id": "mw-cet4-ceo-fan-20261105-v1",
+    "title": "闪婚后，冷面总裁成了我的头号粉丝",
+    "category": "cet4",
+    "tags": [
+      [
+        "先婚后爱",
+        "#af6078"
+      ],
+      [
+        "霸总",
+        "#9f753e"
+      ]
+    ]
+  },
+  {
+    "id": "rainy-night-archives-cet4-v1",
+    "title": "雨夜档案",
+    "category": "cet4",
+    "tags": [
+      [
+        "失踪谜案",
+        "#455a78"
+      ]
+    ]
+  }
+];
+button("applyStoryTags",async()=>{
+  if(!connected())throw Error("请先验证运营身份");
+  const unknown=storyTagPlanV38.filter(p=>!catalogBooks.some(b=>
+    b.id===p.id&&b.title===p.title&&b.status==="published"&&b.category_id===p.category));
+  if(unknown.length)throw Error("检测到书目变化，已停止批量操作。请刷新核对："+unknown.map(x=>x.title).join("、"));
+  if(!window.confirm("将为正式上架的23本小说补齐推荐剧情标签（最多新增46项）。已有标签、颜色及小说内容均不修改。确定应用吗？"))return;
+  let added=0,skipped=0,completed=0;
+  const feedback=$("bulkStoryTagsStatus");
+  try{
+    for(const book of storyTagPlanV38){
+      const url="/api/ops/books/"+encodeURIComponent(book.id)+"/tags";
+      const current=await api(url);
+      const seen=new Set((current.tags||[]).map(t=>t.label));
+      for(const [label,color] of book.tags){
+        if(seen.has(label)){skipped++;continue}
+        await api(url,"POST",{label,color,requestId:requestId()});
+        seen.add(label);added++;
+      }
+      completed++;
+      feedback.textContent="正在应用推荐标签："+completed+" / "+storyTagPlanV38.length+" 本，已新增 "+added+" 个。";
+    }
+    if(chosen)await loadCoverTags(chosen);
+    feedback.textContent="已完成："+completed+" 本小说，新增 "+added+" 个标签，跳过已有 "+skipped+" 个；可以逐本检查修改。";
+  }catch(e){
+    feedback.textContent="已完成 "+completed+" 本、新增 "+added+" 个标签时中断："+e.message+"。重新点击会自动跳过已添加的标签。";
+    throw e;
+  }
+});
+
 // Cover tags stay separate from artwork; changes update the shelf immediately.
 // Keep the original options. Extra genre/plot/length labels are UI presets only:
 // they are not persisted or attached to a book until an operator saves them.
