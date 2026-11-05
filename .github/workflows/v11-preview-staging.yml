@@ -1,0 +1,72 @@
+name: V1.1 staging preview deployment (not production)
+on:
+  push:
+    branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
+    paths: [.github/workflows/v11-preview-staging.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-v11-staging-preview
+  cancel-in-progress: false
+jobs:
+  staging-only:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-phase1-mobile-and-install-guide-20261106' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify PREVIEW-only target before cloud actions
+        run: |
+          set -euo pipefail
+          node scripts/check-v11-preview-config.mjs
+          test "$(node -p 'JSON.parse(require("fs").readFileSync("wrangler.jsonc","utf8")).name')" = "miaowu-english-staging"
+          test "$(node -p 'JSON.parse(require("fs").readFileSync("wrangler.jsonc","utf8")).vars.APP_ENV')" = "staging"
+          test "$(node -p 'JSON.parse(require("fs").readFileSync("wrangler.jsonc","utf8")).d1_databases[0].database_name')" = "miaowu-english-test"
+      - name: Full automated regression before staging deployment
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+      - name: Install Wrangler and verify staging compilation
+        run: |
+          set -euo pipefail
+          npm install --no-save --ignore-scripts wrangler@^4
+          npx wrangler deploy --dry-run --config wrangler.jsonc --outdir .wrangler/v11-preview-dryrun
+      - name: Require configured Cloudflare credentials
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          test "$HAS_TOKEN" = true || { echo 'Missing Cloudflare token. No deployment.'; exit 1; }
+          test "$HAS_ACCOUNT" = true || { echo 'Missing Cloudflare account. No deployment.'; exit 1; }
+      - name: Deploy only staging Worker (test D1; preserve existing secrets)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          node scripts/check-v11-preview-config.mjs
+          npx wrangler deploy --config wrangler.jsonc --keep-vars 2>&1 | tee /tmp/v11-preview-deploy.log
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const log=readFileSync('/tmp/v11-preview-deploy.log','utf8');
+          const urls=[...log.matchAll(/https:\/\/[a-z0-9.-]+\.workers\.dev(?:\/[^\s]*)?/gi)].map(x=>x[0].replace(/[),;]+$/,''));
+          const url=urls.find(x=>x.includes('miaowu-english-staging'));
+          if(!url){console.error('Staging URL not available in deployment output');process.exit(1)}
+          writeFileSync('/tmp/v11-preview-url',url);
+          console.log('STAGING URL: '+url);
+          NODE
+      - name: Verify anonymous requests are rejected by preview password gate
+        run: |
+          set -euo pipefail
+          url="$(cat /tmp/v11-preview-url)"
+          code="$(curl --silent --show-error --max-time 25 --output /tmp/preview-anonymous --write-out '%{http_code}' "$url/")"
+          test "$code" = "401" || { echo "Preview must refuse anonymous requests: got $code"; exit 1; }
+          grep -Fq 'Staging preview: credentials required.' /tmp/preview-anonymous
+          echo "PASS protected preview: $url"
