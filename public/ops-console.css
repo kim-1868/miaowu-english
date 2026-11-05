@@ -215,3 +215,14 @@ button.secondary{background:#5c4852;color:#f9e8eb}hr{border-color:#674d5a}.audit
 #customerList .ops-customer-entry button.danger{background:#a83f4c;color:#fff;border:1px solid #93303f;padding:8px 13px;border-radius:8px}
 #customerList .ops-customer-entry button.danger:hover{background:#842c3b}
 #customerList .ops-customer-entry button:disabled{opacity:.5;cursor:not-allowed}
+
+/* V40: reviewable suggestions, no automatic overwrite of curated labels. */
+.ops-suggest-list{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.ops-suggest-label{display:inline-flex;align-items:center;gap:7px;padding:8px 10px;
+ border:1px solid #dfc8bb;border-radius:9px;background:#fff8ef;color:#6e4250;
+ font-size:12px;line-height:1.5;cursor:pointer;max-width:100%}
+.ops-suggest-label input{margin:0;flex:none;accent-color:#713848}
+.ops-suggest-label span{overflow-wrap:anywhere}
+@media(prefers-color-scheme:dark){
+ .ops-suggest-label{background:#45343d;border-color:#76545f;color:#f7d8e0}
+}
