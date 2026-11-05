@@ -1,0 +1,115 @@
+# Single-use V42: compact operator-only UI with V40 tags and V41 receipt archive.
+# No D1 migration, seeding, user order mutation, or rights changes.
+name: Publish Miaowu compact operator panels V42
+run-name: Compact customer and claims V42 · 47431dd1aa09
+on:
+  push:
+    branches: [release/ops-two-panels-compact-v42-20261106]
+    paths: ['.github/workflows/deploy-ops-two-panels-v42.yml']
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  approved-ops-layout:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/release/ops-two-panels-compact-v42-20261106' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact reviewed integrated commit
+        uses: actions/checkout@v4
+        with:
+          ref: 47431dd1aa096ca6d250c6932e785c58a80a4dc2
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Guard approved diff and production target
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "47431dd1aa096ca6d250c6932e785c58a80a4dc2"
+          grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_id": "649c71b3-340c-49bf-b806-3d39256851d3"' deploy/production.wrangler.jsonc
+          git diff --name-only a6791cad80cb0275ea4dfee8ab1d7a458fa492e1 HEAD | sort > /tmp/diff-actual
+          printf '%s\n' public/claim.css public/claim.html public/claim.js public/ops-claims.js public/ops-console.css public/ops-console.js public/ops-customers.js public/ops.html src/ops-claims.js src/ops-customers.js tests/s166-ops-collapsible-admin.test.mjs tests/v41-claim-archive.test.mjs | sort > /tmp/diff-approved
+          diff -u /tmp/diff-approved /tmp/diff-actual
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Wrangler without project hooks
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Run regression, production asset audit, dry-run
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm run assets:production:build
+          grep -Fq 'id="customerFold"' dist-production/public/ops.html
+          grep -Fq 'id="claimsFold"' dist-production/public/ops.html
+          grep -Fq 'layout=20261106-v42' dist-production/public/ops.html
+          grep -Fq 'tags=20261106-v40' dist-production/public/ops.html
+          grep -Fq '/ops-customers.js?v=20261106-v42-compact' dist-production/public/ops-console.js
+          grep -Fq '/ops-claims.js?v=20261106-v42-compact' dist-production/public/ops-console.js
+          grep -Fq '.ops-record-section-summary' dist-production/public/ops-console.css
+          grep -Fq 'claim.css?v=20261106-v41' dist-production/public/claim.html
+          npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/dryrun-v42
+      - name: Verify live V40 story tags and V41 receipt archive before deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops.html -o /tmp/pre-ops
+          grep -Fq 'id="customerPanel"' /tmp/pre-ops
+          grep -Fq 'id="claimsPanel"' /tmp/pre-ops
+          if grep -Fq 'id="customerFold"' /tmp/pre-ops; then echo 'V42 already deployed; refuse repeat'; exit 1; fi
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/claim.html -o /tmp/pre-claim
+          grep -Fq 'claim.css?v=20261106-v41' /tmp/pre-claim
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/pre-edge
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/pre-edge","utf8"));if(!x.ok||!x.productionBindingPresent)process.exit(1)'
+      - name: Confirm production binding and existing deployment authorization
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npx wrangler secret list --config deploy/production.wrangler.jsonc -o /tmp/live-secrets-before
+          grep -Fq '"OPS_WITHDRAWAL_ENABLED"' /tmp/live-secrets-before
+      - name: Deploy V42 keeping secrets and database untouched
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc
+      - name: Verify live accordions, archive, tagging and API boundaries
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 24); do
+            curl -fsSL --max-time 25 "https://miaowu-english-pages.pages.dev/ops.html?v42-verify=$i" -o /tmp/ops-new || true
+            if grep -Fq 'layout=20261106-v42' /tmp/ops-new; then break; fi
+            sleep 4
+          done
+          grep -Fq 'id="customerFold"' /tmp/ops-new
+          grep -Fq 'id="claimsFold"' /tmp/ops-new
+          grep -Fq 'tags=20261106-v40' /tmp/ops-new
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops-customers.js -o /tmp/new-customers
+          grep -Fq 'ops-record-summary' /tmp/new-customers
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops-claims.js -o /tmp/new-claims
+          grep -Fq 'ops-record-summary' /tmp/new-claims
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/claim.html -o /tmp/new-claim
+          grep -Fq 'claim.css?v=20261106-v41' /tmp/new-claim
+          curl -fsSL --retry 3 --max-time 30 'https://miaowu-english-pages.pages.dev/api/books?category=cet4&page=1' -o /tmp/public-books
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/public-books","utf8"));if(!Array.isArray(x.books)||x.books.length>9||x.pagination?.pageSize!==9)process.exit(1)'
+          status=$(curl -sSL -o /dev/null -w '%{http_code}' --max-time 30 https://miaowu-english-pages.pages.dev/api/me/words)
+          test "$status" = "401"
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/new-edge
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/new-edge","utf8"));if(!x.ok||!x.productionBindingPresent)process.exit(1)'
+          npx wrangler secret list --config deploy/production.wrangler.jsonc -o /tmp/live-secrets-after
+          grep -Fq '"OPS_WITHDRAWAL_ENABLED"' /tmp/live-secrets-after
