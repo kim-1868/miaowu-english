@@ -158,9 +158,11 @@ async function flashcardPool(req,env,userId){
   const params=new URL(req.url).searchParams;
   const scope=params.get("scope")||"due";
   const pageString=params.get("page")||"1";
-  if(!["due","learning","all"].includes(scope)||!/^[1-9][0-9]{0,3}$/.test(pageString))
+  const sizeString=params.get("size")||"10";
+  if(!["due","learning","all"].includes(scope)||!/^[1-9][0-9]{0,3}$/.test(pageString)||
+     !["10","20"].includes(sizeString))
     return err("INVALID_FLASHCARD_SCOPE",400);
-  const page=Number(pageString),limit=20,offset=(page-1)*limit;
+  const page=Number(pageString),limit=Number(sizeString),offset=(page-1)*limit;
   const from="FROM user_words uw JOIN words w ON w.id=uw.word_id "+
     "WHERE uw.user_id=? AND uw.bookmarked=1 AND "+flashVisible+" "+flashScope(scope);
   const count=await sql(env,"SELECT COUNT(*) AS n "+from,userId).first();
