@@ -122,7 +122,7 @@
     function asMeaning(c){return WORDS[c]?`${safe(c)}：${safe(WORDS[c].meaning)}`:safe(c)}
     function reportExamResult(q,ans,hint=false){if(quizAnswer!==null)return;quizAnswer=ans;const ok=ans.toLowerCase().trim()===q.word; if(ok)quizScore++;recordAnswer(q.word,ok,hint);renderQuiz()}
 
-    function navigate(to){if(view==='echo'&&echoMode==='cloud'&&window.MiaowuCloudEcho?.running()){window.MiaowuCloudEcho.leave(to);return}if(view==='echo'&&echoMode==='demo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='reader'&&to!=='reader'){closeWord();clearTimeout(readingSaveTimer);void saveReadingProgress({quiet:true});stopReading();}view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words')renderWords();if(to==='echo')renderQuiz();if(to==='account')renderAccount();$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
+    function navigate(to){if(view==='echo'&&echoMode==='cloud'&&window.MiaowuCloudEcho?.running()){window.MiaowuCloudEcho.leave(to);return}if(view==='echo'&&echoMode==='demo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='reader'&&to!=='reader'){closeWord();clearTimeout(readingSaveTimer);void saveReadingProgress({quiet:true});stopReading();}view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words')renderWords();if(to==='echo')renderQuiz();if(to==='account'){renderAccount();if(user)void loadPersonalBookshelf()}$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
 
     // D1 is the primary reader source. Legacy chapter sample stays unreachable from default book cards.
     // No paid chapter bodies are bundled into app.js or held in a client-side book constant.
@@ -131,6 +131,7 @@
     const SHELF_PAGE_SIZE=9;
     let activeCloud=null;
     let cloudBooks=[],cloudSaved=new Map(),cloudProgress=[],cloudSessionKey=null,cloudLearningSequence=0;
+    let personalBooks=[],personalBooksRequest=0,personalShelfFilter='reading';
     let initialSessionPromise=Promise.resolve(),heroResumeBusy=false;
     function updateHeroReadLabel(){
       const btn=$('heroRead');if(!btn)return;
@@ -192,6 +193,7 @@
           progress:amount,completed_at:complete?new Date().toISOString():null,
           updated_at:new Date().toISOString()});
         updateHeroReadLabel();
+        if(started||complete)void loadPersonalBookshelf();
         // Never display "synced" before the server confirms the write.
         if(activeCloud?.chapterId===id)showCloudProgress(id);
         updateCloudShelfProgress();
@@ -315,6 +317,87 @@
         if(line)line.style.width=(total?Math.min(100,Math.round(completed/total*100)):0)+'%';
       });
     }
+
+    function renderPersonalBookshelf(){
+      const root=$('myBookshelf');
+      if(!root)return;
+      root.hidden=!user;
+      if(!user){root.replaceChildren();return}
+      const groups=[{state:'want',label:'想读'},{state:'reading',label:'阅读中'},{state:'finished',label:'已读完'}];
+      const matches=personalBooks.filter(b=>b.state===personalShelfFilter);
+      root.innerHTML='<div class="v11-my-shelf-header"><div><span class="eyebrow">MY STORY SHELF</span><h2>我的书架</h2>'+
+        '<p>喜欢的故事先收藏；开始阅读后，系统会根据云端进度自动整理。</p></div></div>'+
+        '<div class="v11-my-shelf-tabs" role="group" aria-label="书架阅读状态">'+
+        groups.map(g=>'<button type="button" data-personal-filter="'+g.state+'" class="'+
+          (personalShelfFilter===g.state?'active':'')+'" aria-pressed="'+String(personalShelfFilter===g.state)+'">'+
+          g.label+' <span>'+personalBooks.filter(b=>b.state===g.state).length+'</span></button>').join('')+'</div>'+
+        '<div class="v11-my-shelf-list">'+(matches.length?matches.map(book=>{
+          const chapterCount=Math.max(0,Number(book.chapter_count)||0);
+          const completed=Math.max(0,Number(book.completed_chapters)||0);
+          const coverVersion=/^cover-d1-([a-f0-9]{24})$/.exec(book.cover_key||'');
+          const cover=coverVersion?'/api/covers/'+encodeURIComponent(book.book_id)+'?v='+coverVersion[1]:
+            book.book_id==='rainy-night-archives-cet4-v1'?'/rainy-night-cover-v2.svg':'';
+          const note=book.state==='want'?'加入书架，还没有开始读':
+            book.state==='finished'?'所有已发布章节均已完成':'最近读到第 '+(Number(book.last_chapter_no)||1)+' 章';
+          return '<article class="v11-my-shelf-card" data-personal-book="'+safe(book.book_id)+'">'+
+            '<div class="v11-my-shelf-cover">'+(cover?'<img src="'+safe(cover)+'" alt="《'+safe(book.title)+'》封面" loading="lazy">':'<span>✧</span>')+'</div>'+
+            '<div class="v11-my-shelf-info"><h3>'+safe(book.title)+'</h3><p>'+safe(note)+'</p>'+
+            '<small>已完成 '+completed+' / '+chapterCount+' 章 · '+safe(book.category_slug.toUpperCase())+'</small>'+
+            '<div class="v11-my-shelf-actions"><button class="primary" type="button" data-my-shelf-read="'+safe(book.book_id)+'">'+
+            (book.state==='want'?'查看故事 →':'继续阅读 →')+'</button>'+
+            '<button class="secondary-btn" type="button" data-my-shelf-save="'+safe(book.book_id)+'">'+
+            (book.bookmarked?'✓ 已收藏 · 移除':'♡ 加入书架')+'</button></div></div></article>';
+        }).join(''):'<p class="v11-my-shelf-empty">这个分类暂时还没有故事，去首页挑一本喜欢的吧。</p>')+'</div>'+
+        '<p class="v11-my-shelf-foot">移除收藏不会删除阅读进度。付费章节仍需对应学习分类的阅读权限。</p>';
+      root.querySelectorAll('[data-personal-filter]').forEach(btn=>btn.onclick=()=>{
+        personalShelfFilter=btn.dataset.personalFilter;renderPersonalBookshelf();
+      });
+      root.querySelectorAll('[data-my-shelf-read]').forEach(btn=>btn.onclick=()=>{
+        const book=personalBooks.find(x=>x.book_id===btn.dataset.myShelfRead);
+        if(book)void openCloudBook({id:book.book_id,title:book.title},book.category_slug,
+          {resumeChapterId:book.last_chapter_id||null});
+      });
+      root.querySelectorAll('[data-my-shelf-save]').forEach(btn=>btn.onclick=()=>{
+        const book=personalBooks.find(x=>x.book_id===btn.dataset.myShelfSave);
+        if(book)void setPersonalBookmark(book.book_id,!book.bookmarked,btn);
+      });
+    }
+    async function loadPersonalBookshelf(){
+      const sequence=++personalBooksRequest, name=user?.name;
+      if(!name){personalBooks=[];renderPersonalBookshelf();return}
+      try{
+        const response=await serverRequest('/api/me/bookshelf');
+        if(sequence!==personalBooksRequest||user?.name!==name)return;
+        personalBooks=Array.isArray(response.books)?response.books:[];
+        renderPersonalBookshelf();
+        document.querySelectorAll('[data-cloud-bookmark]').forEach(btn=>{
+          const saved=personalBooks.some(b=>b.book_id===btn.dataset.cloudBookmark&&b.bookmarked);
+          btn.textContent=saved?'✓ 已收藏':'♡ 收藏小说';
+          btn.setAttribute('aria-pressed',String(saved));
+        });
+      }catch(error){
+        if(sequence!==personalBooksRequest||user?.name!==name)return;
+        const root=$('myBookshelf');if(root){
+          root.hidden=false;
+          root.innerHTML='<h2>我的书架</h2><p>书架暂时无法同步，请刷新或稍后重试。</p>'+
+            '<button class="secondary-btn" id="retryMyShelf">重新加载</button>';
+          $('retryMyShelf').onclick=loadPersonalBookshelf;
+        }
+      }
+    }
+    async function setPersonalBookmark(id,bookmarked,button){
+      if(!user){showLogin();return}
+      if(button)button.disabled=true;
+      try{
+        await serverRequest('/api/me/bookshelf/'+encodeURIComponent(id),'PUT',{bookmarked});
+        if(bookmarked&&window.MiaowuOnboarding?.bookmarkTapped())
+          toast('已加入我的书架，可以在「我的书房」找到这本书。');
+        else toast(bookmarked?'已加入我的书架':'已取消收藏，阅读历史仍会保留');
+        await loadPersonalBookshelf();
+      }catch(error){toast('书架收藏失败：'+(error.message||'请重试'))}
+      finally{if(button&&button.isConnected)button.disabled=false}
+    }
+
     function renderShelfPagination(slug,meta){
       const list=$('bookGrid');
       const totalPages=Math.max(0,Math.floor(Number(meta?.totalPages)||0));
@@ -412,8 +495,17 @@
             '<div class="shelf-progress" data-live-progress="'+safe(book.id)+'">'+
             '<div class="progress-text"><span>正在读取阅读记录</span><span>—</span></div>'+
             '<div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>'+
-            '<div class="book-actions"><button class="primary" type="button">'+action+'</button></div></div>';
+            '<div class="book-actions"><button class="primary" type="button">'+action+'</button>'+
+            '<button class="secondary-btn cloud-bookmark-button" type="button" data-cloud-bookmark="'+safe(book.id)+'" aria-pressed="'+
+            String(personalBooks.some(b=>b.book_id===book.id&&b.bookmarked))+'">'+
+            (personalBooks.some(b=>b.book_id===book.id&&b.bookmarked)?'✓ 已收藏':'♡ 收藏小说')+
+            '</button></div></div>';
           item.querySelector('.book-actions button').onclick=()=>openCloudBook(book,slug);
+          item.querySelector('[data-cloud-bookmark]').onclick=e=>{
+            const btn=e.currentTarget;
+            const wasSaved=personalBooks.some(b=>b.book_id===book.id&&b.bookmarked);
+            void setPersonalBookmark(book.id,!wasSaved,btn);
+          };
           list.append(item);
         });
         // Only published D1 books appear on the customer shelf.
@@ -987,9 +1079,10 @@
         activeCloud=null;
         if(view==='reader'){navigate('library');$('storyText').textContent='';}
       }
-      cloudSaved=new Map();cloudProgress=[];glossaryCache.clear();cloudSessionKey=user?.name||null;
+      cloudSaved=new Map();cloudProgress=[];personalBooks=[];++personalBooksRequest;glossaryCache.clear();cloudSessionKey=user?.name||null;
       updateHeroReadLabel();
       renderLibrary();renderAccount();renderReminder();
+      if(user)void loadPersonalBookshelf();else renderPersonalBookshelf();
       refreshCloudLearning();
       if(view==='echo')renderQuiz();
       $('topAccount').textContent=user?'你好，'+user.name:'登录 / 激活';
