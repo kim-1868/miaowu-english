@@ -31,3 +31,11 @@ test("V1.1 staging secret and production proxy remain isolated",()=>{
  assert.equal(page.services[0].service,production.name);
  assert.notEqual(page.services[0].service,staging.name);
 });
+
+test("V1.1 staging pages opt out of search indexing without changing production behavior",()=>{
+ const gate=readFileSync(new URL("../src/staging-gate.js",import.meta.url),"utf8");
+ const worker=readFileSync(new URL("../src/worker.js",import.meta.url),"utf8");
+ assert.match(gate,/x-robots-tag.*noindex, nofollow, noarchive/);
+ assert.match(worker,/if\(env.APP_ENV==="staging"\)h.set\("x-robots-tag"/);
+ assert.match(worker,/headers.set\("x-robots-tag", "noindex, nofollow, noarchive"\)/);
+});
