@@ -3,8 +3,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>妙屋英语 · 运营出版台</title>
-<link rel="stylesheet" href="/ops-console.css?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33">
-<script src="/ops-console.js?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;tags=20261106-v38" defer></script>
+<link rel="stylesheet" href="/ops-console.css?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;layout=20261106-v41">
+<script src="/ops-console.js?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;tags=20261106-v38&amp;layout=20261106-v41" defer></script>
 </head><body>
 <header><div class="brand">喵 · 妙屋英语 <span>THE STORY & WORD LIBRARY</span></div>
   <div class="strap">运营出版台 <span class="pill">受控操作</span></div></header>
@@ -46,11 +46,17 @@
     </div>
   </section>
   <section class="panel" id="customerPanel" aria-label="用户与激活记录">
-    <div class="panel-heading"><h2>用户与激活记录</h2><span class="soft">查询 · 作废或恢复兑换码</span></div>
-    <p class="hint">查看账号是否完成兑换、购买的学习套餐和关联订单。「作废此兑换码」会同时停止此码对应账号的套餐付费阅读权限；「恢复此兑换码」会恢复对应套餐。操作前会二次确认，并要求填写原因。不会展示激活码明文、密码或找回凭证。</p>
-    <div class="ops-customer-overview" id="customerOverview" aria-live="polite">
+    <details id="customerFold" class="ops-record-section">
+      <summary class="ops-record-section-summary">
+        <span class="ops-section-title"><strong>用户与激活记录</strong><small>查询 · 作废或恢复兑换码</small></span>
+        <span class="ops-customer-overview ops-summary-stats" id="customerOverview" aria-live="polite">
       <span>用户 —</span><span>已兑换 —</span><span>未兑换 —</span><span>已作废 —</span>
-    </div>
+    </span>
+        <span class="ops-fold-caret" aria-hidden="true">⌄</span>
+      </summary>
+      <div class="ops-record-section-content">
+    <p class="hint">查看账号是否完成兑换、购买的学习套餐和关联订单。「作废此兑换码」会同时停止此码对应账号的套餐付费阅读权限；「恢复此兑换码」会恢复对应套餐。操作前会二次确认，并要求填写原因。不会展示激活码明文、密码或找回凭证。</p>
+    
     <div class="row">
       <button type="button" id="customerTabCodes" class="secondary" disabled aria-pressed="true">激活码记录</button>
       <button type="button" id="customerTabUsers" class="secondary" disabled aria-pressed="false">用户列表</button>
@@ -74,11 +80,19 @@
       <span id="customerPageInfo" class="soft">第 0 / 0 页</span>
       <button id="customerNext" class="secondary" type="button" disabled>下一页</button>
     </nav>
+      </div>
+    </details>
   </section>
   <section class="panel" id="claimsPanel" aria-label="自助领取订单对账">
-    <div class="panel-heading"><h2>自助领取订单对账</h2><span class="soft">核对 · 标记异常 · 撤销 / 恢复</span></div>
+    <details id="claimsFold" class="ops-record-section">
+      <summary class="ops-record-section-summary">
+        <span class="ops-section-title"><strong>自助领取订单对账</strong><small>核对 · 标记异常 · 撤销 / 恢复</small></span>
+        <span class="ops-summary-claims" id="claimsOverview" aria-live="polite">验证运营身份后显示统计</span>
+        <span class="ops-fold-caret" aria-hidden="true">⌄</span>
+      </summary>
+      <div class="ops-record-section-content">
     <p class="hint">此处只展示由自助领取中心提交的订单编号、所选套餐和兑换账号。用户填写的订单编号未经自动付款验证，请在小红书后台核实。撤销只影响这笔订单对应的套餐权益，不会删除账号或其他购买。</p>
-    <div class="status" id="claimsOverview">验证运营身份后显示统计</div>
+    
     <div class="ops-customer-filters">
       <label for="claimsSearch">按订单编号、账号或套餐搜索
         <input id="claimsSearch" type="search" maxlength="80" autocomplete="off" placeholder="输入关键词"></label>
@@ -95,6 +109,8 @@
       <span id="claimsPageInfo">第 0 / 0 页</span>
       <button id="claimsNext" type="button" class="secondary">下一页</button>
     </nav>
+      </div>
+    </details>
   </section>
   <section class="panel" aria-label="学习商品分类管理">
     <div class="panel-heading"><h2>③ 分类管理 · 内容与售卖分开</h2><span class="soft">发布者专用 · 数据库实时同步</span></div>
