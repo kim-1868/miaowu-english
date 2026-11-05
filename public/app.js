@@ -602,7 +602,9 @@
         savedProgress?.completed_at?'✓ 已读完 · 已同步阅读进度':savedProgress?'✓ 已同步阅读进度':'阅读中 · 自动保存';
       $('progressBar').style.width=Math.round(finished/Math.max(1,activeCloud.chapters.length)*100)+'%';
       $('savedCount').textContent=cloudSaved.size;
-      $('readerUnseen').textContent=String(Array.from(activeCloud.words?.keys()||[]).filter(id=>!cloudSaved.has(id)).length);
+      const unseenSenses=new Set(Array.from(activeCloud.words?.values()||[])
+        .filter(w=>!w.study_seen).map(w=>w.study_key||w.word_id));
+      $('readerUnseen').textContent=String(unseenSenses.size);
       $('readerDue').textContent=String(cloudDue());
       // Completed chapters are automatically recorded when the reader chooses 下一章.
     }
