@@ -33,7 +33,7 @@ test("V40: ambiguous or empty metadata does not fabricate genre tags",()=>{
 test("V40: existing books and future books share secure save path, existing labels remain untouched",()=>{
   assert.match(js,/catalogBooks\.filter\(b=>b\.status==="published"\)/);
   assert.match(js,/const fixed=novel\?null:storyTagPlanV38\.find/);
-  assert.match(js,/const \{suggestStoryTags\}=await import\("\/story-tag-suggester\.js\?v=20261106-v40"\)/);
+  assert.match(js,/const \{suggestStoryTags\}=await import\("\/novel-file-parser\.js\?v=20261106-v40"\)/);
   assert.match(js,/const have=new Set\(\(existing\.tags\|\|\[\]\)\.map/);
   assert.match(js,/if\(have\.has\(tag\.label\)\)/);
   assert.match(js,/await api\(path,"POST"/);
@@ -44,7 +44,7 @@ test("V40: existing books and future books share secure save path, existing labe
   assert.match(html,/id="saveSuggestedTags"/);
   assert.match(html,/id="uploadTagSuggestions"/);
   assert.match(html,/为全部已上架小说补齐推荐标签/);
-  assert.match(assets,/"story-tag-suggester\.js"/);
+  assert.match(assets,/"novel-file-parser\.js"/);
 });
 
 test("V40: new book upload offers opt-out tag checkboxes and saves after actual publication",()=>{
