@@ -1,0 +1,26 @@
+/* Mobile-only, manually opened home-screen how-to. Existing site branding preserved. */
+#homeInstallTip[hidden],#installGuide[hidden],.install-guide-panel[hidden]{display:none!important}
+.home-install-tip{display:none;align-items:center;gap:10px;border:1px solid var(--line);border-radius:14px;background:var(--paper);padding:12px 14px;margin:12px 0 0;color:var(--ink)}
+.home-install-tip-copy{flex:1;min-width:0}
+.home-install-tip-copy strong{display:block;font-size:13px;font-weight:700}
+.home-install-tip-copy small{display:block;color:var(--muted);font-size:11px;margin-top:3px;line-height:1.5}
+.home-install-tip button{min-height:40px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:12px;padding:0 10px}
+.home-install-tip .install-tip-open{background:var(--wine);color:#fff8ee;border-color:var(--wine);white-space:nowrap}
+.home-install-tip .install-tip-dismiss{padding:0 8px;min-width:38px;font-size:18px}
+.install-account-link{display:none;margin:8px 0 20px}
+.install-account-link button{width:100%;text-align:left;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);padding:14px 16px;font-size:13px}
+.install-guide-backdrop{position:fixed;inset:0;z-index:95;background:rgba(35,24,31,.60);display:flex;align-items:center;justify-content:center;padding:18px;padding-bottom:max(18px,env(safe-area-inset-bottom));}
+.install-guide-dialog{width:min(420px,100%);max-height:calc(100dvh - 36px);overflow:auto;background:var(--paper);color:var(--ink);border-radius:20px;box-shadow:0 18px 56px rgba(36,20,22,.23);padding:20px;outline:none}
+.install-guide-heading{display:flex;align-items:flex-start;gap:12px}
+.install-guide-heading div{flex:1}
+.install-guide-heading h2{font-size:19px;line-height:1.4;margin:0 0 5px;color:var(--wine)}
+.install-guide-heading p{font-size:12px;line-height:1.55;color:var(--muted);margin:0}
+.install-guide-close{width:40px;height:40px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--ink);font-size:22px;flex:none}
+.install-guide-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:18px 0 14px}
+.install-guide-tabs button{min-height:42px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:14px;font-weight:600}
+.install-guide-tabs button[aria-selected="true"]{background:var(--wine);border-color:var(--wine);color:#fff9ef}
+.install-guide-panel ol{margin:0;padding:0 0 0 24px}
+.install-guide-panel li{font-size:13px;line-height:1.75;padding:4px 0}
+.install-guide-note{font-size:11px;line-height:1.65;color:var(--muted);padding-top:12px;margin:12px 0 0;border-top:1px solid var(--line)}
+.install-guide-dialog button:focus-visible,.home-install-tip button:focus-visible,.install-account-link button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media(max-width:760px){.home-install-tip:not([hidden]){display:flex}.install-account-link{display:block}}
