@@ -26,7 +26,7 @@ test("S153: the tablet artwork has genuine 1400px WebP and 2800px high-DPI deriv
     assert.ok(PRODUCTION_ASSET_ALLOWLIST.includes(file),file);
   }
   const result=buildProductionAssets();
-  assert.equal(result.assets.length,38);
+  assert.equal(result.assets.length,40);
 });
 
 test("S153: picture srcset chooses density appropriate assets and preserves old design interaction",()=>{
