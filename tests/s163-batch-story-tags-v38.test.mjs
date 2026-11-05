@@ -5,7 +5,7 @@ import fs from "node:fs";
 const js=fs.readFileSync(new URL("../public/ops-console.js",import.meta.url),"utf8");
 const html=fs.readFileSync(new URL("../public/ops.html",import.meta.url),"utf8");
 const source=JSON.parse(fs.readFileSync(new URL("../content/operations/published-book-story-tags-v38.json",import.meta.url),"utf8"));
-const match=js.match(/const storyTagPlanV38=(\[[\s\S]*?\]);\nbutton\("applyStoryTags"/);
+const match=js.match(/const storyTagPlanV38=(\[[\s\S]*?\]);\n\/\/ The curated original 23/);
 assert.ok(match,"Curated tag data must be embedded into the console");
 const plan=JSON.parse(match[1]);
 
@@ -29,16 +29,17 @@ test("23 title-verified published books have 46 reasonable, unique suggested lab
   }
 });
 
-test("batch is opt-in, authorized, and only adds missing labels via publisher tag API",()=>{
+test("existing curated titles remain and the bulk action works for new published books",()=>{
   assert.match(html,/id="applyStoryTags"/);
-  assert.match(html,/tags=20261106-v38/);
+  assert.match(html,/tags=20261106-v40/);
+  assert.match(html,/为全部已上架小说补齐推荐标签/);
   assert.match(js,/if\(!connected\(\)\)throw Error\("请先验证运营身份"\)/);
-  assert.match(js,/b\.status==="published"/);
+  assert.match(js,/catalogBooks\.filter\(b=>b\.status==="published"\)/);
   assert.match(js,/window\.confirm\(/);
-  assert.match(js,/const current=await api\(url\)/);
-  assert.match(js,/if\(seen\.has\(label\)\)\{skipped\+\+;continue\}/);
-  assert.match(js,/await api\(url,"POST",\{label,color,requestId:requestId\(\)\}\)/);
-  const batchSection=js.slice(js.indexOf('const storyTagPlanV38='),js.indexOf('// Cover tags stay separate'));
+  assert.match(js,/const existing=await api\(path\)/);
+  assert.match(js,/if\(have\.has\(tag\.label\)\)/);
+  assert.match(js,/await api\(path,"POST",\{label:tag\.label,color:tag\.color,requestId:requestId\(\)\}\)/);
+  const batchSection=js.slice(js.indexOf('async function proposeTags('),js.indexOf('// Cover tags stay separate'));
   assert.doesNotMatch(batchSection,/"DELETE"/);
   assert.match(js,/if\(chosen\)await loadCoverTags\(chosen\)/);
 });
