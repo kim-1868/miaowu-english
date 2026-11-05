@@ -78,3 +78,43 @@ body{background:#211d24}input,select{background:#40333d;color:white;border-color
 /* V36: account-recovery credential is displayed immediately, not folded away. */
 .recovery-details h3{margin:0 0 7px;font-size:15px;color:var(--rose);font-weight:750}
 .recovery-details h3 span{display:block;margin-top:3px;font:500 12px/1.6 system-ui,-apple-system,"PingFang SC",sans-serif;color:var(--soft)}
+
+/* V41: compact buyer welcome and separate full-receipt archival action. */
+.claim-welcome{padding:10px 0 15px;margin-bottom:15px;border-bottom:1px solid var(--line)}
+.claim-welcome p{margin:0 0 5px;font-size:13px;line-height:1.8;color:var(--soft)}
+.claim-welcome .welcome-title{color:var(--rose-deep);font-size:15px;font-weight:750;letter-spacing:.2px;margin-bottom:7px}
+.claim-welcome .welcome-title span{font-family:Georgia,"Songti SC","STSong",serif}
+.claim-welcome .welcome-blessing{font-size:12px;color:var(--soft);margin-top:6px;margin-bottom:0}
+.claim-intro{border-top:0;padding-top:3px}
+.save-all-panel{margin:17px 0 0;padding:19px;border:1px solid #dcbfb4;border-radius:14px;background:#fff6ee}
+.save-all-eyebrow{font-size:11px;color:var(--rose);letter-spacing:1px;margin:0 0 4px;font-weight:750}
+.save-all-panel h3{font-size:18px;margin:0 0 7px;color:var(--rose-deep)}
+.save-all-description{font-size:13px;line-height:1.85;color:var(--ink);margin:0}
+.receipt-order-line{margin:12px 0;font-size:12px;color:var(--soft);overflow-wrap:anywhere}
+.receipt-order-line span{font-weight:650;color:var(--ink)}
+.save-all-copy{display:block;width:100%;min-height:51px;font-size:15px;border:1px solid var(--rose);background:#fffefd;color:var(--rose);font-weight:800}
+.save-all-copy.is-copied{border-color:var(--green);color:var(--green);background:#f2faf4}
+.save-all-hint{margin:11px 0 0;font-size:12px;line-height:1.8;color:var(--soft)}
+.copy-manual{margin-top:12px}
+.copy-manual label{font-weight:650;font-size:12px;margin:0 0 7px}
+.copy-manual textarea{width:100%;min-height:150px;padding:10px;border-radius:9px;background:#fff;border:1px solid #c89ea9;color:var(--ink);font:13px/1.65 ui-monospace,Consolas,monospace;resize:vertical}
+.next-steps{margin-top:16px}
+.next-steps .go{display:block;margin-top:0}
+footer{padding-bottom:24px}
+.closing-wish{font-size:12px;color:#ae959a;margin:14px 0 0;text-align:center;line-height:1.85;font-weight:400}
+@media(max-width:540px){
+ .claim-welcome{padding-top:5px}
+ .claim-welcome .welcome-title{font-size:14px}
+ .claim-welcome p{font-size:12px}
+ .save-all-panel{padding:15px 12px}
+ .save-all-copy{font-size:14px}
+ .closing-wish{font-size:11px}
+}
+@media(prefers-color-scheme:dark){
+ .save-all-panel{background:#42313a;border-color:#89616e}
+ .save-all-description,.receipt-order-line span{color:#f7e9e2}
+ .save-all-copy{background:#382831;border-color:#b78291;color:#f8d0dd}
+ .save-all-copy.is-copied{background:#254937;border-color:#8ec2a0;color:#b5f1ca}
+ .copy-manual textarea{background:#2b242b;color:#f7e9e2;border-color:#8c6a78}
+ .closing-wish{color:#aa8d97}
+}

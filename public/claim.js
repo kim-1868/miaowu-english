@@ -34,6 +34,7 @@ function showReceipt(data,save=true){
     typeof data.recoveryKey!=="string"||!data.recoveryKey.startsWith("MW-REC-"))
    throw Error("领取结果不完整，请联系店铺客服，不要重新提交订单编号。");
  $("packageName").textContent=data.categoryTitle;
+ $("receiptOrder").textContent=typeof data.orderReference==="string"&&data.orderReference?data.orderReference:"请查看小红书订单详情";
  $("voucher").textContent=data.activationCode;
  $("recovery").textContent=data.recoveryKey;
  $("claimForm").hidden=true;$("claimIntro").hidden=true;
@@ -84,7 +85,7 @@ $("claimForm").addEventListener("submit",async event=>{
    method:"POST",headers:{"Content-Type":"application/json"},
    body:JSON.stringify({orderReference:order,categoryId:category})
   });
-  showReceipt({categoryTitle:data.category?.title,
+  showReceipt({categoryTitle:data.category?.title,orderReference:order,
    activationCode:data.activationCode,recoveryKey:data.recoveryKey});
  }catch(error){submit.disabled=false;feedback(error.message,true);}
  finally{submitting=false;}
@@ -142,6 +143,56 @@ async function copySingle(id){
   feedback("浏览器未允许自动复制，请长按凭证手动复制。",true);
  }
 }
+// The full receipt is for private archival use ONLY, never for code redemption.
+// Render the exact customer-issued values, not any example or placeholder voucher.
+const STUDY_URL="https://miaowu-english-pages.pages.dev/";
+function completeReceiptText(){
+ const code=$("voucher").textContent.trim();
+ const recovery=$("recovery").textContent.trim();
+ const category=$("packageName").textContent.trim();
+ const order=$("receiptOrder").textContent.trim();
+ if(!code||!recovery||!category)return "";
+ return [
+  "🐾 妙屋英语 WordLetter · 我的学习凭证",
+  "",
+  "📚 购买套餐："+category,
+  "🧾 小红书订单编号："+(order||"请查看小红书订单详情"),
+  "",
+  "🎫 学习兑换码："+code,
+  "🔑 账号找回备用凭证："+recovery,
+  "",
+  "🏠 妙屋英语学习网站："+STUDY_URL,
+  "",
+  "温馨提醒：学习兑换码只能激活一次，请妥善保存本信息，不要公开分享。",
+  "兑换时只粘贴「学习兑换码」，不要粘贴整份信息。"
+ ].join("\n");
+}
+async function copyAllReceipt(){
+ const value=completeReceiptText();
+ if(!value){
+  $("copyAllHint").textContent="领取信息尚未完整显示，请联系小红书店铺客服。";
+  return;
+ }
+ let copied=false;
+ try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(value);copied=true;}}catch{}
+ if(!copied)copied=fallbackCopy(value);
+ if(copied){
+  $("copyAll").textContent="✓ 已复制完整领取信息";
+  $("copyAll").classList.add("is-copied");
+  $("copyAllHint").textContent="复制成功！请粘贴到私人备忘录中保存。注意：兑换时仍需单独复制学习兑换码。";
+  $("copyAllText").value="";
+  $("copyAllManual").hidden=true;
+  feedback("完整领取信息已复制，记得粘贴保存。");
+ }else{
+  $("copyAllManual").hidden=false;
+  const field=$("copyAllText");
+  field.value=value;
+  field.focus();field.select();
+  $("copyAllHint").textContent="当前浏览器限制了自动复制，请长按下方文字并选择「全选」「复制」。请勿公开分享这份信息。";
+  feedback("浏览器未允许自动复制，已显示可手动选择的完整领取信息。",true);
+ }
+}
+$("copyAll").addEventListener("click",copyAllReceipt);
 $("copyVoucher").addEventListener("click",()=>copySingle("voucher"));
 $("copyRecovery").addEventListener("click",()=>copySingle("recovery"));
 // Copying or navigating MUST NOT erase the unredeemed claim result.

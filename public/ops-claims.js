@@ -31,12 +31,42 @@ export function initClaimsAdmin({api,connected}){
    (data.overview?.pending||0)+" · 已确认 "+(data.overview?.verified||0)+
    " · 异常 "+(data.overview?.abnormal||0);
   const root=$("claimsList");root.replaceChildren();
+  const statuses={pending:"待核对",verified:"已确认",abnormal:"异常"};
+  const shortOrder=value=>{
+   const n=String(value||"").replace(/^ORD-/,"");
+   return n.length<=8?"尾号 "+n.slice(-4):n.slice(0,4)+"••••"+n.slice(-4);
+  };
   for(const row of data.items||[]){
-   const card=el("article");card.className="ops-customer-entry";
-   const title=el("strong",row.category_title+" · 小红书-订单编号："+row.order_reference.replace(/^ORD-/,""));
+   const card=el("details");card.className="ops-customer-entry ops-record";
+   const summary=el("summary");summary.className="ops-record-summary";
+   const title=el("strong",row.category_title||row.category_slug||"未知套餐");
+   title.className="ops-record-name";
+   const reference=el("span","订单 "+shortOrder(row.order_reference)+" · "+(row.username||"未兑换"));
+   reference.className="ops-record-meta";
+   const status=el("span",statuses[row.review_status]||"未知状态");
+   status.className="ops-customer-badge"+(row.review_status==="verified"?" is-redeemed":"");
+   const arrow=el("span","⌄");arrow.className="ops-record-chevron";
+   arrow.setAttribute("aria-hidden","true");
+   summary.append(title,reference,status,arrow);
+   const body=el("div");body.className="ops-record-body";
+   const orderBox=el("div");orderBox.className="ops-record-order-copy";
+   const orderText=el("p","小红书-订单编号："+String(row.order_reference||"").replace(/^ORD-/,""));
+   orderText.className="ops-customer-detail";orderBox.append(orderText);
+   if(row.order_reference){
+    const copy=el("button","复制订单号");copy.type="button";copy.className="secondary";
+    copy.addEventListener("click",()=>{
+     const value=String(row.order_reference).replace(/^ORD-/,"");
+     if(navigator.clipboard?.writeText){
+      navigator.clipboard.writeText(value).then(()=>{copy.textContent="✓ 已复制";},
+       ()=>window.prompt("复制下面的订单编号",value));
+     }else window.prompt("复制下面的订单编号",value);
+    });
+    orderBox.append(copy);
+   }
+   body.append(orderBox);
    const detail=el("p","兑换："+row.code_status+" · 账号："+(row.username||"未兑换")+
     " · 对账："+row.review_status+" · 领取："+row.claimed_at);
-   card.append(title,detail);
+   detail.className="ops-customer-detail";body.append(detail);
    const actions=el("div");actions.className="ops-claim-actions";
    for(const [name,label] of row.code_status==="revoked"?
     [["restore","恢复本单权益"]]:
@@ -47,12 +77,12 @@ export function initClaimsAdmin({api,connected}){
     btn.className=name==="revoke"?"danger":"secondary";
     btn.addEventListener("click",()=>void action(row,name));actions.append(btn);
    }
-   card.append(actions);root.append(card);
+   body.append(actions);card.append(summary,body);root.append(card);
   }
   if(!total)root.append(el("p","暂无符合条件的订单。"));
-  const pages=Math.ceil(total/20);
+  const pages=Math.ceil(total/10);
   $("claimsPageInfo").textContent="第 "+(pages?page:0)+" / "+pages+" 页";
-  $("claimsPrev").disabled=page<=1;$("claimsNext").disabled=page*20>=total;
+  $("claimsPrev").disabled=page<=1;$("claimsNext").disabled=page*10>=total;
   $("claimsStatus").textContent="已加载 "+total+" 笔记录。";
  }
  function refresh(){page=1;void load().catch(e=>$("claimsStatus").textContent=e.message);}
@@ -63,6 +93,6 @@ export function initClaimsAdmin({api,connected}){
   clearTimeout(task);task=setTimeout(refresh,250);
  });
  $("claimsPrev").addEventListener("click",()=>{if(page>1){page--;void load();}});
- $("claimsNext").addEventListener("click",()=>{if(page*20<total){page++;void load();}});
+ $("claimsNext").addEventListener("click",()=>{if(page*10<total){page++;void load();}});
  reset();return {refresh:load,reset};
 }

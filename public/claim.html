@@ -5,16 +5,18 @@
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="referrer" content="no-referrer">
 <title>妙屋英语 · 学习权益领取</title>
-<link rel="stylesheet" href="/claim.css?v=20261105-v36">
-<script src="/claim.js?v=20261105-v36" defer></script>
+<link rel="stylesheet" href="/claim.css?v=20261106-v41">
+<script src="/claim.js?v=20261106-v41" defer></script>
 </head>
 <body>
 <div class="page">
 <header class="brand"><span class="brand-cat" aria-hidden="true">🐈</span><span><strong>妙屋英语</strong><small>WordLetter · THE STORY & WORD LIBRARY</small></span></header>
 <main class="paper">
-<p class="eyebrow">WORDLETTER · 自助领取中心</p>
-<h1>欢迎来到妙屋的故事世界</h1>
-<p class="lead">感谢你选择妙屋英语！愿你在每个精彩的故事里，遇见新的单词，也遇见更多小惊喜。🐾</p>
+<section class="claim-welcome" aria-label="妙屋英语欢迎语">
+<p class="welcome-title">🐾 欢迎来到妙屋英语 <span>WordLetter！</span></p>
+<p>感谢你的购买！你的专属英语故事书架正在等你开启 📖✨</p>
+<p class="welcome-blessing">🐈 愿你在每一个精彩的故事里，遇见新的单词，也收获阅读的小快乐！</p>
+</section>
 <section id="claimIntro" class="claim-intro" aria-labelledby="claimHeading">
 <h2 id="claimHeading">领取你的专属学习兑换码</h2>
 <p>只需填写购买信息，即可领取属于你的学习兑换码。</p>
@@ -43,20 +45,6 @@
 <button type="button" id="copyVoucher" class="primary voucher-copy">复制学习兑换码</button>
 <p id="copyVoucherHint" class="copy-hint" role="status" aria-live="polite">点击上面的按钮，只复制学习兑换码。请将它粘贴到妙屋英语的注册或兑换框中。</p>
 </div>
-<div class="save-reminder">
-<strong>✦ 温馨提醒</strong>
-<p>学习兑换码只能成功激活一次。建议把它保存在自己的手机备忘录中，也可以私下截图留存。不要将兑换码发给其他人。</p>
-</div>
-<div class="next-steps">
-<h3>接下来，开启你的故事书架</h3>
-<ol>
-<li><strong>复制</strong>上方的学习兑换码</li>
-<li>点击下方按钮，前往妙屋英语</li>
-<li>注册用户名和密码，在兑换码输入框中<strong>粘贴刚才复制的兑换码</strong></li>
-</ol>
-<a href="/" class="primary go">前往妙屋英语，注册并激活 →</a>
-<p class="small-hint">请先保存学习兑换码；当前标签页刷新仍可查看，页面不会自动跳转。</p>
-</div>
 <section id="recoveryDetails" class="recovery-details" aria-labelledby="recoveryHeading">
 <h3 id="recoveryHeading">账号找回备用凭证 <span>忘记密码时使用</span></h3>
 <p class="recovery-help">这不是学习兑换码，也不需要在注册时填写。如果以后忘记登录密码，可使用这份备用凭证协助找回账号。建议<strong>单独保存</strong>，不要与学习兑换码混淆。</p>
@@ -64,11 +52,27 @@
 <button type="button" id="copyRecovery" class="outline">复制备用凭证</button>
 <p id="copyRecoveryHint" class="recovery-hint" role="status" aria-live="polite">请单独保存备用凭证，它不是学习兑换码，注册时不需要填写。</p>
 </section>
-<p class="receipt-thanks">感谢你来到妙屋。希望每一次翻开故事，都能收获一点点英语学习的快乐。🐾</p>
+<section class="save-all-panel" aria-labelledby="saveAllHeading">
+<p class="save-all-eyebrow">✦ 记得保存你的学习凭证</p>
+<h3 id="saveAllHeading">把领取信息一次保存好</h3>
+<p class="save-all-description">一键复制学习兑换码、账号找回备用凭证、购买套餐、小红书订单编号和学习网址。建议粘贴到<strong>私人备忘录</strong>中妥善保存。</p>
+<p class="receipt-order-line">本次领取订单：<span id="receiptOrder"></span></p>
+<button type="button" id="copyAll" class="outline save-all-copy">一键复制完整领取信息</button>
+<p id="copyAllHint" class="save-all-hint" role="status" aria-live="polite">此按钮用于保存整份信息。正式兑换时，请使用上方「复制学习兑换码」按钮，不要把整段文字粘贴到兑换框。</p>
+<div id="copyAllManual" class="copy-manual" hidden>
+<label for="copyAllText">自动复制受限，请手动全选并复制下方内容</label>
+<textarea id="copyAllText" rows="10" readonly aria-label="完整领取信息，可手动全选复制"></textarea>
+</div>
 </section>
-<p class="foot-note">一笔订单仅可领取一次。如填写有误或遇到问题，请联系小红书店铺客服。</p>
+<div class="next-steps">
+<a href="/" class="primary go">前往妙屋英语，注册并激活 →</a>
+<p class="small-hint">请先保存完整领取信息，页面不会自动跳转；当前标签页刷新仍可查看。</p>
+</div>
+</section>
+<p class="foot-note">每笔订单仅可领取一次。如填写有误或遇到问题，请联系小红书店铺客服。</p>
 </main>
-<footer>妙屋英语 · WordLetter · 在故事里遇见新单词</footer>
+<footer><span>妙屋英语 · WordLetter · 在故事里遇见新单词</span>
+<p class="closing-wish">感谢你选择妙屋英语，祝你阅读愉快！💕</p></footer>
 </div>
 </body>
 </html>
