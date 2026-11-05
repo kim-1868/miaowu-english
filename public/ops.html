@@ -3,8 +3,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>妙屋英语 · 运营出版台</title>
-<link rel="stylesheet" href="/ops-console.css?v=20261104-v29-live-editor&amp;customers=20261105-v32">
-<script src="/ops-console.js?v=20261104-v29-live-editor&amp;customers=20261105-v32" defer></script>
+<link rel="stylesheet" href="/ops-console.css?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33">
+<script src="/ops-console.js?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33" defer></script>
 </head><body>
 <header><div class="brand">喵 · 妙屋英语 <span>THE STORY & WORD LIBRARY</span></div>
   <div class="strap">运营出版台 <span class="pill">受控操作</span></div></header>
@@ -73,6 +73,27 @@
       <button id="customerPrev" class="secondary" type="button" disabled>上一页</button>
       <span id="customerPageInfo" class="soft">第 0 / 0 页</span>
       <button id="customerNext" class="secondary" type="button" disabled>下一页</button>
+    </nav>
+  </section>
+  <section class="panel" id="claimsPanel" aria-label="自助领取订单对账">
+    <div class="panel-heading"><h2>自助领取订单对账</h2><span class="soft">核对 · 标记异常 · 撤销 / 恢复</span></div>
+    <p class="hint">此处只展示由自助领取中心提交的订单号、所选套餐和兑换账号。用户填写的订单号未经自动付款验证，请在小红书后台核实。撤销只影响这笔订单对应的套餐权益，不会删除账号或其他购买。</p>
+    <div class="status" id="claimsOverview">验证运营身份后显示统计</div>
+    <div class="ops-customer-filters">
+      <label for="claimsSearch">按订单号、账号或套餐搜索
+        <input id="claimsSearch" type="search" maxlength="80" autocomplete="off" placeholder="输入关键词"></label>
+      <label for="claimsReviewFilter">对账状态
+        <select id="claimsReviewFilter"><option value="">全部</option>
+        <option value="pending">待核对</option><option value="verified">已核实</option>
+        <option value="abnormal">异常</option></select></label>
+      <div class="ops-claim-refresh"><button id="claimsRefresh" type="button" class="secondary">刷新记录</button></div>
+    </div>
+    <div id="claimsStatus" class="status" role="status" aria-live="polite">请先验证运营身份。</div>
+    <div id="claimsList" class="ops-customer-list"><p class="soft">验证后显示自助订单。</p></div>
+    <nav class="ops-book-pagination" aria-label="自助订单记录翻页">
+      <button id="claimsPrev" type="button" class="secondary">上一页</button>
+      <span id="claimsPageInfo">第 0 / 0 页</span>
+      <button id="claimsNext" type="button" class="secondary">下一页</button>
     </nav>
   </section>
   <section class="panel" aria-label="学习商品分类管理">
