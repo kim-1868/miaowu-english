@@ -34,8 +34,8 @@ test("S166: both operator panels default closed, retain live totals in their sum
    assert.ok(!summary.includes('id="'+id+'"'),"query and action controls stay inside collapsed body");
   }
  }
- assert.match(html,/ops-console\.css\?[^"]*layout=20261106-v41/);
- assert.match(html,/ops-console\.js\?[^"]*layout=20261106-v41/);
+ assert.match(html,/ops-console\.css\?[^"]*layout=20261106-v42/);
+ assert.match(html,/ops-console\.js\?[^"]*layout=20261106-v42/);
 });
 test("S166: customer and claim rows use accessible one-column disclosure lists with safe summary and full detail",()=>{
  for(const [source,name] of [[customer,"customers"],[claims,"claims"]]){
@@ -72,8 +72,8 @@ test("S166: unchanged operational actions and filters remain behind disclosure w
  assert.ok(claims.includes('reviewStatus:$("claimsReviewFilter").value'));
  assert.ok(claims.includes('[["restore","恢复本单权益"]]'));
  assert.ok(claims.includes('[["verify","核实通过"],["flag","标记异常"],["revoke","撤销本单权益"]]'));
- assert.ok(main.includes("/ops-customers.js?v=20261106-v41-compact"));
- assert.ok(main.includes("/ops-claims.js?v=20261106-v41-compact"));
+ assert.ok(main.includes("/ops-customers.js?v=20261106-v42-compact"));
+ assert.ok(main.includes("/ops-claims.js?v=20261106-v42-compact"));
 });
 test("S166: page size is ten in client and server; all existing result and entitlement fences remain intact",()=>{
  assert.ok(customer.includes("const pageSize=10;"));
