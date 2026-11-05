@@ -1,0 +1,19 @@
+name: Verify additive word-sense schema draft (isolated, no Cloudflare)
+on:
+  push:
+    branches: [design/canonical-word-senses-no-production-change-20261105]
+    paths:
+      - db/plans/009_canonical_word_senses_DRAFT.sql
+      - tests/word-sense-schema-draft.test.py
+      - .github/workflows/verify-word-sense-schema-draft.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  isolated-sqlite-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: SQLite in-memory legacy preservation and shared-sense assertions
+        run: python3 tests/word-sense-schema-draft.test.py
