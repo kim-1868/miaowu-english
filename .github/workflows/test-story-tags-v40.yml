@@ -26,6 +26,7 @@ jobs:
           npm run check
           npm run assets:production:build
           grep -Fq 'export function suggestStoryTags' dist-production/public/novel-file-parser.js
+          test "$(find dist-production/public -maxdepth 1 -type f | wc -l)" -eq 38
           grep -Fq '为全部已上架小说补齐推荐标签' dist-production/public/ops.html
           grep -Fq 'id="uploadTagSuggestions"' dist-production/public/ops.html
           grep -Fq '已有自定义标签' dist-production/public/ops-console.js
