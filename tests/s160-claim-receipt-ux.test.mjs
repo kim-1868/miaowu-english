@@ -20,7 +20,7 @@ test("V34: buyer page guides one-tap copying of JUST the activation code",()=>{
  assert.match(js,/copySingle\("voucher"\)/);
  assert.match(js,/copySingle\("recovery"\)/);
  assert.match(js,/已复制！现在可以前往妙屋英语/);
- assert.match(js,/navigator\.clipboard\?\.writeText\(value\)/);
+ assert.match(js,/navigator\.clipboard\.writeText\(value\)/);
  assert.match(js,/fallbackCopy\(value\)/);
  assert.doesNotMatch(js,/JSON\.stringify\(\{[^}]*activationCode[^}]*recoveryKey/);
  assert.match(css,/\.voucher-panel/);
