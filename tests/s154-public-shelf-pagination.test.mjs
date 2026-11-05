@@ -38,7 +38,7 @@ test("S154 pagination controls are native, bounded and do not render all book pa
   assert.match(css,/\.shelf-pagination\{/);
   assert.match(css,/@media\(max-width:620px\)/);
   assert.match(html,/styles\.css\?v=20261104-v28-night-selection/);
-  assert.match(html,/app\.js\?v=20261104-v27-shelf-pages/);
+  assert.match(html,/app\.js\?v=20261105-v30-flashcards/);
 });
 test("S154 existing cover tags and reading progress remain attached to page books",()=>{
   assert.match(app,/book\.cover_tags/);

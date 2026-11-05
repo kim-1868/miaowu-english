@@ -80,7 +80,11 @@ async function wordList(env,userId){
     "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e WHERE e.user_id=uw.user_id "+
     "AND e.category_id=b.category_id AND e.revoked_at IS NULL))) "+
     "ORDER BY uw.last_seen_at DESC LIMIT 200",userId).all();
-  return json({words:(result.results||[]).map(w=>{
+  // The old list is capped for display, but the fast-learning due counter
+  // must count the user's entire entitled collection, not only 200 rows.
+  const dueCount=await sql(env,"SELECT COUNT(*) AS n FROM user_words uw "+
+    "WHERE uw.user_id=? AND uw.bookmarked=1 AND "+flashVisible+" "+flashScope("due"),userId).first();
+  return json({flashDue:Number(dueCount?.n||0),words:(result.results||[]).map(w=>{
     let pairs=[];try{const parsed=JSON.parse(w.collocations_json||"[]");if(Array.isArray(parsed))pairs=parsed.slice(0,8)}catch{}
     const {collocations_json,...fields}=w;return {...fields,collocations:pairs};
   })});
@@ -133,9 +137,113 @@ async function quickReview(req,env,userId){
   ]);
   return json({saved:true,wordId,chapterId,remembered,bookmarked:!remembered,nextReviewDays:remembered?3:1});
 }
+
+// V30: bookplate memory sessions. Only accessible bookmarked words can appear
+// or be reviewed; all due dates and spell-check results are authoritative in D1.
+const flashVisible=
+  "EXISTS(SELECT 1 FROM chapter_words cw JOIN chapters ch ON ch.id=cw.chapter_id "+
+  "JOIN books b ON b.id=ch.book_id JOIN categories c ON c.id=b.category_id "+
+  "WHERE cw.word_id=uw.word_id AND b.status='published' AND c.is_visible=1 "+
+  "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
+  "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
+  "WHERE e.user_id=uw.user_id AND e.category_id=b.category_id AND e.revoked_at IS NULL)))";
+const flashScope=(scope)=>scope==="due"?
+  "AND uw.status!='mastered' AND uw.due_at IS NOT NULL AND uw.due_at<=CURRENT_TIMESTAMP":
+  scope==="learning"?"AND uw.status!='mastered'":"";
+const flashSource=(field)=>
+  "(SELECT "+field+" FROM chapter_words cw2 JOIN chapters ch2 ON ch2.id=cw2.chapter_id "+
+  "JOIN books b2 ON b2.id=ch2.book_id JOIN categories c2 ON c2.id=b2.category_id "+
+  "WHERE cw2.word_id=uw.word_id AND b2.status='published' AND c2.is_visible=1 "+
+  "AND ch2.published_at IS NOT NULL AND ch2.published_at<=CURRENT_TIMESTAMP "+
+  "AND (ch2.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e2 "+
+  "WHERE e2.user_id=uw.user_id AND e2.category_id=b2.category_id AND e2.revoked_at IS NULL)) "+
+  "ORDER BY ch2.chapter_no,ch2.id LIMIT 1)";
+async function flashcardPool(req,env,userId){
+  const params=new URL(req.url).searchParams;
+  const scope=params.get("scope")||"due";
+  const pageString=params.get("page")||"1";
+  const sizeString=params.get("size")||"10";
+  if(!["due","learning","all"].includes(scope)||!/^[1-9][0-9]{0,3}$/.test(pageString)||
+     !["10","20"].includes(sizeString))
+    return err("INVALID_FLASHCARD_SCOPE",400);
+  const page=Number(pageString),limit=Number(sizeString),offset=(page-1)*limit;
+  const from="FROM user_words uw JOIN words w ON w.id=uw.word_id "+
+    "WHERE uw.user_id=? AND uw.bookmarked=1 AND "+flashVisible+" "+flashScope(scope);
+  const count=await sql(env,"SELECT COUNT(*) AS n "+from,userId).first();
+  const result=await sql(env,
+    "SELECT uw.word_id,uw.status,uw.due_at,w.headword,w.meaning_zh,w.phonetic_uk,"+
+    "w.phonetic_us,w.part_of_speech,w.example_en,w.example_zh,w.collocations_json,"+
+    flashSource("cw2.context_sentence")+" AS context_sentence,"+
+    flashSource("ch2.id")+" AS chapter_id,"+
+    flashSource("b2.title")+" AS book_title "+
+    from+" ORDER BY "+
+    (scope==="due"?"uw.due_at ASC,uw.word_id ASC":
+      "w.headword COLLATE NOCASE ASC,uw.word_id ASC")+
+    " LIMIT ? OFFSET ?",userId,limit,offset).all();
+  return json({scope,page,pageSize:limit,total:Number(count?.n||0),
+    hasMore:offset+limit<Number(count?.n||0),
+    words:(result.results||[]).map(w=>{
+      let collocations=[];try{
+        const p=JSON.parse(w.collocations_json||"[]");
+        if(Array.isArray(p))collocations=p.slice(0,5);
+      }catch{}
+      const {collocations_json,...rest}=w;
+      return {...rest,collocations};
+    })});
+}
+async function flashcardAnswer(req,env,userId){
+  const body=await readJson(req);if(body.error)return err(body.error,400);
+  const {wordId,mode,judgment,answer,requestId}=body.data;
+  if(typeof wordId!=="string"||!ID.test(wordId)||
+     !["flip","spell"].includes(mode)||
+     typeof requestId!=="string"||!/^[0-9a-f]{8}-[0-9a-f-]{27,44}$/i.test(requestId)||
+     (mode==="flip"&&!["known","unsure","forgot"].includes(judgment))||
+     (mode==="spell"&&(typeof answer!=="string"||answer.length>100||!answer.trim())))
+    return err("INVALID_FLASHCARD_ANSWER",400);
+  const existing=await sql(env,"SELECT user_id,word_id,game_type,result FROM review_events WHERE id=?",requestId).first();
+  if(existing){
+    if(existing.user_id!==userId||existing.word_id!==wordId||
+       existing.game_type!=="bookplate-"+mode)return err("FLASHCARD_REQUEST_REUSED",409);
+    return json({saved:true,alreadyApplied:true,correct:existing.result==="correct",
+      result:existing.result});
+  }
+  const word=await sql(env,"SELECT w.headword,w.meaning_zh,uw.status FROM user_words uw "+
+    "JOIN words w ON w.id=uw.word_id WHERE uw.user_id=? AND uw.word_id=? "+
+    "AND uw.bookmarked=1 AND "+flashVisible,userId,wordId).first();
+  if(!word)return err("FLASHCARD_WORD_UNAVAILABLE",403);
+  // Flip cards are honest self-ratings; spelling is ALWAYS evaluated here.
+  const correct=mode==="flip"?judgment==="known":
+    answer.trim().normalize("NFKC").toLocaleLowerCase("en-US")===
+    word.headword.trim().normalize("NFKC").toLocaleLowerCase("en-US");
+  const result=correct?"correct":mode==="flip"&&judgment==="unsure"?"hinted":"incorrect";
+  const history=await sql(env,"SELECT result FROM review_events WHERE user_id=? AND word_id=? "+
+    "AND game_type IN ('bookplate-flip','bookplate-spell') "+
+    "ORDER BY rowid DESC LIMIT 3",userId,wordId).all();
+  let streak=correct?1:0;
+  if(correct)for(const event of history.results||[]){
+    if(event.result!=="correct")break;
+    streak++;
+  }
+  const days=correct?[1,3,7,14][Math.min(streak-1,3)]:1;
+  const preserveMastered=word.status==="mastered"&&correct;
+  await env.DB.batch([
+    sql(env,"INSERT INTO review_events(id,user_id,word_id,chapter_id,game_type,result) "+
+      "VALUES(?,?,?,NULL,?,?)",requestId,userId,wordId,"bookplate-"+mode,result),
+    sql(env,"UPDATE user_words SET status=?,last_seen_at=CURRENT_TIMESTAMP,"+
+      "due_at=CASE WHEN ? THEN NULL ELSE datetime('now','+'||?||' days') END "+
+      "WHERE user_id=? AND word_id=? AND bookmarked=1",
+      preserveMastered?"mastered":"learning",preserveMastered?1:0,days,userId,wordId)
+  ]);
+  return json({saved:true,correct,result,expected:word.headword,
+    meaning:word.meaning_zh||"",nextReviewDays:preserveMastered?null:days,
+    status:preserveMastered?"mastered":"learning"});
+}
+
 export async function handleLearningState(req,env,path,user){
   if(!user)return err("LOGIN_REQUIRED",401);
   if(path==="/api/me/quick-review"&&req.method==="POST")return quickReview(req,env,user.id);
+  if(path==="/api/me/flashcards"&&req.method==="GET")return flashcardPool(req,env,user.id);
+  if(path==="/api/me/flashcards/answer"&&req.method==="POST")return flashcardAnswer(req,env,user.id);
   if(path==="/api/me/progress"&&req.method==="GET")return progressList(env,user.id);
   if(path==="/api/me/words"&&req.method==="GET")return wordList(env,user.id);
   if(path==="/api/me/progress"&&req.method==="POST")return setProgress(req,env,user.id);
