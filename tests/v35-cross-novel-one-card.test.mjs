@@ -114,3 +114,12 @@ test("V35: distinguish same spelling from same teaching sense and dedupe before 
  assert.equal(uniqueStudyRows(values).length,3);
  assert.equal(uniqueStudyRows(values).filter(w=>w.headword==="charge").length,3);
 });
+
+test("V35: reader new-word counter reflects learned senses instead of only bookmarked rows",()=>{
+ const app=readFileSync(new URL("../public/app.js",import.meta.url),"utf8");
+ const chapter=readFileSync(new URL("../public/chapter-words.js",import.meta.url),"utf8");
+ assert.match(app,/unseenSenses=new Set/);
+ assert.match(app,/filter\(w=>!w\.study_seen\)/);
+ assert.match(chapter,/words\.filter\(w=>!w\.study_seen\)/);
+ assert.match(chapter,/自愿复习已学词/);
+});
