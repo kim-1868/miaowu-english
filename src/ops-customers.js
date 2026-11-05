@@ -12,7 +12,7 @@ const JSON_HEADERS={
 };
 const answer=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:JSON_HEADERS});
 const fail=(error,status=400)=>answer({error},status);
-const PAGE_SIZE=20;
+const PAGE_SIZE=10;
 const ALLOWED_STATUS=new Set(["","unused","redeemed","revoked"]);
 const CATEGORY=/^(?:|[a-z][a-z0-9-]{2,29})$/;
 
