@@ -5,6 +5,7 @@
 const $=id=>document.getElementById(id);
 let key="",chosen=null,readiness=null,identity=null,busy=false;
 let liveEditorState=null,liveRevision=null,liveHistory=[];
+let customerAdmin=null;
 const byId=(tag,text,className)=>{
   const el=document.createElement(tag);
   if(text!==undefined)el.textContent=String(text);
@@ -36,7 +37,7 @@ async function api(path,method="GET",body){
     if(result.status===401){
       key="";identity=null;catalogBooks=[];catalogPage=1;chosen=null;
       $("operatorIdentity").textContent="身份已失效";
-      clearActions();renderBookDirectory();
+      clearActions();renderBookDirectory();customerAdmin?.reset();
     }
     throw Error("操作被拒绝："+(typeof data.error==="string"?data.error:"UNKNOWN")+
       "（HTTP "+result.status+"）。");
@@ -95,6 +96,15 @@ async function verify(){
   status("已通过运营身份校验。所有数据只从后台接口读取。");
   await loadBooks();
   try{await loadSaleCategories();}catch(e){saleStatus('发码功能暂不可用：'+e.message);}
+  try{await mountCustomerAdmin();}catch(e){$("customerResult").textContent="查询暂不可用："+e.message;}
+}
+async function mountCustomerAdmin(){
+  if(!customerAdmin){
+    const module=await import("/ops-customers.js?v=20261105-readonly-v32");
+    customerAdmin=module.initCustomerAdmin({api,connected});
+  }
+  customerAdmin.categories(categoryCatalog);
+  await customerAdmin.refresh();
 }
 // The catalog is kept in page memory only. Filters never alter D1 data or
 // the current publishing selection; page-size is capped to avoid long lists.
@@ -937,6 +947,7 @@ async function loadSaleCategories(){
  saleReady=false;syncSaleButtons();
  const data=await api("/api/ops/sales/categories");
  categoryCatalog=Array.isArray(data.categories)?data.categories:[];
+ customerAdmin?.categories(categoryCatalog);
  renderCategoryCatalog();
  const select=$("saleCategory"),prior=select.value;
  select.replaceChildren(byId("option","选择可售的商品分类"));
@@ -1056,7 +1067,7 @@ $("bookPageNext").addEventListener("click",()=>{
 button("connect",verify);button("refresh",()=>loadBooks());
 button("publish",doPublish);button("withdraw",doWithdraw);
 button("disconnect",async()=>{
-  key="";identity=null;chosen=null;clearActions();clearSaleReceipt();
+  key="";identity=null;chosen=null;clearActions();clearSaleReceipt();customerAdmin?.reset();
   catalogBooks=[];catalogPage=1;
   $("bookSearch").value="";$("bookStatus").value="";updateBookCategoryOptions();
   renderBookDirectory();
@@ -1066,6 +1077,6 @@ button("disconnect",async()=>{
   $("audit").replaceChildren(byId("p","请先验证身份。","soft"));
   $("selected").textContent="请选择一本书";status("本页内存中的运营密钥已清除。");
 });
-window.addEventListener("pagehide",()=>{key="";identity=null;clearSaleReceipt();});
+window.addEventListener("pagehide",()=>{key="";identity=null;clearSaleReceipt();customerAdmin?.reset();});
 syncButtons();
 })();
