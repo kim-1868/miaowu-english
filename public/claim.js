@@ -1,7 +1,7 @@
 (()=>{
 "use strict";
 const $=id=>document.getElementById(id);
-let ready=false,claimed=false;
+let ready=false,claimed=false,submitting=false;
 const messages={
  INVALID_CLAIM_INPUT:"订单编号格式或套餐选择不正确，请核对后再提交。",
  ORDER_ALREADY_CLAIMED:"这个订单编号已有发码记录，请不要重复领取。若遗失兑换码，请联系小红书店铺客服。",
@@ -21,7 +21,8 @@ async function api(path,options={}){
  try{response=await fetch(path,{credentials:"omit",cache:"no-store",referrerPolicy:"no-referrer",...options});}
  catch{throw Error("无法连接妙屋服务器，请检查网络后重试。")}
  let payload;
- try{payload=await response.json();}catch{throw Error("服务器返回异常，请稍后再试。")}
+ try{payload=await response.json();}
+ catch{throw Error("服务器返回异常，请稍后再试。")}
  if(!response.ok)throw Error(messages[payload.error]||"请求未成功，请稍后重试。");
  return payload;
 }
@@ -34,17 +35,21 @@ async function getProducts(){
   ready=data.enabled&&select.options.length>1;
   select.disabled=!ready;
   $("submit").disabled=!ready;
-  feedback(ready?"领取成功后请立即保存，激活码不能重复显示。":"当前没有开放的自助领取商品，请联系店铺客服。",!ready);
+  feedback(ready?"请核对小红书-订单编号和套餐，领取成功后记得保存兑换码。":
+    "当前没有开放的自助领取商品，请联系店铺客服。",!ready);
  }catch(e){feedback(e.message,true);}
 }
-$("claimForm").addEventListener("submit",async e=>{
- e.preventDefault();if(!ready||claimed)return;
+$("claimForm").addEventListener("submit",async event=>{
+ event.preventDefault();
+ if(!ready||claimed||submitting)return;
  const order=$("order").value.normalize("NFKC").trim();
  const category=$("package").value;
  if(!/^[A-Za-z0-9_-]{10,60}$/.test(order)||!/[0-9]/.test(order)||!category){
   feedback("请填写完整订单编号，并选择购买的学习套餐。",true);return;
  }
- const submit=$("submit");submit.disabled=true;feedback("正在生成专属兑换码，请勿重复点击。");
+ submitting=true;
+ const submit=$("submit");submit.disabled=true;
+ feedback("正在生成专属学习兑换码，请勿重复点击。");
  try{
   const data=await api("/api/claim/issue",{
    method:"POST",headers:{"Content-Type":"application/json"},
@@ -54,19 +59,68 @@ $("claimForm").addEventListener("submit",async e=>{
   $("packageName").textContent=data.category.title;
   $("voucher").textContent=data.activationCode;
   $("recovery").textContent=data.recoveryKey;
-  $("claimForm").hidden=true;$("receipt").hidden=false;
-  feedback("兑换码已生成。请先保存两份凭证，再前往妙屋网站注册。");
+  $("claimForm").hidden=true;$("claimIntro").hidden=true;
+  $("receipt").hidden=false;
+  feedback("已领取！请先复制学习兑换码并妥善保存，再前往妙屋英语注册。");
   $("receipt").scrollIntoView({block:"start",behavior:"smooth"});
  }catch(error){submit.disabled=false;feedback(error.message,true);}
+ finally{submitting=false;}
 });
-async function copy(id){
- const field=$(id),value=field.textContent.trim();
- if(!value)return;
- try{await navigator.clipboard.writeText(value);feedback("已复制，请妥善保存。");}
- catch{feedback("复制受浏览器限制，请长按下方文字手动复制。",true);field.focus?.();}
+function fallbackCopy(value){
+ const field=document.createElement("textarea");
+ field.value=value;
+ field.setAttribute("readonly","");
+ field.style.position="fixed";
+ field.style.top="-1000px";
+ field.style.opacity="0";
+ document.body.append(field);
+ field.focus();field.select();field.setSelectionRange(0,value.length);
+ let copied=false;
+ try{copied=document.execCommand("copy");}catch{}
+ field.remove();
+ return copied;
 }
-$("copyVoucher").addEventListener("click",()=>copy("voucher"));
-$("copyRecovery").addEventListener("click",()=>copy("recovery"));
+function selectForManualCopy(id){
+ const node=$(id);
+ try{
+  const range=document.createRange();range.selectNodeContents(node);
+  const selected=window.getSelection();selected.removeAllRanges();selected.addRange(range);
+ }catch{}
+}
+async function copySingle(id){
+ const value=$(id).textContent.trim();
+ if(!value)return;
+ const isVoucher=id==="voucher";
+ let copied=false;
+ try{
+  if(navigator.clipboard?.writeText){
+   await navigator.clipboard.writeText(value);
+   copied=true;
+  }
+ }catch{}
+ if(!copied)copied=fallbackCopy(value);
+ if(copied){
+  if(isVoucher){
+   $("copyVoucher").textContent="✓ 已复制！现在可以前往妙屋英语";
+   $("copyVoucher").classList.add("is-copied");
+   $("copyVoucherHint").textContent="复制成功！只复制了学习兑换码。点击下方「前往妙屋英语」，注册时粘贴到兑换码输入框即可。";
+   feedback("已复制学习兑换码，可以前往妙屋英语注册激活。");
+  }else{
+   $("copyRecovery").textContent="✓ 已复制备用凭证";
+   $("copyRecoveryHint").textContent="备用凭证已复制。它仅用于忘记密码时辅助找回账号，请单独保存，不要粘贴到学习兑换框。";
+  }
+ }else{
+  selectForManualCopy(id);
+  if(isVoucher){
+   $("copyVoucherHint").textContent="当前浏览器限制了自动复制。请长按上方学习兑换码，选择「复制」并保存。不要复制其他文字。";
+  }else{
+   $("copyRecoveryHint").textContent="当前浏览器限制了自动复制，请长按上方备用凭证手动复制并单独保存。";
+  }
+  feedback("浏览器未允许自动复制，请长按凭证手动复制。",true);
+ }
+}
+$("copyVoucher").addEventListener("click",()=>copySingle("voucher"));
+$("copyRecovery").addEventListener("click",()=>copySingle("recovery"));
 window.addEventListener("pagehide",()=>{
  $("voucher").textContent="";$("recovery").textContent="";
 });

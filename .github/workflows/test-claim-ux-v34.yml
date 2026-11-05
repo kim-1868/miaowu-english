@@ -1,0 +1,27 @@
+name: Check buyer claim receipt UX V34
+on:
+  push:
+    branches: [feature/claim-receipt-ux-v34-20261105]
+permissions:
+  contents: read
+jobs:
+  qa:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax, production surface and claim UX
+        run: |
+          set -euo pipefail
+          node --check public/claim.js
+          node --test tests/s160-claim-receipt-ux.test.mjs
+          npm run check
+          npm run assets:production:build
+          grep -Fq 'id="copyVoucherHint"' dist-production/public/claim.html
+          grep -Fq '小红书-订单编号' dist-production/public/claim.html
+      - name: Full regression suite
+        run: npm test

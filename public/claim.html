@@ -5,36 +5,70 @@
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="referrer" content="no-referrer">
 <title>妙屋英语 · 学习权益领取</title>
-<link rel="stylesheet" href="/claim.css?v=33">
-<script src="/claim.js?v=33a" defer></script>
+<link rel="stylesheet" href="/claim.css?v=20261105-v34">
+<script src="/claim.js?v=20261105-v34" defer></script>
 </head>
-<body><div class="page">
-<header class="brand"><span aria-hidden="true">🐈</span><span><strong>妙屋英语</strong><small>WordLetter</small></span></header>
+<body>
+<div class="page">
+<header class="brand"><span class="brand-cat" aria-hidden="true">🐈</span><span><strong>妙屋英语</strong><small>WordLetter · THE STORY & WORD LIBRARY</small></span></header>
 <main class="paper">
-<p class="eyebrow">WORDLETTER · 领取中心</p>
-<h1>领取你的学习兑换码</h1>
-<p class="lead">填写小红书-订单编号，选择所购买的英语学习套餐，领取一次性兑换码。</p>
+<p class="eyebrow">WORDLETTER · 自助领取中心</p>
+<h1>欢迎来到妙屋的故事世界</h1>
+<p class="lead">感谢你选择妙屋英语！愿你在每个精彩的故事里，遇见新的单词，也遇见更多小惊喜。🐾</p>
+<section id="claimIntro" class="claim-intro" aria-labelledby="claimHeading">
+<h2 id="claimHeading">领取你的专属学习兑换码</h2>
+<p>只需填写购买信息，即可领取属于你的学习兑换码。</p>
+</section>
 <form id="claimForm" novalidate>
 <label for="order">小红书-订单编号</label>
-<input id="order" maxlength="64" autocomplete="off" placeholder="请输入小红书-订单编号" required>
-<p class="help">在小红书订单详情中复制完整的「订单编号」，直接粘贴即可，无需手动添加「小红书-」前缀。</p>
-<label for="package">购买套餐</label>
-<select id="package" disabled required><option value="">加载中…</option></select>
-<p class="help">请选择实际购买的套餐，后台会进行人工对账。</p>
-<button class="primary" id="submit" type="submit" disabled>领取兑换码</button>
+<input id="order" maxlength="64" autocomplete="off" inputmode="text" spellcheck="false" placeholder="请输入小红书-订单编号" required>
+<p class="help">请在小红书订单详情中复制「订单编号」直接粘贴，无需手动添加“小红书-”。</p>
+<label for="package">选择你购买的学习套餐</label>
+<select id="package" disabled required><option value="">正在加载套餐…</option></select>
+<p class="help">请按实际购买的套餐选择，领取对应的专属学习兑换码。</p>
+<p class="form-notice">温馨提示：每笔订单仅可领取一次，请确认订单编号与购买套餐正确后再提交。</p>
+<button class="primary claim-submit" id="submit" type="submit" disabled>领取我的学习兑换码 →</button>
 </form>
 <div id="status" class="status" role="status" aria-live="polite">正在加载…</div>
-<section id="receipt" hidden>
+<section id="receipt" hidden aria-label="学习兑换码领取结果">
+<div class="success-head">
+<span class="success-check" aria-hidden="true">✓</span>
 <h2>领取成功！</h2>
-<p>请立即保存，关闭后无法重新查看。</p>
-<label>学习兑换码：<strong id="packageName"></strong></label>
-<code id="voucher"></code>
-<button type="button" id="copyVoucher" class="outline">复制兑换码</button>
-<details><summary>查看订单找回凭证（建议保存）</summary>
-<code id="recovery"></code><button type="button" id="copyRecovery" class="outline">复制找回凭证</button>
+<p>你的英语学习之旅，现在开始 ✨</p>
+</div>
+<div class="voucher-panel">
+<p class="voucher-label">你的专属学习兑换码</p>
+<p class="package-caption">已领取套餐：<strong id="packageName"></strong></p>
+<code id="voucher" aria-label="学习兑换码"></code>
+<button type="button" id="copyVoucher" class="primary voucher-copy">复制学习兑换码</button>
+<p id="copyVoucherHint" class="copy-hint" role="status" aria-live="polite">点击上面的按钮，只复制学习兑换码。请将它粘贴到妙屋英语的注册或兑换框中。</p>
+</div>
+<div class="save-reminder">
+<strong>✦ 温馨提醒</strong>
+<p>学习兑换码只能成功激活一次。建议把它保存在自己的手机备忘录中，也可以私下截图留存。不要将兑换码发给其他人。</p>
+</div>
+<div class="next-steps">
+<h3>接下来，开启你的故事书架</h3>
+<ol>
+<li><strong>复制</strong>上方的学习兑换码</li>
+<li>点击下方按钮，前往妙屋英语</li>
+<li>注册用户名和密码，在兑换码输入框中<strong>粘贴刚才复制的兑换码</strong></li>
+</ol>
+<a href="/" class="primary go">前往妙屋英语，注册并激活 →</a>
+<p class="small-hint">请先复制并保存学习兑换码；页面不会自动跳转。</p>
+</div>
+<details id="recoveryDetails" class="recovery-details">
+<summary>账号找回备用凭证 <span>忘记密码时使用</span></summary>
+<p class="recovery-help">这不是学习兑换码，也不需要在注册时填写。如果以后忘记登录密码，可使用这份备用凭证协助找回账号。建议<strong>单独保存</strong>，不要与学习兑换码混淆。</p>
+<code id="recovery" aria-label="账号找回备用凭证"></code>
+<button type="button" id="copyRecovery" class="outline">复制备用凭证</button>
+<p id="copyRecoveryHint" class="recovery-hint" role="status" aria-live="polite">凭证仅在首次领取时显示，请妥善保管，勿向他人泄露。</p>
 </details>
-<a href="/" class="primary go">前往妙屋英语，注册并兑换</a>
+<p class="receipt-thanks">感谢你来到妙屋。希望每一次翻开故事，都能收获一点点英语学习的快乐。🐾</p>
 </section>
-<p class="foot-note">每个订单编号限领一次；当前不支持自动付款核验。错误订单及套餐可能被运营人员撤销，请按实际购买信息填写。</p>
+<p class="foot-note">一笔订单仅可领取一次。如填写有误或遇到问题，请联系小红书店铺客服。</p>
 </main>
-<footer>妙屋英语 · WordLetter</footer></div></body></html>
+<footer>妙屋英语 · WordLetter · 在故事里遇见新单词</footer>
+</div>
+</body>
+</html>
