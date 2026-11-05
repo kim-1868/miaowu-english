@@ -199,6 +199,8 @@ async function loadBooks(keepId=chosen?.id){
 }
 async function openBook(book){
   chosen=book;renderBookDirectory();clearActions();
+  suggestionBookId=null;$("suggestedTags").replaceChildren();
+  $("suggestTagsStatus").textContent="可为当前书籍生成新的剧情标签建议。";
   $("selectedCoverFile").value="";
   void loadCurrentCover(book);
   void loadCoverTags(book);
