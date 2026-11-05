@@ -2,6 +2,7 @@
 "use strict";
 const $=id=>document.getElementById(id);
 let ready=false,claimed=false,submitting=false;
+const RECEIPT_KEY="mw:claim:receipt:v36";
 const messages={
  INVALID_CLAIM_INPUT:"订单编号格式或套餐选择不正确，请核对后再提交。",
  ORDER_ALREADY_CLAIMED:"这个订单编号已有发码记录，请不要重复领取。若遗失兑换码，请联系小红书店铺客服。",
@@ -25,6 +26,34 @@ async function api(path,options={}){
  catch{throw Error("服务器返回异常，请稍后再试。")}
  if(!response.ok)throw Error(messages[payload.error]||"请求未成功，请稍后重试。");
  return payload;
+}
+// Preserve the one-time-issued receipt in this browser TAB; never reissue on refresh.
+function showReceipt(data,save=true){
+ if(!data||typeof data.categoryTitle!=="string"||
+    typeof data.activationCode!=="string"||!data.activationCode.startsWith("MW-")||
+    typeof data.recoveryKey!=="string"||!data.recoveryKey.startsWith("MW-REC-"))
+   throw Error("领取结果不完整，请联系店铺客服，不要重新提交订单编号。");
+ $("packageName").textContent=data.categoryTitle;
+ $("voucher").textContent=data.activationCode;
+ $("recovery").textContent=data.recoveryKey;
+ $("claimForm").hidden=true;$("claimIntro").hidden=true;
+ $("receipt").hidden=false;claimed=true;ready=false;
+ if(save){
+  try{window.sessionStorage?.setItem(RECEIPT_KEY,JSON.stringify(data));}catch{}
+  $("receipt").scrollIntoView({block:"start",behavior:"smooth"});
+ }
+ feedback("领取成功！请分别保存学习兑换码与账号找回备用凭证。");
+}
+function restoreReceipt(){
+ try{
+  const raw=window.sessionStorage?.getItem(RECEIPT_KEY);
+  if(!raw)return false;
+  const data=JSON.parse(raw);
+  if(typeof data?.categoryTitle!=="string"||data.categoryTitle.length>80||
+     !/^MW-[A-Z0-9-]{20,100}$/.test(data.activationCode||"")||
+     !/^MW-REC-[A-Z0-9-]{20,100}$/.test(data.recoveryKey||""))return false;
+  showReceipt(data,false);return true;
+ }catch{return false}
 }
 async function getProducts(){
  try{
@@ -55,14 +84,8 @@ $("claimForm").addEventListener("submit",async event=>{
    method:"POST",headers:{"Content-Type":"application/json"},
    body:JSON.stringify({orderReference:order,categoryId:category})
   });
-  claimed=true;ready=false;
-  $("packageName").textContent=data.category.title;
-  $("voucher").textContent=data.activationCode;
-  $("recovery").textContent=data.recoveryKey;
-  $("claimForm").hidden=true;$("claimIntro").hidden=true;
-  $("receipt").hidden=false;
-  feedback("已领取！请先复制学习兑换码并妥善保存，再前往妙屋英语注册。");
-  $("receipt").scrollIntoView({block:"start",behavior:"smooth"});
+  showReceipt({categoryTitle:data.category?.title,
+   activationCode:data.activationCode,recoveryKey:data.recoveryKey});
  }catch(error){submit.disabled=false;feedback(error.message,true);}
  finally{submitting=false;}
 });
@@ -121,8 +144,6 @@ async function copySingle(id){
 }
 $("copyVoucher").addEventListener("click",()=>copySingle("voucher"));
 $("copyRecovery").addEventListener("click",()=>copySingle("recovery"));
-window.addEventListener("pagehide",()=>{
- $("voucher").textContent="";$("recovery").textContent="";
-});
-void getProducts();
+// Copying or navigating MUST NOT erase the unredeemed claim result.
+if(!restoreReceipt())void getProducts();
 })();

@@ -4,7 +4,7 @@ import {readFileSync} from "node:fs";
 const html=readFileSync(new URL("../public/claim.html",import.meta.url),"utf8");
 const js=readFileSync(new URL("../public/claim.js",import.meta.url),"utf8");
 const css=readFileSync(new URL("../public/claim.css",import.meta.url),"utf8");
-test("V34: buyer page guides one-tap copying of JUST the activation code",()=>{
+test("V36: claim receipt stays visible after copying and backup is expanded",()=>{
  for(const id of ["voucher","copyVoucher","copyVoucherHint","recovery","copyRecovery",
   "copyRecoveryHint","recoveryDetails","claimForm","receipt","packageName"])
   assert.match(html,new RegExp('id="'+id+'"'));
@@ -23,6 +23,12 @@ test("V34: buyer page guides one-tap copying of JUST the activation code",()=>{
  assert.match(js,/navigator\.clipboard\.writeText\(value\)/);
  assert.match(js,/fallbackCopy\(value\)/);
  assert.doesNotMatch(js,/JSON\.stringify\(\{[^}]*activationCode[^}]*recoveryKey/);
+ assert.match(html,/<section id="recoveryDetails"/);
+ assert.doesNotMatch(html,/<details id="recoveryDetails"|<summary>/);
+ assert.match(js,/RECEIPT_KEY/);
+ assert.match(js,/sessionStorage/);
+ assert.match(js,/restoreReceipt\(\)/);
+ assert.doesNotMatch(js,/addEventListener\("pagehide"/);
  assert.match(css,/\.voucher-panel/);
  assert.match(css,/\.voucher-copy/);
  assert.match(css,/\[hidden\]\{display:none!important\}/);
