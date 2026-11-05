@@ -11,7 +11,7 @@ const source=join(root,"public"),out=join(root,"dist-production","public");
 export const PRODUCTION_ASSET_ALLOWLIST=Object.freeze([
  "index.html","styles.css","flashcards.css","app.js","chapter-words.js","echo-cloud.js","flashcards.js",
  "live.html","live-reader.js","live-reader.css",
- "ops.html","ops-console.js","ops-customers.js","ops-claims.js","ops-console.css","novel-file-parser.js","story-tag-suggester.js","rainy-night.html",
+ "ops.html","ops-console.js","ops-customers.js","ops-claims.js","ops-console.css","novel-file-parser.js","rainy-night.html",
  "rainy-night-cover.webp","rainy-night-cover-v2.svg",
  "cat-reading-window.svg","cat-reading-watercolor.webp","cat-reading-hd.avif",
  "cat-reading-tablet-1x.webp","cat-reading-tablet-2x.webp","cat-reading-tablet-2x.avif",
