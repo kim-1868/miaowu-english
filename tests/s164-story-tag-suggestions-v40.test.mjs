@@ -1,7 +1,7 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {suggestStoryTags} from "../public/story-tag-suggester.js";
+import {suggestStoryTags} from "../public/novel-file-parser.js";
 
 const js=readFileSync(new URL("../public/ops-console.js",import.meta.url),"utf8");
 const html=readFileSync(new URL("../public/ops.html",import.meta.url),"utf8");
