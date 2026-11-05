@@ -1,0 +1,21 @@
+{
+  "name": "miaowu-english-staging",
+  "main": "scripts/v11-staging-qa-bootstrap.mjs",
+  "compatibility_date": "2026-10-30",
+  "vars": {
+    "APP_ENV": "staging"
+  },
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "miaowu-english-test",
+      "database_id": "88a817cb-23bb-4ae4-bcb8-92286c4165d4"
+    }
+  ],
+  "keep_vars": true
+}
