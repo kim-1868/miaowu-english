@@ -74,6 +74,7 @@ test("S157: bookplate pools only contain purchased, still-published and bookmark
     assert.equal(pool.status,200);
     assert.deepEqual(pool.body.words.map(x=>x.word_id),["word-a","word-b"]);
     assert.equal(pool.body.total,2);
+    assert.equal((await call("/api/me/words")).body.flashDue,2);
     assert.equal(pool.body.words[0].chapter_id,"ch-one");
     assert.equal(pool.body.words[0].book_title,"accessible");
     assert.ok(pool.body.words[0].context_sentence.includes("evidence"));
@@ -102,6 +103,7 @@ test("S157: flip rating and server-checked spelling save cloud events without er
     assert.equal(repeated.body.alreadyApplied,true);
     assert.equal(db.prepare("SELECT COUNT(*) n FROM review_events").get().n,1);
     assert.equal((await call("/api/me/flashcards?scope=due")).body.total,1);
+    assert.equal((await call("/api/me/words")).body.flashDue,1);
     const req2=randomUUID();
     const guess=await call("/api/me/flashcards/answer","POST",{
       wordId:"word-b",mode:"spell",answer:" PROMISE ",requestId:req2
@@ -159,6 +161,9 @@ test("S157: server pages large collections beyond the old 200-word display limit
     const first=await call("/api/me/flashcards?scope=learning&page=1&size=20");
     const last=await call("/api/me/flashcards?scope=learning&page=11&size=20");
     assert.equal(first.body.total,217);
+    const legacy=await call("/api/me/words");
+    assert.equal(legacy.body.words.length,200);
+    assert.equal(legacy.body.flashDue,217);
     assert.equal(first.body.words.length,20);
     assert.equal(last.body.words.length,17);
     assert.equal(first.body.pageSize,20);
@@ -187,6 +192,8 @@ test("S157: customer learning screen is reachable and original bookplate grid an
   assert.ok(ui.includes("inputmode=\"text\""));
   assert.ok(ui.includes("autocomplete=\"off\""));
   assert.ok(ui.includes("每张词卡只在提交成功后推进"));
+  assert.ok(ui.includes('last.scope==="due"?1:last.page+1'));
+  assert.ok(ui.includes("确定结束本轮吗"));
   assert.ok(worker.includes('path === "/api/me/flashcards"'));
   assert.ok(css.includes("@media(max-width:620px)"));
   assert.ok(css.includes('html[data-theme="dark"] .flash-paper'));
