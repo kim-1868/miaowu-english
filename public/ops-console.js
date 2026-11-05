@@ -605,11 +605,72 @@ button("saveSelectedCover",async()=>{
  }
 });
 // Cover tags stay separate from artwork; changes update the shelf immediately.
-const defaultTagColors=[
-  ["新书上架","#a34a52"],["已完结","#526e68"],["高能反转","#713848"],
-  ["甜宠","#af6078"],["悬疑","#455a78"],["治愈","#7d8a5b"],
-  ["热门推荐","#9f753e"],["持续更新","#507e9a"]
+// Keep the original options. Extra genre/plot/length labels are UI presets only:
+// they are not persisted or attached to a book until an operator saves them.
+const defaultTagGroups=[
+  ["原有常用",[
+    ["新书上架","#a34a52"],
+    ["已完结","#526e68"],
+    ["高能反转","#713848"],
+    ["甜宠","#af6078"],
+    ["悬疑","#455a78"],
+    ["治愈","#7d8a5b"],
+    ["热门推荐","#9f753e"],
+    ["持续更新","#507e9a"]
+  ]],
+  ["题材类型",[
+    ["豪门","#9f753e"],
+    ["都市","#455a78"],
+    ["职场","#507e9a"],
+    ["双男主","#455a78"],
+    ["重生","#713848"],
+    ["穿书","#713848"],
+    ["霸总","#9f753e"],
+    ["豪门逆袭","#9f753e"],
+    ["职场逆袭","#507e9a"],
+    ["霸总甜宠","#af6078"],
+    ["都市情感","#af6078"]
+  ]],
+  ["感情关系",[
+    ["虐恋","#8d5262"],
+    ["双向暗恋","#af6078"],
+    ["暗恋","#af6078"],
+    ["先婚后爱","#af6078"],
+    ["契约婚姻","#8d5262"],
+    ["追妻火葬场","#a34a52"],
+    ["白月光","#8d5262"],
+    ["死对头","#455a78"],
+    ["暧昧拉扯","#af6078"],
+    ["合租日常","#7d8a5b"],
+    ["误会","#8d5262"],
+    ["离婚","#713848"],
+    ["退婚","#713848"],
+    ["先退婚后恋爱","#af6078"]
+  ]],
+  ["剧情亮点",[
+    ["爽文","#9f753e"],
+    ["逆袭","#9f753e"],
+    ["打脸","#a34a52"],
+    ["身份反转","#713848"],
+    ["真假千金","#9f753e"],
+    ["女主觉醒","#a34a52"],
+    ["女性成长","#526e68"],
+    ["反套路","#713848"],
+    ["追悔莫及","#8d5262"],
+    ["家族纷争","#713848"],
+    ["家庭反击","#a34a52"],
+    ["替嫁","#9f753e"],
+    ["秘密揭晓","#455a78"],
+    ["秘密","#455a78"],
+    ["失踪谜案","#455a78"],
+    ["亲情","#7d8a5b"]
+  ]],
+  ["篇幅类型",[
+    ["短篇","#526e68"],
+    ["中长篇","#526e68"]
+  ]]
 ];
+const defaultTagColors=defaultTagGroups.flatMap(([,tags])=>tags);
 let coverTags=[],tagPresets=[],editingTag=null;
 const validTagColor=x=>/^#[0-9a-fA-F]{6}$/.test(x||"")?x:"#713848";
 function renderCoverTagOverlay(){
@@ -625,8 +686,20 @@ function renderTagChoices(){
   const input=$("tagPreset"),selected=input.value;
   input.replaceChildren(new Option("自己输入标签",""));
   const known=new Map(defaultTagColors);
-  for(const p of tagPresets)known.set(p.label,p.color);
-  for(const [label] of known)input.add(new Option(label,label));
+  for(const [groupName,tags] of defaultTagGroups){
+    const group=document.createElement("optgroup");
+    group.label=groupName;
+    for(const [label] of tags)group.append(new Option(label,label));
+    input.add(group);
+  }
+  const customGroup=document.createElement("optgroup");
+  customGroup.label="已有自定义标签";
+  for(const preset of tagPresets){
+    if(!preset?.label||known.has(preset.label))continue;
+    known.set(preset.label,preset.color);
+    customGroup.append(new Option(preset.label,preset.label));
+  }
+  if(customGroup.children.length)input.add(customGroup);
   if(known.has(selected))input.value=selected;
 }
 function renderTags(){
