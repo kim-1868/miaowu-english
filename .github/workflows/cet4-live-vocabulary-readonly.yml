@@ -100,7 +100,7 @@ jobs:
               'per_book':sorted(per_book,key=lambda v:v['different_id_overlap_terms'],reverse=True),
               'examples_multiple_ids':sample
           }
-                    defs=collections.defaultdict(lambda: collections.defaultdict(set))
+          defs=collections.defaultdict(lambda: collections.defaultdict(set))
           for r in rows:
               defs[norm(r['headword'])][(norm(r.get('pos') or ''),norm(r.get('meaning') or ''))].add(r['word_id'])
           variants=sorted([(k,len(v),len(lemmas[k]['books']),
