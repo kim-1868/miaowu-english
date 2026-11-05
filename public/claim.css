@@ -74,3 +74,7 @@ body{background:#211d24}input,select{background:#40333d;color:white;border-color
 .success-check{background:#2c4b3b;border-color:#4b8063;color:#b5f1ca}
 .next-steps li:before{background:#634252;color:#fff3eb}
 }
+
+/* V36: account-recovery credential is displayed immediately, not folded away. */
+.recovery-details h3{margin:0 0 7px;font-size:15px;color:var(--rose);font-weight:750}
+.recovery-details h3 span{display:block;margin-top:3px;font:500 12px/1.6 system-ui,-apple-system,"PingFang SC",sans-serif;color:var(--soft)}
