@@ -1,0 +1,40 @@
+name: Verify Miaowu integrated V39 ops tags, vouchers and word identity
+on:
+  push:
+    branches: [fix/restore-tags-merge-v39-20261106]
+    paths: [.github/workflows/test-integrated-v39.yml, public/ops-console.js, public/ops.html, src/reading-library.js, src/echo-cloud.js, src/study-identity.js]
+permissions:
+  contents: read
+jobs:
+  qa:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax, tag preservation, voucher revoke and shared word identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check public/ops-console.js
+          node --check src/study-identity.js
+          node --check src/reading-library.js
+          node --check src/echo-cloud.js
+          node --check src/worker.js
+          node --test tests/s163-batch-story-tags-v38.test.mjs tests/s162-voucher-control.test.mjs tests/v35-cross-novel-one-card.test.mjs
+          npm run check
+          npm run assets:production:build
+          grep -Fq 'id="applyStoryTags"' dist-production/public/ops.html
+          grep -Fq 'const storyTagPlanV38=' dist-production/public/ops-console.js
+          grep -Fq '已有自定义标签' dist-production/public/ops-console.js
+          grep -Fq '作废此兑换码' dist-production/public/ops.html
+          grep -Fq '账号找回备用凭证' dist-production/public/claim.html
+          grep -Fq '学习本章新词' dist-production/public/chapter-words.js
+          grep -Fq 'unseenSenses=new Set' dist-production/public/app.js
+      - name: Full integration regressions
+        run: npm test
