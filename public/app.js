@@ -44,7 +44,7 @@
         seen?'喵呜，你已收藏 '+seen+' 张词卡':'喵呜，读一段故事，收藏第一张词卡';
       const hint=!user?'登录后，阅读进度与词卡会自动同步到你的账号。':
         due?'这些词已经到复习时间。去剧情回声找回故事里的单词吧。':
-        '打开记忆藏书票，继续复习你在小说中遇见的单词。';
+        '打开记忆生词本，继续复习你在小说中遇见的单词。';
       area.innerHTML='<div class="reminder-cat reminder-paw" aria-hidden="true">'+
         '<svg class="solid-cat-paw" viewBox="0 0 80 80" width="58" height="58" fill="currentColor" xmlns="http://www.w3.org/2000/svg">'+
         '<ellipse cx="15.5" cy="29" rx="7.7" ry="10.2" transform="rotate(-24 15.5 29)"/>'+
@@ -55,7 +55,7 @@
         '</svg></div>'+
         '<div class="reminder-content"><strong>'+safe(title)+'</strong><small>'+safe(hint)+'</small></div>'+
         '<button class="primary reminder-btn" id="reviewReminderBtn">'+
-        (user?'查看记忆藏书票 →':'登录后同步 →')+'</button>';
+        (user?'查看记忆生词本 →':'登录后同步 →')+'</button>';
       $('reviewReminderBtn').onclick=()=>user?(due?navigate('echo'):navigate('words')):showLogin();
       renderHomeStudyStats();
     }
@@ -348,7 +348,7 @@
             '<button class="secondary-btn" type="button" data-my-shelf-save="'+safe(book.book_id)+'">'+
             (book.bookmarked?'✓ 已收藏 · 移除':'♡ 加入书架')+'</button></div></div></article>';
         }).join(''):'<p class="v11-my-shelf-empty">这个分类暂时还没有故事，去首页挑一本喜欢的吧。</p>')+'</div>'+
-        '<p class="v11-my-shelf-foot">移除收藏不会删除阅读进度。付费章节仍需对应学习分类的阅读权限。</p>';
+        '<p class="v11-my-shelf-foot">移出生词本不会删除阅读进度。付费章节仍需对应学习分类的阅读权限。</p>';
       root.querySelectorAll('[data-personal-filter]').forEach(btn=>btn.onclick=()=>{
         personalShelfFilter=btn.dataset.personalFilter;renderPersonalBookshelf();
       });
@@ -606,7 +606,7 @@
         '<div class="study-switch"><button id="studyPrevious" type="button" '+(idx<=0?'disabled':'')+'>← 上一个词</button>'+
         '<button id="studyNext" type="button" '+(idx<0||idx===ids.length-1?'disabled':'')+'>下一个词 →</button></div>'+
         '<div class="word-actions"><button id="wordSpeak" type="button">♫ 听发音</button>'+
-        '<button id="wordSave" type="button" '+(loading?'disabled':'')+'>'+(current?.bookmarked?'✓ 已收藏 · 移除':'♡ 收藏藏书票')+'</button>'+
+        '<button id="wordSave" type="button" '+(loading?'disabled':'')+'>'+(current?.bookmarked?'✓ 已收藏 · 移除':'♡ 添加生词本')+'</button>'+
         '<button id="cloudMaster" type="button" '+(loading?'disabled':'')+'>'+
         (current?.status==='mastered'?'↻ 继续学习':'✓ 标记已掌握')+'</button></div>';
       const mobileStudyTray=window.matchMedia('(max-width:700px)').matches;
@@ -891,7 +891,7 @@
     }
     function splitPart(txt){const rg=/\[\[([a-z]+)\]\]（([^）]+)）/g;let last=0,html='',m;while((m=rg.exec(txt))){html+=safe(txt.slice(last,m.index));html+=`<button class="word" data-word="${m[1]}">${m[1]}</button><span class="gloss">（${safe(m[2])}）</span>`;last=rg.lastIndex}return html+safe(txt.slice(last))}
     function openChapter(num){resetDemoReadingUI();if(num>0&&!has('cet4')){showRegister({intent:'locked'});return}if(num<0||num>=CHAPTERS.length)return;chapter=num;VISITED.add(num);CHAPTER_WORDS[num].forEach(touchWord);saveReview();navigate('reader');$('chapterNo').textContent=`CHAPTER ${String(num+1).padStart(2,'0')} · ${num===0?'FREE PREVIEW':'MEMBER PREVIEW'}`;$('chapterTitle').textContent=CHAPTERS[num].title;$('storyText').innerHTML=CHAPTERS[num].parts.map(p=>`<p>${splitPart(p)}</p>`).join('');$('storyText').style.fontSize=fontSize+'px';$('readerCrumb').textContent='四级故事馆 / '+(num===0?'免费试读':'已购演示');$('chapterList').innerHTML=CHAPTERS.map((ch,i)=>`<button class="chapter-btn ${i===num?'current':''}" data-chapter="${i}">${String(i+1).padStart(2,'0')} · ${ch.title} ${i===1&&!has('cet4')?'🔒':''}</button>`).join('')+'<button class="chapter-btn" disabled>后续章节 · 内容筹备中</button>';document.querySelectorAll('[data-chapter]').forEach(b=>b.onclick=()=>openChapter(Number(b.dataset.chapter)));document.querySelectorAll('.word').forEach(b=>b.onclick=()=>openWord(b.dataset.word));$('readingStatus').textContent=has('cet4')?'四级已解锁 · 演示内容':'免费试读 · 章节02需激活';$('progressBar').style.width=(VISITED.size/CHAPTERS.length*100)+'%';$('readingChapter').textContent=`第${String(num+1).padStart(2,'0')}章`;$('savedCount').textContent=saved.size;$('nextChapter').textContent=num===0?'下一章 →':'返回书架 →';$('readerLayout').classList.toggle('night',night);$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);$('toggleNight').classList.toggle('pressed',night);$('toggleNight').textContent=night?'☀ 日间':'☾ 夜间';$('nextChapter').onclick=()=>num===0?openChapter(1):navigate('library');let side=$('readingStatus').closest('.side-panel');let extra=side.querySelector('#readerLearningStats');if(!extra){extra=document.createElement('div');extra.id='readerLearningStats';side.appendChild(extra)}extra.innerHTML=`<div class="metric"><span>待学习词汇（演示）</span><strong>${Object.keys(WORDS).length-touchedWords().length}</strong></div><div class="metric"><span>今天待复习</span><strong>${dueList().length}</strong></div>`;try{localStorage.setItem('miaowu_demo_lastchapter',String(num))}catch(e){} }
-    function openWord(w){if(!WORDS[w])return;popWord=w;touchWord(w);const info=WORDS[w];$('wordPop').innerHTML=`<button class="modal-close" id="wordClose" aria-label="关闭">×</button><div class="eyebrow">MIAOWU · WORD IN STORY</div><h3>${safe(w)}</h3><div class="pron">${safe(info.phonetic)} · ${safe(info.part)}</div><div class="meaning">${safe(info.meaning)}</div><div class="context">故事原句：<br>${safe(info.context)}</div><div class="word-extra"><strong>额外例句</strong><br>${safe(info.example)}<br><span style="color:var(--muted)">${safe(info.translation)}</span></div><div class="word-extra"><strong>常用搭配</strong><br>${info.collocations.map(x=>safe(x[0])+' · '+safe(x[1])).join('<br>')}</div><div class="word-actions"><button id="wordSpeak">♫ 听发音</button><button id="wordSave">${saved.has(w)?'✓ 已收藏':'♡ 收藏藏书票'}</button></div>`;$('wordPop').classList.add('on');$('wordBackdrop').classList.add('on');$('wordClose').onclick=closeWord;$('wordSpeak').onclick=()=>speakWord(w);$('wordSave').onclick=()=>toggleWord(w)}
+    function openWord(w){if(!WORDS[w])return;popWord=w;touchWord(w);const info=WORDS[w];$('wordPop').innerHTML=`<button class="modal-close" id="wordClose" aria-label="关闭">×</button><div class="eyebrow">MIAOWU · WORD IN STORY</div><h3>${safe(w)}</h3><div class="pron">${safe(info.phonetic)} · ${safe(info.part)}</div><div class="meaning">${safe(info.meaning)}</div><div class="context">故事原句：<br>${safe(info.context)}</div><div class="word-extra"><strong>额外例句</strong><br>${safe(info.example)}<br><span style="color:var(--muted)">${safe(info.translation)}</span></div><div class="word-extra"><strong>常用搭配</strong><br>${info.collocations.map(x=>safe(x[0])+' · '+safe(x[1])).join('<br>')}</div><div class="word-actions"><button id="wordSpeak">♫ 听发音</button><button id="wordSave">${saved.has(w)?'✓ 已收藏':'♡ 添加生词本'}</button></div>`;$('wordPop').classList.add('on');$('wordBackdrop').classList.add('on');$('wordClose').onclick=closeWord;$('wordSpeak').onclick=()=>speakWord(w);$('wordSave').onclick=()=>toggleWord(w)}
     function closeWord(){
       ++studyRequestSequence;selectedStudyWordId=null;studyAnchorEl=null;
       const tray=$('wordPop'),backdrop=$('wordBackdrop');
@@ -905,7 +905,7 @@
       $('storyText').querySelectorAll('[data-cloud-word]').forEach(el=>el.classList.remove('study-word-active'));
       popWord=null;
     }
-    function toggleWord(w){if(saved.has(w)){saved.delete(w);toast('已从本机演示收藏移除，学习记录继续保留')}else{saved.add(w);toast('已收藏到本机演示藏书票（仅此浏览器）')}saveWords();if(popWord===w)openWord(w);$('savedCount').textContent=saved.size;if(view==='words')renderWords()}
+    function toggleWord(w){if(saved.has(w)){saved.delete(w);toast('已从本机演示收藏移除，学习记录继续保留')}else{saved.add(w);toast('已收藏到本机演示生词本（仅此浏览器）')}saveWords();if(popWord===w)openWord(w);$('savedCount').textContent=saved.size;if(view==='words')renderWords()}
     function saveWords(){try{localStorage.setItem('miaowu_demo_words',JSON.stringify([...saved]));localStorage.setItem('miaowu_demo_mastered',JSON.stringify([...mastered]))}catch(e){}}
     function renderWords(){
       globalThis.MiaowuFlashcards?.render({
@@ -919,7 +919,7 @@
       $('bookplateCount').textContent=String(cloudTotal);
       if(!user){
         $('vocabGrid').innerHTML='<div class="empty" style="grid-column:1/-1">'+
-          '<div class="big">♧</div><h3>登录后，打开你的云端藏书票</h3>'+
+          '<div class="big">♧</div><h3>登录后，打开你的云端生词本</h3>'+
           '<p>登录同一账号即可在不同设备读取已收藏的单词。</p>'+
           '<button class="primary" id="cloudWordsLogin">登录我的书房</button></div>';
         $('cloudWordsLogin').onclick=showLogin;return;
@@ -927,8 +927,8 @@
       if(!words.length){
         const hasSaved=cloudTotal>0;
         $('vocabGrid').innerHTML='<div class="empty" style="grid-column:1/-1">'+
-          '<div class="big">♧</div><h3>'+(hasSaved?'这个筛选下暂无藏书票':'第一张藏书票，等你来收下')+'</h3>'+
-          '<p>'+(hasSaved?'试试切换「全部收藏」，查看其它学习状态的词卡。':'打开已解锁的故事，点击英文词汇即可收藏到记忆藏书票。')+'</p>'+
+          '<div class="big">♧</div><h3>'+(hasSaved?'这个筛选下暂无生词本':'第一张生词本，等你来收下')+'</h3>'+
+          '<p>'+(hasSaved?'试试切换「全部收藏」，查看其它学习状态的词卡。':'打开已解锁的故事，点击英文词汇即可收藏到记忆生词本。')+'</p>'+
           '<button class="primary" id="emptyRead">寻找故事 →</button></div>';
         $('emptyRead').onclick=()=>navigate('library');return;
       }
@@ -950,7 +950,7 @@
             safe(p.zh||'')+'</span></div>').join('')+'</div>'+
           '<div class="card-tools"><button data-cloud-say="'+safe(w.word_id)+'">♫ 发音</button>'+
           '<button data-cloud-master="'+safe(w.word_id)+'">'+(mastered?'↻ 改为学习中':'✓ 标记已掌握')+'</button>'+
-          '<button data-cloud-remove="'+safe(w.word_id)+'">移除收藏</button></div></div>';
+          '<button data-cloud-remove="'+safe(w.word_id)+'">移出生词本</button></div></div>';
       }).join(''):'';
       const sources='<div class="bookplate-source-summary">已同步词卡 '+cloudTotal+
         ' 张<small>这些词卡关联你的账号，可在登录后跨设备查看。</small></div>';
@@ -1133,10 +1133,10 @@
         '<span style="font-size:12px;color:var(--muted)">妙屋英语 · 我的云端学习记录</span></div></div>'+
         '<div class="account-stats">'+stats.map(x=>'<div class="account-stat"><strong>'+x.n+'</strong><small>'+
         x.t+'</small></div>').join('')+'</div>'+
-        '<div class="account-reminder"><div><strong>♧ 记忆藏书票</strong>'+
+        '<div class="account-reminder"><div><strong>♧ 记忆生词本</strong>'+
         '<div class="echo-tip">到期词卡 '+due+' 张 · 已收藏 '+cloudSaved.size+
         ' 张 · 剧情回声学习记录同步到账户</div></div>'+
-        '<button class="primary" id="accountStartReview">查看藏书票 →</button></div>'+
+        '<button class="primary" id="accountStartReview">查看生词本 →</button></div>'+
         '<div class="account-content"><div class="account-block"><h3>已解锁学习分类</h3>'+
         (ent.map(c=>'<span class="account-tag">✓ '+safe(c.name)+'</span>').join('')||
           '<p>暂无已解锁分类</p>')+
@@ -1177,7 +1177,7 @@
       showModal([
         '<span class="eyebrow">OPEN YOUR LIBRARY</span>',
         '<h2 id="modalTitle">注册并激活</h2>',
-        '<p>设置用户名和登录密码，并输入获得的一次性分类激活码。你的阅读记录与藏书票会关联到这个账号。</p>',
+        '<p>设置用户名和登录密码，并输入获得的一次性分类激活码。你的阅读记录与生词本会关联到这个账号。</p>',
         '<form id="registerForm">',
           '<div class="form-field"><label for="rName">自定义用户名</label>',
           '<input id="rName" autocomplete="username" minlength="3" maxlength="24" placeholder="3–24位字母、数字或下划线等" required></div>',
@@ -1399,7 +1399,7 @@
       };
     }
     function formError(s){$('formMessage').innerHTML=`<div class="form-message">${safe(s)}</div>`}
-    function explain(){showModal(`<span class="eyebrow">HOW IT WORKS</span><h2 id="modalTitle">一部小说，一段词汇记忆</h2><p>这是一款将阅读、听书、词汇收藏与情节回忆组合在一起的互动阅读器。</p><div class="onboarding" style="padding:15px;margin:12px 0"><h3>01 · 先读故事</h3><p>打开已解锁的章节，点击酒红色英文词查义、听发音。</p><h3>02 · 收下藏书票</h3><p>收藏之后，你可以在「记忆藏书票」里复习。</p><h3>03 · 听见剧情回声</h3><p>可选不同玩法、章节范围，通过选择与拼写练习回忆词汇。</p><h3>04 · 解锁完整书架</h3><p>注册账号后使用一次性分类激活码解锁更多作品，实际开放内容以书架为准。</p></div><button class="primary" id="explainRead" style="width:100%">去书架看看 →</button>`);$('explainRead').onclick=()=>{closeModal();openFirstCloudBook()}}
+    function explain(){showModal(`<span class="eyebrow">HOW IT WORKS</span><h2 id="modalTitle">一部小说，一段词汇记忆</h2><p>这是一款将阅读、听书、词汇收藏与情节回忆组合在一起的互动阅读器。</p><div class="onboarding" style="padding:15px;margin:12px 0"><h3>01 · 先读故事</h3><p>打开已解锁的章节，点击酒红色英文词查义、听发音。</p><h3>02 · 收下生词本</h3><p>收藏之后，你可以在「记忆生词本」里复习。</p><h3>03 · 听见剧情回声</h3><p>可选不同玩法、章节范围，通过选择与拼写练习回忆词汇。</p><h3>04 · 解锁完整书架</h3><p>注册账号后使用一次性分类激活码解锁更多作品，实际开放内容以书架为准。</p></div><button class="primary" id="explainRead" style="width:100%">去书架看看 →</button>`);$('explainRead').onclick=()=>{closeModal();openFirstCloudBook()}}
     // Device TTS remains unchanged. The player now supports paragraph/segment
     // navigation without pretending that speechSynthesis has audio timestamps.
     let speechGeneration=0;
