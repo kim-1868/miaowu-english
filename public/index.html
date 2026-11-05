@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#f8f3ec" />
   <title>妙屋英语 · THE STORY & WORD LIBRARY｜故事阅读与词汇记忆</title>
   <link rel="stylesheet" href="/styles.css?v=20261104-v28-night-selection" />
+  <link rel="stylesheet" href="/flashcards.css?v=20261105-v30-flashcards" />
 </head>
 <body>
   <div class="app-shell">
@@ -77,7 +78,7 @@
     <div class="chapter-vocab-header"><h3 id="chapterVocabTitle">本章词汇</h3><span class="side-caption" id="chapterVocabCount">0 词</span><button id="chapterVocabToggle" class="chapter-vocab-toggle" type="button" aria-expanded="true" aria-controls="chapterVocabBody">收起</button></div>
     <div id="chapterVocabBody"><p class="side-caption">打开章节后查看全部目标词。</p></div>
     </div><div class="side-panel"><h3>我的阅读进度</h3><span class="side-caption" id="readingStatus">阅读进度</span><div class="book-progress"><span id="progressBar"></span></div><div class="metric"><span>已收藏词汇</span><strong id="savedCount">0</strong></div><div class="metric"><span>最近阅读</span><strong id="readingChapter">第01章</strong></div><div class="metric"><span>待学习词汇</span><strong id="readerUnseen">—</strong></div><div class="metric"><span>今日待复习</span><strong id="readerDue">0</strong></div></div><div class="side-panel"><h3>阅读设置</h3><p class="side-caption">点击英文弹出词卡。需要回忆时，隐藏释义再读一次。</p><button class="secondary-btn" id="sideToggleGloss" style="width:100%;margin-top:9px">切换释义显示</button><button class="secondary-btn" id="sideRead" style="width:100%;margin-top:9px">▶ 开始朗读</button></div><div class="mini-note">章节朗读使用设备内置语音，支持跳转段落；语音音色由设备提供。</div></aside><div id="readerDrawerOverlay" class="reader-drawer-overlay"></div></div></section>
-    <section id="view-words" class="view app-section"><div class="page-intro"><div><span class="eyebrow">YOUR WORD COLLECTION</span><h1>我的记忆藏书票</h1><p>单词不是孤立的条目。每一个单词，都有它被你遇见时的故事。</p></div><button class="secondary-btn" id="wordbookRead">返回故事 →</button></div><div class="filter-row"><button class="filter-chip active" data-word-filter="all">全部收藏</button><button class="filter-chip" data-word-filter="learning">待复习</button><button class="filter-chip" data-word-filter="mastered">已记住</button></div><div class="wordbook-layout"><div class="wordbook-grid" id="vocabGrid"></div><aside><div class="side-panel"><span class="eyebrow">YOUR BOOKPLATE</span><div class="stamp">KEEP<br><small>THE WORDS</small><br>✦</div><h3 style="text-align:center">把好故事，留在心里</h3><p class="side-caption" style="text-align:center">收藏单词，再从原剧情中把它想起来。复习只是轻轻翻开另一页。</p><div class="metric"><span>我的藏书票</span><strong id="bookplateCount">0</strong></div></div></aside></div></section>
+    <section id="view-words" class="view app-section"><div class="page-intro"><div><span class="eyebrow">YOUR WORD COLLECTION</span><h1>我的记忆藏书票</h1><p>单词不是孤立的条目。每一个单词，都有它被你遇见时的故事。</p></div><button class="secondary-btn" id="wordbookRead">返回故事 →</button></div><section id="flashcardTrainer" class="flashcard-trainer" aria-label="记忆藏书票快速学习"></section><div class="filter-row"><button class="filter-chip active" data-word-filter="all">全部收藏</button><button class="filter-chip" data-word-filter="learning">待复习</button><button class="filter-chip" data-word-filter="mastered">已记住</button></div><div class="wordbook-layout"><div class="wordbook-grid" id="vocabGrid"></div><aside><div class="side-panel"><span class="eyebrow">YOUR BOOKPLATE</span><div class="stamp">KEEP<br><small>THE WORDS</small><br>✦</div><h3 style="text-align:center">把好故事，留在心里</h3><p class="side-caption" style="text-align:center">收藏单词，再从原剧情中把它想起来。复习只是轻轻翻开另一页。</p><div class="metric"><span>我的藏书票</span><strong id="bookplateCount">0</strong></div></div></aside></div></section>
     <section id="view-echo" class="view app-section"><div class="echo-wrap"><div class="echo-banner"><span class="eyebrow" style="color:#e9c2a5">STORY ECHO · THE MEMORY GAME</span><h2>剧情回声</h2><p>闭上书页，故事还在。选择剧情填词、情境选择或单词找回，复习你真正读过的章节。</p></div><div id="echoModeSwitch"></div><div id="quizContainer"></div></div></section>
     <section id="view-account" class="view app-section"><div class="page-intro"><div><span class="eyebrow">MY PRIVATE LIBRARY</span><h1>我的书房</h1><p>这里收藏你拥有的故事，也记录它们陪你记住的词。</p></div></div><div id="accountPanel"></div></section>
     <div class="foot-note">MIAOWU · THE STORY & WORD LIBRARY <span style="color:#b79383">✦</span> DESIGNED FOR STORIES & WORDS<br><span style="font:11px sans-serif;color:#ac9b93;letter-spacing:0">在故事里相遇，让词汇慢慢留下来。</span></div>
@@ -93,6 +94,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="/chapter-words.js"></script>
   <script src="/echo-cloud.js?v=20261103-v12-review-cover"></script>
-  <script src="/app.js?v=20261104-v27-shelf-pages"></script>
+  <script src="/flashcards.js?v=20261105-v30-flashcards"></script>
+  <script src="/app.js?v=20261105-v30-flashcards"></script>
 </body>
 </html>
