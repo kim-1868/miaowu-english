@@ -1,0 +1,113 @@
+name: V1.1 one-time TEST D1 onboarding schema (not production)
+on:
+  push:
+    branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
+    paths: [.github/workflows/v11-staging-009-once.yml]
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-staging-009-once
+  cancel-in-progress: false
+jobs:
+  migrate-staging-only:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-phase1-mobile-and-install-guide-20261106' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Fail closed unless D1 binding belongs to TEST database
+        run: |
+          set -euo pipefail
+          node scripts/check-v11-preview-config.mjs
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const c=JSON.parse(readFileSync('v11-onboarding-migrator.wrangler.jsonc','utf8'));
+          if(c.name!=='miaowu-v11-onboarding-migrator'||c.vars?.APP_ENV!=='staging'||
+             c.d1_databases?.length!==1||c.d1_databases[0]?.binding!=='DB'||
+             c.d1_databases[0]?.database_name!=='miaowu-english-test'||
+             c.d1_databases[0]?.database_id!=='88a817cb-23bb-4ae4-bcb8-92286c4165d4'||
+             c.main!=='scripts/v11-onboarding-migrator.mjs')throw Error('UNSAFE_MIGRATION_TARGET');
+          const sql=readFileSync('db/009_v11_onboarding.sql','utf8');
+          if(!sql.includes('CREATE TABLE IF NOT EXISTS user_onboarding')||
+             /(?:ALTER|DROP|DELETE|UPDATE|INSERT)\s+(?:TABLE|FROM|INTO|users|activation_codes)/i.test(sql))
+            throw Error('UNEXPECTED_MIGRATION_SQL');
+          console.log('Safe staging-only 009 target and additive SQL confirmed');
+          NODE
+      - name: Run complete regression including onboarding tests
+        run: |
+          npm run check
+          npm test
+      - name: Install Wrangler
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Generate ephemeral bearer and 12-minute expiry (never check in or log)
+        run: |
+          node --input-type=module <<'NODE'
+          import {randomBytes} from 'node:crypto';
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const key=randomBytes(48).toString('hex');
+          const config=JSON.parse(readFileSync('v11-onboarding-migrator.wrangler.jsonc','utf8'));
+          config.vars.MIGRATION_EXPIRES_AT=String(Date.now()+12*60*1000);
+          writeFileSync('v11-onboarding-migrator.wrangler.jsonc',JSON.stringify(config));
+          writeFileSync(process.env.RUNNER_TEMP+'/mw-v11-migrate-key.json',JSON.stringify({MIGRATION_SECRET:key}),{mode:0o600});
+          writeFileSync(process.env.RUNNER_TEMP+'/mw-v11-migrate-key',key,{mode:0o600});
+          NODE
+      - name: Deploy isolated short-lived migrator with encrypted secret
+        id: deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npx wrangler deploy --config v11-onboarding-migrator.wrangler.jsonc --secrets-file "$RUNNER_TEMP/mw-v11-migrate-key.json" > "$RUNNER_TEMP/mw-v11-deploy.log" 2>&1 || {
+            grep -E 'ERROR|Error|permission|Forbidden|forbidden|not authorized' "$RUNNER_TEMP/mw-v11-deploy.log" | head -n 8 || true
+            exit 1
+          }
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const log=readFileSync(process.env.RUNNER_TEMP+'/mw-v11-deploy.log','utf8');
+          const url=[...log.matchAll(/https:\/\/[a-z0-9.-]+\.workers\.dev/gi)].map(x=>x[0]).find(x=>x.includes('miaowu-v11-onboarding-migrator'));
+          if(!url)throw Error('MIGRATOR_URL_NOT_FOUND');
+          writeFileSync(process.env.RUNNER_TEMP+'/mw-v11-migrator-url',url);
+          console.log('Temporary staging-only migration worker deployed');
+          NODE
+      - name: Invoke test-only migration and verify 009 schema
+        env:
+          MIGRATION_KEY_FILE: ${{ runner.temp }}/mw-v11-migrate-key
+        run: |
+          set -euo pipefail
+          url="$(cat "$RUNNER_TEMP/mw-v11-migrator-url")"
+          key="$(cat "$MIGRATION_KEY_FILE")"
+          status="$(curl --silent --show-error --max-time 30 --output "$RUNNER_TEMP/mw-v11-result.json" --write-out '%{http_code}' -X POST -H "X-Migration-Authorization: $key" "$url/__v11_onboarding_migrate")"
+          test "$status" = "200" || {
+            echo "STAGING_ONBOARDING_MIGRATION_FAILED_HTTP_$status"
+            exit 1
+          }
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const result=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/mw-v11-result.json','utf8'));
+          if(result.ok!==true||result.table!=='user_onboarding'||result.schemaVerified!==true||
+             result.noUserDataTouched!==true)throw Error('STAGING_ONBOARDING_SCHEMA_NOT_VERIFIED');
+          console.log('STAGING_009_SCHEMA_VERIFIED; existing user/activation data unchanged by migration');
+          console.log('EXISTING_TABLE: '+Boolean(result.alreadyPresent));
+          NODE
+          code="$(curl --silent --show-error --max-time 20 --output /dev/null --write-out '%{http_code}' -X POST "$url/__v11_onboarding_migrate")"
+          test "$code" = "403" || { echo "MIGRATOR_ANONYMOUS_ACCESS_NOT_DENIED"; exit 1; }
+      - name: Delete temporary migrator (always; never delete staging or production Worker)
+        if: always()
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -f "$RUNNER_TEMP/mw-v11-migrator-url" ]; then
+            printf 'y\n' | npx wrangler delete --name miaowu-v11-onboarding-migrator --config v11-onboarding-migrator.wrangler.jsonc
+            echo 'TEMPORARY_MIGRATION_WORKER_DELETED'
+          else
+            echo 'No successfully deployed migration Worker recorded; no deletion requested'
+          fi
+          rm -f "$RUNNER_TEMP/mw-v11-migrate-key" "$RUNNER_TEMP/mw-v11-migrate-key.json"
