@@ -1,0 +1,115 @@
+name: V1.1 deploy protected staging preview (never production)
+run-name: Release V1.1 candidate to isolated preview Worker
+
+on:
+  push:
+    branches:
+      - feature/v11-preview-environment-20261106
+    paths:
+      - .github/workflows/v11-preview-deploy.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: miaowu-v11-staging-only-deploy
+  cancel-in-progress: false
+
+jobs:
+  staging-only:
+    if: github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-preview-environment-20261106'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout the exact V1.1 preview candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Assert isolation and prevent any production resources
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/check-v11-preview-config.mjs
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const stage=JSON.parse(readFileSync("wrangler.jsonc","utf8"));
+            if(stage.name!=="miaowu-english-staging")throw Error("PREVIEW_TARGET_NAME_MISMATCH");
+            if(stage.d1_databases[0].database_name!=="miaowu-english-test")throw Error("PREVIEW_DB_MISMATCH");
+            if(stage.d1_databases[0].database_id==="649c71b3-340c-49bf-b806-3d39256851d3")throw Error("PRODUCTION_DB_FORBIDDEN");
+          '
+      - name: Validate code and all existing automated regression checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+      - name: Install Wrangler without project lifecycle scripts
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Build staging Worker bundle without deployment
+        run: npx wrangler deploy --dry-run --config wrangler.jsonc --outdir .wrangler/v11-preview-dryrun
+      - name: Require connected Cloudflare credentials
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          test "$HAS_TOKEN" = true || { echo "::error::Cloudflare API token missing"; exit 1; }
+          test "$HAS_ACCOUNT" = true || { echo "::error::Cloudflare account ID missing"; exit 1; }
+      - name: Verify secrets already exist ONLY on the staging Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler secret list --config wrangler.jsonc --format json > /tmp/v11-preview-secrets.json
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const list=JSON.parse(readFileSync("/tmp/v11-preview-secrets.json","utf8"));
+            if(!Array.isArray(list))throw Error("INVALID_STAGING_SECRET_LIST");
+            const names=new Set(list.map(s=>s.name));
+            for(const name of ["STAGING_PREVIEW_PASSWORD","ACTIVATION_PEPPER"])
+              if(!names.has(name))throw Error("STAGING_SECRET_MISSING_"+name);
+            console.log("STAGING_PASSWORD_AND_ACTIVATION_PEPPER_PRESENT");
+          '
+      - name: Publish candidate ONLY to existing isolated staging Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/check-v11-preview-config.mjs
+          npx wrangler deploy --config wrangler.jsonc --keep-vars 2>&1 | tee /tmp/v11-preview-deploy.log
+          grep -Eq "miaowu-english-staging" /tmp/v11-preview-deploy.log
+          if grep -Ei "Deployed miaowu-english-production|https://miaowu-english-pages.pages.dev" /tmp/v11-preview-deploy.log; then
+            echo "::error::Production origin unexpectedly mentioned during staging deploy"
+            exit 1
+          fi
+      - name: Confirm preview gate without knowing user reviewer password
+        shell: bash
+        run: |
+          set -euo pipefail
+          PREVIEW_URL=$(grep -Eo 'https://miaowu-english-staging[.a-zA-Z0-9-]*\.workers\.dev' /tmp/v11-preview-deploy.log | tail -n 1 || true)
+          if [ -z "$PREVIEW_URL" ]; then
+            echo "::error::Staging Worker URL not reported by Wrangler; do not claim publicly accessible preview"
+            exit 1
+          fi
+          echo "Staging URL: $PREVIEW_URL"
+          status=""
+          for i in $(seq 1 12); do
+            status=$(curl -sS --max-time 15 -o /tmp/v11-preview-anon-body -D /tmp/v11-preview-anon-headers -w '%{http_code}' "$PREVIEW_URL" || true)
+            if [ "$status" = "401" ]; then break; fi
+            sleep 3
+          done
+          test "$status" = "401" || { echo "::error::Preview is not protected by HTTP 401 gate"; exit 1; }
+          grep -iq 'www-authenticate: Basic' /tmp/v11-preview-anon-headers
+          grep -iq 'x-robots-tag: noindex' /tmp/v11-preview-anon-headers
+          api_status=$(curl -sS --max-time 15 -o /dev/null -w '%{http_code}' "$PREVIEW_URL/api/me/words")
+          test "$api_status" = "401" || { echo "::error::Protected APIs accessible without preview password"; exit 1; }
+          echo "PREVIEW_ACCESS_GATE_PASS_NO_PRODUCTION_DEPLOYMENT"
