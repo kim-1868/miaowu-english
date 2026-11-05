@@ -1,0 +1,101 @@
+name: Publish Miaowu reviewable 23-book tag action V38
+on:
+  push:
+    branches: [release/bulk-story-tags-v38-20261106]
+    paths: [.github/workflows/deploy-bulk-story-tags-v38.yml]
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/release/bulk-story-tags-v38-20261106' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out immutable, CI-verified V38 app
+        uses: actions/checkout@v4
+        with:
+          ref: 13b26ce92620f5119fbb855b8f6634b6f72724b3
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact V37 based diff and safe production target
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 13b26ce92620f5119fbb855b8f6634b6f72724b3
+          grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
+          git diff --name-only 4a12e28cd9cee05781dea00534b3987ac5970aab HEAD | sort > /tmp/changed
+          printf '%s\n' \
+            .github/workflows/test-bulk-tags-v38.yml \
+            content/operations/published-book-story-tags-v38.json \
+            public/ops-console.js \
+            public/ops.html \
+            tests/s163-batch-story-tags-v38.test.mjs | sort > /tmp/approved
+          diff -u /tmp/approved /tmp/changed
+          test ! -e private-output
+          test ! -e private-input
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check label plan, existing voucher behavior and full regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check public/ops-console.js
+          node --test tests/s163-batch-story-tags-v38.test.mjs
+          npm run check
+          npm test
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm run assets:production:build
+          grep -Fq 'id="applyStoryTags"' dist-production/public/ops.html
+          grep -Fq 'storyTagPlanV38' dist-production/public/ops-console.js
+          grep -Fq '已有自定义标签' dist-production/public/ops-console.js
+          grep -Fq '作废此兑换码' dist-production/public/ops.html
+          grep -Fq '账号找回备用凭证' dist-production/public/claim.html
+      - name: Install Wrangler without lifecycle scripts
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Dry-run unchanged database bindings
+        run: npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc
+      - name: Check existing site before deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/ops -o /tmp/ops-before
+          grep -Fq '作废此兑换码' /tmp/ops-before
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/claim -o /tmp/claim-before
+          grep -Fq '账号找回备用凭证' /tmp/claim-before
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/ -o /tmp/home-before
+          grep -Fq 'v31-word-only' /tmp/home-before
+      - name: Check preconfigured production credentials
+        env:
+          HAS_WORKER_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          test "$HAS_WORKER_TOKEN" = true
+          test "$HAS_ACCOUNT" = true
+      - name: Publish only opt-in operations UI and preserve D1
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc
+      - name: Smoke-check live V38 action and old workflows
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 15); do
+            curl -fsSL --max-time 20 "https://miaowu-english-pages.pages.dev/ops?storytagsv38=$i" -o /tmp/ops-after || true
+            if grep -Fq 'id="applyStoryTags"' /tmp/ops-after; then break; fi
+            sleep 3
+          done
+          grep -Fq 'id="applyStoryTags"' /tmp/ops-after
+          grep -Fq '作废此兑换码' /tmp/ops-after
+          curl -fsSL --retry 3 --max-time 25 "https://miaowu-english-pages.pages.dev/ops-console.js?storytagsv38=1" -o /tmp/ops-js-after
+          grep -Fq 'const storyTagPlanV38=' /tmp/ops-js-after
+          grep -Fq 'if(seen.has(label)){skipped++;continue}' /tmp/ops-js-after
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/claim -o /tmp/claim-after
+          grep -Fq '账号找回备用凭证' /tmp/claim-after
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/ -o /tmp/home-after
+          grep -Fq 'v31-word-only' /tmp/home-after
