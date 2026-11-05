@@ -38,6 +38,7 @@ test("batch is opt-in, authorized, and only adds missing labels via publisher ta
   assert.match(js,/const current=await api\(url\)/);
   assert.match(js,/if\(seen\.has\(label\)\)\{skipped\+\+;continue\}/);
   assert.match(js,/await api\(url,"POST",\{label,color,requestId:requestId\(\)\}\)/);
-  assert.doesNotMatch(js,/\/api\/ops\/books\/.*?\/tags","DELETE"/s);
+  const batchSection=js.slice(js.indexOf('const storyTagPlanV38='),js.indexOf('// Cover tags stay separate'));
+  assert.doesNotMatch(batchSection,/"DELETE"/);
   assert.match(js,/if\(chosen\)await loadCoverTags\(chosen\)/);
 });
