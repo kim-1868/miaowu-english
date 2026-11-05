@@ -15,7 +15,7 @@ class D1{
   for(const path of ["001_schema.sql","002_s1.sql","003_public_categories.sql","007_ops_identity_audit.sql"]){
    this.sql.exec(readFileSync(new URL("../db/"+path,import.meta.url),"utf8"));
   }
-  for(const path of ["001_one_paid_order_one_code.sql","003_paid_order_recovery.sql"]){
+  for(const path of ["001_one_paid_order_one_code.sql","002_account_recovery_codes.sql","003_paid_order_recovery.sql"]){
    this.sql.exec(readFileSync(new URL("../db/production/"+path,import.meta.url),"utf8"));
   }
   this.sql.exec(`INSERT INTO books(id,category_id,title,status) VALUES
