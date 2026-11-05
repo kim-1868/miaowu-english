@@ -175,3 +175,31 @@ button.secondary{background:#5c4852;color:#f9e8eb}hr{border-color:#674d5a}.audit
   .ops-live-word{background:#694354;color:#fff3eb}
   .ops-live-history-text small{color:#d8bdbc}
 }
+
+/* Read-only customer and activation directory (V32). */
+.ops-customer-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}
+.ops-customer-overview span{display:block;padding:10px 9px;background:#faf4eb;border:1px solid #eadad0;
+  border-radius:10px;font-size:12px;color:#6b4a4d;text-align:center}
+.ops-customer-filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin:14px 0}
+.ops-customer-filters label{font-size:12px;min-width:0}
+.ops-customer-filters input,.ops-customer-filters select{display:block;width:100%;min-width:0;
+  margin-top:6px;padding:9px 10px;background:#fff;border:1px solid #d7c7b9;
+  border-radius:9px;color:#392b2e;font:inherit}
+.ops-customer-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:13px 0}
+.ops-customer-entry{padding:14px;border-radius:12px;background:#fcf8f2;border:1px solid #e7d8cd;min-width:0}
+.ops-customer-entry-header{display:flex;justify-content:space-between;align-items:start;gap:8px;margin-bottom:8px}
+.ops-customer-entry-header strong{font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.ops-customer-badge{display:inline-flex;white-space:nowrap;background:#e9ddd7;color:#775461;
+  padding:4px 8px;border-radius:40px;font-size:11px}
+.ops-customer-badge.is-redeemed{background:#d9e9de;color:#2c7152}
+.ops-customer-detail{font-size:12px;line-height:1.75;margin:4px 0;overflow-wrap:anywhere}
+.ops-customer-entry button{margin-top:9px;font-size:12px}
+#customerTabCodes[aria-pressed=true],#customerTabUsers[aria-pressed=true]{background:#793d4d;color:#fff}
+@media(max-width:700px){.ops-customer-overview{grid-template-columns:repeat(2,1fr)}
+  .ops-customer-filters{grid-template-columns:1fr}.ops-customer-list{grid-template-columns:1fr}}
+@media(prefers-color-scheme:dark){
+ .ops-customer-overview span,.ops-customer-entry{background:#45343d;border-color:#725660;color:#f4d6de}
+ .ops-customer-filters input,.ops-customer-filters select{background:#29252b;color:#fff;border-color:#78606b}
+ .ops-customer-badge{background:#65545f;color:#f8e4e7}
+ .ops-customer-badge.is-redeemed{background:#274b3e;color:#c4f0db}
+}
