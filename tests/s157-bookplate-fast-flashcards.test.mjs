@@ -180,7 +180,7 @@ test("S157: customer learning screen is reachable and original bookplate grid an
   assert.ok(html.includes('href="/flashcards.css?v=20261105-v30-flashcards"'));
   assert.ok(html.includes('src="/app.js?v=20261105-v30-flashcards"'));
   assert.ok(app.includes("window.MiaowuFlashcards?.configure"));
-  assert.ok(app.includes("window.MiaowuFlashcards?.render"));
+  assert.ok(app.includes("globalThis.MiaowuFlashcards?.render"));
   assert.ok(ui.includes('"/api/me/flashcards/answer"'));
   assert.ok(ui.includes('crypto.randomUUID()'));
   assert.ok(ui.includes('local.queue.splice(later,0,{word:w,retry:true})'));
