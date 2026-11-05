@@ -1,0 +1,112 @@
+name: Publish sustainable story tagging V40
+on:
+  push:
+    branches: [release/sustainable-story-tags-v40-20261106]
+    paths: [.github/workflows/deploy-story-tags-v40.yml]
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/release/sustainable-story-tags-v40-20261106' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exactly the CI verified, V39 based revision
+        uses: actions/checkout@v4
+        with:
+          ref: a6791cad80cb0275ea4dfee8ab1d7a458fa492e1
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Confirm audited limited diff and unchanged production DB
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = a6791cad80cb0275ea4dfee8ab1d7a458fa492e1
+          grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
+          git diff --name-only 2f0438f06a92b51e27c4711475641c1de971635f HEAD | sort > /tmp/changed
+          printf '%s\n' \
+            .github/workflows/test-story-tags-v40.yml \
+            public/novel-file-parser.js public/ops-console.css public/ops-console.js public/ops.html \
+            src/ops-console.js tests/s163-batch-story-tags-v38.test.mjs \
+            tests/s164-story-tag-suggestions-v40.test.mjs | sort > /tmp/approved
+          diff -u /tmp/approved /tmp/changed
+          test ! -e private-output
+          test ! -e private-input
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Full site tests, safe asset bundle and novel label rules
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check public/ops-console.js
+          node --check public/novel-file-parser.js
+          node --check src/ops-console.js
+          node --test tests/s163-batch-story-tags-v38.test.mjs tests/s164-story-tag-suggestions-v40.test.mjs tests/s162-voucher-control.test.mjs tests/v35-cross-novel-one-card.test.mjs
+          npm run check
+          npm test
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm run assets:production:build
+          test "$(find dist-production/public -maxdepth 1 -type f | wc -l)" -eq 38
+          grep -Fq 'id="suggestTags"' dist-production/public/ops.html
+          grep -Fq 'id="uploadTagSuggestions"' dist-production/public/ops.html
+          grep -Fq '为全部已上架小说补齐推荐标签' dist-production/public/ops.html
+          grep -Fq 'export function suggestStoryTags' dist-production/public/novel-file-parser.js
+          grep -Fq 'const defaultTagGroups=' dist-production/public/ops-console.js
+          grep -Fq '作废此兑换码' dist-production/public/ops.html
+          grep -Fq '学习本章新词' dist-production/public/chapter-words.js
+          grep -Fq '账号找回备用凭证' dist-production/public/claim.html
+      - name: Install Cloudflare deployment tool without lifecycle scripts
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Dry run Worker, keep same production D1
+        run: npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc
+      - name: Confirm existing live website before deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/ops -o /tmp/ops-before
+          grep -Fq 'id="applyStoryTags"' /tmp/ops-before
+          grep -Fq '作废此兑换码' /tmp/ops-before
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/chapter-words.js -o /tmp/chapter-before
+          grep -Fq '学习本章新词' /tmp/chapter-before
+      - name: Require existing restricted production deploy credentials
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          test "$HAS_TOKEN" = true
+          test "$HAS_ACCOUNT" = true
+      - name: Deploy reviewed V40 preserving secrets and D1 data
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc
+      - name: Verify live current/new story tagging and core safety features
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 18); do
+            curl -fsSL --max-time 25 "https://miaowu-english-pages.pages.dev/ops?storyv40=$i" -o /tmp/ops-after || true
+            if grep -Fq 'id="uploadTagSuggestions"' /tmp/ops-after; then break; fi
+            sleep 3
+          done
+          grep -Fq 'id="applyStoryTags"' /tmp/ops-after
+          grep -Fq 'id="suggestTags"' /tmp/ops-after
+          grep -Fq 'id="uploadTagSuggestions"' /tmp/ops-after
+          grep -Fq '为全部已上架小说补齐推荐标签' /tmp/ops-after
+          grep -Fq '作废此兑换码' /tmp/ops-after
+          curl -fsSL --retry 3 --max-time 25 'https://miaowu-english-pages.pages.dev/ops-console.js?storyv40=1' -o /tmp/ops-js
+          grep -Fq 'catalogBooks.filter(b=>b.status==="published")' /tmp/ops-js
+          grep -Fq 'await renderImportTagSuggestions(pkg)' /tmp/ops-js
+          grep -Fq 'const defaultTagGroups=' /tmp/ops-js
+          curl -fsSL --retry 3 --max-time 25 'https://miaowu-english-pages.pages.dev/novel-file-parser.js?storyv40=1' -o /tmp/parser
+          grep -Fq 'export function suggestStoryTags' /tmp/parser
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/chapter-words.js -o /tmp/learn
+          grep -Fq '学习本章新词' /tmp/learn
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/claim -o /tmp/claim
+          grep -Fq '账号找回备用凭证' /tmp/claim
+          test "$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 https://miaowu-english-pages.pages.dev/api/me/words)" = 401
