@@ -33,7 +33,7 @@ jobs:
             ['claim','账号找回备用凭证','claimBackup']
           ];
           for(const [file,needle,name] of cases){
-            const str=fs.readFileSync('/tmp/'+file,'utf8');
+            const str=fs.readFileSync('/tmp/'+file.replaceAll('_','-'),'utf8');
             console.log(name+': '+(str.includes(needle)?'YES':'NO')+' ('+str.length+' bytes)');
           }
           NODE
