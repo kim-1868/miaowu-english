@@ -1,0 +1,33 @@
+name: Verify self-service claim center V33
+on:
+  push:
+    branches: [feature/self-service-claims-v33-20261105]
+permissions:
+  contents: read
+jobs:
+  qa:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and production bundle checks
+        run: |
+          set -euo pipefail
+          node --check src/self-service-claims.js
+          node --check src/ops-claims.js
+          node --check public/claim.js
+          node --check public/ops-claims.js
+          npm run check
+      - name: All integration and regression tests
+        run: npm test
+      - name: Verify production bundle includes new pages
+        run: |
+          npm run assets:production:build
+          test -f dist-production/public/claim.html
+          test -f dist-production/public/ops-claims.js
+          grep -Fq 'id="claimsPanel"' dist-production/public/ops.html
+          grep -Fq 'id="claimForm"' dist-production/public/claim.html
