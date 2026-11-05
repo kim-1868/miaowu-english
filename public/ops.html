@@ -45,6 +45,36 @@
         <button type="button" id="saleClear" class="secondary">清除页面中的凭证</button></div>
     </div>
   </section>
+  <section class="panel" id="customerPanel" aria-label="用户与激活记录">
+    <div class="panel-heading"><h2>用户与激活记录</h2><span class="soft">只读查询 · 已有数据自动显示</span></div>
+    <p class="hint">查看账号是否完成兑换、购买的学习套餐和关联订单。这里的「未兑换」只表示激活码尚未使用，不能据此确认是否已经发送给买家。不会展示激活码明文、密码或找回凭证。</p>
+    <div class="ops-customer-overview" id="customerOverview" aria-live="polite">
+      <span>用户 —</span><span>已兑换 —</span><span>未兑换 —</span><span>已作废 —</span>
+    </div>
+    <div class="row">
+      <button type="button" id="customerTabCodes" class="secondary" disabled aria-pressed="true">激活码记录</button>
+      <button type="button" id="customerTabUsers" class="secondary" disabled aria-pressed="false">用户列表</button>
+      <button type="button" id="customerRefresh" class="secondary" disabled>刷新数据</button>
+    </div>
+    <div class="ops-customer-filters">
+      <label for="customerSearch">搜索用户名或订单号
+        <input type="search" id="customerSearch" maxlength="80" autocomplete="off" placeholder="输入用户名 / 小红书订单号" disabled></label>
+      <label for="customerCategory">购买套餐
+        <select id="customerCategory" disabled><option value="">全部套餐</option></select></label>
+      <label for="customerCodeStatus">兑换状态
+        <select id="customerCodeStatus" disabled>
+          <option value="">全部状态</option><option value="redeemed">已兑换</option>
+          <option value="unused">未兑换</option><option value="revoked">已作废</option>
+        </select></label>
+    </div>
+    <div id="customerResult" class="status" role="status" aria-live="polite">请先验证运营身份。</div>
+    <div id="customerList" class="ops-customer-list"><p class="soft">此处显示真实注册用户及激活记录。</p></div>
+    <nav class="ops-book-pagination" aria-label="用户与激活记录翻页">
+      <button id="customerPrev" class="secondary" type="button" disabled>上一页</button>
+      <span id="customerPageInfo" class="soft">第 0 / 0 页</span>
+      <button id="customerNext" class="secondary" type="button" disabled>下一页</button>
+    </nav>
+  </section>
   <section class="panel" aria-label="学习商品分类管理">
     <div class="panel-heading"><h2>③ 分类管理 · 内容与售卖分开</h2><span class="soft">发布者专用 · 数据库实时同步</span></div>
     <p class="hint">分类先建立，再上传对应小说。新分类默认隐藏，不会显示给读者，也不能销售。只有正式发布内容后，才可单独开放书架和售卖。四级权益不会自动解锁其他分类。</p>
