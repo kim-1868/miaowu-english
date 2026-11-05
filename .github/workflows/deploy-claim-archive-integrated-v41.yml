@@ -2,7 +2,7 @@ name: Publish Miaowu V41 claim archive with V40 tags preserved
 on:
   push:
     branches: [release/claim-archive-v41-integrated-v40-20261106]
-    paths: [.github/workflows/deploy-claim-archive-v41.yml]
+    paths: [.github/workflows/deploy-claim-archive-integrated-v41.yml]
 permissions:
   contents: read
 concurrency:
