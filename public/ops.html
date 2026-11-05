@@ -4,7 +4,7 @@
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>妙屋英语 · 运营出版台</title>
 <link rel="stylesheet" href="/ops-console.css?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33">
-<script src="/ops-console.js?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;tags=20261106-v38" defer></script>
+<script src="/ops-console.js?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;tags=20261106-v40" defer></script>
 </head><body>
 <header><div class="brand">喵 · 妙屋英语 <span>THE STORY & WORD LIBRARY</span></div>
   <div class="strap">运营出版台 <span class="pill">受控操作</span></div></header>
@@ -139,8 +139,14 @@
       <div id="tagList" class="ops-tag-list" aria-live="polite">选择书籍后管理标签。</div>
       <div id="tagStatus" class="status" role="status">标签修改会立即保存，无须重新上传封面。</div>
       <div class="row">
-        <button id="applyStoryTags" class="secondary" type="button" disabled>一键补齐 23 本现有小说标签</button>
-        <span id="bulkStoryTagsStatus" class="hint" role="status" aria-live="polite">已核对剧情，只补充缺少的标签；不会替换原有标签及颜色。可重复点击，不会产生重复标签。</span>
+        <button id="suggestTags" type="button" class="secondary" disabled>查看当前书籍的推荐标签</button>
+        <button id="saveSuggestedTags" type="button" class="secondary" disabled>应用勾选标签</button>
+      </div>
+      <div id="suggestedTags" class="ops-suggest-list" aria-label="当前书籍标签建议"></div>
+      <p id="suggestTagsStatus" class="hint" role="status" aria-live="polite">根据书名、简介与章节标题提供保守建议，先检查再添加，不覆盖已有标签。</p>
+      <div class="row">
+        <button id="applyStoryTags" class="secondary" type="button" disabled>为全部已上架小说补齐推荐标签</button>
+        <span id="bulkStoryTagsStatus" class="hint" role="status" aria-live="polite">不限于最初23本。自动读取当前书架，包括以后上架的新小说；只添加缺少的标签。</span>
       </div>
     </div>
   </section>
@@ -256,6 +262,12 @@
     </div>
     <div id="uploadStatus" role="status" aria-live="polite" class="status">请先验证运营身份，再选择文件。</div>
     <pre id="uploadReport" class="report" hidden></pre>
+    <div class="ops-tag-editor">
+      <h3>新小说剧情标签建议</h3>
+      <p class="hint">识别小说后，根据故事简介、章节标题及部分正文生成可选标签。勾选的建议会在确认上架成功后保存；不合适的可取消。</p>
+      <div id="uploadTagSuggestions" class="ops-suggest-list" aria-label="新小说推荐标签"></div>
+      <p id="uploadTagStatus" class="hint" role="status" aria-live="polite">识别小说后显示可选标签建议。</p>
+    </div>
     <div id="uploadPreview" class="report" hidden>
       <h3>阅读效果试览（仅在当前后台显示）</h3>
       <div id="uploadPreviewSample"></div>
