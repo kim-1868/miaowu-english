@@ -18,7 +18,7 @@ function renderHome(loggedIn,saved,due){
   const el=host();if(!el)return;
   el.innerHTML='<div class="flash-intro"><div>'+
     '<span class="eyebrow">MIAOWU · QUICK MEMORY</span>'+
-    '<h2>喵呜，翻开下一张藏书票</h2>'+
+    '<h2>喵呜，翻开下一张生词本</h2>'+
     '<p>不必打开单独的复习页。听一听、想一想、翻一张，几分钟就能完成一轮。</p></div>'+
     '<div class="flash-kpis"><span>已收藏 <strong>'+saved+'</strong></span>'+
     '<span>今日待复习 <strong>'+due+'</strong></span></div></div>'+
@@ -206,7 +206,7 @@ function finish(){
   const last=round;
   el.innerHTML='<div class="flash-session flash-finish"><div class="flash-finish-stamp" aria-hidden="true">♧ ✦</div>'+
     '<span class="eyebrow">MIAOWU · MEMORIES KEPT</span><h2>这一轮，翻完啦！</h2>'+
-    '<p>你把藏书票里的故事，又记住了一点点。</p>'+
+    '<p>你把生词本里的故事，又记住了一点点。</p>'+
     '<div class="flash-finish-stats">'+
     '<div><strong>'+summary.attempted+'</strong><span>完成次数</span></div>'+
     '<div><strong>'+summary.remembered+'</strong><span>首次记住</span></div>'+
@@ -215,7 +215,7 @@ function finish(){
     '<p class="flash-finish-note">约 '+elapsed+' 分钟 · 每张提交均已同步到账号；“记住了”不等于永久掌握。</p>'+
     '<div class="flash-finish-actions"><button id="flashAgain" class="flash-primary" type="button">再来一轮</button>'+
     (last.hasMore?'<button id="flashMore" type="button">下一组词卡 →</button>':'')+
-    '<button id="flashBackList" type="button">返回全部藏书票</button></div></div>';
+    '<button id="flashBackList" type="button">返回全部生词本</button></div></div>';
   $("flashAgain").onclick=()=>{clearRound();void begin(last.mode,1);};
   if($("flashMore"))$("flashMore").onclick=()=>{
     clearRound();
