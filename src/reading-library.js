@@ -1,3 +1,4 @@
+import {studyKey,relatedAccessibleWordIds,uniqueStudyRows} from './study-identity.js';
 // S4: Real reader learning state in Cloudflare D1.
 // Never allow paid reading state changes without valid category entitlements.
 const HEADERS={"content-type":"application/json; charset=utf-8","cache-control":"private, no-store",
@@ -79,12 +80,14 @@ async function wordList(env,userId){
     "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
     "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e WHERE e.user_id=uw.user_id "+
     "AND e.category_id=b.category_id AND e.revoked_at IS NULL))) "+
-    "ORDER BY uw.last_seen_at DESC LIMIT 200",userId).all();
+    "ORDER BY uw.last_seen_at DESC LIMIT 4000",userId).all();
   // The old list is capped for display, but the fast-learning due counter
   // must count the user's entire entitled collection, not only 200 rows.
-  const dueCount=await sql(env,"SELECT COUNT(*) AS n FROM user_words uw "+
-    "WHERE uw.user_id=? AND uw.bookmarked=1 AND "+flashVisible+" "+flashScope("due"),userId).first();
-  return json({flashDue:Number(dueCount?.n||0),words:(result.results||[]).map(w=>{
+  const dueRows=await sql(env,"SELECT uw.word_id,w.headword,w.part_of_speech,w.meaning_zh "+
+    "FROM user_words uw JOIN words w ON w.id=uw.word_id "+
+    "WHERE uw.user_id=? AND uw.bookmarked=1 AND "+flashVisible+" "+flashScope("due"),userId).all();
+  return json({flashDue:uniqueStudyRows(dueRows.results||[]).length,
+    words:uniqueStudyRows(result.results||[]).slice(0,200).map(w=>{
     let pairs=[];try{const parsed=JSON.parse(w.collocations_json||"[]");if(Array.isArray(parsed))pairs=parsed.slice(0,8)}catch{}
     const {collocations_json,...fields}=w;return {...fields,collocations:pairs};
   })});
@@ -96,11 +99,15 @@ async function setWord(req,env,userId,id){
   if(typeof bookmarked!=="boolean"||!["learning","mastered"].includes(status))
     return err("INVALID_WORD_STATE",400);
   if(!(await canStudyWord(env,id,userId)))return err("WORD_NOT_AVAILABLE",403);
-  await sql(env,"INSERT INTO user_words(user_id,word_id,status,bookmarked,last_seen_at,due_at) "+
+  // One explicit learning decision applies to every accessible copy of the same sense.
+  // Keep legacy word IDs untouched for chapters and historical review events.
+  const related=await relatedAccessibleWordIds(env,id,userId);
+  await env.DB.batch(related.map(alias=>sql(env,
+    "INSERT INTO user_words(user_id,word_id,status,bookmarked,last_seen_at,due_at) "+
     "VALUES(?,?,?,?,CURRENT_TIMESTAMP,CASE WHEN ?='mastered' THEN NULL ELSE datetime('now','+1 day') END) "+
     "ON CONFLICT(user_id,word_id) DO UPDATE SET "+
     "status=excluded.status,bookmarked=excluded.bookmarked,last_seen_at=CURRENT_TIMESTAMP,due_at=excluded.due_at",
-    userId,id,status,bookmarked?1:0,status).run();
+    userId,alias,status,bookmarked?1:0,status)));
   return json({saved:true,wordId:id,bookmarked,status});
 }
 async function quickReview(req,env,userId){
@@ -121,11 +128,13 @@ async function quickReview(req,env,userId){
   // An answer of "remembered" does not imply permanently mastered.
   // The prior bookmark status is preserved; "forgot" adds a bookmark.
   const due=remembered?"+3 days":"+1 day";
+  const related=await relatedAccessibleWordIds(env,wordId,userId);
   await env.DB.batch([
     sql(env,"INSERT INTO review_events(id,user_id,word_id,chapter_id,game_type,result) "+
       "VALUES(?,?,?,?,?,?)",crypto.randomUUID(),userId,wordId,chapterId,
       "chapter-quick-review",remembered?"correct":"incorrect"),
-    sql(env,"INSERT INTO user_words(user_id,word_id,status,bookmarked,last_seen_at,due_at) "+
+    ...related.map(alias=>sql(env,
+      "INSERT INTO user_words(user_id,word_id,status,bookmarked,last_seen_at,due_at) "+
       "VALUES(?,?,'learning',?,CURRENT_TIMESTAMP,datetime('now','"+due+"')) "+
       "ON CONFLICT(user_id,word_id) DO UPDATE SET "+
       "status=CASE WHEN user_words.status='mastered' AND ?=1 THEN 'mastered' ELSE 'learning' END,"+
@@ -133,7 +142,7 @@ async function quickReview(req,env,userId){
       "last_seen_at=CURRENT_TIMESTAMP,"+
       "due_at=CASE WHEN user_words.status='mastered' AND ?=1 THEN user_words.due_at "+
       "ELSE excluded.due_at END",
-      userId,wordId,remembered?0:1,remembered?1:0,remembered?1:0)
+      userId,alias,remembered?0:1,remembered?1:0,remembered?1:0))
   ]);
   return json({saved:true,wordId,chapterId,remembered,bookmarked:!remembered,nextReviewDays:remembered?3:1});
 }
@@ -161,17 +170,19 @@ async function flashcardPool(req,env,userId){
   const page=Number(pageString),limit=Number(sizeString),offset=(page-1)*limit;
   const from="FROM user_words uw JOIN words w ON w.id=uw.word_id "+
     "WHERE uw.user_id=? AND uw.bookmarked=1 AND "+flashVisible+" "+flashScope(scope);
-  const count=await sql(env,"SELECT COUNT(*) AS n "+from,userId).first();
+  // Deduplicate BEFORE pagination, otherwise ten aliases could consume ten card slots.
   const result=await sql(env,
     "SELECT uw.word_id,uw.status,uw.due_at,w.headword,w.meaning_zh,w.phonetic_uk,"+
     "w.phonetic_us,w.part_of_speech,w.example_en,w.example_zh,w.collocations_json "+
     from+" ORDER BY "+
     (scope==="due"?"uw.due_at ASC,uw.word_id ASC":
       "w.headword COLLATE NOCASE ASC,uw.word_id ASC")+
-    " LIMIT ? OFFSET ?",userId,limit,offset).all();
-  return json({scope,page,pageSize:limit,total:Number(count?.n||0),
-    hasMore:offset+limit<Number(count?.n||0),
-    words:(result.results||[]).map(w=>{
+    " LIMIT 8000",userId).all();
+  const unique=uniqueStudyRows(result.results||[]);
+  const pageRows=unique.slice(offset,offset+limit);
+  return json({scope,page,pageSize:limit,total:unique.length,
+    hasMore:offset+limit<unique.length,
+    words:pageRows.map(w=>{
       let collocations=[];try{
         const p=JSON.parse(w.collocations_json||"[]");
         if(Array.isArray(p))collocations=p.slice(0,5);
@@ -215,13 +226,15 @@ async function flashcardAnswer(req,env,userId){
   }
   const days=correct?[1,3,7,14][Math.min(streak-1,3)]:1;
   const preserveMastered=word.status==="mastered"&&correct;
+  const related=await relatedAccessibleWordIds(env,wordId,userId);
   await env.DB.batch([
     sql(env,"INSERT INTO review_events(id,user_id,word_id,chapter_id,game_type,result) "+
       "VALUES(?,?,?,NULL,?,?)",requestId,userId,wordId,"bookplate-"+mode,result),
-    sql(env,"UPDATE user_words SET status=?,last_seen_at=CURRENT_TIMESTAMP,"+
+    ...related.map(alias=>sql(env,
+      "UPDATE user_words SET status=?,last_seen_at=CURRENT_TIMESTAMP,"+
       "due_at=CASE WHEN ? THEN NULL ELSE datetime('now','+'||?||' days') END "+
-      "WHERE user_id=? AND word_id=? AND bookmarked=1",
-      preserveMastered?"mastered":"learning",preserveMastered?1:0,days,userId,wordId)
+      "WHERE user_id=? AND word_id=?",
+      preserveMastered?"mastered":"learning",preserveMastered?1:0,days,userId,alias))
   ]);
   return json({saved:true,correct,result,expected:word.headword,
     meaning:word.meaning_zh||"",nextReviewDays:preserveMastered?null:days,
