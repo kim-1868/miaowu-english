@@ -1,0 +1,32 @@
+name: Verify Miaowu existing book tag application V38
+on:
+  push:
+    branches: [feature/bulk-story-tags-v38-20261106]
+    paths: [.github/workflows/test-bulk-tags-v38.yml]
+permissions:
+  contents: read
+jobs:
+  qa:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate curated label mapping, batch safety, syntax and bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check public/ops-console.js
+          node --test tests/s163-batch-story-tags-v38.test.mjs
+          npm run check
+          npm run assets:production:build
+          grep -Fq '一键补齐 23 本现有小说标签' dist-production/public/ops.html
+          grep -Fq 'storyTagPlanV38' dist-production/public/ops-console.js
+          grep -Fq '已有自定义标签' dist-production/public/ops-console.js
+      - name: Full regression (including voucher V37)
+        run: npm test
