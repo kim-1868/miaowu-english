@@ -1,0 +1,15 @@
+/* V1.1 P3: improve readability of word senses, example audio, and no empty blocks. */
+#wordPop .v11-word-pron{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:9px 0}
+#wordPop .v11-pron-ipa{font:normal 15px/1.5 Georgia,serif;letter-spacing:.02em;color:var(--ink,#322a2b)}
+#wordPop .v11-pron-part{display:inline-block;border-radius:8px;padding:4px 9px;
+ background:var(--bg,#f8f4ed);color:var(--wine,#672b41);font-weight:700;font-size:12px}
+#wordPop .v11-example-heading{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:7px}
+#wordPop .v11-example-heading button,
+.vocab-card .v11-example-audio{background:transparent;color:var(--wine,#672b41);
+ border:1px solid var(--line,#e7ddd4);border-radius:20px;padding:5px 10px;
+ font-size:11px;font-weight:600;min-height:32px}
+#wordPop .word-extra p{font-size:13px;line-height:1.75;margin:7px 0}
+.vocab-card .v11-example-audio{display:inline-flex;align-items:center;margin:8px 0 4px}
+html[data-theme="dark"] #wordPop .v11-pron-ipa{color:var(--ink,#eee2d8)}
+html[data-theme="dark"] #wordPop .v11-pron-part{color:#f4d2db;background:#42353c}
+@media(max-width:700px){#wordPop .v11-word-pron{gap:5px}#wordPop .v11-pron-ipa{font-size:14px}}
