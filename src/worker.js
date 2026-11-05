@@ -15,6 +15,7 @@ import { handleOpsLiveEdit } from "./ops-live-edit.js";
 import { handleBookCover } from "./book-covers.js";
 import { handleBookCoverTags } from "./book-cover-tags.js";
 import { handleLearningState } from "./reading-library.js";
+import { annotateStudyWords } from "./study-identity.js";
 import {handleEcho} from "./echo-cloud.js";
 import {
   normalizedUsername, validPassword, normalizeCode, hashCode, newPasswordHash,
@@ -412,13 +413,13 @@ async function chapterVocabulary(req, env, id, user) {
     w.example_en,w.example_zh,w.collocations_json
     FROM chapter_words cw JOIN words w ON w.id=cw.word_id
     WHERE cw.chapter_id=? ORDER BY cw.context_anchor LIMIT 2000`, id).all();
-  return json({chapterId:id, words:(result.results || []).map(row=>{
+  return json({chapterId:id, words:await annotateStudyWords(env,user?.id||null,(result.results || []).map(row=>{
     let collocations=[];
     try { const value=JSON.parse(row.collocations_json || "[]");
       if(Array.isArray(value)) collocations=value.slice(0,8); } catch {}
     const {collocations_json,...fields}=row;
     return {...fields,collocations};
-  })});
+  }))});
 }
 
 async function chapterCatalog(env, bookId, user) {
