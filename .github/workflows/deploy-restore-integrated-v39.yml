@@ -1,0 +1,114 @@
+name: Publish Miaowu V39 merged operator tags and word learning
+on:
+  push:
+    branches: [release/restore-tags-integrated-v39-20261106]
+    paths: [.github/workflows/deploy-restore-integrated-v39.yml]
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  restore:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/release/restore-tags-integrated-v39-20261106' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact fully tested V39 content
+        uses: actions/checkout@v4
+        with:
+          ref: 2f0438f06a92b51e27c4711475641c1de971635f
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Confirm only reviewed changes and same production D1 binding
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 2f0438f06a92b51e27c4711475641c1de971635f
+          grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
+          git diff --name-only 13b26ce92620f5119fbb855b8f6634b6f72724b3 HEAD | sort > /tmp/changed
+          printf '%s\n' \
+            .github/workflows/test-integrated-v39.yml \
+            docs/CET4_STORY_PRODUCTION_STANDARD.md \
+            public/app.js \
+            public/chapter-words.js \
+            src/echo-cloud.js \
+            src/reading-library.js \
+            src/study-identity.js \
+            src/worker.js \
+            tests/v35-cross-novel-one-card.test.mjs | sort > /tmp/approved
+          diff -u /tmp/approved /tmp/changed
+          test ! -e private-output
+          test ! -e private-input
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate tags, voucher revocation, word dedup, and all regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check public/ops-console.js
+          node --check src/study-identity.js
+          node --test tests/s163-batch-story-tags-v38.test.mjs tests/s162-voucher-control.test.mjs tests/v35-cross-novel-one-card.test.mjs
+          npm run check
+          npm test
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm run assets:production:build
+          grep -Fq 'id="applyStoryTags"' dist-production/public/ops.html
+          grep -Fq 'const storyTagPlanV38=' dist-production/public/ops-console.js
+          grep -Fq 'const defaultTagGroups=' dist-production/public/ops-console.js
+          grep -Fq '已有自定义标签' dist-production/public/ops-console.js
+          grep -Fq '作废此兑换码' dist-production/public/ops.html
+          grep -Fq '学习本章新词' dist-production/public/chapter-words.js
+          grep -Fq 'unseenSenses=new Set' dist-production/public/app.js
+          grep -Fq '账号找回备用凭证' dist-production/public/claim.html
+      - name: Install Wrangler without application lifecycle hooks
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Dry-run production Worker and unchanged D1
+        run: npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc
+      - name: Verify live site before deploying
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/ -o /tmp/home-before
+          grep -Fq 'v31-word-only' /tmp/home-before
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/chapter-words.js -o /tmp/chapter-before
+          grep -Fq '学习本章新词' /tmp/chapter-before
+      - name: Require already configured restricted deploy credentials
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          test "$HAS_TOKEN" = true
+          test "$HAS_ACCOUNT" = true
+      - name: Deploy reviewed merged V39 without D1 migrations or user data writes
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc
+      - name: Confirm restored live tags, batch button, vouchers, word learning and claim
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 18); do
+            curl -fsSL --max-time 25 "https://miaowu-english-pages.pages.dev/ops?restoredv39=$i" -o /tmp/ops-after || true
+            if grep -Fq 'id="applyStoryTags"' /tmp/ops-after; then break; fi
+            sleep 3
+          done
+          grep -Fq 'id="applyStoryTags"' /tmp/ops-after
+          grep -Fq '作废此兑换码' /tmp/ops-after
+          curl -fsSL --retry 3 --max-time 25 'https://miaowu-english-pages.pages.dev/ops-console.js?restoredv39=1' -o /tmp/ops-script
+          grep -Fq 'const defaultTagGroups=' /tmp/ops-script
+          grep -Fq 'const storyTagPlanV38=' /tmp/ops-script
+          grep -Fq '已有自定义标签' /tmp/ops-script
+          grep -Fq '追妻火葬场' /tmp/ops-script
+          grep -Fq 'id="tagPreset"' /tmp/ops-after
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/chapter-words.js -o /tmp/chapter-after
+          grep -Fq '学习本章新词' /tmp/chapter-after
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/app.js -o /tmp/app-after
+          grep -Fq 'unseenSenses=new Set' /tmp/app-after
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/claim -o /tmp/claim-after
+          grep -Fq '账号找回备用凭证' /tmp/claim-after
+          test "$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 https://miaowu-english-pages.pages.dev/api/me/words)" = 401
+          test "$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 https://miaowu-english-pages.pages.dev/api/me/flashcards)" = 401
