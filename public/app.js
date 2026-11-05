@@ -957,6 +957,7 @@
       if(view==='echo')renderQuiz();
       $('topAccount').textContent=user?'你好，'+user.name:'登录 / 激活';
       if(move)navigate('account');
+      window.MiaowuOnboarding?.sync(!!user,grants.size>0);
     }
     async function loadServerSession(){
       try { applyServerAccount(await serverRequest('/api/auth/me')); }
@@ -1051,7 +1052,9 @@
           '<div class="form-field"><label for="rName">自定义用户名</label>',
           '<input id="rName" autocomplete="username" minlength="3" maxlength="24" placeholder="3–24位字母、数字或下划线等" required></div>',
           '<div class="form-field"><label for="rPass">登录密码</label>',
-          '<input id="rPass" type="password" autocomplete="new-password" minlength="10" maxlength="128" placeholder="至少10位，请勿使用常用密码" required></div>',
+          '<div class="mw-password-control"><input id="rPass" type="password" autocomplete="new-password" minlength="10" maxlength="128" placeholder="至少10位，请勿使用常用密码" required><button type="button" data-password-toggle="rPass" aria-label="显示登录密码">显示</button></div></div>',
+          '<div class="form-field"><label for="rPassConfirm">确认登录密码</label>',
+          '<div class="mw-password-control"><input id="rPassConfirm" type="password" autocomplete="new-password" minlength="10" maxlength="128" placeholder="再次输入登录密码" required><button type="button" data-password-toggle="rPassConfirm" aria-label="显示确认密码">显示</button></div><small id="registerMatchMessage" class="mw-password-feedback" role="status" aria-live="polite"></small></div>',
           '<div class="form-field"><label for="rCode">一次性分类激活码</label>',
           '<input id="rCode" autocomplete="off" placeholder="输入获得的分类激活码" required></div>',
           '<p class="helper">激活码由网站运营方通过指定渠道提供，当前不支持站内直接付款。分类权益及售后请以实际商品说明为准。</p>',
@@ -1061,9 +1064,28 @@
         '<div style="margin-top:15px"><button class="tiny-action" id="switchLogin">已有账号？去登录</button></div>'
       ].join(''));
       $('switchLogin').onclick=showLogin;
+      const password=$('rPass'),confirmPassword=$('rPassConfirm'),matchMessage=$('registerMatchMessage');
+      const updatePasswordMatch=()=>{
+        matchMessage.textContent=confirmPassword.value&&password.value!==confirmPassword.value?'两次输入的密码不一致，请检查。':'';
+      };
+      password.addEventListener('input',updatePasswordMatch);
+      confirmPassword.addEventListener('input',updatePasswordMatch);
+      document.querySelectorAll('[data-password-toggle]').forEach(button=>button.onclick=()=>{
+        const input=$(button.dataset.passwordToggle);
+        const visible=input.type==='password';
+        input.type=visible?'text':'password';
+        button.textContent=visible?'隐藏':'显示';
+        button.setAttribute('aria-label',(visible?'隐藏':'显示')+(input.id==='rPass'?'登录密码':'确认密码'));
+      });
       $('registerForm').onsubmit=e=>{
         e.preventDefault();
         const form=e.currentTarget;
+        updatePasswordMatch();
+        if(password.value!==confirmPassword.value){
+          formError('两次输入的密码不一致，请重新确认。');
+          confirmPassword.focus();
+          return;
+        }
         const btn=form.querySelector('button[type=submit]');
         btn.dataset.original=btn.textContent;
         submitServerForm(form,
@@ -1072,7 +1094,7 @@
             activationCode:$('rCode').value.trim()
           }),
           result=>{
-            $('rPass').value='';
+            $('rPass').value='';$('rPassConfirm').value='';
             closeModal();
             applyServerAccount(result,true);
             toast('书房创建成功，分类已开通');
@@ -1418,7 +1440,7 @@
     });
     $('storyText').addEventListener('click',e=>{
       const word=e.target.closest('[data-cloud-word]');
-      if(word){e.preventDefault();e.stopPropagation();showCloudWord(word.dataset.cloudWord);return;}
+      if(word){e.preventDefault();e.stopPropagation();showCloudWord(word.dataset.cloudWord);window.MiaowuOnboarding?.wordTapped();return;}
       if(e.target.closest('button,a,[role=button]'))return;
       const p=e.target.closest('[data-audio-paragraph]');
       if(activeCloud?.chapterId&&p)startReading(Number(p.dataset.audioParagraph));
@@ -1439,6 +1461,8 @@ $('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalO
       saved:()=>cloudSaved.size,due:()=>cloudFlashDue,
       login:showLogin
     });
+    window.MiaowuOnboardingNavigate=navigate;
+    window.MiaowuOnboardingRedeem=showRedeem;
     applyTheme();applyReadingPrefs();renderLibrary();renderReminder();renderWords();renderQuiz();renderAccount();initialSessionPromise=loadServerSession();refreshCloudCategories();
   })();
   
