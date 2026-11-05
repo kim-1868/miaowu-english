@@ -1,0 +1,111 @@
+name: Publish Miaowu buyer claim archive UX V41
+on:
+  push:
+    branches: [release/claim-archive-v41-20261106]
+    paths: [.github/workflows/deploy-claim-archive-v41.yml]
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  claim-ui:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/release/claim-archive-v41-20261106' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - name: Checkout exactly tested V41 integrated product, no branch drift
+        uses: actions/checkout@v4
+        with:
+          ref: 770160f09f840f36245e2779be9f042c28a73b91
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify only buyer UI assets changed and V39 product features stay intact
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 770160f09f840f36245e2779be9f042c28a73b91
+          grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
+          git diff --name-only 2f0438f06a92b51e27c4711475641c1de971635f HEAD | sort > /tmp/changed
+          printf '%s\n'             .github/workflows/test-claim-archive-v41.yml             public/claim.css public/claim.html public/claim.js             tests/v41-claim-archive.test.mjs | sort > /tmp/approved
+          diff -u /tmp/approved /tmp/changed
+          grep -Fq 'const storyTagPlanV38=' public/ops-console.js
+          grep -Fq 'const defaultTagGroups=' public/ops-console.js
+          grep -Fq 'unseenSenses=new Set' public/app.js
+          grep -Fq 'handleOpsVoucher' src/worker.js
+          test ! -e private-output
+          test ! -e private-input
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify copy all and single copy behavior including browser fallback
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check public/claim.js
+          node --test tests/v41-claim-archive.test.mjs             tests/s160-claim-receipt-ux.test.mjs             tests/s161-claim-visible-runtime.test.mjs
+          npm run check
+          npm test
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm run assets:production:build
+          grep -Fq 'id="copyAll"' dist-production/public/claim.html
+          grep -Fq 'id="copyAllText"' dist-production/public/claim.html
+          grep -Fq '感谢你选择妙屋英语，祝你阅读愉快！' dist-production/public/claim.html
+          grep -Fq '账号找回备用凭证' dist-production/public/claim.html
+      - name: Install Wrangler without package lifecycle scripts
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Safe production Worker dry-run without database mutation
+        run: npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc
+      - name: Verify current live reader, order portal and operator before deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/claim -o /tmp/claim-old
+          grep -Fq '账号找回备用凭证' /tmp/claim-old
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/ops -o /tmp/ops-old
+          grep -Fq '作废此兑换码' /tmp/ops-old
+          grep -Fq 'id="applyStoryTags"' /tmp/ops-old
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/chapter-words.js -o /tmp/chapter-old
+          grep -Fq '学习本章新词' /tmp/chapter-old
+      - name: Require existing restricted Cloudflare credentials
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          test "$HAS_TOKEN" = true
+          test "$HAS_ACCOUNT" = true
+      - name: Publish approved claim UX without migrations or changing secrets
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc
+      - name: Confirm live full-copy UI and that voucher and reader protections remain
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 16); do
+            curl -fsSL --max-time 20 "https://miaowu-english-pages.pages.dev/claim?v41=$i" -o /tmp/claim-new || true
+            if grep -Fq 'id="copyAll"' /tmp/claim-new; then break; fi
+            sleep 3
+          done
+          grep -Fq 'id="copyAll"' /tmp/claim-new
+          grep -Fq 'id="receiptOrder"' /tmp/claim-new
+          grep -Fq '感谢你选择妙屋英语，祝你阅读愉快！' /tmp/claim-new
+          grep -Fq '账号找回备用凭证' /tmp/claim-new
+          curl -fsSL --retry 3 --max-time 25 'https://miaowu-english-pages.pages.dev/claim.js?v41=1' -o /tmp/claim-script
+          grep -Fq 'completeReceiptText()' /tmp/claim-script
+          grep -Fq 'orderReference:order' /tmp/claim-script
+          grep -Fq 'restoreReceipt()' /tmp/claim-script
+          ! grep -Fq 'addEventListener("pagehide"' /tmp/claim-script
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/ops -o /tmp/ops-new
+          grep -Fq 'id="applyStoryTags"' /tmp/ops-new
+          grep -Fq '作废此兑换码' /tmp/ops-new
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/chapter-words.js -o /tmp/chapter-new
+          grep -Fq '学习本章新词' /tmp/chapter-new
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/app.js -o /tmp/app-new
+          grep -Fq 'unseenSenses=new Set' /tmp/app-new
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/api/claim/categories -o /tmp/cats-new
+          node --input-type=module -e 'import fs from "node:fs";let d=JSON.parse(fs.readFileSync("/tmp/cats-new","utf8"));if(!d.enabled||!Array.isArray(d.categories))process.exit(1)'
+          noauth=$(curl -s -o /dev/null -w '%{http_code}' -X POST             https://miaowu-english-pages.pages.dev/api/ops/customers/voucher-action             -H 'Origin: https://miaowu-english-pages.pages.dev'             -H 'Content-Type: application/json' -d '{"action":"revoke"}')
+          test "$noauth" = 401
