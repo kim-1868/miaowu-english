@@ -16,6 +16,7 @@ import { handleOpsLiveEdit } from "./ops-live-edit.js";
 import { handleBookCover } from "./book-covers.js";
 import { handleBookCoverTags } from "./book-cover-tags.js";
 import { handleLearningState } from "./reading-library.js";
+import {handleMyBookshelf} from "./my-bookshelf.js";
 import {onboardingSchemaReady,registrationOnboardingStatement,handleOnboarding} from "./onboarding.js";
 import { annotateStudyWords } from "./study-identity.js";
 import {handleEcho} from "./echo-cloud.js";
@@ -689,6 +690,7 @@ async function api(req, env) {
   }
   const user = await atStage("api.session_lookup", () => currentUser(req, env.DB));
   if(path==="/api/me/onboarding")return handleOnboarding(req,env,user);
+  if(path==="/api/me/bookshelf"||path.startsWith("/api/me/bookshelf/"))return handleMyBookshelf(req,env,user);
   if(path==="/api/me/echo/available" || path==="/api/me/echo/answer" || path==="/api/me/echo/stats"){
     return handleEcho(req,env,path,user);
   }
