@@ -66,7 +66,7 @@ async function vote(remembered){
     w.study_seen=true;w.study_status="learning";
     api.refresh();
     if(cursor<reviewWords.length-1)cursor++;render();
-    api.toast(remembered?"已记录「记得」":"已加入记忆藏书票 · 待复习");
+    api.toast(remembered?"已记录「记得」":"已加入记忆生词本 · 待复习");
   }catch(error){api.toast(error.message);render()}
 }
 $("chapterVocabToggle").onclick=()=>{
