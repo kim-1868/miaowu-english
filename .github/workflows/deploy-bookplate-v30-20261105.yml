@@ -1,0 +1,126 @@
+# One-shot release of Miaowu reader-owned flashcard practice.
+# No schema migrations, novel edits, purchase changes or data seeding.
+name: Publish Miaowu bookplate quick learning V30 (one-time)
+run-name: Bookplate fast flashcards V30 · 56eb7a9cb30b
+on:
+  push:
+    branches: [release/one-shot-bookplate-v30-20261105]
+    paths: ['.github/workflows/deploy-bookplate-v30-20261105.yml']
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  reader-flashcards:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/release/one-shot-bookplate-v30-20261105' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact reviewed commit
+        uses: actions/checkout@v4
+        with:
+          ref: 56eb7a9cb30b3a5418aa8d87dd9d77aa54c58df1
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Guard immutable change set and production deployment target
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "56eb7a9cb30b3a5418aa8d87dd9d77aa54c58df1"
+          grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_id": "649c71b3-340c-49bf-b806-3d39256851d3"' deploy/production.wrangler.jsonc
+          test ! -e private-input
+          test ! -e private-output
+          git diff --name-only e6dfd92bb776ee830131cc62253da6b87da576ea HEAD | sort > /tmp/reviewed-diff
+          printf '%s\n' 'public/app.js' 'public/flashcards.css' 'public/flashcards.js' 'public/index.html' 'scripts/build-production-assets.mjs' 'src/reading-library.js' 'src/worker.js' 'tests/s124-v1-customer-experience.test.mjs' 'tests/s132-cat-storybook-home.test.mjs' 'tests/s133-watercolor-reference-art.test.mjs' 'tests/s134-hd-paw-reader-toolbar.test.mjs' 'tests/s135-category-svg-alignment.test.mjs' 'tests/s137-home-paw-reminder-and-baseline.test.mjs' 'tests/s138-immersive-home-scene.test.mjs' 'tests/s149-cover-led-responsive-bookshelf.test.mjs' 'tests/s152-home-resume-last-read.test.mjs' 'tests/s153-retina-banner-tablet.test.mjs' 'tests/s154-public-shelf-pagination.test.mjs' 'tests/s155-night-reader-selection-contrast.test.mjs' 'tests/s157-bookplate-fast-flashcards.test.mjs' 'tests/s22-production-assets.test.mjs' | sort > /tmp/approved-diff
+          diff -u /tmp/approved-diff /tmp/reviewed-diff
+          ! git diff --name-only e6dfd92bb776ee830131cc62253da6b87da576ea HEAD | grep -Eq '^(db/|deploy/|pages-production/|src/ops-|src/ops_|src/security\.js)'
+      - name: Install Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Wrangler without application install hooks
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Full regression, production asset audit and Worker dry run
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm run assets:production:build
+          grep -Fq 'id="flashcardTrainer"' dist-production/public/index.html
+          grep -Fq 'flashcards.js?v=20261105-v30-flashcards' dist-production/public/index.html
+          grep -Fq 'flashcards.css?v=20261105-v30-flashcards' dist-production/public/index.html
+          grep -Fq 'app.js?v=20261105-v30-flashcards' dist-production/public/index.html
+          grep -Fq '20261104-v28-night-selection' dist-production/public/index.html
+          grep -Fq '20261104-v29-live-editor' dist-production/public/ops.html
+          grep -Fq 'function finish()' dist-production/public/flashcards.js
+          grep -Fq 'V30' dist-production/public/flashcards.css
+          grep -Fq 'flashcardAnswer' src/reading-library.js
+          npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/dryrun-v30
+      - name: Verify previously-live reader and publisher console before deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ -o /tmp/pre-home.html
+          grep -Fq '20261104-v28-night-selection' /tmp/pre-home.html
+          grep -Fq '20261104-v27-shelf-pages' /tmp/pre-home.html
+          if grep -Fq '20261105-v30-flashcards' /tmp/pre-home.html; then
+            echo "V30 already present; refusing repeat release";exit 1
+          fi
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops.html -o /tmp/pre-ops.html
+          grep -Fq '20261104-v29-live-editor' /tmp/pre-ops.html
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/pre-edge.json
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/pre-edge.json","utf8"));if(!x.ok||!x.productionBindingPresent)process.exit(1)'
+      - name: Confirm existing deploy credentials and secure publisher withdrawal binding
+        shell: bash
+        env:
+          TOKEN_PRESENT: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          ACCOUNT_PRESENT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test "$TOKEN_PRESENT" = "true"
+          test "$ACCOUNT_PRESENT" = "true"
+          npx wrangler secret list --config deploy/production.wrangler.jsonc > /tmp/bindings-before
+          grep -Fq '"OPS_WITHDRAWAL_ENABLED"' /tmp/bindings-before
+      - name: Deploy V30 preserving existing secrets and production D1
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc
+      - name: Validate new bookplate learning and existing production boundaries
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 24); do
+            curl -fsSL --max-time 25 "https://miaowu-english-pages.pages.dev/?v30-check=$i" -o /tmp/home-after.html || true
+            if grep -Fq '20261105-v30-flashcards' /tmp/home-after.html; then break; fi
+            sleep 4
+          done
+          grep -Fq '20261105-v30-flashcards' /tmp/home-after.html
+          grep -Fq 'id="flashcardTrainer"' /tmp/home-after.html
+          grep -Fq '20261104-v28-night-selection' /tmp/home-after.html
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/flashcards.js -o /tmp/flashcards-js
+          grep -Fq 'MiaowuFlashcards' /tmp/flashcards-js
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/flashcards.css -o /tmp/flashcards-css
+          grep -Fq 'V30' /tmp/flashcards-css
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops.html -o /tmp/ops-after.html
+          grep -Fq '20261104-v29-live-editor' /tmp/ops-after.html
+          curl -fsSL --retry 3 --max-time 30 'https://miaowu-english-pages.pages.dev/api/books?category=cet4&page=1' -o /tmp/public-books
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/public-books","utf8"));if(!Array.isArray(x.books)||x.books.length>9||x.pagination?.pageSize!==9)process.exit(1)'
+          for endpoint in /api/me/flashcards /api/me/flashcards/answer /api/me/progress; do
+            status=$(curl -sSL -o /dev/null -w '%{http_code}' --max-time 30 "https://miaowu-english-pages.pages.dev$endpoint")
+            test "$status" = "401"
+          done
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/edge-after.json
+          node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/edge-after.json","utf8"));if(!x.ok||!x.productionBindingPresent)process.exit(1)'
+          npx wrangler secret list --config deploy/production.wrangler.jsonc > /tmp/bindings-after
+          grep -Fq '"OPS_WITHDRAWAL_ENABLED"' /tmp/bindings-after
