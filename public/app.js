@@ -1336,6 +1336,7 @@
       // interrupt a paused chapter, but closing the card NEVER auto-resumes it.
       if(speaking){
         chapterSpeechNeedsRestart=true;
+        speechGeneration++; // invalidate the canceled chapter utterance callbacks
         window.speechSynthesis.cancel();
         paused=true;
         $('playerPause').textContent='▶';
