@@ -15,14 +15,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 20ac55627d88d620ad62387f5826e6c9b2f7979f
+          ref: d242bc7c1bd126d0d414a3c69478a15dc32e4f1b
           fetch-depth: 0
           persist-credentials: false
       - name: Pin audited code and assert additive-only migration
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "20ac55627d88d620ad62387f5826e6c9b2f7979f"
+          test "$(git rev-parse HEAD)" = "d242bc7c1bd126d0d414a3c69478a15dc32e4f1b"
           grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
           grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
           grep -Fq '"SELF_CLAIM_ENABLED": "true"' deploy/production.wrangler.jsonc
