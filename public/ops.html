@@ -24,11 +24,11 @@
   </section>
   <section class="panel" aria-label="人工订单发货">
     <div class="panel-heading"><h2>② 人工订单发码</h2><span class="soft">仅限正式环境 · 发布者操作</span></div>
-    <p class="hint">选择商品、输入真实订单号，一键生成对应分类的激活码和找回凭证。使用前请自行在小红书核对订单已付款；凭证仅显示一次。</p>
+    <p class="hint">选择商品、输入真实订单编号，一键生成对应分类的激活码和找回凭证。使用前请自行在小红书核对订单已付款；凭证仅显示一次。</p>
     <div class="row">
       <label class="stretch" for="saleCategory">商品分类
         <select id="saleCategory" disabled><option value="">请先验证运营身份</option></select></label>
-      <label class="stretch" for="saleOrder">小红书订单编号
+      <label class="stretch" for="saleOrder">小红书-订单编号
         <input id="saleOrder" maxlength="64" autocomplete="off" placeholder="输入真实订单编号"></label>
     </div>
     <p class="hint">仅对小红书中已确认付款的真实订单使用；点击生成后立即写入数据库，同一个订单只能发一次码。</p>
@@ -57,8 +57,8 @@
       <button type="button" id="customerRefresh" class="secondary" disabled>刷新数据</button>
     </div>
     <div class="ops-customer-filters">
-      <label for="customerSearch">搜索用户名或订单号
-        <input type="search" id="customerSearch" maxlength="80" autocomplete="off" placeholder="输入用户名 / 小红书订单号" disabled></label>
+      <label for="customerSearch">搜索用户名或订单编号
+        <input type="search" id="customerSearch" maxlength="80" autocomplete="off" placeholder="输入用户名 / 小红书-订单编号" disabled></label>
       <label for="customerCategory">购买套餐
         <select id="customerCategory" disabled><option value="">全部套餐</option></select></label>
       <label for="customerCodeStatus">兑换状态
@@ -77,10 +77,10 @@
   </section>
   <section class="panel" id="claimsPanel" aria-label="自助领取订单对账">
     <div class="panel-heading"><h2>自助领取订单对账</h2><span class="soft">核对 · 标记异常 · 撤销 / 恢复</span></div>
-    <p class="hint">此处只展示由自助领取中心提交的订单号、所选套餐和兑换账号。用户填写的订单号未经自动付款验证，请在小红书后台核实。撤销只影响这笔订单对应的套餐权益，不会删除账号或其他购买。</p>
+    <p class="hint">此处只展示由自助领取中心提交的订单编号、所选套餐和兑换账号。用户填写的订单编号未经自动付款验证，请在小红书后台核实。撤销只影响这笔订单对应的套餐权益，不会删除账号或其他购买。</p>
     <div class="status" id="claimsOverview">验证运营身份后显示统计</div>
     <div class="ops-customer-filters">
-      <label for="claimsSearch">按订单号、账号或套餐搜索
+      <label for="claimsSearch">按订单编号、账号或套餐搜索
         <input id="claimsSearch" type="search" maxlength="80" autocomplete="off" placeholder="输入关键词"></label>
       <label for="claimsReviewFilter">对账状态
         <select id="claimsReviewFilter"><option value="">全部</option>

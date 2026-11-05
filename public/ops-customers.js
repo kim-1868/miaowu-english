@@ -66,7 +66,7 @@ export function initCustomerAdmin({api,connected}){
     head.append(make("span",states[x.status]||"未知状态",
      "ops-customer-badge"+(x.status==="redeemed"?" is-redeemed":"")));
     item.append(head);
-    item.append(line("订单号",x.order_reference?
+    item.append(line("小红书-订单编号",x.order_reference?
       String(x.order_reference).replace(/^ORD-/,""):"未关联订单"));
     item.append(line("兑换账号",x.redeemed_username||"尚未兑换"));
     item.append(line("兑换时间",date(x.redeemed_at)));

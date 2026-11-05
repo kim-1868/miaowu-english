@@ -3,8 +3,8 @@
 const $=id=>document.getElementById(id);
 let ready=false,claimed=false;
 const messages={
- INVALID_CLAIM_INPUT:"订单号格式或套餐选择不正确，请核对后再提交。",
- ORDER_ALREADY_CLAIMED:"这个订单号已有发码记录，请不要重复领取。若遗失兑换码，请联系小红书店铺客服。",
+ INVALID_CLAIM_INPUT:"订单编号格式或套餐选择不正确，请核对后再提交。",
+ ORDER_ALREADY_CLAIMED:"这个订单编号已有发码记录，请不要重复领取。若遗失兑换码，请联系小红书店铺客服。",
  ORDER_ALREADY_CLAIMED_OR_UNAVAILABLE:"该订单已领取，或当前无法发码。请联系店铺客服确认。",
  PACKAGE_UNAVAILABLE:"该学习套餐暂未开放领取，请选择已上架商品。",
  CLAIM_LIMIT_REACHED:"领取人数或领取频率达到临时上限，请稍后联系店铺客服。",
@@ -42,7 +42,7 @@ $("claimForm").addEventListener("submit",async e=>{
  const order=$("order").value.normalize("NFKC").trim();
  const category=$("package").value;
  if(!/^[A-Za-z0-9_-]{10,60}$/.test(order)||!/[0-9]/.test(order)||!category){
-  feedback("请填写完整订单号，并选择购买的学习套餐。",true);return;
+  feedback("请填写完整订单编号，并选择购买的学习套餐。",true);return;
  }
  const submit=$("submit");submit.disabled=true;feedback("正在生成专属兑换码，请勿重复点击。");
  try{

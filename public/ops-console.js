@@ -108,7 +108,7 @@ async function mountClaimAdmin(){
 }
 async function mountCustomerAdmin(){
   if(!customerAdmin){
-    const module=await import("/ops-customers.js?v=20261105-readonly-v32");
+    const module=await import("/ops-customers.js?v=20261105-readonly-v32&claimLabels=33a");
     customerAdmin=module.initCustomerAdmin({api,connected});
   }
   customerAdmin.categories(categoryCatalog);
@@ -999,7 +999,7 @@ button("saleIssueButton",async()=>{
  if(!$("saleReceipt").hidden)throw Error("请先复制上一笔订单的发货内容并清除凭证");
  const order=$("saleOrder").value.trim();
  const category=$("saleCategory").value;
- if(!order||!category)throw Error("请先选择商品并填写订单号");
+ if(!order||!category)throw Error("请先选择商品并填写订单编号");
  // Clicking "生成激活码" is the operator's action to attest that the
  // external Xiaohongshu order has been paid and the category is deliverable.
  // This is NOT an external payment verification or a user-entered checkbox.
@@ -1012,12 +1012,12 @@ button("saleIssueButton",async()=>{
   "妙屋英语｜订单交付说明",
   "学习网址：https://miaowu-english-pages.pages.dev/",
   "购买商品："+name,
-  "小红书订单号："+result.orderReference.replace(/^ORD-/,""),
+  "小红书-订单编号："+result.orderReference.replace(/^ORD-/,""),
   "本单一次性激活码："+result.activationCode,
   "订单专属密码找回凭证："+result.recoveryKey,
   "",
   "首次使用：注册并激活，设置用户名和密码。",
-  "忘记密码：登录页面点击「订单找回」，输入用户名、订单号及独立找回凭证。",
+  "忘记密码：登录页面点击「订单找回」，输入用户名、订单编号及独立找回凭证。",
   "请私下保存以上信息；找回凭证使用后会自动失效并生成新凭证。"
  ].join("\n");
  $("saleReceipt").hidden=false;
