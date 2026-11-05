@@ -223,6 +223,9 @@
           serverRequest('/api/me/echo/stats')
         ]);
         if(seq!==cloudLearningSequence||user?.name!==requested)return;
+        // Reading decisions change sense state even when the user has not bookmarked.
+        // Do not reuse a prior chapter's "new word" flags after choosing Remember.
+        glossaryCache.clear();
         cloudSaved=new Map((words.words||[]).map(w=>[w.word_id,w]));
         cloudReviewDue=Number(stats.due)||0;
         cloudFlashDue=Number(words.flashDue)||0;
@@ -477,7 +480,7 @@
       const clicked=Array.from($('storyText').querySelectorAll('[data-cloud-word]'))
         .find(el=>el.dataset.cloudWord===wordId);
       const w=activeCloud.words?.get(wordId);
-      const current=cloudSaved.get(wordId);
+      const current=cloudSaved.get(wordId)||(w?.study_seen?{status:w.study_status,bookmarked:!!w.study_bookmarked}:null);
       const pairs=Array.isArray(w?.collocations)?w.collocations:[];
       const title=w?.headword||clicked?.textContent||'单词学习';
       const meaning=w?.meaning_zh||clicked?.nextElementSibling?.textContent?.replace(/[（）]/g,'')||'词义加载中…';
@@ -499,7 +502,7 @@
         '<div class="study-switch"><button id="studyPrevious" type="button" '+(idx<=0?'disabled':'')+'>← 上一个词</button>'+
         '<button id="studyNext" type="button" '+(idx<0||idx===ids.length-1?'disabled':'')+'>下一个词 →</button></div>'+
         '<div class="word-actions"><button id="wordSpeak" type="button">♫ 听发音</button>'+
-        '<button id="wordSave" type="button" '+(loading?'disabled':'')+'>'+(current?'✓ 已收藏 · 移除':'♡ 收藏藏书票')+'</button>'+
+        '<button id="wordSave" type="button" '+(loading?'disabled':'')+'>'+(current?.bookmarked?'✓ 已收藏 · 移除':'♡ 收藏藏书票')+'</button>'+
         '<button id="cloudMaster" type="button" '+(loading?'disabled':'')+'>'+
         (current?.status==='mastered'?'↻ 继续学习':'✓ 标记已掌握')+'</button></div>';
       const mobileStudyTray=window.matchMedia('(max-width:700px)').matches;
@@ -577,12 +580,13 @@
       if(!user){closeWord();showLogin();return}
       const w=activeCloud?.words?.get(id);
       if(!w)return;
-      const old=cloudSaved.get(id);
-      const bookmarked=markMastered?true:!old;
+      const old=cloudSaved.get(id)||(w.study_seen?{status:w.study_status,bookmarked:!!w.study_bookmarked}:null);
+      const bookmarked=markMastered?true:!(old?.bookmarked);
       const status=markMastered?(old?.status==='mastered'?'learning':'mastered'):(old?.status||'learning');
       const action=$('wordSave');if(action)action.disabled=true;
       try{
         await serverRequest('/api/me/words/'+encodeURIComponent(id),'PUT',{bookmarked,status});
+        w.study_seen=true;w.study_status=status;w.study_bookmarked=bookmarked;
         if(bookmarked)cloudSaved.set(id,{...w,word_id:id,status,bookmarked:1});
         else cloudSaved.delete(id);
         toast(bookmarked?'已同步到云端记忆藏书票':'已从云端藏书票移除');
@@ -598,7 +602,9 @@
         savedProgress?.completed_at?'✓ 已读完 · 已同步阅读进度':savedProgress?'✓ 已同步阅读进度':'阅读中 · 自动保存';
       $('progressBar').style.width=Math.round(finished/Math.max(1,activeCloud.chapters.length)*100)+'%';
       $('savedCount').textContent=cloudSaved.size;
-      $('readerUnseen').textContent=String(Array.from(activeCloud.words?.keys()||[]).filter(id=>!cloudSaved.has(id)).length);
+      const unseenSenses=new Set(Array.from(activeCloud.words?.values()||[])
+        .filter(w=>!w.study_seen).map(w=>w.study_key||w.word_id));
+      $('readerUnseen').textContent=String(unseenSenses.size);
       $('readerDue').textContent=String(cloudDue());
       // Completed chapters are automatically recorded when the reader chooses 下一章.
     }
@@ -710,7 +716,7 @@
       if(glossary.ok){
         if(!glossaryCache.has(key))glossaryCache.set(key,glossary.data);
         for(const row of (glossary.data.words||[])){
-          if(row?.word_id&&!book.words.has(row.word_id))book.words.set(row.word_id,row);
+          if(row?.word_id)book.words.set(row.word_id,row);
         }
         window.MiaowuChapterWords?.setWords([...book.words.values()]);
         showCloudProgress(id);
