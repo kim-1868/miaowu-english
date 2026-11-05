@@ -585,7 +585,7 @@
           .find(el=>el.dataset.cloudWord===wordId);
       const w=activeCloud.words?.get(wordId);
       const current=cloudSaved.get(wordId)||(w?.study_seen?{status:w.study_status,bookmarked:!!w.study_bookmarked}:null);
-      const pairs=Array.isArray(w?.collocations)?w.collocations:[];
+      const pairs=Array.isArray(w?.collocations)?w.collocations.filter(p=>p&&typeof p.en==='string'&&p.en.trim()&&typeof p.zh==='string'&&p.zh.trim()).slice(0,3):[];
       const title=w?.headword||clicked?.textContent||'单词学习';
       const meaning=w?.meaning_zh||clicked?.nextElementSibling?.textContent?.replace(/[（）]/g,'')||'词义加载中…';
       const missingKey=activeCloud.chapterId+'::'+wordId;
@@ -594,19 +594,22 @@
         '<div class="study-navigation"><span class="eyebrow">MIAOWU · LEARN A WORD</span>'+
         '<span class="study-position">'+(idx>=0?idx+1:1)+' / '+Math.max(1,ids.length)+'</span></div>'+
         '<h3>'+safe(title)+'</h3>'+
-        '<div class="pron">'+safe(w?.phonetic_us||w?.phonetic_uk||'')+
-        ' <button id="wordSmallSpeak" class="word-voice-inline" type="button" aria-label="播放发音">♫</button> · '+safe(w?.part_of_speech||'')+'</div>'+
+        '<div class="pron v11-word-pron"><span class="v11-pron-ipa">'+safe(w?.phonetic_us||w?.phonetic_uk||'')+'</span>'+
+        ' <button id="wordSmallSpeak" class="word-voice-inline" type="button" aria-label="播放单词发音">♫</button>'+
+        '<span class="v11-pron-part">'+safe(w?.part_of_speech||'')+'</span></div>'+
         '<div class="meaning">'+safe(meaning)+'</div>'+
         (!w&&!loading?'<p class="study-loading" role="status">暂无这张词卡的完整资料，请换一个单词学习。</p>':
         loading?'<p class="study-loading" role="status">正在读取这张词卡的学习资料…</p>':
-          '<div class="word-extra"><strong>例句</strong><br>'+safe(w.example_en||'暂未提供')+
-          '<br><span class="study-translation">'+safe(w.example_zh||'')+'</span></div>'+
-          '<div class="word-extra"><strong>常用搭配</strong><br>'+
-          (pairs.length?pairs.map(x=>safe(x.en||'')+' · '+safe(x.zh||'')).join('<br>'):'暂无搭配')+'</div>')+
+          (w.example_en?'<div class="word-extra"><div class="v11-example-heading"><strong>例句</strong>'+
+            '<button id="wordExampleSpeak" type="button" aria-label="朗读完整例句">♫ 朗读例句</button></div>'+
+            '<p>'+safe(w.example_en)+'</p>'+
+            (w.example_zh?'<span class="study-translation">'+safe(w.example_zh)+'</span>':'')+'</div>':'')+
+          (pairs.length?'<div class="word-extra"><strong>常用搭配</strong><br>'+
+            pairs.map(x=>safe(x.en)+' · '+safe(x.zh)).join('<br>')+'</div>':'') )+
         '<div class="study-switch"><button id="studyPrevious" type="button" '+(idx<=0?'disabled':'')+'>← 上一个词</button>'+
         '<button id="studyNext" type="button" '+(idx<0||idx===ids.length-1?'disabled':'')+'>下一个词 →</button></div>'+
         '<div class="word-actions"><button id="wordSpeak" type="button">♫ 听发音</button>'+
-        '<button id="wordSave" type="button" '+(loading?'disabled':'')+'>'+(current?.bookmarked?'✓ 已收藏 · 移除':'♡ 添加生词本')+'</button>'+
+        '<button id="wordSave" type="button" '+(loading?'disabled':'')+'>'+(current?.bookmarked?'✓ 已加入 · 移出生词本':'♡ 添加生词本')+'</button>'+
         '<button id="cloudMaster" type="button" '+(loading?'disabled':'')+'>'+
         (current?.status==='mastered'?'↻ 继续学习':'✓ 标记已掌握')+'</button></div>';
       const mobileStudyTray=window.matchMedia('(max-width:700px)').matches;
@@ -650,6 +653,7 @@
       $('wordClose').onclick=closeWord;
       $('wordSpeak').onclick=()=>speakWord(title);
       $('wordSmallSpeak').onclick=()=>speakWord(title);
+      if($('wordExampleSpeak'))$('wordExampleSpeak').onclick=()=>speakWord(w.example_en);
       $('wordSave').onclick=()=>saveCloudWord(wordId,false);
       $('cloudMaster').onclick=()=>saveCloudWord(wordId,true);
       $('studyPrevious').onclick=()=>{if(idx>0)showCloudWord(ids[idx-1]);};
@@ -934,7 +938,7 @@
       }
       const cloudCards=user?words.map(w=>{
         const mastered=w.status==='mastered';
-        const pairs=Array.isArray(w.collocations)?w.collocations:[];
+        const pairs=Array.isArray(w.collocations)?w.collocations.filter(p=>p&&typeof p.en==='string'&&p.en.trim()&&typeof p.zh==='string'&&p.zh.trim()).slice(0,3):[];
         return '<div class="vocab-card status-'+(mastered?'mastered':'learning')+'">'+
           '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px">'+
           '<span class="eyebrow">MIAOWU · BOOKPLATE</span>'+
@@ -943,11 +947,13 @@
           safe(w.phonetic_us||w.phonetic_uk||'')+
           ' <button data-cloud-voice="'+safe(w.word_id)+'" aria-label="播放发音">♫</button></p>'+
           '<p>'+safe(w.part_of_speech||'')+' '+safe(w.meaning_zh||'')+'</p>'+
-          '<div class="vocab-section"><b>例句 / EXAMPLE</b><div class="vocab-example">'+
-          safe(w.example_en||'待补充')+'</div><p class="vocab-translation">'+safe(w.example_zh||'')+'</p></div>'+
-          '<div class="vocab-section"><b>常用搭配 / COLLOCATIONS</b>'+
-          pairs.map(p=>'<div class="vocab-collocation"><span>'+safe(p.en||'')+'</span><span>'+
-            safe(p.zh||'')+'</span></div>').join('')+'</div>'+
+          (w.example_en?'<div class="vocab-section"><b>例句 / EXAMPLE</b>'+
+          '<button class="v11-example-audio" type="button" data-example-audio="'+safe(w.word_id)+'">♫ 朗读例句</button>'+
+          '<div class="vocab-example">'+safe(w.example_en)+'</div>'+
+          (w.example_zh?'<p class="vocab-translation">'+safe(w.example_zh)+'</p>':'')+'</div>':'')+
+          (pairs.length?'<div class="vocab-section"><b>常用搭配 / COLLOCATIONS</b>'+
+          pairs.map(p=>'<div class="vocab-collocation"><span>'+safe(p.en)+'</span><span>'+
+            safe(p.zh)+'</span></div>').join('')+'</div>':'')+
           '<div class="card-tools"><button data-cloud-say="'+safe(w.word_id)+'">♫ 发音</button>'+
           '<button data-cloud-master="'+safe(w.word_id)+'">'+(mastered?'↻ 改为学习中':'✓ 标记已掌握')+'</button>'+
           '<button data-cloud-remove="'+safe(w.word_id)+'">移出生词本</button></div></div>';
@@ -956,6 +962,10 @@
         ' 张<small>这些词卡关联你的账号，可在登录后跨设备查看。</small></div>';
       const cloudSection=cloudCards?'<div class="bookplate-source-heading">☁ 云端收藏 · 已同步到账号</div>'+cloudCards:'';
       $('vocabGrid').innerHTML=sources+cloudSection;
+      document.querySelectorAll('[data-example-audio]').forEach(x=>x.onclick=()=>{
+        const w=cloudSaved.get(x.dataset.exampleAudio);
+        if(w?.example_en)speakWord(w.example_en);
+      });
       document.querySelectorAll('[data-cloud-voice],[data-cloud-say]').forEach(x=>{
         x.onclick=()=>{const w=cloudSaved.get(x.dataset.cloudVoice||x.dataset.cloudSay);if(w)speakWord(w.headword)};
       });
