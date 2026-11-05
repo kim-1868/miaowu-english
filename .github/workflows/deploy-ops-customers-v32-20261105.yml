@@ -1,0 +1,106 @@
+name: Publish Miaowu customer activation console V32
+on:
+  push:
+    branches:
+      - release/one-shot-ops-customers-v32-20261105
+    paths:
+      - .github/workflows/deploy-ops-customers-v32-20261105.yml
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  read-only-customer-console:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/release/one-shot-ops-customers-v32-20261105' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact proposed release
+        uses: actions/checkout@v4
+        with:
+          ref: cde316828b1f521ba53df2eed603081605cecfd0
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Audit immutable source and unchanged production database
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "cde316828b1f521ba53df2eed603081605cecfd0"
+          grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
+          git diff --name-only 951db1f9f9b5753a61205f1d78f70cd1c3c6548f HEAD | sort > /tmp/changed
+          printf '%s\n' \
+            .github/workflows/test-ops-customers-v32.yml \
+            public/ops-console.css public/ops-console.js public/ops-customers.js public/ops.html \
+            scripts/build-production-assets.mjs src/ops-customers.js src/worker.js \
+            tests/s158-customer-redemption-view.test.mjs tests/s22-production-assets.test.mjs \
+            | sort > /tmp/allowed
+          diff -u /tmp/allowed /tmp/changed
+          test ! -e private-output
+          test ! -e private-input
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Wrangler without third-party package hooks
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Complete regression suite and production asset build
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check src/ops-customers.js
+          node --check public/ops-customers.js
+          npm run check
+          npm test
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm run assets:production:build
+          grep -Fq 'id="customerPanel"' dist-production/public/ops.html
+          grep -Fq 'customerAdmin.refresh()' dist-production/public/ops-console.js
+          grep -Fq '/api/ops/customers/query' dist-production/public/ops-customers.js
+          npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/dryrun-customers
+      - name: Confirm live production site and lack of earlier customer rollout
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ops.html -o /tmp/live-ops-before
+          grep -Fq 'v=20261104-v29-live-editor' /tmp/live-ops-before
+          if grep -Fq 'id="customerPanel"' /tmp/live-ops-before; then
+            echo 'Customer console already present. Do not redeploy duplicate.'
+            exit 1
+          fi
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/ -o /tmp/live-index
+          grep -Fq 'v31-word-only' /tmp/live-index
+          curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/live-edge-before
+          node --input-type=module -e 'import fs from "node:fs";const d=JSON.parse(fs.readFileSync("/tmp/live-edge-before","utf8"));if(!d.ok||!d.productionBindingPresent)process.exit(1)'
+      - name: Check Cloudflare deploy permissions configured
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          test "$HAS_TOKEN" = "true"
+          test "$HAS_ACCOUNT" = "true"
+      - name: Deploy read-only endpoints and operator assets preserving existing D1
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc
+      - name: Verify operator assets, protected endpoint and existing reader
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 20); do
+            curl -fsSL --max-time 20 "https://miaowu-english-pages.pages.dev/ops.html?v32=$i" -o /tmp/ops-after || true
+            if grep -Fq 'id="customerPanel"' /tmp/ops-after; then break; fi
+            sleep 4
+          done
+          grep -Fq 'id="customerPanel"' /tmp/ops-after
+          curl -fsSL --retry 3 https://miaowu-english-pages.pages.dev/ops-customers.js -o /tmp/customers-after
+          grep -Fq '/api/ops/customers/query' /tmp/customers-after
+          status=$(curl -s -o /dev/null -w '%{http_code}' \
+            -X POST 'https://miaowu-english-pages.pages.dev/api/ops/customers/query' \
+            -H 'Origin: https://miaowu-english-pages.pages.dev' \
+            -H 'Content-Type: application/json' \
+            -d '{"mode":"users"}')
+          test "$status" = "401"
+          curl -fsSL --retry 3 https://miaowu-english-pages.pages.dev/ -o /tmp/index-after
+          grep -Fq 'v31-word-only' /tmp/index-after
