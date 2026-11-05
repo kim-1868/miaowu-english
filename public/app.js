@@ -477,7 +477,7 @@
       const clicked=Array.from($('storyText').querySelectorAll('[data-cloud-word]'))
         .find(el=>el.dataset.cloudWord===wordId);
       const w=activeCloud.words?.get(wordId);
-      const current=cloudSaved.get(wordId);
+      const current=cloudSaved.get(wordId)||(w?.study_seen?{status:w.study_status,bookmarked:!!w.study_bookmarked}:null);
       const pairs=Array.isArray(w?.collocations)?w.collocations:[];
       const title=w?.headword||clicked?.textContent||'单词学习';
       const meaning=w?.meaning_zh||clicked?.nextElementSibling?.textContent?.replace(/[（）]/g,'')||'词义加载中…';
@@ -499,7 +499,7 @@
         '<div class="study-switch"><button id="studyPrevious" type="button" '+(idx<=0?'disabled':'')+'>← 上一个词</button>'+
         '<button id="studyNext" type="button" '+(idx<0||idx===ids.length-1?'disabled':'')+'>下一个词 →</button></div>'+
         '<div class="word-actions"><button id="wordSpeak" type="button">♫ 听发音</button>'+
-        '<button id="wordSave" type="button" '+(loading?'disabled':'')+'>'+(current?'✓ 已收藏 · 移除':'♡ 收藏藏书票')+'</button>'+
+        '<button id="wordSave" type="button" '+(loading?'disabled':'')+'>'+(current?.bookmarked?'✓ 已收藏 · 移除':'♡ 收藏藏书票')+'</button>'+
         '<button id="cloudMaster" type="button" '+(loading?'disabled':'')+'>'+
         (current?.status==='mastered'?'↻ 继续学习':'✓ 标记已掌握')+'</button></div>';
       const mobileStudyTray=window.matchMedia('(max-width:700px)').matches;
@@ -577,12 +577,13 @@
       if(!user){closeWord();showLogin();return}
       const w=activeCloud?.words?.get(id);
       if(!w)return;
-      const old=cloudSaved.get(id);
-      const bookmarked=markMastered?true:!old;
+      const old=cloudSaved.get(id)||(w.study_seen?{status:w.study_status,bookmarked:!!w.study_bookmarked}:null);
+      const bookmarked=markMastered?true:!(old?.bookmarked);
       const status=markMastered?(old?.status==='mastered'?'learning':'mastered'):(old?.status||'learning');
       const action=$('wordSave');if(action)action.disabled=true;
       try{
         await serverRequest('/api/me/words/'+encodeURIComponent(id),'PUT',{bookmarked,status});
+        w.study_seen=true;w.study_status=status;w.study_bookmarked=bookmarked;
         if(bookmarked)cloudSaved.set(id,{...w,word_id:id,status,bookmarked:1});
         else cloudSaved.delete(id);
         toast(bookmarked?'已同步到云端记忆藏书票':'已从云端藏书票移除');
