@@ -1,0 +1,399 @@
+{
+  "version": "v38",
+  "scope": "production-published-only",
+  "purpose": "Reviewable book story labels; additive only",
+  "source": "2026-11-06 production read-only metadata audit",
+  "records": [
+    {
+      "bookId": "mw26-fresh-7bb98dbbe0c9",
+      "title": "他认错白月光的那一年",
+      "category": "cet4",
+      "add": [
+        {
+          "label": "白月光",
+          "color": "#8d5262",
+          "rank": 1
+        },
+        {
+          "label": "女性成长",
+          "color": "#526e68",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "mw26-fresh-581d2b8ed258",
+      "title": "假千金退场后，全家都慌了",
+      "category": "cet4",
+      "add": [
+        {
+          "label": "真假千金",
+          "color": "#9f753e",
+          "rank": 1
+        },
+        {
+          "label": "亲情",
+          "color": "#7d8a5b",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "postgrad-contract",
+      "title": "假婚沦陷：陆总的眼底星光",
+      "category": "postgrad",
+      "add": [
+        {
+          "label": "契约婚姻",
+          "color": "#8d5262",
+          "rank": 1
+        },
+        {
+          "label": "先婚后爱",
+          "color": "#af6078",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "mw-cet4-heiress-reveal-20261105-v1",
+      "title": "全家嫌我穷，没想到我是千亿继承人",
+      "category": "cet4",
+      "add": [
+        {
+          "label": "豪门",
+          "color": "#9f753e",
+          "rank": 1
+        },
+        {
+          "label": "打脸",
+          "color": "#a34a52",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "mw-cet4-actress-reversal-20261105-v1",
+      "title": "全网嘲我花瓶，颁奖夜我成了影后",
+      "category": "cet4",
+      "add": [
+        {
+          "label": "职场逆袭",
+          "color": "#507e9a",
+          "rank": 1
+        },
+        {
+          "label": "打脸",
+          "color": "#a34a52",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "mw26-fresh-96e7f1ee233c",
+      "title": "合租室友藏了七年的秘密",
+      "category": "cet4",
+      "add": [
+        {
+          "label": "合租日常",
+          "color": "#7d8a5b",
+          "rank": 1
+        },
+        {
+          "label": "暗恋",
+          "color": "#af6078",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "mw26-fresh-006ef86dab61",
+      "title": "契约婚姻到期那天",
+      "category": "cet4",
+      "add": [
+        {
+          "label": "契约婚姻",
+          "color": "#8d5262",
+          "rank": 1
+        },
+        {
+          "label": "女性成长",
+          "color": "#526e68",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "mw26-fresh-140d06599cec",
+      "title": "替嫁当天，我撕了婚约",
+      "category": "cet4",
+      "add": [
+        {
+          "label": "替嫁",
+          "color": "#9f753e",
+          "rank": 1
+        },
+        {
+          "label": "女主觉醒",
+          "color": "#a34a52",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "cet6-last-tram-reply-2026",
+      "title": "末班车前请回信",
+      "category": "cet6",
+      "add": [
+        {
+          "label": "治愈",
+          "color": "#7d8a5b",
+          "rank": 1
+        },
+        {
+          "label": "秘密揭晓",
+          "color": "#455a78",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "mw26-fresh-6f31e202e357",
+      "title": "死对头突然开始对我好",
+      "category": "cet4",
+      "add": [
+        {
+          "label": "死对头",
+          "color": "#455a78",
+          "rank": 1
+        },
+        {
+          "label": "误会",
+          "color": "#8d5262",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "mw-cet4-real-heir-old-street-20261105-v1",
+      "title": "真少爷回家那天，我把豪门群聊退了",
+      "category": "cet4",
+      "add": [
+        {
+          "label": "豪门逆袭",
+          "color": "#9f753e",
+          "rank": 1
+        },
+        {
+          "label": "打脸",
+          "color": "#a34a52",
+          "rank": 2
+        },
+        {
+          "label": "爽文",
+          "color": "#9f753e",
+          "rank": 3
+        }
+      ]
+    },
+    {
+      "bookId": "postgrad-rise",
+      "title": "破光而上",
+      "category": "postgrad",
+      "add": [
+        {
+          "label": "职场",
+          "color": "#507e9a",
+          "rank": 1
+        },
+        {
+          "label": "女性成长",
+          "color": "#526e68",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "editorial-ex-husband-extended-8ch-v2",
+      "title": "离婚后，前夫公司成了我的客户",
+      "category": "cet4",
+      "add": [
+        {
+          "label": "离婚",
+          "color": "#713848",
+          "rank": 1
+        },
+        {
+          "label": "女性成长",
+          "color": "#526e68",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "mw26-fresh-166e2a985823",
+      "title": "穿成恶毒女配后，我不演了",
+      "category": "cet4",
+      "add": [
+        {
+          "label": "反套路",
+          "color": "#713848",
+          "rank": 1
+        },
+        {
+          "label": "女主觉醒",
+          "color": "#a34a52",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "postgrad-thirteenth-glass-2026",
+      "title": "第十三张底片",
+      "category": "postgrad",
+      "add": [
+        {
+          "label": "悬疑",
+          "color": "#455a78",
+          "rank": 1
+        },
+        {
+          "label": "中长篇",
+          "color": "#526e68",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "mw-cet4-office-20261105",
+      "title": "被开除当天，霸总买下了整栋楼",
+      "category": "cet4",
+      "add": [
+        {
+          "label": "霸总",
+          "color": "#9f753e",
+          "rank": 1
+        },
+        {
+          "label": "职场逆袭",
+          "color": "#507e9a",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "mw26-fresh-5517fc581a6e",
+      "title": "被赶出豪门后我成了继承人",
+      "category": "cet4",
+      "add": [
+        {
+          "label": "身份反转",
+          "color": "#713848",
+          "rank": 1
+        },
+        {
+          "label": "女性成长",
+          "color": "#526e68",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "mw-cet4-marriage-sweet-20261105-v1",
+      "title": "说好只领证，霸总却天天求亲亲",
+      "category": "cet4",
+      "add": [
+        {
+          "label": "先婚后爱",
+          "color": "#af6078",
+          "rank": 1
+        },
+        {
+          "label": "契约婚姻",
+          "color": "#8d5262",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "mw-cet4-jingquan-romance-20261105",
+      "title": "退婚后，京圈太子爷非要娶我",
+      "category": "cet4",
+      "add": [
+        {
+          "label": "退婚",
+          "color": "#713848",
+          "rank": 1
+        },
+        {
+          "label": "霸总",
+          "color": "#9f753e",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "postgrad-tide-signal-2026",
+      "title": "逆潮信号",
+      "category": "postgrad",
+      "add": [
+        {
+          "label": "悬疑",
+          "color": "#455a78",
+          "rank": 1
+        },
+        {
+          "label": "中长篇",
+          "color": "#526e68",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "mw26-fresh-43aa86b6b07f",
+      "title": "重生后我不再讨好他们",
+      "category": "cet4",
+      "add": [
+        {
+          "label": "女主觉醒",
+          "color": "#a34a52",
+          "rank": 1
+        },
+        {
+          "label": "家庭反击",
+          "color": "#a34a52",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "mw-cet4-ceo-fan-20261105-v1",
+      "title": "闪婚后，冷面总裁成了我的头号粉丝",
+      "category": "cet4",
+      "add": [
+        {
+          "label": "先婚后爱",
+          "color": "#af6078",
+          "rank": 1
+        },
+        {
+          "label": "霸总",
+          "color": "#9f753e",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "bookId": "rainy-night-archives-cet4-v1",
+      "title": "雨夜档案",
+      "category": "cet4",
+      "add": [
+        {
+          "label": "失踪谜案",
+          "color": "#455a78",
+          "rank": 1
+        }
+      ]
+    }
+  ]
+}
