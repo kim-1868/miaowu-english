@@ -1,0 +1,119 @@
+/* WordLetter V1.1: optional phone home-screen tutorial; reuse the site palette. */
+.install-guide-entry {
+  margin: 20px 0 0;
+  padding: 20px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid var(--line, #e7ddd4);
+  border-radius: 18px;
+  background: var(--paper, #fffcf7);
+  color: var(--ink, #322a2b);
+}
+.install-guide-entry h2 {
+  margin: 0 0 7px;
+  font-size: 19px;
+  line-height: 1.35;
+  color: var(--wine, #672b41);
+}
+.install-guide-entry p {
+  margin: 0;
+  color: var(--muted, #847675);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.install-guide-entry button {
+  flex: 0 0 auto;
+  border: 1px solid var(--wine, #672b41);
+  background: transparent;
+  color: var(--wine, #672b41);
+  border-radius: 11px;
+  padding: 10px 14px;
+  font-weight: 600;
+  min-height: 42px;
+}
+.install-guide-dialog {
+  width: min(440px, calc(100vw - 30px));
+  max-height: min(85vh, 720px);
+  margin: auto;
+  padding: 24px;
+  overflow-y: auto;
+  border: 1px solid var(--line, #e7ddd4);
+  border-radius: 22px;
+  background: var(--paper, #fffcf7);
+  color: var(--ink, #322a2b);
+  box-shadow: 0 28px 70px rgba(40, 20, 30, .2);
+  z-index: 1000;
+}
+.install-guide-dialog::backdrop { background: rgba(34, 22, 28, .58); }
+.install-guide-dialog h2 {
+  margin: 0 38px 7px 0;
+  font-size: 22px;
+  color: var(--wine, #672b41);
+}
+.install-guide-dialog .install-guide-subtitle {
+  color: var(--muted, #847675);
+  margin: 0 0 17px;
+  font-size: 13px;
+}
+.install-guide-close {
+  position: absolute;
+  right: 16px;
+  top: 15px;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink, #322a2b);
+  font-size: 24px;
+}
+.install-guide-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 4px;
+  border-radius: 13px;
+  gap: 4px;
+  background: var(--bg, #f8f4ed);
+}
+.install-guide-tabs button {
+  border: 0;
+  padding: 11px 8px;
+  border-radius: 10px;
+  color: var(--muted, #847675);
+  background: transparent;
+  font-weight: 650;
+}
+.install-guide-tabs button[aria-selected="true"] {
+  background: var(--paper, #fffcf7);
+  color: var(--wine, #672b41);
+  box-shadow: 0 1px 7px rgba(34, 20, 20, .09);
+}
+.install-guide-panel { margin-top: 17px; }
+.install-guide-panel[hidden] { display: none !important; }
+.install-guide-panel ol {
+  padding-left: 23px;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.install-guide-panel li { padding-left: 3px; }
+.install-guide-note {
+  margin: 20px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line, #e7ddd4);
+  color: var(--muted, #847675);
+  font-size: 12px;
+  line-height: 1.65;
+}
+@media (max-width: 760px) {
+  .install-guide-entry { align-items: flex-start; flex-direction: column; padding: 17px; }
+  .install-guide-entry button { width: 100%; }
+  .install-guide-dialog { padding: 21px 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .install-guide-entry, .install-guide-dialog { animation: none; }
+}
