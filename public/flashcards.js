@@ -2,7 +2,7 @@
 "use strict";
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let api=null,userName=null,scope="due",roundSize=10,round=null,busy=false,loadSerial=0;
+let api=null,userName=null,scope="due",roundSize=20,round=null,busy=false,loadSerial=0;
 const host=()=>$("flashcardTrainer");
 const word=()=>round?.queue[round.index]?.word||null;
 const cursor=()=>round?.queue[round.index]||null;
@@ -29,8 +29,7 @@ function renderHome(loggedIn,saved,due){
       '" data-flash-scope="'+k+'" aria-pressed="'+(scope===k)+'">'+label+'</button>').join("")+
     '</div></div>'+
     '<div class="flash-setting"><strong>每轮词数</strong><div class="flash-pills" role="group" aria-label="每轮词数">'+
-    [10,20].map(n=>'<button class="flash-pill '+(roundSize===n?'selected':'')+
-      '" type="button" data-flash-size="'+n+'" aria-pressed="'+(roundSize===n)+'">'+n+' 张</button>').join("")+
+    '<span class="flash-pill selected" aria-label="每轮20个不同词义">20 张</span>'+
     '</div></div>'+
     '<div class="flash-choices"><button type="button" class="flash-choice" id="flashStartFlip">'+
     '<span class="flash-choice-icon" aria-hidden="true">✦</span><strong>快刷词卡</strong>'+
@@ -42,9 +41,6 @@ function renderHome(loggedIn,saved,due){
     '<div class="flash-status" id="flashStatus" role="status" aria-live="polite"></div></div>';
   el.querySelectorAll("[data-flash-scope]").forEach(b=>b.onclick=()=>{
     scope=b.dataset.flashScope;renderHome(loggedIn,saved,due);
-  });
-  el.querySelectorAll("[data-flash-size]").forEach(b=>b.onclick=()=>{
-    roundSize=Number(b.dataset.flashSize);renderHome(loggedIn,saved,due);
   });
   const open=mode=>{
     if(!loggedIn){api?.login?.();return;}
@@ -76,7 +72,7 @@ async function begin(mode,page=1){
     }
     round={mode,scope,page,total:data.total,hasMore:data.hasMore,
       queue:batch.map(w=>({word:w,retry:false})),index:0,shown:false,
-      feedback:null,answers:[],queued:new Set(),startedAt:Date.now()};
+      feedback:null,answers:[],retryCounts:new Map(),startedAt:Date.now()};
     draw();
   }catch(error){api.toast(error.message);if(state)state.textContent="词卡获取失败，请重试。";}
   finally{busy=false;}
@@ -102,8 +98,9 @@ function draw(){
     (reading?
       '<div class="flash-listen-header"><button id="flashVoice" type="button" class="flash-voice" aria-label="播放单词发音">♫ <span>听发音</span></button>'+
       '<span class="flash-audio-note">可反复播放 · 设备语音</span></div>'+
-      '<h3 class="flash-meaning">'+esc(w.meaning_zh||"暂缺中文释义")+'</h3>'+
-      '<p class="flash-letters">'+Array.from(w.headword||"").length+' 个字符 · 回忆英文拼写</p>'+
+      (feedback?'<h3 class="flash-meaning">'+esc(w.meaning_zh||"暂缺中文释义")+'</h3>':
+        '<p class="flash-mystery">先听发音，再回忆英文拼写</p>')+
+      (feedback?'<p class="flash-letters">'+Array.from(w.headword||"").length+' 个字符</p>':'')+
       (feedback?
         '<div class="flash-reveal-answer"><strong>'+esc(w.headword)+'</strong>'+
         '<span>'+esc(w.phonetic_us||w.phonetic_uk||"")+'</span></div>':
@@ -133,10 +130,12 @@ function draw(){
       (feedback?
         '<button class="flash-primary" id="flashNext" type="button">下一张 →</button>':
         '<button class="flash-primary" id="flashSubmit" type="button">核对拼写 →</button>'):
-      (flipped?
-        '<div class="flash-votes"><button id="flashForgot" type="button">↻ 忘记了</button>'+
-        '<button id="flashUnsure" type="button">≈ 有点模糊</button>'+
-        '<button class="flash-primary" id="flashKnown" type="button">✓ 记住了 →</button></div>':
+      (feedback?
+        '<button class="flash-primary" id="flashNext" type="button">下一张 →</button>':
+       flipped?
+        '<div class="flash-votes"><button id="flashForgot" type="button">↻ 再记一次</button>'+
+        '<button id="flashUnsure" type="button">≈ 还有点模糊</button>'+
+        '<button class="flash-primary" id="flashKnown" type="button">✓ 记得</button></div>':
         '<button class="flash-primary" id="flashFlip" type="button">翻开词卡 · 查看释义</button>'))+
     '</div>'+
     '<p class="flash-footer-help">每张词卡只在提交成功后推进，退出时已提交的记录仍会保存。</p></div>';
@@ -177,19 +176,20 @@ async function vote(judgment,answer){
     if(local!==round||i!==round.index||!api.user())return;
     local.feedback=result;
     local.answers.push({wordId:w.word_id,correct:result.correct,retry:entry.retry});
-    if(!result.correct&&!entry.retry&&!local.queued.has(w.word_id)){
-      local.queued.add(w.word_id);
-      const later=Math.min(local.queue.length,local.index+4);
-      local.queue.splice(later,0,{word:w,retry:true});
+    // Up to TWO automatic revisits, after 4-6 intervening cards when available.
+    // A short round may put the retry near the end; do not pad with duplicates.
+    if(!result.correct){
+      const times=local.retryCounts.get(w.word_id)||0;
+      if(times<2){
+        local.retryCounts.set(w.word_id,times+1);
+        const afterOthers=4+((i+times)%3);
+        const later=Math.min(local.queue.length,local.index+1+afterOthers);
+        local.queue.splice(later,0,{word:w,retry:true});
+      }
     }
     if(result.correct&&navigator.vibrate)try{navigator.vibrate(14)}catch{}
     draw();
-    // Flip mode keeps the satisfying single-tap rhythm; typing stays on the
-    // feedback until the learner explicitly requests another card.
-    if(local.mode==="flip"){
-      const index=i;
-      setTimeout(()=>{if(local===round&&local.index===index&&!busy)advance();},460);
-    }
+    // Both modes await an explicit Next click so feedback remains readable.
   }catch(error){api.toast("这张词卡未能保存："+error.message);}
   finally{busy=false;areaBusy(false);}
 }
