@@ -215,3 +215,80 @@ button.secondary{background:#5c4852;color:#f9e8eb}hr{border-color:#674d5a}.audit
 #customerList .ops-customer-entry button.danger{background:#a83f4c;color:#fff;border:1px solid #93303f;padding:8px 13px;border-radius:8px}
 #customerList .ops-customer-entry button.danger:hover{background:#842c3b}
 #customerList .ops-customer-entry button:disabled{opacity:.5;cursor:not-allowed}
+
+
+/* V41: compact, independent and keyboard-accessible operator accordions.
+   All validation, query and voucher/reconciliation action logic remains intact. */
+#customerPanel,#claimsPanel{padding:0;overflow:hidden}
+.ops-record-section{margin:0}
+.ops-record-section-summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;
+ padding:17px 20px;min-height:82px;flex-wrap:wrap;border-radius:inherit}
+.ops-record-section-summary::-webkit-details-marker,.ops-record-summary::-webkit-details-marker{display:none}
+.ops-record-section-summary::marker,.ops-record-summary::marker{content:""}
+.ops-record-section-summary:hover,.ops-record-section-summary:focus-visible{background:#f9f2ec}
+.ops-section-title{display:flex;flex-direction:column;gap:4px;flex:1;min-width:170px}
+.ops-section-title strong{font:normal 21px 'Songti SC','STSong',serif;color:#873d50}
+.ops-section-title small{font-size:11px;color:#8f7b70}
+.ops-summary-stats{margin:0!important;display:flex!important;align-items:center;gap:5px!important;
+ flex:0 1 auto;max-width:100%;flex-wrap:wrap}
+.ops-summary-stats span{padding:5px 9px!important;font-size:11px!important;white-space:nowrap;
+ border-radius:8px!important}
+.ops-summary-claims{display:inline-flex;align-items:center;flex-wrap:wrap;gap:3px;
+ font-size:11px;color:#765a59;padding:7px 10px;background:#f8f1e8;border-radius:9px}
+.ops-fold-caret{width:28px;height:28px;display:grid;place-items:center;flex:0 0 28px;
+ border:1px solid #ddc8bd;background:#fbf5ed;border-radius:50%;color:#873d50;
+ font-size:20px;line-height:1;transition:transform .18s ease}
+.ops-record-section[open] .ops-fold-caret{transform:rotate(180deg)}
+.ops-record-section[open]>.ops-record-section-summary{border-bottom:1px solid #eee0d5;border-radius:0}
+.ops-record-section-content{padding:16px 20px 19px}
+.ops-record-section-content>.hint:first-child{margin-top:0}
+#customerPanel .ops-customer-list,#claimsPanel .ops-customer-list{
+ display:grid;grid-template-columns:minmax(0,1fr);gap:7px;margin:10px 0}
+#customerPanel .ops-customer-entry,#claimsPanel .ops-customer-entry{
+ padding:0;overflow:hidden;border-radius:11px}
+.ops-record-summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;
+ padding:11px 13px;min-height:53px;flex-wrap:wrap}
+.ops-record-summary:hover,.ops-record-summary:focus-visible{background:#f6eee7}
+.ops-record-name{font-size:13px;font-weight:700;color:#603c47;min-width:0;overflow-wrap:anywhere;
+ flex:1 1 170px}
+.ops-record-meta{font-size:11px;color:#947e78;line-height:1.6;flex:1 1 180px;
+ min-width:0;overflow-wrap:anywhere}
+.ops-record-summary .ops-customer-badge{font-size:11px;flex:0 0 auto}
+.ops-record-chevron{font-size:16px;color:#a07b82;flex:0 0 auto;
+ transition:transform .18s ease}
+.ops-record[open]>.ops-record-summary .ops-record-chevron{transform:rotate(180deg)}
+.ops-record[open]>.ops-record-summary{background:#f9eee8}
+.ops-record-body{margin:0 13px 13px;padding:12px 0 2px;border-top:1px dashed #dfcdc3}
+.ops-record-body .ops-customer-detail{margin:4px 0;line-height:1.7}
+.ops-record-body .ops-claim-actions{padding-top:3px}
+.ops-record-body button{margin-top:8px}
+.ops-record-order-copy{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:5px 0 7px}
+.ops-record-order-copy .ops-customer-detail{margin:0}
+.ops-record-order-copy button{margin:0!important;min-height:30px;font-size:11px!important;
+ padding:5px 9px!important;border-radius:8px}
+.ops-record-summary:focus-visible,.ops-record-section-summary:focus-visible{outline:3px solid #b88e70;outline-offset:-3px}
+@media(max-width:700px){
+ .ops-record-section-summary{padding:13px 14px;gap:7px}
+ .ops-section-title{min-width:0;flex:1 1 calc(100% - 45px)}
+ .ops-section-title strong{font-size:19px}
+ .ops-summary-stats,.ops-summary-claims{order:3;width:100%;flex:1 1 100%}
+ .ops-summary-stats span{font-size:10px!important;padding:5px 7px!important}
+ .ops-fold-caret{order:2}
+ .ops-record-section-content{padding:13px 12px 16px}
+ .ops-record-summary{padding:11px;gap:6px}
+ .ops-record-name{flex:1 1 55%;font-size:12px}
+ .ops-record-meta{flex:1 1 100%;order:3}
+ .ops-record-chevron{margin-left:auto}
+ .ops-record-body{margin:0 11px 11px}
+}
+@media(prefers-reduced-motion:reduce){.ops-fold-caret,.ops-record-chevron{transition:none}}
+@media(prefers-color-scheme:dark){
+ .ops-record-section-summary:hover,.ops-record-section-summary:focus-visible,
+ .ops-record-summary:hover,.ops-record-summary:focus-visible{background:#49343f}
+ .ops-section-title strong,.ops-record-name{color:#f3d0d9}
+ .ops-section-title small,.ops-record-meta,.ops-summary-claims{color:#dfc1bf}
+ .ops-summary-claims,.ops-fold-caret{background:#48353e;border-color:#775e69;color:#f3d5de}
+ .ops-record-section[open]>.ops-record-section-summary{border-color:#715665}
+ .ops-record[open]>.ops-record-summary{background:#4b3945}
+ .ops-record-body{border-color:#6b5261}
+}
