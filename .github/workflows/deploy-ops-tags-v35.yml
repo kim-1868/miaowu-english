@@ -1,0 +1,94 @@
+name: Publish Miaowu operations tag presets V35
+on:
+  push:
+    branches: [release/ops-tag-presets-v35-20261105]
+    paths: [.github/workflows/deploy-ops-tags-v35.yml]
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  deploy-tag-presets:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/release/ops-tag-presets-v35-20261105' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 23
+    steps:
+      - name: Checkout exact CI-verified V35 code, not changing main
+        uses: actions/checkout@v4
+        with:
+          ref: 7eb36bdb353aa33600ae97fd38791435165e4ba4
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Guard tiny front-end-only diff and existing production bindings
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "7eb36bdb353aa33600ae97fd38791435165e4ba4"
+          grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
+          git diff --name-only c4dabdfe758bb8849716cf8adaf7e0f0a98bf48f HEAD | sort > /tmp/changed
+          printf '%s\n' .github/workflows/test-ops-tags-v35.yml public/ops-console.js tests/s161-ops-tag-presets-v35.test.mjs | sort > /tmp/approved
+          diff -u /tmp/approved /tmp/changed
+          test ! -e private-output
+          test ! -e private-input
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Regression, publisher preset verification and production bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check public/ops-console.js
+          node --test tests/s161-ops-tag-presets-v35.test.mjs
+          npm run check
+          npm test
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm run assets:production:build
+          grep -Fq '已有自定义标签' dist-production/public/ops-console.js
+          grep -Fq '追妻火葬场' dist-production/public/ops-console.js
+      - name: Install Wrangler without lifecycle scripts
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Verify exact production worker bundle dry run
+        run: npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc
+      - name: Ensure current live publisher, claim page, and reader respond before update
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/ops-console.js -o /tmp/ops-before
+          grep -Fq '新书上架' /tmp/ops-before
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/claim -o /tmp/claim-before
+          grep -Fq '小红书-订单编号' /tmp/claim-before
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/ -o /tmp/home-before
+          grep -Fq 'v31-word-only' /tmp/home-before
+      - name: Require preconfigured restricted production credentials
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          test "$HAS_TOKEN" = "true"
+          test "$HAS_ACCOUNT" = "true"
+      - name: Publish grouped tag presets without data migrations
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc
+      - name: Validate live new tag dropdown, buyer claim and home
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 15); do
+            curl -fsSL --max-time 20 "https://miaowu-english-pages.pages.dev/ops-console.js?tagsv35=$i" -o /tmp/ops-after || true
+            if grep -Fq '已有自定义标签' /tmp/ops-after; then break; fi
+            sleep 3
+          done
+          grep -Fq '已有自定义标签' /tmp/ops-after
+          grep -Fq '追妻火葬场' /tmp/ops-after
+          grep -Fq 'const defaultTagGroups=' /tmp/ops-after
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/ops -o /tmp/ops-page
+          grep -Fq 'id="tagPreset"' /tmp/ops-page
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/claim -o /tmp/claim-after
+          grep -Fq 'id="copyVoucherHint"' /tmp/claim-after
+          grep -Fq '小红书-订单编号' /tmp/claim-after
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/ -o /tmp/home-after
+          grep -Fq 'v31-word-only' /tmp/home-after
