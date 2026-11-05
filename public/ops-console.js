@@ -58,6 +58,8 @@ function syncButtons(){
     pendingNovel.words?.every(w=>w.phoneticUk&&w.phoneticUs&&w.partOfSpeech&&w.meaningZh&&w.exampleEn&&w.exampleZh));
   $("tagSave").disabled=!connected()||!chosen||!$("tagText").value.trim();
   $("applyStoryTags").disabled=!connected()||catalogBooks.length===0;
+  $("suggestTags").disabled=!connected()||!chosen;
+  $("saveSuggestedTags").disabled=!connected()||!chosen||suggestionBookId!==chosen.id||!$("suggestedTags").querySelector("input");
   $("useSelectedDraft").disabled=!connected()||chosen?.status!=="draft";
   $("reviseNovel").disabled=!(connected()&&pendingNovel&&chosen?.status==="draft"&&
     pendingNovel.book?.id===chosen.id&&pendingNovel.book?.title===chosen.title&&
@@ -954,31 +956,99 @@ const storyTagPlanV38=[
     ]
   }
 ];
+// The curated original 23 retain their reviewed suggestions. All later books
+// use conservative story-text cues instead of hardcoded IDs, without an AI API.
+async function proposeTags(book,novel=null){
+  const fixed=novel?null:storyTagPlanV38.find(x=>x.id===book.id&&x.title===book.title&&x.category===book.category_id);
+  if(fixed)return fixed.tags.map(([label,color])=>({label,color,basis:"已审核的历史故事方案"}));
+  const {suggestStoryTags}=await import("/story-tag-suggester.js?v=20261106-v40");
+  const input=novel||book;
+  const body=novel?(novel.chapters||[]).flatMap(ch=>(ch.paragraphs||[])
+    .slice(0,5).flatMap(p=>(p.segments||[]).map(s=>s.text||s.surface||""))).join("").slice(0,4500):"";
+  return suggestStoryTags({
+    title:input.book?.title||input.title,
+    description:input.book?.description||input.description,
+    chapters:novel?.chapters,
+    chapter_titles:input.chapter_titles,
+    body
+  });
+}
+async function addMissingTagsToBook(book,tags,minimum=3){
+  const path="/api/ops/books/"+encodeURIComponent(book.id)+"/tags";
+  const existing=await api(path);
+  const have=new Set((existing.tags||[]).map(x=>x.label));
+  let added=0,skipped=0;
+  const quota=Math.max(0,minimum-have.size);
+  for(const tag of tags.slice(0,5)){
+    if(have.has(tag.label)){skipped++;continue}
+    if(added>=quota)break;
+    await api(path,"POST",{label:tag.label,color:tag.color,requestId:requestId()});
+    have.add(tag.label);added++;
+  }
+  return {added,skipped};
+}
+let suggestionBookId=null;
+function renderTagSuggestChoices(book,tags){
+  const root=$("suggestedTags");root.replaceChildren();
+  const notice=$("suggestTagsStatus");
+  const existing=new Set(coverTags.map(x=>x.label));
+  const available=tags.filter(t=>!existing.has(t.label));
+  suggestionBookId=book.id;
+  for(const tag of available){
+    const label=byId("label",undefined,"ops-suggest-label");
+    const input=document.createElement("input");input.type="checkbox";input.checked=true;
+    input.value=tag.label;input.dataset.tagColor=tag.color;
+    const span=byId("span",tag.label+"（"+tag.basis+"）");
+    label.append(input,span);root.append(label);
+  }
+  notice.textContent=available.length?"已生成 "+available.length+" 项建议，可取消勾选；确认后只添加缺少的标签。":
+    "没有可可靠推荐的新标签；可继续从下拉列表手动选择。";
+  $("saveSuggestedTags").disabled=!available.length;
+}
+button("suggestTags",async()=>{
+  if(!connected()||!chosen)throw Error("请选择一本书并验证运营身份");
+  const book=chosen;
+  const result=await proposeTags(book);
+  if(chosen?.id!==book.id)return;
+  renderTagSuggestChoices(book,result);
+});
+button("saveSuggestedTags",async()=>{
+  if(!chosen||chosen.id!==suggestionBookId)throw Error("请重新查看当前书籍的标签建议");
+  const book=chosen;
+  const tags=[...$("suggestedTags").querySelectorAll("input:checked")].map(el=>({
+    label:el.value,color:el.dataset.tagColor
+  }));
+  if(!tags.length){$("suggestTagsStatus").textContent="未勾选任何标签，未修改书籍。";return}
+  const result=await addMissingTagsToBook(book,tags,Math.max(3,coverTags.length+tags.length));
+  if(chosen?.id===book.id){
+    await loadCoverTags(book);
+    $("suggestTagsStatus").textContent="已补充 "+result.added+" 项；已有标签及颜色均保持不变。";
+  }
+});
 button("applyStoryTags",async()=>{
   if(!connected())throw Error("请先验证运营身份");
-  const unknown=storyTagPlanV38.filter(p=>!catalogBooks.some(b=>
-    b.id===p.id&&b.title===p.title&&b.status==="published"&&b.category_id===p.category));
-  if(unknown.length)throw Error("检测到书目变化，已停止批量操作。请刷新核对："+unknown.map(x=>x.title).join("、"));
-  if(!window.confirm("将为正式上架的23本小说补齐推荐剧情标签（最多新增46项）。已有标签、颜色及小说内容均不修改。确定应用吗？"))return;
-  let added=0,skipped=0,completed=0;
+  const books=catalogBooks.filter(b=>b.status==="published");
+  if(!books.length)throw Error("没有可补充标签的已发布小说");
+  const plan=[];
+  for(const book of books){
+    const tags=await proposeTags(book);
+    if(tags.length)plan.push({book,tags});
+  }
+  if(!plan.length)throw Error("目前没有足够的剧情线索生成标签建议，请先补充小说简介。");
+  if(!window.confirm("将根据已审核旧书方案及当前书架简介/章节标题，为 "+plan.length+
+    " 本书补齐缺少的推荐标签。已有标签、颜色及正文均不改动；未来新书也在范围内。确认执行吗？"))return;
+  let added=0,finished=0,skipped=0;
   const feedback=$("bulkStoryTagsStatus");
   try{
-    for(const book of storyTagPlanV38){
-      const url="/api/ops/books/"+encodeURIComponent(book.id)+"/tags";
-      const current=await api(url);
-      const seen=new Set((current.tags||[]).map(t=>t.label));
-      for(const [label,color] of book.tags){
-        if(seen.has(label)){skipped++;continue}
-        await api(url,"POST",{label,color,requestId:requestId()});
-        seen.add(label);added++;
-      }
-      completed++;
-      feedback.textContent="正在应用推荐标签："+completed+" / "+storyTagPlanV38.length+" 本，已新增 "+added+" 个。";
+    for(const entry of plan){
+      const result=await addMissingTagsToBook(entry.book,entry.tags);
+      added+=result.added;skipped+=result.skipped;finished++;
+      feedback.textContent="已检查 "+finished+"/"+plan.length+" 本；已新增 "+added+" 项。";
     }
     if(chosen)await loadCoverTags(chosen);
-    feedback.textContent="已完成："+completed+" 本小说，新增 "+added+" 个标签，跳过已有 "+skipped+" 个；可以逐本检查修改。";
+    feedback.textContent="已检查 "+finished+" 本，新增 "+added+" 项，跳过已有 "+skipped+" 项；以后上传新书也可重复使用。";
   }catch(e){
-    feedback.textContent="已完成 "+completed+" 本、新增 "+added+" 个标签时中断："+e.message+"。重新点击会自动跳过已添加的标签。";
+    feedback.textContent="完成 "+finished+" 本后中断，已添加 "+added+" 项："+e.message+"。再次执行会跳过已有标签。";
     throw e;
   }
 });
@@ -1163,9 +1233,25 @@ button("tagSave",async()=>{
 });
 
 let pendingNovel=null;
+function selectedImportTags(){return [...$("uploadTagSuggestions").querySelectorAll("input:checked")]
+  .map(el=>({label:el.value,color:el.dataset.tagColor}));}
+async function renderImportTagSuggestions(pkg){
+  const suggestions=await proposeTags({id:pkg.book.id,title:pkg.book.title,category_id:pkg.book.category},pkg);
+  const root=$("uploadTagSuggestions");root.replaceChildren();
+  for(const tag of suggestions){
+    const label=byId("label",undefined,"ops-suggest-label");
+    const input=document.createElement("input");input.type="checkbox";input.value=tag.label;
+    input.dataset.tagColor=tag.color;input.checked=true;
+    label.append(input,byId("span",tag.label+"（"+tag.basis+"）"));root.append(label);
+  }
+  $("uploadTagStatus").textContent=suggestions.length?"建议标签已选中；确认上传并上架后自动添加，可在上架前取消勾选。":
+    "未找到足够明确的题材线索，暂不自动添加标签；可在上架后手动选择。";
+}
+
 const uploadMsg=message=>{$("uploadStatus").textContent=message;};
 function resetNovel(){
  pendingNovel=null;$("importNovel").disabled=true;$("reviseNovel").disabled=true;
+ $("uploadTagSuggestions").replaceChildren();$("uploadTagStatus").textContent="识别小说后显示可选标签建议。";
  $("uploadReport").hidden=true;$("uploadPreview").hidden=true;
 }
 function uploadedTitle(name){
@@ -1263,6 +1349,7 @@ async function examineNovel(){
  if(report.metadataIncomplete.length)uploadMsg("预检发现"+report.metadataIncomplete.length+"个词卡缺少音标/例句。可以导入草稿，但必须补齐后才能正式上架。");
  else uploadMsg("文件识别成功。请检查下面的预览，选择封面，然后点击「确认上传并上架」。");
  pendingNovel=pkg;
+ await renderImportTagSuggestions(pkg);
  syncButtons();
  const lines=[
   "书籍："+pkg.book.title+"（"+pkg.book.category+"）",
@@ -1310,10 +1397,20 @@ button("importNovel",async()=>{
       throw Error(problems||"当前发布条件未满足，请在⑤查看报告");
     }
     await quickPublishBook(created.bookId,snapshot);
+    const tags=selectedImportTags();
+    let tagNotice="";
+    if(tags.length){
+      try{
+        const saved=await addMissingTagsToBook({id:created.bookId},tags,Math.max(3,tags.length));
+        tagNotice="；已添加 "+saved.added+" 个剧情标签";
+      }catch(tagError){
+        tagNotice="；小说已上架，但部分标签未保存："+tagError.message+"（可在封面标签中补充）";
+      }
+    }
     $("uploadCoverWithNovel").value="";
     resetNovel();await loadBooks(created.bookId);
     uploadMsg("《"+title+"》已成功上架，"+created.chapters+"章、"+
-      created.wordCards+"个词卡。已上传封面，付费章节仍由会员权限保护。");
+      created.wordCards+"个词卡。已上传封面"+tagNotice+"，付费章节仍由会员权限保护。");
   }catch(e){
     if(!created)throw e;
     resetNovel();await loadBooks(created.bookId);
