@@ -2,7 +2,8 @@
 // HttpOnly host-only preview cookie then authenticates subsequent same-site fetches.
 // Do not confuse this cookie with mw_session (the actual user-login session).
 const encoder = new TextEncoder();
-const noCache = { "cache-control": "no-store", "x-content-type-options": "nosniff" };
+const noCache = { "cache-control": "no-store", "x-content-type-options": "nosniff",
+  "x-robots-tag": "noindex, nofollow, noarchive" };
 const PREVIEW_COOKIE = "__Host-mw_preview";
 const PREVIEW_TTL_SECONDS = 8 * 3600;
 
