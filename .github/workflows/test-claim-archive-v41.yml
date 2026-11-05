@@ -1,0 +1,27 @@
+name: Verify claim full-receipt archive V41
+on:
+  push:
+    branches: [feature/claim-archive-v41-on-v40-20261106]
+permissions:
+  contents: read
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Claim receipt browser emulation and full purchase flow regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check public/claim.js
+          node --test tests/v41-claim-archive.test.mjs tests/s160-claim-receipt-ux.test.mjs tests/s161-claim-visible-runtime.test.mjs
+          npm run check
+          npm run assets:production:build
+          grep -Fq 'id="copyAll"' dist-production/public/claim.html
+          grep -Fq 'id="copyAllText"' dist-production/public/claim.html
+          grep -Fq '感谢你选择妙屋英语，祝你阅读愉快！' dist-production/public/claim.html
+      - name: Site-wide regressions for voucher categories story tags and reader
+        run: npm test
