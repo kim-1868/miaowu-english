@@ -1,4 +1,5 @@
 name: V1.1 apply 010 bookshelf to TEST D1 then restore staging
+# Revised P2 feature regression assertions before test-only migration.
 on:
   push:
     branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
