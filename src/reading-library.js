@@ -19,7 +19,7 @@ async function canReadChapter(env,id,userId){
     "JOIN categories c ON c.id=b.category_id WHERE ch.id=? AND b.status='published' "+
     "AND c.is_visible=1 AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
     "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e WHERE e.user_id=? "+
-    "AND e.category_id=b.category_id AND e.revoked_at IS NULL))",id,userId).first();
+    "AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked')))",id,userId).first();
 }
 async function canStudyWord(env,id,userId){
   return sql(env,"SELECT w.id FROM words w WHERE w.id=? AND EXISTS("+ 
@@ -28,7 +28,7 @@ async function canStudyWord(env,id,userId){
     "WHERE cw.word_id=w.id AND b.status='published' AND c.is_visible=1 "+
     "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
     "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
-    "WHERE e.user_id=? AND e.category_id=b.category_id AND e.revoked_at IS NULL)))",id,userId).first();
+    "WHERE e.user_id=? AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked'))))",id,userId).first();
 }
 async function progressList(env,userId){
   const found=await sql(env,"SELECT p.chapter_id,p.progress,p.completed_at,p.updated_at,"+
@@ -38,7 +38,7 @@ async function progressList(env,userId){
     "AND b.status='published' AND c.is_visible=1 "+
     "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
     "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e WHERE e.user_id=p.user_id "+
-    "AND e.category_id=b.category_id AND e.revoked_at IS NULL)) "+
+    "AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked'))) "+
     "ORDER BY p.updated_at DESC LIMIT 100",userId).all();
   return json({progress:found.results||[]});
 }
@@ -69,7 +69,7 @@ async function wordList(env,userId){
     "WHERE cw2.word_id=uw.word_id AND b2.status='published' AND c2.is_visible=1 "+
     "AND ch2.published_at IS NOT NULL AND ch2.published_at<=CURRENT_TIMESTAMP "+
     "AND (ch2.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e2 "+
-    "WHERE e2.user_id=uw.user_id AND e2.category_id=b2.category_id AND e2.revoked_at IS NULL)) "+
+    "WHERE e2.user_id=uw.user_id AND e2.category_id=b2.category_id AND e2.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e2.source_code_id AND v.status='revoked'))) "+
     "ORDER BY ch2.chapter_no ASC LIMIT 1) AS context_sentence "+
     "FROM user_words uw "+
     "JOIN words w ON w.id=uw.word_id WHERE uw.user_id=? AND uw.bookmarked=1 "+
@@ -78,7 +78,7 @@ async function wordList(env,userId){
     "WHERE cw.word_id=uw.word_id AND b.status='published' AND c.is_visible=1 "+
     "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
     "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e WHERE e.user_id=uw.user_id "+
-    "AND e.category_id=b.category_id AND e.revoked_at IS NULL))) "+
+    "AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked')))) "+
     "ORDER BY uw.last_seen_at DESC LIMIT 200",userId).all();
   // The old list is capped for display, but the fast-learning due counter
   // must count the user's entire entitled collection, not only 200 rows.
@@ -115,7 +115,7 @@ async function quickReview(req,env,userId){
     "AND b.status='published' AND c.is_visible=1 "+
     "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
     "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
-    "WHERE e.user_id=? AND e.category_id=b.category_id AND e.revoked_at IS NULL))",
+    "WHERE e.user_id=? AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked')))",
     wordId,chapterId,userId).first();
   if(!match)return err("WORD_NOT_AVAILABLE",403);
   // An answer of "remembered" does not imply permanently mastered.
@@ -146,7 +146,7 @@ const flashVisible=
   "WHERE cw.word_id=uw.word_id AND b.status='published' AND c.is_visible=1 "+
   "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
   "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
-  "WHERE e.user_id=uw.user_id AND e.category_id=b.category_id AND e.revoked_at IS NULL)))";
+  "WHERE e.user_id=uw.user_id AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked'))))";
 const flashScope=(scope)=>scope==="due"?
   "AND uw.status!='mastered' AND uw.due_at IS NOT NULL AND uw.due_at<=CURRENT_TIMESTAMP":
   scope==="learning"?"AND uw.status!='mastered'":"";

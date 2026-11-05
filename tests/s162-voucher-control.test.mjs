@@ -105,6 +105,16 @@ test("V37 revoke redeemed code denies paid chapters immediately; restore returns
   const restored=db.sql.prepare("SELECT status FROM activation_codes WHERE id=?").get(id);
   assert.equal(restored.status,"redeemed");
   assert.equal(db.sql.prepare("SELECT revoked_at FROM entitlements WHERE source_code_id=?").get(id).revoked_at,null);
+  // Defense in depth for historical inconsistency: even if a revoked code
+  // still has an unrevoked entitlement row, paid content must be denied.
+  db.sql.prepare("UPDATE activation_codes SET status='revoked' WHERE id=?").run(id);
+  assert.equal((await access("v37-c4")).status,403);
+  assert.equal((await access("v37-c6")).status,200);
+  const staleMe=await worker.fetch(req("/api/auth/me","GET",undefined,null,cookie),app).then(r=>r.json());
+  assert.deepEqual(staleMe.categories.map(x=>x.slug),["cet6"]);
+  const staleCatalog=await worker.fetch(req("/api/books/v37-book-c4/chapters","GET",undefined,null,cookie),app).then(r=>r.json());
+  assert.equal(staleCatalog.chapters[0].canRead,false);
+  db.sql.prepare("UPDATE activation_codes SET status='redeemed' WHERE id=?").run(id);
   const logs=db.sql.prepare("SELECT event_type,reason_note FROM ops_audit_events WHERE resource_id=? ORDER BY rowid").all(id);
   assert.deepEqual(logs.map(x=>x.event_type),["voucher.revoke","voucher.restore"]);
   assert.ok(logs.every(x=>x.reason_note.length>=12));

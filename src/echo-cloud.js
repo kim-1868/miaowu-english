@@ -20,7 +20,7 @@ const core=[
 "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP",
 "AND (ch.is_preview=1 OR EXISTS(",
 "SELECT 1 FROM entitlements e WHERE e.user_id=p.user_id",
-"AND e.category_id=b.category_id AND e.revoked_at IS NULL))"
+"AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked')))"
 ].join(" ");
 // "本章复习" is immediate practice for the chapter the reader has OPENED.
 // It never depends on bookmarking a word or on completed_at. Long-term
@@ -36,7 +36,7 @@ function chapterCore(){
  "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP",
  "AND (ch.is_preview=1 OR EXISTS(",
  "SELECT 1 FROM entitlements e WHERE e.user_id=?",
- "AND e.category_id=b.category_id AND e.revoked_at IS NULL))"
+ "AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked')))"
  ].join(" ");
 }
 async function available(env,user,url){
@@ -97,7 +97,7 @@ async function stats(env,user){
     "AND b.status='published' AND c.is_visible=1 "+
     "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
     "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
-    "WHERE e.user_id=p.user_id AND e.category_id=b.category_id AND e.revoked_at IS NULL)))",
+    "WHERE e.user_id=p.user_id AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked'))))",
     user.id).first();
   return reply({due:count?.n||0});
 }

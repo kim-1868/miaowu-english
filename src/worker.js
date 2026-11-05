@@ -77,7 +77,7 @@ async function currentUser(req, db) {
 async function userEntitlements(db, userId) {
   const result = await dbStmt(db, `SELECT c.id, c.slug, c.title
     FROM entitlements e JOIN categories c ON c.id=e.category_id
-    WHERE e.user_id=? AND e.revoked_at IS NULL ORDER BY c.slug`, userId).all();
+    WHERE e.user_id=? AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked') ORDER BY c.slug`, userId).all();
   return result.results || [];
 }
 async function register(req, env) {
@@ -366,7 +366,7 @@ async function redeem(req, env, user) {
         WHERE code_hash=? AND status='unused'
         AND EXISTS(SELECT 1 FROM categories c WHERE c.id=activation_codes.category_id AND c.is_visible=1)
         AND NOT EXISTS(SELECT 1 FROM entitlements e
-          WHERE e.user_id=? AND e.category_id=activation_codes.category_id AND e.revoked_at IS NULL)`,
+          WHERE e.user_id=? AND e.category_id=activation_codes.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked'))`,
         user.id, redemptionNonce, codeHash, user.id),
       dbStmt(db, `INSERT INTO entitlements(user_id,category_id,source_code_id)
         VALUES(?, (SELECT category_id FROM activation_codes WHERE code_hash=? AND redeemed_by=? AND redemption_nonce=? AND status='redeemed'),
@@ -394,8 +394,9 @@ async function chapterAccess(req, env, id, user) {
   if (!row) return reject("NOT_FOUND", 404);
   if (!row.is_preview) {
     if (!user) return reject("LOGIN_REQUIRED", 401);
-    const permission = await dbStmt(env.DB, `SELECT 1 AS allowed FROM entitlements
-      WHERE user_id=? AND category_id=? AND revoked_at IS NULL`, user.id, row.category_id).first();
+    const permission = await dbStmt(env.DB, `SELECT 1 AS allowed FROM entitlements e
+      WHERE e.user_id=? AND e.category_id=? AND e.revoked_at IS NULL
+      AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked')`, user.id, row.category_id).first();
     if (!permission) return reject("PURCHASE_REQUIRED", 403);
   }
   let content;
@@ -436,7 +437,8 @@ async function chapterCatalog(env, bookId, user) {
   if (user) {
     const permission = await dbStmt(env.DB, `SELECT 1 AS allowed FROM entitlements e
       JOIN categories c ON c.id=e.category_id
-      WHERE e.user_id=? AND c.slug=? AND e.revoked_at IS NULL`, user.id, book.category).first();
+      WHERE e.user_id=? AND c.slug=? AND e.revoked_at IS NULL
+      AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked')`, user.id, book.category).first();
     allowed = !!permission;
   }
   return json({ book, chapters: (data.results || []).map(ch => ({
