@@ -1,0 +1,39 @@
+name: Diagnose Miaowu live version indicators V39
+on:
+  push:
+    branches: [release/restore-tags-integrated-v39-20261106]
+    paths: [.github/workflows/diagnose-live-tags-v39.yml]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Fetch live non-auth pages and print only version flags
+        shell: bash
+        run: |
+          set -euo pipefail
+          for resource in ops ops-console.js chapter-words.js app.js claim; do
+            path=$resource
+            curl --fail --silent --show-error --location --max-time 20 "https://miaowu-english-pages.pages.dev/$path?debug-ops-v39=$(date +%s)" -o "/tmp/$(echo "$resource" | tr . _)"
+          done
+          node <<'NODE'
+          const fs=require('fs');
+          const cases=[
+            ['ops','id="applyStoryTags"','batchButton'],
+            ['ops','作废此兑换码','voucherControls'],
+            ['ops','id="tagPreset"','tagPicker'],
+            ['ops_console_js','const defaultTagGroups=','groupedPresets'],
+            ['ops_console_js','const storyTagPlanV38=','batchLogic'],
+            ['ops_console_js','已有自定义标签','customPresets'],
+            ['ops_console_js','追妻火葬场','newTagText'],
+            ['chapter-words_js','学习本章新词','oneWordV35'],
+            ['app_js','unseenSenses=new Set','oneWordCounter'],
+            ['claim','账号找回备用凭证','claimBackup']
+          ];
+          for(const [file,needle,name] of cases){
+            const str=fs.readFileSync('/tmp/'+file,'utf8');
+            console.log(name+': '+(str.includes(needle)?'YES':'NO')+' ('+str.length+' bytes)');
+          }
+          NODE
