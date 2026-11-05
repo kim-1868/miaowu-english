@@ -72,10 +72,10 @@
 .flash-reveal-answer{display:flex;align-items:center;flex-direction:column;gap:5px}
 .flash-reveal-answer strong{font:normal 34px Georgia,serif;color:#78435a}
 .flash-reveal-answer span{font:14px Georgia,serif;color:#946e78}
-.flash-context{width:100%;text-align:left;border-top:1px solid #eedbd5;margin-top:10px;padding-top:11px}
-.flash-context-label{font-size:10px;font-weight:700;color:#9a6579;letter-spacing:.06em}
-.flash-context p{font-size:13px;color:#6f5360;line-height:1.9;margin:7px 0}
-.flash-context small{display:block;font-size:11px;color:#9a7b79;line-height:1.7}
+.flash-example{width:100%;text-align:left;border-top:1px solid #eedbd5;margin-top:10px;padding-top:11px}
+.flash-example-label{font-size:10px;font-weight:700;color:#9a6579;letter-spacing:.06em}
+.flash-example p{font-size:13px;color:#6f5360;line-height:1.9;margin:7px 0}
+.flash-example small{display:block;font-size:11px;color:#9a7b79;line-height:1.7}
 .flash-footer{display:flex;justify-content:center;margin:17px auto 0;max-width:650px}
 .flash-footer button,.flash-finish-actions button{min-height:47px;padding:12px 17px;border-radius:12px;
   border:1px solid #d9bfc0;background:#fff8f4;color:#724654;font-weight:700;font-size:13px}
@@ -152,11 +152,11 @@ html[data-theme="dark"] .flash-headword,html[data-theme="dark"] .flash-meaning,
 html[data-theme="dark"] .flash-flip-meaning,html[data-theme="dark"] .flash-reveal-answer strong,
 html[data-theme="dark"] .flash-finish-stats strong{color:#fff0ea}
 html[data-theme="dark"] .flash-paper-top,html[data-theme="dark"] .flash-mystery,
-html[data-theme="dark"] .flash-context p,html[data-theme="dark"] .flash-context small,
+html[data-theme="dark"] .flash-example p,html[data-theme="dark"] .flash-example small,
 html[data-theme="dark"] .flash-handwriting-hint,html[data-theme="dark"] .flash-audio-note,
 html[data-theme="dark"] .flash-letters,html[data-theme="dark"] .flash-finish>p{color:#ddc4c7}
-html[data-theme="dark"] .flash-context{border-color:#67515e}
-html[data-theme="dark"] .flash-context-label,html[data-theme="dark"] .flash-phonetic,
+html[data-theme="dark"] .flash-example{border-color:#67515e}
+html[data-theme="dark"] .flash-example-label,html[data-theme="dark"] .flash-phonetic,
 html[data-theme="dark"] .flash-reveal-answer span{color:#f0bbca}
 html[data-theme="dark"] .flash-voice,html[data-theme="dark"] .flash-phonetic button{background:#533c4a;color:#ffeadf;border-color:#946779}
 html[data-theme="dark"] .flash-answer{background:#251f2a;color:#fff7ec;border-color:#a57989}
