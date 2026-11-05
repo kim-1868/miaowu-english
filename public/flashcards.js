@@ -118,12 +118,10 @@ function draw(){
       (flipped?
         '<h4 class="flash-flip-meaning">'+esc(w.meaning_zh||"暂无中文释义")+'</h4>':
         '<p class="flash-mystery">先在心里回忆它的意思，再翻开词卡</p>')+'</div>')+
-    ((flipped||feedback)?
-      '<div class="flash-context"><span class="flash-context-label">来自你的小说记忆'+
-      (w.book_title?' · 《'+esc(w.book_title)+'》':'')+'</span>'+
-      (w.context_sentence?'<p>'+esc(w.context_sentence.slice(0,260))+'</p>':'')+
-      (w.example_en?'<small>'+esc(w.example_en.slice(0,220))+
-      (w.example_zh?' · '+esc(w.example_zh.slice(0,160)):'')+'</small>':'')+'</div>':'')+
+    ((flipped||feedback)&&(w.example_en||w.example_zh)?
+      '<div class="flash-example"><span class="flash-example-label">常用例句</span>'+
+      (w.example_en?'<p>'+esc(w.example_en.slice(0,220))+'</p>':'')+
+      (w.example_zh?'<small>'+esc(w.example_zh.slice(0,160))+'</small>':'')+'</div>':'')+
     '</div>'+
     (feedback?
       '<div class="flash-feedback" role="status" aria-live="polite"><strong>'+
