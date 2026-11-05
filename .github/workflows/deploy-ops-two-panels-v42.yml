@@ -77,7 +77,7 @@ jobs:
           set -euo pipefail
           test -n "$CLOUDFLARE_API_TOKEN"
           test -n "$CLOUDFLARE_ACCOUNT_ID"
-          npx wrangler secret list --config deploy/production.wrangler.jsonc -o /tmp/live-secrets-before
+          npx wrangler secret list --config deploy/production.wrangler.jsonc > /tmp/live-secrets-before
           grep -Fq '"OPS_WITHDRAWAL_ENABLED"' /tmp/live-secrets-before
       - name: Deploy V42 keeping secrets and database untouched
         env:
@@ -111,5 +111,5 @@ jobs:
           test "$status" = "401"
           curl -fsSL --retry 3 --max-time 30 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/new-edge
           node --input-type=module -e 'import fs from "node:fs";const x=JSON.parse(fs.readFileSync("/tmp/new-edge","utf8"));if(!x.ok||!x.productionBindingPresent)process.exit(1)'
-          npx wrangler secret list --config deploy/production.wrangler.jsonc -o /tmp/live-secrets-after
+          npx wrangler secret list --config deploy/production.wrangler.jsonc > /tmp/live-secrets-after
           grep -Fq '"OPS_WITHDRAWAL_ENABLED"' /tmp/live-secrets-after
