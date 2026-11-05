@@ -20,7 +20,7 @@ jobs:
         run: |
           set -euo pipefail
           node --check public/ops-console.js
-          node --check public/story-tag-suggester.js
+          node --check public/novel-file-parser.js
           node --check src/ops-console.js
           node --test tests/s163-batch-story-tags-v38.test.mjs tests/s164-story-tag-suggestions-v40.test.mjs tests/s162-voucher-control.test.mjs tests/v35-cross-novel-one-card.test.mjs
           npm run check
