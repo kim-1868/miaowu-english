@@ -1,3 +1,4 @@
+import {relatedAccessibleWordIds,uniqueStudyRows} from './study-identity.js';
 // S6: real Story Echo. Return questions only from accessible, completed D1 chapters.
 // Server scores submitted answers and updates spaced-repeat review events and due dates.
 const H={"content-type":"application/json; charset=utf-8","cache-control":"private, no-store",
@@ -79,15 +80,14 @@ async function available(env,user,url){
     const ids=[...new Set(data.map(x=>x.chapter_id))].slice(0,3);
     data=data.filter(x=>ids.includes(x.chapter_id));
   }
-  const seen=new Set();
-  data=data.filter(x=>{if(seen.has(x.word_id))return false;seen.add(x.word_id);return true}).slice(0,60);
+  data=uniqueStudyRows(data).slice(0,60);
   return reply({scope,words:data,availableGames:data.length>=4?
     ["fill","situation","spell"]:data.length?["spell"]:[],
     distinctWords:data.length,manualOnly:false,
     note:scope==="chapter"?"当前已打开章节的目标词可立即练习，无需完成阅读或先收藏。":"仅展示已读完且有权读取的章节目标词。"});
 }
 async function stats(env,user){
-  const count=await exec(env,"SELECT COUNT(*) n FROM user_words uw WHERE uw.user_id=? "+
+  const count=await exec(env,"SELECT uw.word_id,w.headword,w.part_of_speech,w.meaning_zh FROM user_words uw JOIN words w ON w.id=uw.word_id WHERE uw.user_id=? "+
     "AND uw.status!='mastered' AND uw.due_at IS NOT NULL "+
     "AND uw.due_at<=CURRENT_TIMESTAMP AND EXISTS("+
     "SELECT 1 FROM reading_progress p JOIN chapters ch ON ch.id=p.chapter_id "+
@@ -98,8 +98,8 @@ async function stats(env,user){
     "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
     "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
     "WHERE e.user_id=p.user_id AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked'))))",
-    user.id).first();
-  return reply({due:count?.n||0});
+    user.id).all();
+  return reply({due:uniqueStudyRows(count.results||[]).length});
 }
 async function answer(req,env,user){
   if(!/^application\/json(?:;|$)/i.test(req.headers.get("content-type")||""))
@@ -122,20 +122,23 @@ async function answer(req,env,user){
   const right=data.answer.trim().toLocaleLowerCase("en-US")===
     q.headword.trim().toLocaleLowerCase("en-US");
   const result=right?(data.hinted?"hinted":"correct"):"incorrect";
+  const related=await relatedAccessibleWordIds(env,q.id,user.id);
   const recent=await exec(env,"SELECT result FROM review_events "+
-    "WHERE user_id=? AND word_id=? ORDER BY created_at DESC LIMIT 3",user.id,q.id).all();
+    "WHERE user_id=? AND word_id IN ("+related.map(()=>"?").join(",")+
+    ") ORDER BY created_at DESC LIMIT 3",user.id,...related).all();
   const streak=right&&!data.hinted?1+(recent.results||[]).filter(x=>x.result==="correct").length:0;
   const status=streak>=4?"mastered":"learning";
   const days=status==="mastered"?null:right&&!data.hinted?Math.min(14,streak*3):1;
   await env.DB.batch([
     exec(env,"INSERT INTO review_events(id,user_id,word_id,chapter_id,game_type,result) "+
       "VALUES(?,?,?,?,?,?)",crypto.randomUUID(),user.id,q.id,data.chapterId,data.gameType,result),
-    exec(env,"INSERT INTO user_words(user_id,word_id,status,bookmarked,last_seen_at,due_at) "+
+    ...related.map(alias=>exec(env,
+      "INSERT INTO user_words(user_id,word_id,status,bookmarked,last_seen_at,due_at) "+
       "VALUES(?,?,?,0,CURRENT_TIMESTAMP,"+
       (days===null?"NULL":"datetime('now','+"+days+" days')")+") "+
       "ON CONFLICT(user_id,word_id) DO UPDATE SET status=excluded.status,"+
       "last_seen_at=CURRENT_TIMESTAMP,due_at=excluded.due_at",
-      user.id,q.id,status)
+      user.id,alias,status))
   ]);
   return reply({correct:right,result,expected:q.headword,meaning:q.meaning_zh,
     phonetic:q.phonetic_uk||q.phonetic_us||"",context:q.context_sentence,
