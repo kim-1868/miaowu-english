@@ -158,7 +158,7 @@ test("V37 UI clearly explains that already-redeemed codes revoke package access,
  const html=readFileSync(new URL("../public/ops.html",import.meta.url),"utf8");
  const front=readFileSync(new URL("../public/ops-customers.js",import.meta.url),"utf8");
  assert.match(html,/作废此兑换码/);assert.match(html,/阅读权限/);
- assert.match(front,/customer\/voucher-action/);
+ assert.match(front,/customers\/voucher-action/);
  assert.match(front,/window\.confirm/);assert.match(front,/window\.prompt/);
  assert.match(front,/expectedStatus/);
 });
