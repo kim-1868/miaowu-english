@@ -29,7 +29,7 @@ jobs:
               sys.exit('Missing Cloudflare D1 read-only audit credential')
           sql = """
           SELECT DISTINCT b.id AS book_id, b.title AS book_title,
-             w.id AS word_id, w.headword AS headword
+             w.id AS word_id, w.headword AS headword, w.part_of_speech AS pos, w.meaning_zh AS meaning
             FROM books b
             JOIN categories c ON c.id=b.category_id
             JOIN chapters ch ON ch.book_id=b.id
@@ -100,5 +100,19 @@ jobs:
               'per_book':sorted(per_book,key=lambda v:v['different_id_overlap_terms'],reverse=True),
               'examples_multiple_ids':sample
           }
+                    defs=collections.defaultdict(lambda: collections.defaultdict(set))
+          for r in rows:
+              defs[norm(r['headword'])][(norm(r.get('pos') or ''),norm(r.get('meaning') or ''))].add(r['word_id'])
+          variants=sorted([(k,len(v),len(lemmas[k]['books']),
+             [{'pos':p,'meaning':m,'cards':len(ids)} for (p,m),ids in v.items()])
+             for k,v in defs.items() if len(lemmas[k]['books'])>=2],key=lambda x:(-x[1],-x[2],x[0]))
+          profile={'crossbook_headwords':len(variants),
+            'one_exact_pos_meaning':sum(1 for x in variants if x[1]==1),
+            'multi_exact_pos_meaning':sum(1 for x in variants if x[1]>1),
+            'cases_top50':[
+               {'word':x[0],'variants':x[1],'books':x[2],
+                'definitions':x[3][:7]} for x in variants[:50]
+            ]}
+          print('CET4_MEANING_PROFILE_JSON='+json.dumps(profile,ensure_ascii=False))
           print('CET4_IDENTITY_AUDIT_JSON='+json.dumps(output,ensure_ascii=False,sort_keys=True))
           PY
