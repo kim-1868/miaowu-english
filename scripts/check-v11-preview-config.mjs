@@ -35,7 +35,7 @@ export function auditV11PreviewConfig(staging=read("wrangler.jsonc"),production=
   assert(!("STAGING_PREVIEW_PASSWORD" in (staging.vars||{})),"NO_PLAINTEXT_PREVIEW_SECRET");
   return {safe:errors.length===0,environment:"STAGING_ONLY",database:"miaowu-english-test",errors};
 }
-if(process.argv[1]===fileURLToPath(import.meta.url)){
+if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const result=auditV11PreviewConfig();
  if(!result.safe){console.error(JSON.stringify(result));process.exitCode=1}
  else console.log(JSON.stringify(result));
