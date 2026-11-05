@@ -1,0 +1,45 @@
+name: V1.1 onboarding staging D1 read-only schema check
+on:
+  push:
+    branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
+    paths: [.github/workflows/v11-onboarding-schema-readonly.yml]
+permissions:
+  contents: read
+jobs:
+  inspect-only:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-phase1-mobile-and-install-guide-20261106' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Hard-stop unless all staging identifiers are safe
+        run: |
+          set -euo pipefail
+          node scripts/check-v11-preview-config.mjs
+          test "$(node -p 'JSON.parse(require("fs").readFileSync("wrangler.jsonc","utf8")).d1_databases[0].database_name')" = "miaowu-english-test"
+      - name: Prepare Wrangler only; no migration
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Query only test D1 table names
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npx wrangler d1 execute miaowu-english-test --remote --config wrangler.jsonc --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('users','user_onboarding') ORDER BY name;" --json > /tmp/v11-schema-only.json
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const raw=JSON.parse(readFileSync('/tmp/v11-schema-only.json','utf8'));
+          const entries=Array.isArray(raw)?raw:[raw];
+          const rows=entries.flatMap(x=>x.results||[]);
+          const names=rows.map(x=>x.name).sort();
+          if(!names.includes('users'))throw new Error('STAGING_USERS_TABLE_MISSING');
+          console.log('STAGING_USERS_TABLE_OK');
+          console.log(names.includes('user_onboarding')?'ONBOARDING_TABLE_PRESENT':'ONBOARDING_TABLE_MISSING__MIGRATION_REQUIRED');
+          NODE
