@@ -80,7 +80,11 @@ async function wordList(env,userId){
     "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e WHERE e.user_id=uw.user_id "+
     "AND e.category_id=b.category_id AND e.revoked_at IS NULL))) "+
     "ORDER BY uw.last_seen_at DESC LIMIT 200",userId).all();
-  return json({words:(result.results||[]).map(w=>{
+  // The old list is capped for display, but the fast-learning due counter
+  // must count the user's entire entitled collection, not only 200 rows.
+  const dueCount=await sql(env,"SELECT COUNT(*) AS n FROM user_words uw "+
+    "WHERE uw.user_id=? AND uw.bookmarked=1 AND "+flashVisible+" "+flashScope("due"),userId).first();
+  return json({flashDue:Number(dueCount?.n||0),words:(result.results||[]).map(w=>{
     let pairs=[];try{const parsed=JSON.parse(w.collocations_json||"[]");if(Array.isArray(parsed))pairs=parsed.slice(0,8)}catch{}
     const {collocations_json,...fields}=w;return {...fields,collocations:pairs};
   })});
@@ -173,8 +177,8 @@ async function flashcardPool(req,env,userId){
     flashSource("ch2.id")+" AS chapter_id,"+
     flashSource("b2.title")+" AS book_title "+
     from+" ORDER BY "+
-    (scope==="all"?"COALESCE(uw.last_seen_at,'') DESC,uw.word_id ASC":
-      "COALESCE(uw.due_at,'9999') ASC,uw.word_id ASC")+
+    (scope==="due"?"uw.due_at ASC,uw.word_id ASC":
+      "w.headword COLLATE NOCASE ASC,uw.word_id ASC")+
     " LIMIT ? OFFSET ?",userId,limit,offset).all();
   return json({scope,page,pageSize:limit,total:Number(count?.n||0),
     hasMore:offset+limit<Number(count?.n||0),
