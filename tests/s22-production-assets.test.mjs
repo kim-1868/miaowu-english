@@ -8,7 +8,9 @@ test("S22 production bundle contains only explicit reviewed assets and no test l
  const report=buildProductionAssets();
  assert.equal(report.status,"REVIEWED_STATIC_ASSETS_ONLY");
  assert.deepEqual(report.assets,[...PRODUCTION_ASSET_ALLOWLIST].sort());
- assert.equal(report.assets.length,38);
+ assert.equal(report.assets.length,40);
+ assert.ok(report.assets.includes("install-guide.js"));
+ assert.ok(report.assets.includes("install-guide.css"));
  assert.ok(report.assets.includes("novel-file-parser.js"),"self-service uploader parser must deploy");
  const names=readdirSync(new URL("../dist-production/public/",import.meta.url));
  assert.deepEqual(names.sort(),[...PRODUCTION_ASSET_ALLOWLIST].sort());
