@@ -108,8 +108,8 @@ async function mountClaimAdmin(){
 }
 async function mountCustomerAdmin(){
   if(!customerAdmin){
-    const module=await import("/ops-customers.js?v=20261105-readonly-v32&claimLabels=33a");
-    customerAdmin=module.initCustomerAdmin({api,connected});
+    const module=await import("/ops-customers.js?v=20261105-v37-voucher-control");
+    customerAdmin=module.initCustomerAdmin({api,connected,onChanged:()=>claimAdmin?.refresh()});
   }
   customerAdmin.categories(categoryCatalog);
   await customerAdmin.refresh();

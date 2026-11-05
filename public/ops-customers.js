@@ -1,6 +1,6 @@
-// Read-only operator customer directory; credentials stay inside ops-console.js.
+// Customer directory with publisher-only explicit voucher revoke/restore actions.
 // All displayed values originate from authenticated APIs and use textContent.
-export function initCustomerAdmin({api,connected}){
+export function initCustomerAdmin({api,connected,onChanged=()=>{}}){
  const $=id=>document.getElementById(id);
  const make=(tag,value,cls)=>{
   const el=document.createElement(tag);
@@ -73,9 +73,52 @@ export function initCustomerAdmin({api,connected}){
     item.append(line("生成时间",date(x.created_at)));
     if(x.status==="redeemed"&&!x.entitlement_active)
      item.append(line("权益提醒","此兑换记录没有对应的有效权益"));
+    if(x.status==="revoked")
+     item.append(line("权限状态","已作废；此前通过此码获得的套餐权限已停用"));
+    const action=x.status==="revoked"?"restore":"revoke";
+    const actionLabel=action==="revoke"?"作废此兑换码":"恢复此兑换码";
+    const change=make("button",actionLabel,action==="revoke"?"danger":"secondary");
+    change.type="button";change.disabled=!connected();
+    change.addEventListener("click",()=>void changeVoucher(x,action,change));
+    item.append(change);
    }
    root.append(item);
   }
+ }
+ async function changeVoucher(x,action,button){
+  if(!connected()||button.disabled)return;
+  const revoke=action==="revoke";
+  const confirmWord=revoke?"作废":"恢复";
+  const order=x.order_reference?String(x.order_reference).replace(/^ORD-/,""):"未关联订单";
+  const buyer=x.redeemed_username||"尚未兑换";
+  const category=x.category_title||x.category_slug||"未知套餐";
+  const implication=revoke?(x.status==="redeemed"?
+   "此码已经兑换。作废后，该账号将立即失去此码授予的「"+category+"」付费阅读权限，其他套餐不受影响。":
+   "这枚兑换码尚未兑换，作废后将无法再注册或兑换。"):
+   "恢复后，若此码已兑换，会恢复对应账号的「"+category+"」阅读权限；未兑换的码可重新使用。";
+  if(!window.confirm("请先核对以下信息：\\n小红书-订单编号："+order+
+   "\\n购买套餐："+category+"\\n关联账号："+buyer+
+   "\\n\\n"+implication+"\\n\\n确认要继续"+confirmWord+"吗？"))return;
+  const typed=window.prompt("最后一道安全确认：请输入「"+confirmWord+"」两个字，然后点击确定。","");
+  if(typed!==confirmWord){
+   $("customerResult").textContent="已取消操作：确认文字不匹配。";return;
+  }
+  const reason=window.prompt("填写操作原因（至少 12 个字符，将留存不可修改的审计记录）","");
+  if(reason===null)return;
+  if(reason.trim().length<12||reason.trim().length>200){
+   $("customerResult").textContent="操作原因需为 12–200 个字符，本次未提交。";return;
+  }
+  button.disabled=true;
+  try{
+   const result=await api("/api/ops/customers/voucher-action","POST",{
+    codeId:x.id,action,confirmation:confirmWord,expectedStatus:x.status,
+    reason:reason.trim(),requestId:crypto.randomUUID()
+   });
+   await load();
+   $("customerResult").textContent=result.note||"兑换码状态已更新。";
+   void onChanged();
+  }catch(e){$("customerResult").textContent=e?.message||"操作失败，请刷新记录后重试。";}
+  finally{button.disabled=false;}
  }
  function displayError(error){
   if(connected())$("customerResult").textContent=error?.message||"查询失败";

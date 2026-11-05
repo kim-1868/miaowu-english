@@ -210,3 +210,8 @@ button.secondary{background:#5c4852;color:#f9e8eb}hr{border-color:#674d5a}.audit
 .ops-claim-refresh{display:flex;align-items:end}
 #claimsList .ops-customer-entry p{line-height:1.8;font-size:12px;overflow-wrap:anywhere}
 @media(max-width:700px){.ops-claim-refresh{display:block}}
+
+/* V37: destructive voucher action separated from regular list controls. */
+#customerList .ops-customer-entry button.danger{background:#a83f4c;color:#fff;border:1px solid #93303f;padding:8px 13px;border-radius:8px}
+#customerList .ops-customer-entry button.danger:hover{background:#842c3b}
+#customerList .ops-customer-entry button:disabled{opacity:.5;cursor:not-allowed}

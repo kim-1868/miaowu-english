@@ -1,0 +1,26 @@
+name: Verify voucher revoke and scoped entitlement restore V37
+on:
+  push:
+    branches: [feature/voucher-control-v37-20261105]
+permissions:
+  contents: read
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Scope-specific regression and production configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check src/ops-vouchers.js
+          node --check public/ops-customers.js
+          node --test tests/s162-voucher-control.test.mjs
+          npm run check
+          npm run assets:production:build
+          grep -Fq '作废此兑换码' dist-production/public/ops.html
+      - name: Full regression suite
+        run: npm test
