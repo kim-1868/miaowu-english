@@ -1,0 +1,155 @@
+name: Published CET4 library quality inventory (read-only)
+on:
+  push:
+    branches: [audit/cet4-live-vocabulary-readonly-20261105]
+    paths: [.github/workflows/cet4-published-quality-inventory.yml]
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CF_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_API_TOKEN }}
+      CF_D1_DATABASE: 649c71b3-340c-49bf-b806-3d39256851d3
+    steps:
+      - name: Inspect published CET4 story metadata, markers and card quality (no writes)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os, json, urllib.request, urllib.error, collections, unicodedata, re, statistics
+          account=os.environ['CF_ACCOUNT']
+          token=os.environ['CF_D1_TOKEN']
+          db=os.environ['CF_D1_DATABASE']
+          assert account and token, 'missing read-only D1 audit secrets'
+          endpoint='https://api.cloudflare.com/client/v4/accounts/'+account+'/d1/database/'+db+'/query'
+          def query(sql):
+              request=urllib.request.Request(endpoint,method='POST',data=json.dumps({'sql':sql}).encode(),
+                   headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'})
+              with urllib.request.urlopen(request,timeout=100) as response:
+                  body=json.load(response)
+              assert body.get('success') and body.get('result') and body['result'][0].get('success'), 'D1 query unsuccessful'
+              return body['result'][0].get('results',[])
+          # Chapter content stays in process memory and is never copied into Actions logs.
+          chapters=query("""
+            SELECT b.id book_id,b.title book_title,ch.id chapter_id,ch.chapter_no,ch.content_json,
+                   ch.is_preview,ch.published_at
+            FROM books b JOIN categories cat ON cat.id=b.category_id
+            JOIN chapters ch ON ch.book_id=b.id
+            WHERE cat.slug='cet4' AND cat.is_visible=1 AND b.status='published'
+                  AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP
+            ORDER BY b.title,ch.chapter_no
+          """)
+          cards=query("""
+            SELECT DISTINCT b.id book_id,w.id word_id,w.headword,w.part_of_speech,
+                   w.meaning_zh,w.phonetic_uk,w.phonetic_us,w.example_en,w.example_zh
+            FROM books b JOIN categories cat ON cat.id=b.category_id
+            JOIN chapters ch ON ch.book_id=b.id
+            JOIN chapter_words cw ON cw.chapter_id=ch.id JOIN words w ON w.id=cw.word_id
+            WHERE cat.slug='cet4' AND cat.is_visible=1 AND b.status='published'
+                  AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP
+            ORDER BY b.title,w.headword
+          """)
+          anchors=query("""
+            SELECT ch.book_id,COUNT(*) n
+            FROM chapter_words cw JOIN chapters ch ON ch.id=cw.chapter_id
+            JOIN books b ON b.id=ch.book_id JOIN categories cat ON cat.id=b.category_id
+            WHERE cat.slug='cet4' AND cat.is_visible=1 AND b.status='published'
+                  AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP
+            GROUP BY ch.book_id
+          """)
+          norm=lambda s: unicodedata.normalize('NFKC',str(s or '')).strip().casefold()
+          canonical=lambda s: norm(s).replace('；',';').replace('。','').replace(' ','')
+          bybook=collections.defaultdict(list)
+          for row in cards: bybook[row['book_id']].append(row)
+          lemmas=collections.defaultdict(set)
+          variants=collections.defaultdict(set)
+          for c in cards:
+              key=norm(c['headword'])
+              lemmas[key].add(c['book_id'])
+              variants[key].add((canonical(c['part_of_speech']),canonical(c['meaning_zh'])))
+          anchor_by={r['book_id']:r['n'] for r in anchors}
+          chapter_by=collections.defaultdict(list)
+          for ch in chapters: chapter_by[ch['book_id']].append(ch)
+          all_books=[]
+          for bid,chlist in chapter_by.items():
+              own=bybook[bid]
+              uniq={norm(w['headword']) for w in own}
+              shared={w for w in uniq if len(lemmas[w])>1}
+              unique_only=uniq-shared
+              metadata_missing=collections.Counter()
+              for w in own:
+                  for field in ['part_of_speech','meaning_zh','phonetic_uk','phonetic_us','example_en','example_zh']:
+                      if not str(w.get(field) or '').strip():metadata_missing[field]+=1
+              n_han=n_english=n_paragraphs=n_substantial=n_good_sentences=0
+              chapter_metrics=[]
+              anchors_per_paragraph=[]
+              broken_chapters=[]
+              for c in chlist:
+                  try:
+                      payload=json.loads(c['content_json'])
+                      paragraphs=payload['paragraphs']
+                  except (ValueError,KeyError,TypeError) as e:
+                      broken_chapters.append(c['chapter_no'])
+                      continue
+                  han=eng=0
+                  for p in paragraphs:
+                      markup=[]
+                      paragraph_words=0
+                      for seg in p.get('segments',[]):
+                          if 'wordId' in seg:
+                              eng+=1
+                              paragraph_words+=1
+                              markup.append('[[WORD]]')
+                          else: markup.append(seg.get('text',''))
+                      passage=''.join(markup)
+                      han+=len(re.findall(r'[\u3400-\u9fff]',passage))
+                      n_paragraphs+=1
+                      anchors_per_paragraph.append(paragraph_words)
+                      for sentence in re.split(r'[。！？!?；;]',passage):
+                          if len(re.findall(r'[\u3400-\u9fff]',sentence))<15:continue
+                          n_substantial+=1
+                          ct=sentence.count('[[WORD]]')
+                          if 2<=ct<=5:n_good_sentences+=1
+                  n_han+=han;n_english+=eng
+                  chapter_metrics.append({'no':c['chapter_no'],'han':han,'anchors':eng,
+                       'per100han':round(100*eng/max(han,1),2)})
+              density=round(100*n_english/max(n_han,1),2)
+              meta_issues=sum(1 for c in own if any(not str(c.get(field) or '').strip() for field in
+                        ['part_of_speech','meaning_zh','phonetic_uk','phonetic_us','example_en','example_zh']))
+              mixed_terms=sum(1 for lemma in uniq if len(variants[lemma])>1)
+              exact_identity_shared=sum(1 for lemma in shared if len(variants[lemma])==1)
+              all_books.append({'book_id':bid,'title':chlist[0]['book_title'],'chapters':len(chlist),
+                'han_chars':n_han,'avg_han_per_chapter':round(n_han/max(len(chlist),1)),
+                'anchors_in_chapter_json':n_english,'anchors_in_chapter_words':anchor_by.get(bid,0),
+                'anchors_per100han':density,
+                'unique_headwords':len(uniq),'unique_word_ids':len({w['word_id'] for w in own}),
+                'shared_with_any_other_book':len(shared),
+                'overlap_other_books_pct':round(100*len(shared)/max(len(uniq),1),2),
+                'only_this_book':len(unique_only),
+                'headwords_with_divergent_pos_or_meaning_across_books':mixed_terms,
+                'shared_headwords_with_same_exact_pos_and_meaning':exact_identity_shared,
+                'cards_missing_any_required_metadata':meta_issues,
+                'metadata_gaps':dict(metadata_missing),
+                'avg_anchors_per_paragraph':round(statistics.mean(anchors_per_paragraph),2) if anchors_per_paragraph else 0,
+                'substantial_sentence_count':n_substantial,
+                'substantial_sentences_with_2to5_targets_pct':round(100*n_good_sentences/max(n_substantial,1),1),
+                'invalid_json_chapters':broken_chapters,
+                'chapters_metrics':chapter_metrics
+              })
+          all_books.sort(key=lambda x:(-x['overlap_other_books_pct'], x['unique_headwords']))
+          print('PUBLISHED_CET4_INVENTORY_JSON='+json.dumps({
+              'published_books':len(all_books),
+              'published_chapters':len(chapters),
+              'unique_headwords':len(lemmas),
+              'book_word_rows':len(cards),
+              'total_chapter_markers':sum(x['anchors_in_chapter_json'] for x in all_books),
+              'total_chapter_words_rows':sum(anchor_by.values()),
+              'crossbook_lemmas':sum(1 for v in lemmas.values() if len(v)>1),
+              'crossbook_lemmas_with_definition_variants':sum(1 for term,books in lemmas.items()
+                          if len(books)>1 and len(variants[term])>1),
+              'books':all_books
+          },ensure_ascii=False,separators=(',',':')))
+          PY
