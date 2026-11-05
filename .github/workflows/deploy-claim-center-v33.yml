@@ -1,0 +1,102 @@
+name: Publish Miaowu self-service claim center V33
+on:
+  push:
+    branches: [release/claim-center-v33-20261105]
+    paths: [.github/workflows/deploy-claim-center-v33.yml]
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  verified-claims-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 20ac55627d88d620ad62387f5826e6c9b2f7979f
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Pin audited code and assert additive-only migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "20ac55627d88d620ad62387f5826e6c9b2f7979f"
+          grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
+          grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
+          grep -Fq '"SELF_CLAIM_ENABLED": "true"' deploy/production.wrangler.jsonc
+          sed '/^--/d' db/production/007_self_service_claims.sql > /tmp/migration-sql
+          ! grep -Eiq '\b(DROP|DELETE|UPDATE|ALTER|REPLACE|TRUNCATE)\b' /tmp/migration-sql
+          test ! -e private-output
+          test ! -e private-input
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install deploy tooling
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Run regression tests and dry-run Worker
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm run assets:production:build
+          npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc
+      - name: Confirm existing live site before database upgrade
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 https://miaowu-english-pages.pages.dev/ops.html -o /tmp/ops-before
+          grep -Fq 'id="customerPanel"' /tmp/ops-before
+          curl -fsSL --retry 3 https://miaowu-english-pages.pages.dev/ -o /tmp/home-before
+          grep -Fq 'v31-word-only' /tmp/home-before
+      - name: Check existing scoped Cloudflare secrets
+        env:
+          HAS_D1: ${{ secrets.CLOUDFLARE_D1_API_TOKEN != '' }}
+          HAS_WORKER: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          test "$HAS_D1" = true
+          test "$HAS_WORKER" = true
+          test "$HAS_ACCOUNT" = true
+      - name: Preflight D1 schema metadata (no personal rows)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute miaowu-english-prod --remote --config deploy/production.wrangler.jsonc --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('users','activation_codes','entitlements','ops_operators','order_recovery_credentials')" > /tmp/schema-before
+          for name in users activation_codes entitlements ops_operators order_recovery_credentials; do
+            grep -Fq "$name" /tmp/schema-before
+          done
+      - name: Apply isolated CREATE TABLE migration to D1
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute miaowu-english-prod --remote --config deploy/production.wrangler.jsonc --file db/production/007_self_service_claims.sql
+          npx wrangler d1 execute miaowu-english-prod --remote --config deploy/production.wrangler.jsonc --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('self_service_claims','self_service_claim_actions')" > /tmp/schema-after
+          grep -Fq self_service_claims /tmp/schema-after
+          grep -Fq self_service_claim_actions /tmp/schema-after
+      - name: Deploy Worker with existing production secrets and D1 binding
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc
+      - name: Verify public page, code endpoint guard and unchanged reading site
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 18); do
+            curl -fsSL --max-time 20 "https://miaowu-english-pages.pages.dev/claim.html?claimv33=$i" -o /tmp/claim-live || true
+            if grep -Fq 'id="claimForm"' /tmp/claim-live; then break; fi
+            sleep 4
+          done
+          grep -Fq 'id="claimForm"' /tmp/claim-live
+          curl -fsSL --retry 3 https://miaowu-english-pages.pages.dev/api/claim/categories -o /tmp/claim-catalog
+          node --input-type=module -e 'import fs from "node:fs";const d=JSON.parse(fs.readFileSync("/tmp/claim-catalog","utf8"));if(!d.enabled||!Array.isArray(d.categories)||d.categories.length<1)process.exit(1)'
+          guest=$(curl -s -o /dev/null -w '%{http_code}' -X POST https://miaowu-english-pages.pages.dev/api/ops/claims/query -H 'Origin: https://miaowu-english-pages.pages.dev' -H 'Content-Type: application/json' -d '{"page":1}')
+          test "$guest" = 401
+          curl -fsSL --retry 3 https://miaowu-english-pages.pages.dev/ -o /tmp/home-after
+          grep -Fq 'v31-word-only' /tmp/home-after
