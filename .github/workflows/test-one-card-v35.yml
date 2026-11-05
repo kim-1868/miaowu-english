@@ -1,0 +1,41 @@
+name: Verify Miaowu V35 one-sense-one-card patch
+on:
+  push:
+    branches: [fix/cet4-one-word-one-card-v35-20261106]
+    paths:
+      - .github/workflows/test-one-card-v35.yml
+      - src/reading-library.js
+      - src/study-identity.js
+      - src/echo-cloud.js
+      - src/worker.js
+      - public/app.js
+      - public/chapter-words.js
+      - tests/v35-cross-novel-one-card.test.mjs
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check and offline production build
+        run: |
+          set -euo pipefail
+          node --check src/study-identity.js
+          node --check src/reading-library.js
+          node --check src/echo-cloud.js
+          node --check src/worker.js
+          node --check public/chapter-words.js
+          node --check public/app.js
+          npm run check
+      - name: One sense = one card targeted and full regression suite
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite --test tests/v35-cross-novel-one-card.test.mjs
+          npm test
+      - name: Production asset validation
+        run: npm run assets:production:build
