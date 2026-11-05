@@ -963,7 +963,7 @@ const storyTagPlanV38=[
 async function proposeTags(book,novel=null){
   const fixed=novel?null:storyTagPlanV38.find(x=>x.id===book.id&&x.title===book.title&&x.category===book.category_id);
   if(fixed)return fixed.tags.map(([label,color])=>({label,color,basis:"已审核的历史故事方案"}));
-  const {suggestStoryTags}=await import("/story-tag-suggester.js?v=20261106-v40");
+  const {suggestStoryTags}=await import("/novel-file-parser.js?v=20261106-v40");
   const input=novel||book;
   const body=novel?(novel.chapters||[]).flatMap(ch=>(ch.paragraphs||[])
     .slice(0,5).flatMap(p=>(p.segments||[]).map(s=>s.text||s.surface||""))).join("").slice(0,4500):"";
