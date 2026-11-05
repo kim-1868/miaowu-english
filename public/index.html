@@ -7,6 +7,7 @@
   <title>妙屋英语 · THE STORY & WORD LIBRARY｜故事阅读与词汇记忆</title>
   <link rel="stylesheet" href="/styles.css?v=20261104-v28-night-selection" />
   <link rel="stylesheet" href="/flashcards.css?v=20261105-v31-word-only" />
+  <link rel="stylesheet" href="/install-guide.css?v=20261106-v1" />
 </head>
 <body>
   <div class="app-shell">
@@ -45,6 +46,11 @@
       <aside class="home-reminder-strip" aria-label="词汇复习提醒">
         <div id="reviewReminder" class="review-reminder" aria-live="polite"></div>
       </aside>
+      <aside class="home-install-tip" id="homeInstallTip" aria-label="添加妙屋到手机桌面" hidden>
+        <div class="home-install-tip-copy"><strong>🐾 把妙屋添加到手机桌面</strong><small>下次打开更方便，不用再找网址啦！</small></div>
+        <button class="install-tip-open" id="installTipOpen" type="button">查看步骤</button>
+        <button class="install-tip-dismiss" id="installTipDismiss" type="button" aria-label="不再提示添加到桌面">×</button>
+      </aside>
       <section class="section"><div class="section-heading"><div><span class="eyebrow">CHOOSE YOUR SHELF</span><h2>探索你的故事书架</h2></div><p>一个账号，多个学习分类。购买哪个，就解锁哪个。</p></div>
       <div class="category-row" id="categories"></div>
       <div class="section-heading shelf-heading"><div><span class="eyebrow" id="selectedCategoryEn">CET-4 COLLECTION</span><h2 id="selectedCategoryTitle">四级核心词 · 故事精选</h2></div><div class="shelf-tabs"><button class="tiny-action" id="openActivation">已有激活码？去兑换 ↗</button></div></div><div class="home-shelf-layout">
@@ -80,7 +86,7 @@
     </div><div class="side-panel"><h3>我的阅读进度</h3><span class="side-caption" id="readingStatus">阅读进度</span><div class="book-progress"><span id="progressBar"></span></div><div class="metric"><span>已收藏词汇</span><strong id="savedCount">0</strong></div><div class="metric"><span>最近阅读</span><strong id="readingChapter">第01章</strong></div><div class="metric"><span>待学习词汇</span><strong id="readerUnseen">—</strong></div><div class="metric"><span>今日待复习</span><strong id="readerDue">0</strong></div></div><div class="side-panel"><h3>阅读设置</h3><p class="side-caption">点击英文弹出词卡。需要回忆时，隐藏释义再读一次。</p><button class="secondary-btn" id="sideToggleGloss" style="width:100%;margin-top:9px">切换释义显示</button><button class="secondary-btn" id="sideRead" style="width:100%;margin-top:9px">▶ 开始朗读</button></div><div class="mini-note">章节朗读使用设备内置语音，支持跳转段落；语音音色由设备提供。</div></aside><div id="readerDrawerOverlay" class="reader-drawer-overlay"></div></div></section>
     <section id="view-words" class="view app-section"><div class="page-intro"><div><span class="eyebrow">YOUR WORD COLLECTION</span><h1>我的记忆藏书票</h1><p>单词不是孤立的条目。每一个单词，都有它被你遇见时的故事。</p></div><button class="secondary-btn" id="wordbookRead">返回故事 →</button></div><section id="flashcardTrainer" class="flashcard-trainer" aria-label="记忆藏书票快速学习"></section><div class="filter-row"><button class="filter-chip active" data-word-filter="all">全部收藏</button><button class="filter-chip" data-word-filter="learning">待复习</button><button class="filter-chip" data-word-filter="mastered">已记住</button></div><div class="wordbook-layout"><div class="wordbook-grid" id="vocabGrid"></div><aside><div class="side-panel"><span class="eyebrow">YOUR BOOKPLATE</span><div class="stamp">KEEP<br><small>THE WORDS</small><br>✦</div><h3 style="text-align:center">把好故事，留在心里</h3><p class="side-caption" style="text-align:center">收藏单词，再从原剧情中把它想起来。复习只是轻轻翻开另一页。</p><div class="metric"><span>我的藏书票</span><strong id="bookplateCount">0</strong></div></div></aside></div></section>
     <section id="view-echo" class="view app-section"><div class="echo-wrap"><div class="echo-banner"><span class="eyebrow" style="color:#e9c2a5">STORY ECHO · THE MEMORY GAME</span><h2>剧情回声</h2><p>闭上书页，故事还在。选择剧情填词、情境选择或单词找回，复习你真正读过的章节。</p></div><div id="echoModeSwitch"></div><div id="quizContainer"></div></div></section>
-    <section id="view-account" class="view app-section"><div class="page-intro"><div><span class="eyebrow">MY PRIVATE LIBRARY</span><h1>我的书房</h1><p>这里收藏你拥有的故事，也记录它们陪你记住的词。</p></div></div><div id="accountPanel"></div></section>
+    <section id="view-account" class="view app-section"><div class="page-intro"><div><span class="eyebrow">MY PRIVATE LIBRARY</span><h1>我的书房</h1><p>这里收藏你拥有的故事，也记录它们陪你记住的词。</p></div></div><div class="install-account-link"><button id="installAccountOpen" type="button">📱 添加到手机桌面 · 查看教程 →</button></div><div id="accountPanel"></div></section>
     <div class="foot-note">MIAOWU · THE STORY & WORD LIBRARY <span style="color:#b79383">✦</span> DESIGNED FOR STORIES & WORDS<br><span style="font:11px sans-serif;color:#ac9b93;letter-spacing:0">在故事里相遇，让词汇慢慢留下来。</span></div>
   </main>
   <nav class="bottom-tabs" aria-label="手机导航"><button data-nav="library" class="active"><span class="tab-icon">⌂</span>书架</button><button data-nav="words"><span class="tab-icon">▤</span>藏书票</button><button data-nav="echo"><span class="tab-icon">✧</span>剧情回声</button><button data-nav="account"><span class="tab-icon">♙</span>我的</button></nav>
@@ -91,10 +97,27 @@
 </div>
   <div class="popover-backdrop" id="wordBackdrop"></div><div class="word-pop" id="wordPop" role="dialog" aria-label="单词学习面板" aria-live="polite"></div>
   <div class="modal-overlay" id="modalOverlay"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button class="modal-close" id="modalClose" aria-label="关闭">×</button><div id="modalContent"></div></div></div>
+  <div class="install-guide-backdrop" id="installGuide" hidden>
+    <div class="install-guide-dialog" role="dialog" aria-modal="true" aria-labelledby="installGuideTitle" tabindex="-1">
+      <div class="install-guide-heading"><div><h2 id="installGuideTitle">把妙屋添加到手机桌面</h2><p>下次打开更方便，不用再找网址啦！</p></div><button id="installGuideClose" class="install-guide-close" type="button" aria-label="关闭教程">×</button></div>
+      <div class="install-guide-tabs" role="tablist" aria-label="选择手机类型">
+        <button type="button" role="tab" data-install-tab="iphone" id="installTabIphone" aria-controls="installPanelIphone" aria-selected="true">iPhone</button>
+        <button type="button" role="tab" data-install-tab="android" id="installTabAndroid" aria-controls="installPanelAndroid" aria-selected="false" tabindex="-1">Android</button>
+      </div>
+      <div class="install-guide-panel" role="tabpanel" id="installPanelIphone" aria-labelledby="installTabIphone" data-install-panel="iphone">
+        <ol><li>用 Safari 打开妙屋英语。</li><li>点击“共享”，选择“添加到主屏幕”。</li><li>点击“添加”，就完成啦！</li></ol>
+      </div>
+      <div class="install-guide-panel" role="tabpanel" id="installPanelAndroid" aria-labelledby="installTabAndroid" data-install-panel="android" hidden>
+        <ol><li>用 Chrome 打开妙屋英语。</li><li>打开浏览器菜单，选择“添加到主屏幕”或“安装应用”。</li><li>确认添加即可。</li></ol>
+      </div>
+      <p class="install-guide-note">从小红书打开？请先选择“在浏览器中打开”，再按步骤操作。不同系统版本的按钮名称可能略有差异。</p>
+    </div>
+  </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="/chapter-words.js"></script>
   <script src="/echo-cloud.js?v=20261103-v12-review-cover"></script>
   <script src="/flashcards.js?v=20261105-v31-word-only"></script>
   <script src="/app.js?v=20261105-v30-flashcards"></script>
+  <script src="/install-guide.js?v=20261106-v1"></script>
 </body>
 </html>
