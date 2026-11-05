@@ -214,6 +214,11 @@ test("S157: customer learning screen is reachable and original bookplate grid an
   assert.ok(ui.includes('"/api/me/flashcards/answer"'));
   assert.ok(ui.includes('crypto.randomUUID()'));
   assert.ok(ui.includes('local.queue.splice(later,0,{word:w,retry:true})'));
+  assert.ok(ui.includes('retryCounts:new Map()'));
+  assert.ok(ui.includes('if(times<2)'));
+  assert.ok(ui.includes('roundSize=20'));
+  assert.ok(!ui.includes('setTimeout(()=>{if(local===round'));
+  assert.ok(ui.includes('下一张 →'));
   assert.ok(ui.includes("inputmode=\"text\""));
   assert.ok(ui.includes("autocomplete=\"off\""));
   assert.ok(ui.includes("每张词卡只在提交成功后推进"));
