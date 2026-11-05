@@ -10,7 +10,7 @@ export function initCustomerAdmin({api,connected,onChanged=()=>{}}){
  };
  let mode="codes",page=1,total=0,serial=0;
  let debounce=null;
- const pageSize=20;
+ const pageSize=10;
  const states={unused:"未兑换",redeemed:"已兑换",revoked:"已作废"};
  function date(value){
   if(!value)return "—";
@@ -39,19 +39,39 @@ export function initCustomerAdmin({api,connected,onChanged=()=>{}}){
    root.append(make("span",label+" · "+Number(value||0)));
   }
  }
+ function shortOrder(value){
+  if(!value)return "未关联订单";
+  const n=String(value).replace(/^ORD-/,"");
+  return n.length<=8?"尾号 "+n.slice(-4):n.slice(0,4)+"••••"+n.slice(-4);
+ }
+ function copyOrder(value,button){
+  const order=String(value||"").replace(/^ORD-/,"");
+  if(!order)return;
+  const original=button.textContent;
+  const copied=()=>{button.textContent="✓ 已复制";button.setAttribute("aria-label","订单号已复制");};
+  if(navigator.clipboard?.writeText){
+   navigator.clipboard.writeText(order).then(copied,()=>{
+    window.prompt("复制下面的订单编号",order);
+   });
+  }else window.prompt("复制下面的订单编号",order);
+  button.title=original;
+ }
  function draw(items){
   const root=$("customerList");root.replaceChildren();
   if(!items.length){root.append(make("p","没有找到符合条件的记录。","ops-book-empty"));return;}
   for(const x of items){
-   const item=make("article",undefined,"ops-customer-entry");
-   const head=make("div",undefined,"ops-customer-entry-header");
+   const item=make("details",undefined,"ops-customer-entry ops-record");
+   const head=make("summary",undefined,"ops-record-summary");
+   const body=make("div",undefined,"ops-record-body");
+   const arrow=make("span","⌄","ops-record-chevron");arrow.setAttribute("aria-hidden","true");
    if(mode==="users"){
-    head.append(make("strong",x.username));
+    head.append(make("strong",x.username,"ops-record-name"));
+    head.append(make("span","最近兑换 "+date(x.last_redeemed_at),"ops-record-meta"));
     head.append(make("span",Number(x.redeemed_count||0)+" 次兑换","ops-customer-badge"));
-    item.append(head);
-    item.append(line("已开通套餐",x.packages||"暂无有效权益"));
-    item.append(line("注册时间",date(x.created_at)));
-    item.append(line("最近兑换",date(x.last_redeemed_at)));
+    head.append(arrow);
+    body.append(line("已开通套餐",x.packages||"暂无有效权益"));
+    body.append(line("注册时间",date(x.created_at)));
+    body.append(line("最近兑换",date(x.last_redeemed_at)));
     const show=make("button","查看兑换记录","secondary");
     show.type="button";
     show.addEventListener("click",()=>{
@@ -60,29 +80,37 @@ export function initCustomerAdmin({api,connected,onChanged=()=>{}}){
       $("customerCodeStatus").value="";$("customerCategory").value="";
       void load().catch(displayError);
     });
-    item.append(show);
+    body.append(show);
    }else{
-    head.append(make("strong",x.category_title||x.category_slug||"未知套餐"));
+    head.append(make("strong",x.category_title||x.category_slug||"未知套餐","ops-record-name"));
+    head.append(make("span","订单 "+shortOrder(x.order_reference)+" · "+(x.redeemed_username||"未兑换"),"ops-record-meta"));
     head.append(make("span",states[x.status]||"未知状态",
      "ops-customer-badge"+(x.status==="redeemed"?" is-redeemed":"")));
-    item.append(head);
-    item.append(line("小红书-订单编号",x.order_reference?
+    head.append(arrow);
+    const order=make("div",undefined,"ops-record-order-copy");
+    order.append(line("小红书-订单编号",x.order_reference?
       String(x.order_reference).replace(/^ORD-/,""):"未关联订单"));
-    item.append(line("兑换账号",x.redeemed_username||"尚未兑换"));
-    item.append(line("兑换时间",date(x.redeemed_at)));
-    item.append(line("生成时间",date(x.created_at)));
+    if(x.order_reference){
+     const copy=make("button","复制订单号","secondary");copy.type="button";
+     copy.addEventListener("click",()=>copyOrder(x.order_reference,copy));
+     order.append(copy);
+    }
+    body.append(order);
+    body.append(line("兑换账号",x.redeemed_username||"尚未兑换"));
+    body.append(line("兑换时间",date(x.redeemed_at)));
+    body.append(line("生成时间",date(x.created_at)));
     if(x.status==="redeemed"&&!x.entitlement_active)
-     item.append(line("权益提醒","此兑换记录没有对应的有效权益"));
+     body.append(line("权益提醒","此兑换记录没有对应的有效权益"));
     if(x.status==="revoked")
-     item.append(line("权限状态","已作废；此前通过此码获得的套餐权限已停用"));
+     body.append(line("权限状态","已作废；此前通过此码获得的套餐权限已停用"));
     const action=x.status==="revoked"?"restore":"revoke";
     const actionLabel=action==="revoke"?"作废此兑换码":"恢复此兑换码";
     const change=make("button",actionLabel,action==="revoke"?"danger":"secondary");
     change.type="button";change.disabled=!connected();
     change.addEventListener("click",()=>void changeVoucher(x,action,change));
-    item.append(change);
+    body.append(change);
    }
-   root.append(item);
+   item.append(head,body);root.append(item);
   }
  }
  async function changeVoucher(x,action,button){
