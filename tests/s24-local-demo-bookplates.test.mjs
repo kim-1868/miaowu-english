@@ -19,6 +19,7 @@ function harness({loggedIn=true,cloudWords=[],localDemo=["contract"]}={}){
   saved:new Set(localDemo),
   safe:s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])),
   navigate:()=>{},showLogin:()=>{},toast:()=>{},speakWord:()=>{},
+  renderExampleWords:s=>String(s), // extracted renderWords harness, actual tokenizer tested separately
   serverRequest:()=>{throw Error("no remote request during render")},
   refreshCloudLearning:()=>{}
  };
@@ -42,7 +43,7 @@ test("S24 commercial wordbook only lists authenticated cloud bookmarks, not save
 });
 test("S24 guests cannot see local demo content as paid wordbooks",()=>{
  const h=harness({loggedIn:false,localDemo:["contract"]});h.render();
- assert.match(h.$("vocabGrid").innerHTML,/登录后，打开你的云端藏书票/);
+ assert.match(h.$("vocabGrid").innerHTML,/登录后，打开你的云端生词本/);
  assert.doesNotMatch(h.$("vocabGrid").innerHTML,/contract|本机演示/);
  assert.equal(h.$("bookplateCount").textContent,"0");
 });
