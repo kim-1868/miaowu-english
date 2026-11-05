@@ -47,6 +47,7 @@ jobs:
           node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
           grep -Fq '学习本章新词' dist-production/public/chapter-words.js
           grep -Fq 'glossaryCache.clear()' dist-production/public/app.js
+          grep -Fq 'unseenSenses=new Set' dist-production/public/app.js
       - name: Install Cloudflare Wrangler
         run: npm install --no-save --ignore-scripts wrangler@^4
       - name: Dry-run exact Worker and assets
