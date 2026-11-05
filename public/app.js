@@ -9,7 +9,7 @@
     Object.keys(WORD_EXTRAS).forEach(k=>Object.assign(WORDS[k],WORD_EXTRAS[k]));
     const CHAPTERS=[{title:'一纸协议',parts:['这只是一个用于测试阅读功能的场景片段，并非正式小说正文。窗外的雨敲打玻璃，客厅里只亮着一盏灯。','她将那份 [[contract]]（合同）轻轻推到桌面中央。对面的男人看上去依旧 [[indifferent]]（冷淡的），仿佛这不过是一次寻常的会面。','“我只想 [[confirm]]（确认）一件事。”她望着他，“这真的是你的决定吗？”','他没有回答。她也没有 [[hesitate]]（犹豫），拿起笔，在最后一页留下自己的 [[signature]]（签名）。','离开前，她发现文件下压着一张旧照片。也许，那会是一份重要的 [[evidence]]（证据）。']},{title:'藏在照片里的名字',parts:['这一章同样是临时交互文案，仅用于体验付费章节解锁与词汇功能。','照片背面的名字让她重新思考自己的 [[identity]]（身份）。那是一段不曾向任何人提起的往事。','律师寄来的邮件提到了股份 [[transfer]]（转让）。事情比她想象的复杂。','她将信纸折好，决定先不 [[reveal]]（透露）真相。某个遥远的 [[promise]]（承诺），仍然留在她的记忆里。','门外的脚步声逐渐 [[approach]]（接近）。她突然明白，每个决定都可能带来新的 [[consequence]]（后果）。']}];
     const QUIZ=[{q:'她把哪一种文件推到桌面中央？',hint:'提示：一份正式的书面约定。',choices:['contract','evidence','identity','promise'],correct:'contract',detail:'contract = 合同；契约。想起桌上的那份协议。'},{q:'她在文件最后一页留下了什么？',hint:'提示：这是签署协议时的一个动作。',choices:['approach','signature','transfer','reveal'],correct:'signature',detail:'signature = 签名。把词义和“落笔签字”的画面连在一起。'},{q:'他看上去冷淡的，哪个英文词更贴近？',hint:'提示：描述人物的态度。',choices:['indifferent','hesitate','confirm','consequence'],correct:'indifferent',detail:'indifferent = 冷淡的；漠不关心的。再次想起故事人物的神情。'}];
-    const $=id=>document.getElementById(id);let view='library',category='cet4',chapter=0,gloss=true,night=(function(){try{return localStorage.getItem('miaowu_theme')==='dark'}catch(e){return false}})(),fontSize=(()=>{try{return Math.min(25,Math.max(15,Number(localStorage.getItem('miaowu_reader_font'))||18))}catch{return 18}})(),wordFilter='all',popWord=null,user=null,grants=new Set(),quizIndex=0,quizScore=0,quizAnswer=null,utterances=[],speakIndex=0,speaking=false,paused=false;
+    const $=id=>document.getElementById(id);let view='library',category='cet4',chapter=0,gloss=true,night=(function(){try{return localStorage.getItem('miaowu_theme')==='dark'}catch(e){return false}})(),fontSize=(()=>{try{return Math.min(24,Math.max(12,Number(localStorage.getItem('miaowu_reader_font'))||18))}catch{return 18}})(),wordFilter='all',popWord=null,user=null,grants=new Set(),quizIndex=0,quizScore=0,quizAnswer=null,utterances=[],speakIndex=0,speaking=false,paused=false;
     const stored=(key)=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch(e){return []}};const saved=new Set(stored('miaowu_demo_words').filter(w=>WORDS[w]));const mastered=new Set(stored('miaowu_demo_mastered').filter(w=>WORDS[w]));
     const safe=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     function applyTheme(){
@@ -149,6 +149,13 @@
         content.style.setProperty('line-height','2.15');
         content.style.setProperty('font-size',fontSize+'px');
       }
+      const heading=$('chapterTitle');
+      if(heading)heading.style.setProperty('font-size',Math.round(fontSize*1.75)+'px');
+      const slider=$('readerFontSlider'),label=$('readerFontValue');
+      if(slider)slider.value=String(fontSize);
+      if(label)label.textContent=fontSize+'px';
+      $('smallerFont').disabled=fontSize<=12;
+      $('biggerFont').disabled=fontSize>=24;
       $('readerLayout')?.removeAttribute('data-reader-tone');
       try{
         localStorage.setItem('miaowu_reader_font',String(fontSize));
@@ -466,19 +473,23 @@
     }
     // The bottom study tray is stable across re-rendered chapters. It is not a
     // blocking mobile modal: readers can tap another highlighted word in place.
-    let selectedStudyWordId=null,studyRequestSequence=0;
+    let selectedStudyWordId=null,studyRequestSequence=0,studyAnchorEl=null;
     const studyMissingWordIds=new Set();
     function chapterStudyWordIds(){
       return [...new Set(Array.from($('storyText').querySelectorAll('[data-cloud-word]'))
         .map(el=>el.dataset.cloudWord).filter(Boolean))];
     }
-    function showCloudWord(wordId){
+    function showCloudWord(wordId,anchorEl=null){
       if(!activeCloud?.chapterId)return;
+      if(anchorEl?.isConnected)studyAnchorEl=anchorEl;
+      else if(!studyAnchorEl?.isConnected||studyAnchorEl.dataset.cloudWord!==wordId)
+        studyAnchorEl=$('storyText').querySelector('[data-cloud-word="'+CSS.escape(wordId)+'"]');
       selectedStudyWordId=wordId;
       const ids=chapterStudyWordIds();
       const idx=ids.indexOf(wordId);
-      const clicked=Array.from($('storyText').querySelectorAll('[data-cloud-word]'))
-        .find(el=>el.dataset.cloudWord===wordId);
+      const clicked=studyAnchorEl?.isConnected&&studyAnchorEl.dataset.cloudWord===wordId?
+        studyAnchorEl:Array.from($('storyText').querySelectorAll('[data-cloud-word]'))
+          .find(el=>el.dataset.cloudWord===wordId);
       const w=activeCloud.words?.get(wordId);
       const current=cloudSaved.get(wordId)||(w?.study_seen?{status:w.study_status,bookmarked:!!w.study_bookmarked}:null);
       const pairs=Array.isArray(w?.collocations)?w.collocations:[];
@@ -511,7 +522,7 @@
       tray.classList.add('on');
       // Do not create a blocking full-screen overlay on iOS. On older cached
       // stylesheets the backdrop used to dim the page without a visible card.
-      backdrop.classList.toggle('on',!mobileStudyTray);
+      backdrop.classList.remove('on'); // Desktop uses a nonmodal anchored card; mobile uses the bottom tray.
       if(mobileStudyTray){
         backdrop.style.setProperty('display','none','important');
         backdrop.style.setProperty('pointer-events','none','important');
@@ -538,6 +549,7 @@
         ['position','display','visibility','z-index','top','bottom','left','right',
           'width','max-width','max-height','overflow-y','background','color',
           'border-radius','box-shadow','padding'].forEach(prop=>tray.style.removeProperty(prop));
+        positionStudyPopover();
       }
       $('storyText').querySelectorAll('[data-cloud-word]').forEach(el=>{
         el.classList.toggle('study-word-active',el.dataset.cloudWord===wordId);
@@ -576,6 +588,30 @@
         ++studyRequestSequence;
       }
     }
+    function positionStudyPopover(){
+      const tray=$('wordPop');
+      if(!tray?.classList.contains('on')||window.matchMedia('(max-width:700px)').matches)return;
+      const anchor=studyAnchorEl?.isConnected?studyAnchorEl:null;
+      if(!anchor)return;
+      const bounds=anchor.getBoundingClientRect();
+      const margin=12, width=Math.min(370,window.innerWidth-margin*2);
+      const cardHeight=Math.min(tray.scrollHeight||520,window.innerHeight*.72);
+      const left=Math.max(margin,Math.min(window.innerWidth-width-margin,bounds.left));
+      const placeBelow=window.innerHeight-bounds.bottom>Math.min(280,cardHeight);
+      const top=placeBelow?Math.min(window.innerHeight-cardHeight-margin,bounds.bottom+9):
+        Math.max(margin,bounds.top-cardHeight-9);
+      tray.style.setProperty('position','fixed','important');
+      tray.style.setProperty('left',Math.round(left)+'px','important');
+      tray.style.setProperty('top',Math.round(top)+'px','important');
+      tray.style.setProperty('right','auto','important');
+      tray.style.setProperty('bottom','auto','important');
+      tray.style.setProperty('width',Math.round(width)+'px','important');
+      tray.style.setProperty('max-height','72vh','important');
+      tray.style.setProperty('overflow-y','auto','important');
+      tray.style.setProperty('z-index','2147483000','important');
+    }
+    window.addEventListener('resize',positionStudyPopover,{passive:true});
+    window.addEventListener('scroll',positionStudyPopover,{passive:true});
     async function saveCloudWord(id,markMastered){
       if(!user){closeWord();showLogin();return}
       const w=activeCloud?.words?.get(id);
@@ -589,7 +625,7 @@
         w.study_seen=true;w.study_status=status;w.study_bookmarked=bookmarked;
         if(bookmarked)cloudSaved.set(id,{...w,word_id:id,status,bookmarked:1});
         else cloudSaved.delete(id);
-        toast(bookmarked?'已同步到云端记忆藏书票':'已从云端藏书票移除');
+        toast(bookmarked?'已同步到云端记忆生词本':'已从云端生词本移除');
         showCloudWord(id);
         refreshCloudLearning();
       }catch(error){toast(error.message);if(action)action.disabled=false}
@@ -1296,10 +1332,21 @@
     function speakWord(w){
       if(!('speechSynthesis' in window)){toast('此浏览器暂不支持语音朗读');return}
       stopReading();
+      // The browser has a single SpeechSynthesis queue. Word audio can
+      // interrupt a paused chapter, but closing the card NEVER auto-resumes it.
+      if(speaking){
+        chapterSpeechNeedsRestart=true;
+        window.speechSynthesis.cancel();
+        paused=true;
+        $('playerPause').textContent='▶';
+        $('playerState').textContent='已暂停 · 点击继续朗读';
+      }else window.speechSynthesis.cancel();
       const u=new SpeechSynthesisUtterance(w);u.lang='en-US';u.rate=.82;
       window.speechSynthesis.speak(u);
     }
+    let chapterSpeechNeedsRestart=false;
     function stopReading(){
+      chapterSpeechNeedsRestart=false;
       speechGeneration++;
       if('speechSynthesis' in window)window.speechSynthesis.cancel();
       speaking=false;paused=false;utterances=[];
@@ -1339,7 +1386,7 @@
       if(!utterances.length)return;
       speechGeneration++;
       window.speechSynthesis.cancel();
-      speaking=true;paused=false;
+      speaking=true;paused=false;chapterSpeechNeedsRestart=false;
       speakIndex=Math.max(0,Math.min(utterances.length-1,Math.floor(index)));
       $('player').classList.add('show');
       $('playerPause').textContent='Ⅱ';
@@ -1351,7 +1398,7 @@
       const next=buildSpeechSegments();
       if(!next.length){toast('本章没有可朗读的内容');return}
       stopReading();
-      utterances=next;speaking=true;paused=false;
+      utterances=next;speaking=true;paused=false;chapterSpeechNeedsRestart=false;
       let first=0;
       if(Number.isInteger(fromParagraph)){
         const target=utterances.findIndex(t=>t.paragraph>=fromParagraph);
@@ -1428,7 +1475,7 @@
       $('readerLayout').classList.remove('chapter-drawer-open','vocab-drawer-open');
       $('mobileChapterOpen').setAttribute('aria-expanded','false');
       $('mobileVocabOpen').setAttribute('aria-expanded','false');
-    };$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{echoMode='cloud';if(activeCloud?.chapterId)window.MiaowuCloudEcho?.useChapter(activeCloud.chapterId);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);applyReadingPrefs()};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);applyReadingPrefs()};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=()=>{rememberSpeechPosition(0);stopReading()};
+    };$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{echoMode='cloud';if(activeCloud?.chapterId)window.MiaowuCloudEcho?.useChapter(activeCloud.chapterId);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(12,fontSize-1);applyReadingPrefs()};$('biggerFont').onclick=()=>{fontSize=Math.min(24,fontSize+1);applyReadingPrefs()};$('readerFontSlider').addEventListener('input',e=>{fontSize=Math.max(12,Math.min(24,Math.round(Number(e.target.value)||18)));applyReadingPrefs()});function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){if(chapterSpeechNeedsRestart)seekSpeech(Math.max(0,speakIndex-1));else{window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=()=>{rememberSpeechPosition(0);stopReading()};
     $('playerPrevious').onclick=()=>{if(speaking)seekSpeech(speakIndex-2);else startReading()};
     $('playerNext').onclick=()=>{if(speaking)seekSpeech(speakIndex);else startReading()};
     $('playerSeek').addEventListener('input',e=>{
@@ -1436,14 +1483,38 @@
     });
     $('playerSeek').addEventListener('change',e=>{
       if(speaking)seekSpeech(Number(e.target.value));
-      else startReading();
+      // Never start chapter audio from a slider unless user pressed 朗读 first.
     });
     $('storyText').addEventListener('click',e=>{
       const word=e.target.closest('[data-cloud-word]');
-      if(word){e.preventDefault();e.stopPropagation();showCloudWord(word.dataset.cloudWord);window.MiaowuOnboarding?.wordTapped();return;}
+      if(word){
+        e.preventDefault();e.stopPropagation();
+        if(speaking&&!paused){
+          window.speechSynthesis.pause();
+          paused=true;
+          $('playerPause').textContent='▶';
+          $('playerState').textContent='已暂停 · 点击继续朗读';
+        }
+        showCloudWord(word.dataset.cloudWord,word);
+        window.MiaowuOnboarding?.wordTapped();
+        return;
+      }
       if(e.target.closest('button,a,[role=button]'))return;
       const p=e.target.closest('[data-audio-paragraph]');
-      if(activeCloud?.chapterId&&p)startReading(Number(p.dataset.audioParagraph));
+      if(!activeCloud?.chapterId||!p||!speaking)return;
+      const paragraph=Number(p.dataset.audioParagraph);
+      const current=utterances[Math.max(0,speakIndex-1)]?.paragraph;
+      if(paragraph===current){
+        if(paused){
+          if(chapterSpeechNeedsRestart)seekSpeech(Math.max(0,speakIndex-1));
+          else {window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读';}
+        }else{
+          window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停';
+        }
+      }else{
+        const segment=utterances.findIndex(x=>x.paragraph>=paragraph);
+        if(segment>=0)seekSpeech(segment);
+      }
     });
 $('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
     // Cloud reading progress is saved automatically on scroll and chapter navigation.
