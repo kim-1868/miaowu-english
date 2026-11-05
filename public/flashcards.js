@@ -61,7 +61,8 @@ async function begin(mode,page=1){
   const state=host()?.querySelector("#flashStatus");
   if(state)state.textContent="正在从云端抽取你的词卡……";
   try{
-    const data=await api.request("/api/me/flashcards?scope="+scope+"&page="+page);
+    const data=await api.request("/api/me/flashcards?scope="+scope+"&page="+page+
+      "&size="+roundSize);
     if(serial!==loadSerial||!api.user())return;
     const batch=(data.words||[]).slice(0,roundSize);
     if(!batch.length){
