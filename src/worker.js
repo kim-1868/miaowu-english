@@ -797,6 +797,7 @@ export default {
         h.set("x-content-type-options","nosniff");
         h.set("referrer-policy","no-referrer");
         h.set("x-frame-options","DENY");
+        if(env.APP_ENV==="staging")h.set("x-robots-tag","noindex, nofollow, noarchive");
         h.set("content-security-policy",
           "default-src 'none'; script-src 'self'; style-src 'self'; "+
           "connect-src 'self'; img-src 'self' blob:; form-action 'none'; "+
@@ -807,6 +808,7 @@ export default {
       if (env.APP_ENV !== "staging") return attachPreviewCookie(response, previewCookie);
       const headers = new Headers(response.headers);
       headers.set("cache-control", "private, no-store");
+      headers.set("x-robots-tag", "noindex, nofollow, noarchive");
       return attachPreviewCookie(new Response(response.body, { status: response.status, headers }), previewCookie);
     }
     try {
