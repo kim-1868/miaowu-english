@@ -32,7 +32,18 @@ jobs:
           set -euo pipefail
           test -n "$CLOUDFLARE_API_TOKEN"
           test -n "$CLOUDFLARE_ACCOUNT_ID"
-          npx wrangler d1 execute miaowu-english-test --remote --config wrangler.jsonc --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('users','user_onboarding') ORDER BY name;" --json > /tmp/v11-schema-only.json
+          if ! npx wrangler d1 execute miaowu-english-test --remote --config wrangler.jsonc --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('users','user_onboarding') ORDER BY name;" --json > /tmp/v11-schema-only.json 2> /tmp/v11-schema-err; then
+            node --input-type=module <<'FAIL'
+          import {readFileSync} from 'node:fs';
+          const all=readFileSync('/tmp/v11-schema-only.json','utf8')+' '+readFileSync('/tmp/v11-schema-err','utf8');
+          const codes=[...all.matchAll(/\\b(?:401|403|404|10000|10001|9109|7500)\\b/g)].map(x=>x[0]);
+          const classification=/permission|authorization|forbidden|not authorized|invalid api token|authentication/i.test(all)?'AUTHORIZATION_OR_PERMISSIONS':
+            /database.*not found|unknown database/i.test(all)?'TEST_DATABASE_NOT_FOUND':
+            /json|parse|unexpected token|unsupported/i.test(all)?'CLI_OR_FORMAT_ERROR':'UNKNOWN_D1_QUERY_ERROR';
+          console.error('V11_STAGING_READ_ONLY_QUERY_FAILED: '+classification+'; public codes: '+[...new Set(codes)].join(','));
+          FAIL
+            exit 1
+          fi
           node --input-type=module <<'NODE'
           import {readFileSync} from 'node:fs';
           const raw=JSON.parse(readFileSync('/tmp/v11-schema-only.json','utf8'));
