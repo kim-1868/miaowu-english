@@ -10,7 +10,7 @@ function browser(session){
   const e={id,textContent:"",value:"",hidden:false,disabled:false,listeners:{},style:{},options:[],
    classList:{toggle(){},add(){}},
    addEventListener(type,cb){this.listeners[type]=cb;},
-   replaceChildren(...x){this.children=x},add(x){this.options.push(x)},
+   replaceChildren(...x){this.children=x;if(this.id==="package")this.options=[...x]},add(x){this.options.push(x)},
    scrollIntoView(){},focus(){}};
   elements.set(id,e);return e;
  }
