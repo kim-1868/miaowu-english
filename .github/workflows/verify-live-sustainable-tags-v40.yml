@@ -1,0 +1,36 @@
+name: Read-only live verification of reusable story tags V40
+on:
+  push:
+    branches: [release/claim-archive-v41-integrated-v40-20261106]
+    paths: [.github/workflows/verify-live-sustainable-tags-v40.yml]
+permissions:
+  contents: read
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Confirm current live operator UI and scripts contain future-book tagging
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 12); do
+            curl -fsSL --max-time 20 "https://miaowu-english-pages.pages.dev/ops?future-tags-verify=$i" -o /tmp/ops || true
+            if grep -Fq '为全部已上架小说补齐推荐标签' /tmp/ops; then break; fi
+            sleep 3
+          done
+          grep -Fq '为全部已上架小说补齐推荐标签' /tmp/ops
+          grep -Fq 'id="suggestTags"' /tmp/ops
+          grep -Fq 'id="uploadTagSuggestions"' /tmp/ops
+          grep -Fq '作废此兑换码' /tmp/ops
+          curl -fsSL --retry 3 --max-time 20 'https://miaowu-english-pages.pages.dev/ops-console.js?future-tags-verify=1' -o /tmp/ops-script
+          grep -Fq 'catalogBooks.filter(b=>b.status==="published")' /tmp/ops-script
+          grep -Fq 'await renderImportTagSuggestions(pkg)' /tmp/ops-script
+          grep -Fq 'const defaultTagGroups=' /tmp/ops-script
+          curl -fsSL --retry 3 --max-time 20 'https://miaowu-english-pages.pages.dev/novel-file-parser.js?future-tags-verify=1' -o /tmp/parser
+          grep -Fq 'export function suggestStoryTags' /tmp/parser
+          curl -fsSL --retry 3 --max-time 20 https://miaowu-english-pages.pages.dev/claim -o /tmp/claim
+          grep -Fq 'id="copyAll"' /tmp/claim
+          curl -fsSL --retry 3 --max-time 20 https://miaowu-english-pages.pages.dev/chapter-words.js -o /tmp/chapter
+          grep -Fq '学习本章新词' /tmp/chapter
+          echo 'LIVE_DYNAMIC_STORY_TAGS_AND_CLAIM_VERIFIED'
