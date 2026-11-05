@@ -19,14 +19,14 @@ jobs:
       - name: Checkout exact proposed release
         uses: actions/checkout@v4
         with:
-          ref: cde316828b1f521ba53df2eed603081605cecfd0
+          ref: f2f7d80186af121bf793c59220243b1f37167395
           fetch-depth: 0
           persist-credentials: false
       - name: Audit immutable source and unchanged production database
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "cde316828b1f521ba53df2eed603081605cecfd0"
+          test "$(git rev-parse HEAD)" = "f2f7d80186af121bf793c59220243b1f37167395"
           grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
           grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
           git diff --name-only 951db1f9f9b5753a61205f1d78f70cd1c3c6548f HEAD | sort > /tmp/changed
@@ -34,6 +34,9 @@ jobs:
             .github/workflows/test-ops-customers-v32.yml \
             public/ops-console.css public/ops-console.js public/ops-customers.js public/ops.html \
             scripts/build-production-assets.mjs src/ops-customers.js src/worker.js \
+            tests/s132-cat-storybook-home.test.mjs tests/s133-watercolor-reference-art.test.mjs \
+            tests/s134-hd-paw-reader-toolbar.test.mjs tests/s153-retina-banner-tablet.test.mjs \
+            tests/s157-bookplate-fast-flashcards.test.mjs \
             tests/s158-customer-redemption-view.test.mjs tests/s22-production-assets.test.mjs \
             | sort > /tmp/allowed
           diff -u /tmp/allowed /tmp/changed
