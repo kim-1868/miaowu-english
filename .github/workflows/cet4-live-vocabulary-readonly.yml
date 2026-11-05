@@ -1,4 +1,4 @@
-name: CET4 production vocabulary coverage audit (read-only)
+name: CET4 production vocabulary identity audit (read-only)
 on:
   push:
     branches:
@@ -16,28 +16,22 @@ jobs:
       CF_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_API_TOKEN }}
       CF_D1_DATABASE: 649c71b3-340c-49bf-b806-3d39256851d3
     steps:
-      - name: Query only published CET4 books and their lexical anchors
+      - name: Read published CET4 word IDs and check cross-book reuse
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import os, urllib.request, urllib.error, json, sys, collections, unicodedata
+          import os, urllib.request, urllib.error, json, sys, collections, unicodedata, itertools
           account=os.environ.get('CF_ACCOUNT','')
           token=os.environ.get('CF_D1_TOKEN','')
           db=os.environ['CF_D1_DATABASE']
           if not account or not token:
-              sys.exit('Missing Cloudflare D1 read-only audit secret or account ID')
+              sys.exit('Missing Cloudflare D1 read-only audit credential')
           sql = """
-          SELECT b.id AS book_id, b.title AS title,
-                 COUNT(DISTINCT ch.id) AS chapter_count,
-                 COUNT(cw.word_id) AS vocab_anchors,
-                 json_group_array(DISTINCT w.headword) AS headwords,
-                 json_group_array(DISTINCT CASE WHEN EXISTS(
-                   SELECT 1 FROM word_categories wc
-                   WHERE wc.word_id = w.id AND wc.category_id = b.category_id
-                 ) THEN w.headword END) AS tagged_headwords
+          SELECT DISTINCT b.id AS book_id, b.title AS book_title,
+             w.id AS word_id, w.headword AS headword
             FROM books b
-            JOIN categories c ON c.id = b.category_id
+            JOIN categories c ON c.id=b.category_id
             JOIN chapters ch ON ch.book_id=b.id
             JOIN chapter_words cw ON cw.chapter_id=ch.id
             JOIN words w ON w.id=cw.word_id
@@ -45,7 +39,7 @@ jobs:
              AND b.status='published'
              AND ch.published_at IS NOT NULL
              AND ch.published_at <= CURRENT_TIMESTAMP
-           GROUP BY b.id,b.title ORDER BY b.title;
+           ORDER BY b.id, w.headword, w.id
           """
           url='https://api.cloudflare.com/client/v4/accounts/'+account+'/d1/database/'+db+'/query'
           body=json.dumps({'sql':sql}).encode('utf-8')
@@ -55,56 +49,56 @@ jobs:
               with urllib.request.urlopen(req,timeout=90) as response:
                   payload=json.loads(response.read())
           except urllib.error.HTTPError as err:
-              sys.exit('D1 query HTTP '+str(err.code)+': '+err.read().decode('utf-8','replace')[:1200])
-          if not payload.get('success'):
-              sys.exit('D1 query unsuccessful: '+str(payload.get('errors',[]))[:800])
-          pieces=payload.get('result',[])
-          if not pieces or not pieces[0].get('success'):
-              sys.exit('D1 returned no successful query result')
-          rows=pieces[0].get('results',[])
+              sys.exit('D1 query HTTP '+str(err.code))
+          if not payload.get('success') or not payload.get('result') or not payload['result'][0].get('success'):
+              sys.exit('D1 query unsuccessful')
+          rows=payload['result'][0].get('results',[])
           norm=lambda s: unicodedata.normalize('NFKC',str(s)).strip().casefold()
-          d={}
+          lemmas=collections.defaultdict(lambda: {'ids':set(),'books':set(),'per_book':collections.defaultdict(set)})
+          book_names={}
           for row in rows:
-              all_terms={norm(x) for x in json.loads(row['headwords']) if x is not None and norm(x)}
-              tagged_terms={norm(x) for x in json.loads(row['tagged_headwords']) if x is not None and norm(x)}
-              d[row['book_id']]={'title':row['title'],'chapters':row['chapter_count'],
-                  'anchors':row['vocab_anchors'],'all':all_terms,'tagged':tagged_terms}
-          all_union=set().union(*(v['all'] for v in d.values()))
-          cet_union=set().union(*(v['tagged'] for v in d.values()))
-          all_mentions=sum(len(v['all']) for v in d.values())
-          cet_mentions=sum(len(v['tagged']) for v in d.values())
-          freq=collections.Counter(t for v in d.values() for t in v['tagged'])
+              lemma=norm(row['headword'])
+              x=lemmas[lemma]
+              x['ids'].add(row['word_id'])
+              x['books'].add(row['book_id'])
+              x['per_book'][row['book_id']].add(row['word_id'])
+              book_names[row['book_id']]=row['book_title']
+          cross={k:v for k,v in lemmas.items() if len(v['books'])>=2}
+          inconsistent={k:v for k,v in cross.items() if len(v['ids'])>=2}
+          consistent={k:v for k,v in cross.items() if len(v['ids'])==1}
+          n_cross_entries=sum(len(v['per_book']) for v in cross.values())
+          n_collision_entries=sum(len(v['per_book']) for v in inconsistent.values())
+          pair_total=pair_shared=pair_different=0
+          for v in cross.values():
+              for a,b in itertools.combinations(v['books'],2):
+                  pair_total+=1
+                  if v['per_book'][a]&v['per_book'][b]:
+                      pair_shared+=1
+                  else:
+                      pair_different+=1
+          examples=sorted(inconsistent.items(),key=lambda x:(-len(x[1]['books']),x[0]))[:35]
+          sample=[{'term':term,'books':len(v['books']),'word_ids':len(v['ids']),
+                    'id_examples':sorted(v['ids'])[:5]} for term,v in examples]
           per_book=[]
-          for bid,v in d.items():
-              others=set().union(*(t['tagged'] for k,t in d.items() if k!=bid))
-              repeat=len(v['tagged'] & others)
-              per_book.append({'book_id':bid,'title':v['title'],'chapters':v['chapters'],
-                 'anchored_mentions':v['anchors'],'all_unique_words':len(v['all']),
-                 'tagged_cet4_unique':len(v['tagged']),
-                 'repeated_in_other_books':repeat,
-                 'shared_percent':round(100*repeat/len(v['tagged']),2) if v['tagged'] else 0,
-                 'exclusive_words':len(v['tagged']-others)})
-          pairs=[]
-          items=list(d.items())
-          for i in range(len(items)):
-              for j in range(i+1,len(items)):
-                  u=items[i][1]['tagged'];v=items[j][1]['tagged']
-                  common=len(u&v);den=len(u|v)
-                  pairs.append({'left':items[i][1]['title'],'right':items[j][1]['title'],
-                    'common_words':common,'jaccard_percent':round(100*common/den,2) if den else 0})
-          books_with_repeat=sum(1 for k in freq if freq[k]>=2)
-          result={'source':'Cloudflare production D1 published CET4 chapter_words',
-             'books':len(d),'chapters':sum(v['chapters'] for v in d.values()),
-             'vocab_anchors':sum(v['anchors'] for v in d.values()),
-             'all_unique_words':len(all_union),
-             'tagged_cet4_unique':len(cet_union),
-             'sum_per_book_unique_cet4':cet_mentions,
-             'extra_cross_book_occurrences':cet_mentions-len(cet_union),
-             'duplicate_share_of_per_book_entries_percent':round(100*(cet_mentions-len(cet_union))/cet_mentions,2) if cet_mentions else 0,
-             'words_appearing_in_2plus_books':books_with_repeat,
-             'share_of_unique_terms_used_in_2plus_books_percent':round(100*books_with_repeat/len(cet_union),2) if cet_union else 0,
-             'book_frequency_distribution':dict(sorted(collections.Counter(freq.values()).items())),
-             'per_book':per_book,'top_shared_terms':freq.most_common(25),
-             'highest_pairwise_overlaps':sorted(pairs,key=lambda x:x['common_words'],reverse=True)[:8]}
-          print('CET4_AUDIT_JSON='+json.dumps(result,ensure_ascii=False,sort_keys=True))
+          for bid,title in book_names.items():
+              bwords={lemma:v for lemma,v in lemmas.items() if bid in v['books']}
+              collision=sum(1 for lemma,v in bwords.items() if lemma in inconsistent)
+              per_book.append({'title':title,'unique_lemmas':len(bwords),'different_id_overlap_terms':collision})
+          output={
+              'source':'production D1 published CET4 books only',
+              'book_count':len(book_names),'distinct_lemmas':len(lemmas),
+              'distinct_word_ids':len(set(row['word_id'] for row in rows)),
+              'wordid_book_unique_pairs':len(rows),
+              'lemmas_in_2plus_books':len(cross),
+              'crossbook_lemmas_reusing_same_word_id':len(consistent),
+              'crossbook_lemmas_with_multiple_word_ids':len(inconsistent),
+              'crossbook_lemma_book_entries':n_cross_entries,
+              'crossbook_collision_book_entries':n_collision_entries,
+              'crossbook_pairwise_lemma_overlap':pair_total,
+              'same_id_pairs':pair_shared,
+              'different_id_pairs':pair_different,
+              'per_book':sorted(per_book,key=lambda v:v['different_id_overlap_terms'],reverse=True),
+              'examples_multiple_ids':sample
+          }
+          print('CET4_IDENTITY_AUDIT_JSON='+json.dumps(output,ensure_ascii=False,sort_keys=True))
           PY
