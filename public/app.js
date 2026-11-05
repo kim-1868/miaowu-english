@@ -772,6 +772,10 @@
     function toggleWord(w){if(saved.has(w)){saved.delete(w);toast('已从本机演示收藏移除，学习记录继续保留')}else{saved.add(w);toast('已收藏到本机演示藏书票（仅此浏览器）')}saveWords();if(popWord===w)openWord(w);$('savedCount').textContent=saved.size;if(view==='words')renderWords()}
     function saveWords(){try{localStorage.setItem('miaowu_demo_words',JSON.stringify([...saved]));localStorage.setItem('miaowu_demo_mastered',JSON.stringify([...mastered]))}catch(e){}}
     function renderWords(){
+      window.MiaowuFlashcards?.render({
+        loggedIn:!!user,saved:cloudSaved.size,due:cloudReviewDue,
+        sessionKey:user?.name||null
+      });
       document.querySelectorAll('[data-word-filter]').forEach(x=>x.classList.toggle('active',x.dataset.wordFilter===wordFilter));
       const words=[...cloudSaved.values()].filter(w=>wordFilter==='all'||
         (wordFilter==='mastered'?w.status==='mastered':w.status!=='mastered'));
@@ -1421,6 +1425,12 @@ $('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalO
     window.MiaowuCloudEcho?.configure({
       request:serverRequest,refresh:refreshCloudLearning,progress:()=>cloudProgress,
       showModal,closeModal,navigate,toast,speak:speakWord
+    });
+    window.MiaowuFlashcards?.configure({
+      request:serverRequest,refresh:refreshCloudLearning,speak:speakWord,toast,
+      user:()=>user?.name||null,
+      saved:()=>cloudSaved.size,due:()=>cloudReviewDue,
+      login:showLogin
     });
     applyTheme();applyReadingPrefs();renderLibrary();renderReminder();renderWords();renderQuiz();renderAccount();initialSessionPromise=loadServerSession();refreshCloudCategories();
   })();
