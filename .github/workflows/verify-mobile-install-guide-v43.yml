@@ -1,0 +1,42 @@
+name: Verify V1.1 mobile desktop-home install help (no deploy)
+on:
+  push:
+    branches: [feature/v11-mobile-install-help-20261106]
+    paths: [.github/workflows/verify-mobile-install-guide-v43.yml]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 8b188390b9e1969d1c48833672d82148f1865ba2
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm only reviewed public assets and tests were touched
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 8b188390b9e1969d1c48833672d82148f1865ba2
+          git diff --name-only 47431dd1aa096ca6d250c6932e785c58a80a4dc2 HEAD | sort >/tmp/changed
+          printf '%s\n' public/index.html public/install-guide.css public/install-guide.js scripts/build-production-assets.mjs tests/v43-mobile-install-guide.test.mjs | sort >/tmp/allowed
+          diff -u /tmp/allowed /tmp/changed
+      - name: Syntax and regression suite
+        run: |
+          node --check public/install-guide.js
+          node --test tests/v43-mobile-install-guide.test.mjs
+          npm run check
+          npm test
+      - name: Production asset bundle audit
+        run: npm run assets:production:build
+      - name: Confirm operator/claim and reader assets preserved
+        run: |
+          grep -Fq 'layout=20261106-v42' dist-production/public/ops.html
+          grep -Fq 'claim.css?v=20261106-v41' dist-production/public/claim.html
+          grep -Fq 'id="installGuide"' dist-production/public/index.html
+          test -s dist-production/public/install-guide.js
+          test -s dist-production/public/install-guide.css
+          grep -Fq 'unseenSenses=new Set' dist-production/public/app.js
