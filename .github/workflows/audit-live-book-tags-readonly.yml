@@ -1,0 +1,60 @@
+name: Audit currently published Miaowu book tags (read only)
+on:
+  push:
+    branches: [audit/live-book-tags-readonly-20261106]
+    paths: [.github/workflows/audit-live-book-tags-readonly.yml]
+permissions:
+  contents: read
+jobs:
+  audit:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify target and read-only query rules
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq '"database_name": "miaowu-english-prod"' deploy/production.wrangler.jsonc
+          grep -Fq '"name": "miaowu-english-production"' deploy/production.wrangler.jsonc
+          test ! -e private-input
+          test ! -e private-output
+      - name: Install Wrangler without hooks
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Read live metadata, existing labels, and chapter excerpts (no writes)
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          SQL="SELECT b.id,b.title,b.description,b.status,c.slug category,
+          (SELECT COUNT(*) FROM chapters ch WHERE ch.book_id=b.id AND ch.published_at IS NOT NULL) chapter_count,
+          (SELECT group_concat(ch.title,' / ') FROM chapters ch WHERE ch.book_id=b.id) chapter_titles,
+          (SELECT group_concat(t.label || ':' || t.color,'|') FROM book_cover_tags t WHERE t.book_id=b.id) tags,
+          (SELECT substr(ch.content_json,1,3000) FROM chapters ch WHERE ch.book_id=b.id ORDER BY ch.chapter_no ASC LIMIT 1) first_excerpt,
+          (SELECT substr(ch.content_json,1,2000) FROM chapters ch WHERE ch.book_id=b.id ORDER BY ch.chapter_no DESC LIMIT 1) last_excerpt
+          FROM books b JOIN categories c ON c.id=b.category_id
+          WHERE b.status='published'
+          ORDER BY b.title LIMIT 100"
+          npx wrangler d1 execute miaowu-english-prod --config deploy/production.wrangler.jsonc --remote --json --command "$SQL" > /tmp/live-book-tags.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const raw=JSON.parse(fs.readFileSync('/tmp/live-book-tags.json','utf8'));
+          const rows=(Array.isArray(raw)?raw:[raw]).flatMap(x=>x.results||[]);
+          if(rows.length>100)throw Error('Unexpected number of published books');
+          console.log('BOOK_AUDIT_BEGIN');
+          for(const r of rows){
+            let first='',last='';
+            try{const v=JSON.parse(r.first_excerpt||'');first=JSON.stringify(v).slice(0,1200)}catch{first=(r.first_excerpt||'').slice(0,1100)}
+            try{const v=JSON.parse(r.last_excerpt||'');last=JSON.stringify(v).slice(0,700)}catch{last=(r.last_excerpt||'').slice(0,700)}
+            console.log(JSON.stringify({id:r.id,title:r.title,description:r.description,category:r.category,chapter_count:r.chapter_count,chapters:r.chapter_titles,tags:r.tags,first,last},null,0));
+          }
+          console.log('BOOK_AUDIT_END');
+          NODE
