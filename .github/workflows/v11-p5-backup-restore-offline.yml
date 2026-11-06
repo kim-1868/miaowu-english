@@ -1,0 +1,33 @@
+name: V1.1 P5 local SQLite backup restore rehearsal (no D1)
+on:
+  push:
+    branches: [feature/v11-p5-offline-backup-restore-gate-20261106]
+  pull_request:
+    branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
+permissions:
+  contents: read
+jobs:
+  offline-restore-proof:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout reviewed branch without persisted GitHub credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22 built-in SQLite
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Actual SQLite file backup, reopen, additive migration and independent local restore
+        run: npm run db:restore:rehearsal
+      - name: Backup failure handling and SQL import regression
+        run: node --experimental-sqlite --test tests/v11-p5-backup-restore.test.mjs
+      - name: Check source syntax and website build without cloud
+        run: npm run check
+      - name: No production access
+        run: |
+          echo "ONLY_SYNTHETIC_LOCAL_SQLITE"
+          echo "NO_ACTUAL_D1_BACKUP_VERIFIED"
+          echo "NO_REMOTE_WRITE_OR_DEPLOYMENT"
