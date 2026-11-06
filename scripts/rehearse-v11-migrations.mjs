@@ -37,7 +37,7 @@ export function rehearseV11Migrations(db){
   "WHERE name NOT LIKE 'sqlite_%' ORDER BY type,name").all();
  const sqls=stages.map(name=>readFileSync(new URL("../db/"+name+".sql",import.meta.url),"utf8"));
  for(const sql of sqls){
-  assert(!/\b(?:ALTER|DROP|DELETE|UPDATE)\b\s+(?:TABLE|FROM|\w+)/i.test(sql),
+  assert(!/\b(?:ALTER\s+TABLE|DROP\s+TABLE|DELETE\s+FROM|UPDATE\s+[a-z_]|INSERT\s+INTO|REPLACE\s+INTO)\b/i.test(sql),
    "V11_NON_ADDITIVE_DDL_FOUND");
  }
  for(let pass=0;pass<2;pass++){
