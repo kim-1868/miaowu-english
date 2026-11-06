@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {DatabaseSync} from "node:sqlite";
 import {buildSenseShadow} from "../scripts/v11-shadow-sense-audit.mjs";
-import {readLocalSenseSnapshot,simulateReviewedSenseImpact} from "../scripts/v11-reviewed-sense-impact.mjs";
+import {readLocalSenseSnapshot,previewLocalReviewCandidates,simulateReviewedSenseImpact} from "../scripts/v11-reviewed-sense-impact.mjs";
 
 const read=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
 function fixture(){
@@ -195,5 +195,44 @@ test("P5 old master and review events are preserved when simulated, with PRAGMA 
   assert.deepEqual(db.prepare("SELECT * FROM user_words ORDER BY word_id").all(),before.words);
   assert.deepEqual(db.prepare("SELECT * FROM reading_progress").all(),before.progress);
   assert.deepEqual(db.prepare("SELECT * FROM entitlements").all(),before.grants);
+ }finally{db.close()}
+});
+
+test("P5 local candidate report emits matching SHA-256 for a fresh approved manifest, no story body",()=>{
+ const db=fixture();try{
+  const preview=previewLocalReviewCandidates(db);
+  const signed=approval(db);
+  assert.equal(preview.snapshotFingerprint,signed.snapshotFingerprint);
+  assert.equal(preview.status,"REVIEW_CANDIDATES_ONLY");
+  assert.equal(preview.productionWritten,false);
+  assert.equal(preview.migrationApproved,false);
+  assert.ok(!JSON.stringify(preview).includes("Private storyline context:"));
+  assert.ok(!JSON.stringify(preview).includes("private-user-one"));
+ }finally{db.close()}
+});
+test("P5 empty review manifest cannot mark an unreviewed database as safe to migrate",()=>{
+ const db=fixture();try{
+  const reviewed=buildSenseShadow(readLocalSenseSnapshot(db));
+  const result=simulateReviewedSenseImpact(db,{version:1,snapshotFingerprint:reviewed.sourceFingerprint,groups:[]});
+  assert.equal(result.status,"REVIEW_BLOCKED");
+  assert.deepEqual(result.reviewBlockerCodes,["NO_APPROVED_SENSE_GROUPS"]);
+  assert.equal(result.migrationApproved,false);
+ }finally{db.close()}
+});
+test("P5 revoked activation source excludes old entitled but revoked alias state",()=>{
+ const db=fixture();try{
+  db.exec("UPDATE books SET category_id='cat6' WHERE id='book-b'");
+  db.exec("INSERT INTO activation_codes(id,code_hash,category_id,status,redeemed_by) "+
+    "VALUES('revoked-code','private-digest','cat6','revoked','u1')");
+  db.exec("INSERT INTO entitlements(user_id,category_id,source_code_id) "+
+    "VALUES('u1','cat6','revoked-code')");
+  addWord(db,"u1","sense-a","learning",0);
+  addWord(db,"u1","sense-b","mastered",1,null);
+  const r=simulateReviewedSenseImpact(db,approval(db));
+  assert.equal(r.status,"SIMULATION_PASSED_NO_MIGRATION");
+  assert.equal(r.groups[0].impactedAccounts,1);
+  assert.equal(r.groups[0].distinctVisibleStudiedAliases,1);
+  assert.equal(r.groups[0].projectedMasteredAccounts,0);
+  assert.equal(r.groups[0].projectedBookmarkedAccounts,0);
  }finally{db.close()}
 });
