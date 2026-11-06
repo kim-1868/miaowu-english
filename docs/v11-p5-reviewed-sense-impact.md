@@ -20,7 +20,11 @@
 
 ## 离线执行
 
-在已核实来源、受控私有文件夹里保存完整恢复的 SQLite 数据库和人工审核 manifest：
+在已核实来源、受控私有文件夹里保存完整恢复的 SQLite 数据库。**先由这份数据库生成候选及专属指纹**，人工根据真正的小说语境审核，然后填入这一份数据库对应的 manifest。此前 P5 JSON 导出具有不同语境元信息，指纹可能不同，不能直接套用它的审核记录：
+
+    node --experimental-sqlite scripts/v11-reviewed-sense-impact.mjs --local-sqlite /PRIVATE/RESTORED/rehearsal.sqlite --report
+
+如果已通过人工核实，再运行模拟：
 
     node --experimental-sqlite scripts/v11-reviewed-sense-impact.mjs --local-sqlite /PRIVATE/RESTORED/rehearsal.sqlite --approvals /PRIVATE/REVIEWED/senses.json
 
