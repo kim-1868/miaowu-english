@@ -1,0 +1,37 @@
+name: V1.1 wordbook example underline — offline visual check
+on:
+  push:
+    branches: [fix/v11-wordbook-example-inline-underline-20261106]
+  pull_request:
+    branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
+permissions:
+  contents: read
+jobs:
+  inline-wordbook-example:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout reviewed V1.1 branch, no credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22 for offline website tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check syntax and production asset assembly (no deployment)
+        run: npm run check
+      - name: Full website regressions
+        run: npm test
+      - name: Install isolated Chromium test tooling
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Real-browser CSS computed style check, phone and desktop, day and night
+        run: node scripts/test-v11-wordbook-example-browser.mjs
+      - name: Safe completion
+        run: |
+          echo "INLINE_EXAMPLE_NO_PILLS_VISUAL_CHECKED"
+          echo "NO_CLOUDFLARE_OR_D1_ACCESS"
+          echo "NO_PRODUCTION_DEPLOYMENT"
