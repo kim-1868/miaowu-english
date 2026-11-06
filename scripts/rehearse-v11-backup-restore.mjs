@@ -10,6 +10,7 @@ import {resolve,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {checkExportSql} from "./verify-d1-backup.mjs";
 import {newFixture,rehearseV11Migrations} from "./rehearse-v11-migrations.mjs";
+import {auditRestoredRights,compareRestoredRights} from "./v11-restored-rights-audit.mjs";
 
 const assert=(ok,code)=>{if(!ok)throw Error(code)};
 const quote=x=>'"'+String(x).replaceAll('"','""')+'"';
@@ -64,6 +65,7 @@ export async function rehearseV11BackupRestore({sqlText=null,fixture=false}={}){
   if(!fixture)source.exec(sqlText);
   proveHealthy(source,"SOURCE");
   const before=snapshot(source);
+  const originalRights=auditRestoredRights(source);
   const originalPath=join(dir,"original-private.sqlite");
   await backup(source,originalPath);
   chmodSync(originalPath,0o600);
@@ -79,6 +81,8 @@ export async function rehearseV11BackupRestore({sqlText=null,fixture=false}={}){
   sameSnapshot(before,snapshot(working),"MIGRATION_COPY");
   const migration=rehearseV11Migrations(working);
   proveHealthy(working,"AFTER_MIGRATION");
+  const migratedRights=auditRestoredRights(working);
+  compareRestoredRights(originalRights,migratedRights);
   // Independently enforce old row preservation; migration helper also
   // checks all old table schema and hashes twice.
   const after=snapshot(working);
@@ -99,6 +103,8 @@ export async function rehearseV11BackupRestore({sqlText=null,fixture=false}={}){
   rollback=new DatabaseSync(rollbackPath,{readOnly:true});
   proveHealthy(rollback,"INDEPENDENT_RESTORE");
   sameSnapshot(before,snapshot(rollback),"INDEPENDENT_RESTORE");
+  const restoredRights=auditRestoredRights(rollback);
+  const rightsComparison=compareRestoredRights(originalRights,restoredRights);
   return {
    status:"LOCAL_RESTORE_AND_MIGRATION_REHEARSAL_PASSED",
    input:fixture?"SYNTHETIC_FIXTURE":"TRUSTED_LOCAL_SQL_EXPORT",
@@ -110,6 +116,9 @@ export async function rehearseV11BackupRestore({sqlText=null,fixture=false}={}){
    oldDataPreserved:true,foreignKeys:"ok",integrity:"ok",
    baselineTables:before.tables,baselineDigest:before.digest,
    newTables:migration.newTables,
+   restoredRightsAudit:originalRights,
+   restoredRightsCountsPreserved:rightsComparison.rightCountsPreserved,
+   realOrdersAndAccountsHumanReviewed:false,
    actualCloudflareTimeTravelRestoreVerified:false,
    productionDatabaseModified:false,productionReleaseApproved:false
   };
