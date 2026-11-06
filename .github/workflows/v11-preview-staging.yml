@@ -76,3 +76,5 @@ jobs:
           echo "PASS protected preview: $url"
 
 # P5 preview correction: example-word buttons now speak only and preserve the originating study card.
+
+# P5 UI sizing: Chromium verified 17 viewports (320–1920px); book CTAs now single-line stacked.
