@@ -143,11 +143,18 @@ async function answer(value,choiceId=null){
  if(st.answer||st.posting)return;
  st.posting=true;const q=st.questions[st.idx],w=q.word;
  try{
- const body={wordId:w.word_id,chapterId:w.chapter_id,gameType:q.kind,
-   answer:value,hinted:st.hint};
- if(choiceId)body.choiceId=choiceId;
+ // A lost HTTP acknowledgement must not create another review event.
+ // Keep the same payload and idempotency key until the answer is confirmed.
+ if(!q.submitPayload){
+   const body={wordId:w.word_id,chapterId:w.chapter_id,gameType:q.kind,
+     answer:value,hinted:st.hint,requestId:crypto.randomUUID()};
+   if(choiceId)body.choiceId=choiceId;
+   q.submitPayload=body;
+ }
+ const body=q.submitPayload;
  const r=await adapter.request("/api/me/echo/answer","POST",body);
- st.answer={...r,submittedAnswer:value,submittedChoiceId:choiceId};
+ if(st.phase!=="playing"||st.questions[st.idx]!==q)return;
+ st.answer={...r,submittedAnswer:body.answer,submittedChoiceId:body.choiceId||null};
  if(r.correct)st.correct++;
  adapter.refresh();draw();
  }catch(e){adapter.toast(e.message)}finally{st.posting=false}
