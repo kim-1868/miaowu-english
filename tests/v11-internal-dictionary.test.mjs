@@ -108,5 +108,5 @@ test("V1.1 internal dictionary remains server-side but example clicks are immedi
  assert.doesNotMatch(js,/\/api\/lexicon\/lookup\?word=/);
  assert.doesNotMatch(js,/function showExampleLookup/);
  assert.match(api,/internalDictionaryLookup/);
- assert.match(api,/referenceOnly/);
+ assert.match(src("src/internal-dictionary.js"),/referenceOnly:true/);
 });
