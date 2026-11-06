@@ -4,7 +4,7 @@ import {DatabaseSync} from "node:sqlite";
 import {readFileSync} from "node:fs";
 import {rehearseV11Migrations,newFixture} from "../scripts/rehearse-v11-migrations.mjs";
 const file=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
-test("V1.1 009-011 migrations are idempotent and preserve all old customers, entitlements and reviews",()=>{
+test("V1.1 009-013 migrations and dictionary seed are idempotent and preserve all old customers, entitlements and reviews",()=>{
  const db=newFixture();
  try{
   const before={
@@ -19,7 +19,8 @@ test("V1.1 009-011 migrations are idempotent and preserve all old customers, ent
   assert.equal(result.dryRunPassed,true);
   assert.equal(result.duplicateApplyPassed,true);
   assert.equal(result.remoteDatabaseModified,false);
-  assert.deepEqual(result.newTables.sort(),["user_bookmarks","user_onboarding","user_study_schedules"]);
+  assert.deepEqual(result.newTables.sort(),["supplemental_dictionary","user_bookmarks","user_onboarding","user_study_schedules"]);
+  assert.equal(db.prepare("SELECT count(*) AS n FROM supplemental_dictionary").get().n,107);
   assert.deepEqual(db.prepare("SELECT username FROM users WHERE id='old-1'").get(),before.user);
   assert.equal(db.prepare("SELECT count(*) AS n FROM entitlements").get().n,before.rights);
   assert.deepEqual(db.prepare("SELECT status FROM activation_codes WHERE id='code-1'").get(),before.code);
@@ -35,12 +36,15 @@ test("V1.1 rehearsal refuses a wrong baseline (does not pretend to have migrated
  }finally{db.close()}
 });
 test("V1.1 stage SQL contains ONLY additive independent tables and no changes to existing access policy",()=>{
- for(const sql of ["db/009_v11_onboarding.sql","db/010_v11_my_bookshelf.sql","db/011_v11_study_schedules.sql"]){
+ for(const sql of ["db/009_v11_onboarding.sql","db/010_v11_my_bookshelf.sql","db/011_v11_study_schedules.sql","db/012_v11_supplemental_dictionary.sql"]){
   const s=file(sql);
   assert.match(s,/CREATE TABLE IF NOT EXISTS/);
   assert.doesNotMatch(s,/\b(?:ALTER\s+TABLE|DROP\s+TABLE|DELETE\s+FROM|UPDATE\s+[a-z_]|INSERT\s+INTO|REPLACE\s+INTO)\b/i);
   assert.doesNotMatch(s,/\b(?:INSERT INTO|REPLACE INTO)\b/i);
  }
+ const starter=file("db/013_v11_supplemental_starter.sql");
+ assert.match(starter,/INSERT OR IGNORE INTO supplemental_dictionary/);
+ assert.doesNotMatch(starter,/(?:DELETE FROM|UPDATE user_words|UPDATE words|INSERT INTO users)/i);
  const packageJson=JSON.parse(file("package.json"));
  assert.match(packageJson.scripts["db:migrate:remote"],/refuse-unbaselined-remote-migration/);
 });
