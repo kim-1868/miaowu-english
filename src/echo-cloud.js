@@ -1,4 +1,4 @@
-import {relatedAccessibleWordIds,uniqueStudyRows,countUserDueSenses} from './study-identity.js';
+import {studyKey,relatedAccessibleWordIds,uniqueStudyRows,countUserDueSenses} from './study-identity.js';
 import {studyScheduleReady,applySenseReview} from './study-schedule-store.js';
 // S6: real Story Echo. Return questions only from accessible, completed D1 chapters.
 // Server scores submitted answers and updates spaced-repeat review events and due dates.
@@ -101,8 +101,10 @@ async function answer(req,env,user){
   let data;try{data=JSON.parse(raw)}catch{return fail("INVALID_JSON")}
   if(!data||!validId(data.wordId)||!validId(data.chapterId)||!MODES.has(data.gameType)||
     typeof data.answer!=="string"||data.answer.length>90||!data.answer.trim()||
-    typeof data.hinted!=="boolean")return fail("INVALID_ANSWER");
-  const q=await exec(env,"SELECT w.id,w.headword,w.meaning_zh,w.phonetic_uk,w.phonetic_us,"+
+    typeof data.hinted!=="boolean"||
+    (data.choiceId!==undefined&&(!validId(data.choiceId)||data.gameType==="spell")))
+    return fail("INVALID_ANSWER");
+  const q=await exec(env,"SELECT w.id,w.headword,w.part_of_speech,w.meaning_zh,w.phonetic_uk,w.phonetic_us,"+
     "cw.context_sentence,ch.id chapter_id "+chapterCore()+
     " AND w.id=? LIMIT 1",data.chapterId,user.id,data.wordId).first();
   if(!q)return fail("REVIEW_WORD_UNAVAILABLE",403);
@@ -115,8 +117,27 @@ async function answer(req,env,user){
       "ORDER BY created_at DESC LIMIT 1",user.id,q.id).first();
     if(last)return fail("REVIEW_TOO_FAST",429);
   }
-  const right=data.answer.trim().toLocaleLowerCase("en-US")===
+  let right=data.answer.trim().toLocaleLowerCase("en-US")===
     q.headword.trim().toLocaleLowerCase("en-US");
+  if(data.choiceId&&data.gameType!=="spell"){
+    // Multiple senses can share the same English spelling: a wrong POS/sense
+    // must not score as correct merely because its headword is identical.
+    // Verify the chosen ID belongs to a currently accessible published chapter.
+    const choice=await exec(env,"SELECT w.id,w.headword,w.part_of_speech,w.meaning_zh "+
+      "FROM words w WHERE w.id=? AND EXISTS(SELECT 1 FROM chapter_words cw "+
+      "JOIN chapters ch ON ch.id=cw.chapter_id "+
+      "JOIN books b ON b.id=ch.book_id JOIN categories c ON c.id=b.category_id "+
+      "WHERE cw.word_id=w.id AND b.status='published' AND c.is_visible=1 "+
+      "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
+      "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
+      "WHERE e.user_id=? AND e.category_id=b.category_id AND e.revoked_at IS NULL "+
+      "AND NOT EXISTS(SELECT 1 FROM activation_codes v "+
+      "WHERE v.id=e.source_code_id AND v.status='revoked'))))",data.choiceId,user.id).first();
+    if(!choice)return fail("REVIEW_OPTION_UNAVAILABLE",403);
+    if(choice.headword.trim().toLocaleLowerCase("en-US")!==data.answer.trim().toLocaleLowerCase("en-US"))
+      return fail("REVIEW_OPTION_MISMATCH",400);
+    right=studyKey(choice)===studyKey(q);
+  }
   const result=right?(data.hinted?"hinted":"correct"):"incorrect";
   if(await studyScheduleReady(env)){
     const saved=await applySenseReview(env,{userId:user.id,wordId:q.id,
