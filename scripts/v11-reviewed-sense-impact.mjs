@@ -9,7 +9,6 @@ import {buildSenseShadow} from "./v11-shadow-sense-audit.mjs";
 import {studyKey} from "../src/study-identity.js";
 
 const fail=code=>{throw Error(code)};
-const quote=x=>'"'+String(x).replaceAll('"','""')+'"';
 const dateMs=value=>{
  if(!value)return null;
  const s=String(value);
@@ -65,11 +64,28 @@ function plansCompatible(plans){
  ]);
  return plans.slice(1).every(p=>make(p)===make(plans[0]));
 }
+export function previewLocalReviewCandidates(db){
+ const audit=buildSenseShadow(readLocalSenseSnapshot(db),null,{includeCandidates:true});
+ return {
+  version:"v11-p5-impact-candidates/1",
+  status:audit.blockers.length?"REVIEW_BLOCKED":"REVIEW_CANDIDATES_ONLY",
+  snapshotFingerprint:audit.sourceFingerprint,
+  summary:audit.summary,
+  candidates:audit.candidates,
+  reviewBlockerCodes:sorted(audit.blockers.map(b=>b.code)),
+  productionWritten:false,migrationApproved:false
+ };
+}
 export function simulateReviewedSenseImpact(db,approvalManifest,{now=new Date()}={}){
  if(!db||typeof db.prepare!=="function")fail("LOCAL_SQLITE_REQUIRED");
  if(!hasTable(db,"user_words")||!hasTable(db,"review_events")||!hasTable(db,"entitlements"))
   fail("REQUIRED_LEGACY_STUDY_TABLE_MISSING");
  if(!approvalManifest||!Array.isArray(approvalManifest.groups))fail("REVIEW_MANIFEST_REQUIRED");
+ if(!approvalManifest.groups.length)return {
+  version:"v11-p5-impact/1",status:"REVIEW_BLOCKED",
+  approvedGroups:0,groups:[],reviewBlockerCodes:["NO_APPROVED_SENSE_GROUPS"],
+  productionWritten:false,historyRewritten:false,migrationApproved:false
+ };
  const snapshot=readLocalSenseSnapshot(db);
  const reviewed=buildSenseShadow(snapshot,approvalManifest,{includeAssignments:true});
  if(reviewed.blockers.length||!reviewed.assignments)return {
@@ -179,15 +195,24 @@ export function simulateReviewedSenseImpact(db,approvalManifest,{now=new Date()}
  };
 }
 function main(args){
- if(args.length!==4||args[0]!=="--local-sqlite"||args[2]!=="--approvals")
-  fail("USAGE_LOCAL_SQLITE_AND_REVIEWED_APPROVAL_MANIFEST_REQUIRED");
- // Never accept remote DB identifiers or Wrangler arguments. Only a local
- // sqlite pathname is accepted, opened READ-ONLY, with no temp/scratch SQL.
+ if(args.length!==3&&args.length!==4)
+  fail("USAGE_LOCAL_SQLITE_WITH_REPORT_OR_APPROVED_MANIFEST_REQUIRED");
+ if(args[0]!=="--local-sqlite"||
+    !(args.length===3&&args[2]==="--report"||
+      args.length===4&&args[2]==="--approvals"))
+  fail("USAGE_LOCAL_SQLITE_WITH_REPORT_OR_APPROVED_MANIFEST_REQUIRED");
+ // Read-only local SQLite; never open a remote D1/Worker connection.
  const path=resolve(args[1]);
- const approvals=JSON.parse(readFileSync(resolve(args[3]),"utf8"));
+ const manifest=args[2]==="--approvals"?
+  JSON.parse(readFileSync(resolve(args[3]),"utf8")):null;
  const db=new DatabaseSync(path,{readOnly:true});
- try{console.log(JSON.stringify(simulateReviewedSenseImpact(db,approvals),null,2))}
- finally{db.close()}
+ try{
+  const report=manifest===null?previewLocalReviewCandidates(db):
+   simulateReviewedSenseImpact(db,manifest);
+  console.log(JSON.stringify(report,null,2));
+  if(report.status==="REVIEW_BLOCKED"||report.status==="MANUAL_REVIEW_REQUIRED")
+   process.exitCode=1;
+ }finally{db.close()}
 }
 if(process.argv[1]&&fileURLToPath(import.meta.url)===resolve(process.argv[1])){
  try{main(process.argv.slice(2))}
