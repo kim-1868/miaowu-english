@@ -1,6 +1,7 @@
 name: V1.1 staging preview deployment (not production)
 # P1-02 staging promotion: test D1 009 schema verified in Actions run 42095001248.
 # P3 reviewed staging: vocabulary naming, IPA, example audio and entitlement-scoped inline lookups; no new D1 migration.
+# V1.1 wording approval: correct the vocabulary-card heading; staging only.
 on:
   push:
     branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
