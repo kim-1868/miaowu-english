@@ -1,3 +1,4 @@
+import {internalDictionaryLookup} from "./internal-dictionary.js";
 // V1.1: approved, access-scoped dictionary lookup for example words.
 // Never returns paid chapter context or any word outside a published authorized chapter.
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{
@@ -12,6 +13,7 @@ export async function handleExampleWordLookup(request,env,user){
  const word=token.normalize("NFKC").trim().toLowerCase();
  if(!/^[a-z](?:[a-z'-]{0,30}[a-z])?$/.test(word))return json({error:"INVALID_WORD"},400);
  const uid=user?.id||null;
+ const originWordId=new URL(request.url).searchParams.get("originWordId")||null;
  const data=await env.DB.prepare(
   "SELECT w.id AS word_id,w.headword,w.phonetic_uk,w.phonetic_us,w.part_of_speech,w.meaning_zh,"+
   "uw.bookmarked AS bookmarked,uw.status AS status FROM words w "+
@@ -26,7 +28,10 @@ export async function handleExampleWordLookup(request,env,user){
   "AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked')))) "+
   "ORDER BY w.part_of_speech,w.id LIMIT 6"
  ).bind(uid,word,uid).all();
- return json({word,entries:(data.results||[]).map(x=>({
+ const fallback=(data.results||[]).length?null:await internalDictionaryLookup(env,{
+  word,originWordId,userId:uid
+ });
+ return json({word,fallback,entries:(data.results||[]).map(x=>({
   wordId:x.word_id,headword:x.headword,phonetic:x.phonetic_us||x.phonetic_uk||"",
   partOfSpeech:x.part_of_speech||"",meaning:x.meaning_zh||"",
   bookmarked:Boolean(x.bookmarked),status:x.status||null
