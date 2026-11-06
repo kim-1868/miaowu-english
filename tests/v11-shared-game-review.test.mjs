@@ -101,3 +101,34 @@ test("V1.1 P4 completed chapters and unlocked categories remain necessary for St
   assert.equal(f.db.prepare("SELECT count(*) n FROM review_events").get().n,0);
  }finally{f.db.close()}
 });
+
+
+test("V1.1 P4 home/Echo and flashcard due totals share unbookmarked unique senses",async()=>{
+ const f=fixture();
+ try{
+  f.db.exec("INSERT INTO user_words(user_id,word_id,status,bookmarked,due_at) VALUES"+
+   "('u1','w1','learning',0,'2026-01-01 00:00:00'),"+
+   "('u1','w2','learning',0,'2026-01-01 00:00:00'),"+
+   "('u1','w3','mastered',1,NULL)");
+  const words=await f.call("/api/me/words");
+  const echo=await f.call("/api/me/echo/stats");
+  const due=await f.call("/api/me/flashcards?scope=due&page=1&size=20");
+  const saved=await f.call("/api/me/flashcards?scope=saved");
+  const mastered=await f.call("/api/me/flashcards?scope=mastered");
+  assert.equal(words.status,200);
+  assert.equal(echo.status,200);
+  assert.equal(due.status,200);
+  assert.equal(words.body.flashDue,1,"one sense, no duplicate across novels");
+  assert.equal(echo.body.due,1);
+  assert.equal(due.body.total,1);
+  assert.equal(due.body.words[0].word_id,"w1");
+  assert.equal(saved.body.total,0,"bookmarked mastery is not ordinary saved practice");
+  assert.equal(mastered.body.total,1,"mastered is explicit opt-in");
+  const answer=await f.call("/api/me/flashcards/answer",{
+   wordId:"w2",mode:"flip",judgment:"known",requestId:randomUUID()
+  });
+  assert.equal(answer.status,200,JSON.stringify(answer.body));
+  assert.equal((await f.call("/api/me/echo/stats")).body.due,0);
+  assert.equal((await f.call("/api/me/words")).body.flashDue,0);
+ }finally{f.db.close()}
+});
