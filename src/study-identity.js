@@ -69,3 +69,24 @@ export function uniqueStudyRows(rows){
     return true;
   });
 }
+
+
+// V1.1: one shared due/overdue counter for home, quick flashcards and Story Echo.
+// A word is due only after an explicit learning/review event scheduled a due_at;
+// passive tapping/reading alone never enters this pool.
+export async function countUserDueSenses(env,userId){
+ const rows=await stmt(env,
+  "SELECT uw.word_id,w.headword,w.part_of_speech,w.meaning_zh "+
+  "FROM user_words uw JOIN words w ON w.id=uw.word_id "+
+  "WHERE uw.user_id=? AND uw.status!='mastered' AND uw.due_at IS NOT NULL "+
+  "AND datetime(uw.due_at)<=CURRENT_TIMESTAMP "+
+  "AND EXISTS(SELECT 1 FROM chapter_words cw JOIN chapters ch ON ch.id=cw.chapter_id "+
+  "JOIN books b ON b.id=ch.book_id JOIN categories c ON c.id=b.category_id "+
+  "WHERE cw.word_id=uw.word_id AND b.status='published' AND c.is_visible=1 "+
+  "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
+  "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
+  "WHERE e.user_id=uw.user_id AND e.category_id=b.category_id AND e.revoked_at IS NULL "+
+  "AND NOT EXISTS(SELECT 1 FROM activation_codes v "+
+  "WHERE v.id=e.source_code_id AND v.status='revoked'))))",userId).all();
+ return uniqueStudyRows(rows.results||[]).length;
+}
