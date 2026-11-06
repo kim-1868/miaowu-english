@@ -75,3 +75,10 @@
 - 新增 `npm run db:restore:rehearsal` 和 `tests/v11-p5-backup-restore.test.mjs`；5 项专门测试通过，完整 S1 回归 545 通过、0 失败、1 跳过。<https://github.com/kim-1868/miaowu-english/actions/runs/42246943333> 与 <https://github.com/kim-1868/miaowu-english/actions/runs/42247073319>。
 - `npm run release:v11:offline-check` 已将上述磁盘恢复作为新增自动化门禁。通过可信私有 SQL 导出路径的运行方式另见 `docs/v11-p5-backup-recovery-gate.md`。
 - **此验证所用历史数据均为虚构，未验证真实 Cloudflare D1 Time Travel 恢复能力，也未取得生产备份。正式 D1 的独立真实备份、受控私有恢复演练和运营历史记录抽样核查依然阻断正式 V1.1 发布。**
+
+## 九、P5 本地恢复后权益一致性核验（2026-11-06）
+
+- V1.1 开发分支已整合 PR #175；新增 `scripts/v11-restored-rights-audit.mjs`，在**本地恢复数据库**中运行 `docs/v11-p5-rights-reconciliation-readonly.sql` 的八项匿名计数（兑换码、授权、订单自助领取异常）。`rehearse-v11-backup-restore.mjs` 已对**源数据库、增量迁移后的副本、独立恢复数据库**三处计数做一致性核验；若数量发生变化则阻断恢复演练。
+- 当历史备份还没有 `self_service_claims` 时，脚本明确显示七项可用、第八项 `null`、需要人工核验；不会将缺少数据当作“零异常”。已有异常不做自动变更/纠正，仅输出异常类别与数量。
+- 本次全部使用虚构数据：新增 5 项独立测试，连同上一批磁盘恢复测试，10/10 项通过；完整 S1 测试 551 项，其中 550 通过、0 失败、1 跳过。<https://github.com/kim-1868/miaowu-english/actions/runs/42248394687>。
+- **真实正式 D1 的备份、Time Travel 恢复验证及私人订单核验依然没有执行**。本次不改变线上发码、兑换、权益或学习数据；不能因此将正式发布门禁标记完成。
