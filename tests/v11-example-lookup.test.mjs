@@ -92,3 +92,18 @@ test("V1.1 example words are audio-only and never replace the active novel word 
  assert.doesNotMatch(css,/\.v11-example-lookup\{/);
  assert.doesNotThrow(()=>new Script(js,{filename:"app.js"}));
 });
+
+test("V1.1 tapping an example word plays only that word and does not close the novel study card",()=>{
+ const js=read("public/app.js");
+ const start=js.indexOf("    function pronounceExampleWord(button){");
+ const end=js.indexOf("    function renderD1Paragraph(",start);
+ assert.ok(start>0&&end>start);
+ const calls=[],originalCard={open:true,word:"sustain"};
+ const onWord=new Function("speakWord","closeWord",js.slice(start,end)+";return pronounceExampleWord;")(
+  word=>calls.push(word),()=>{originalCard.open=false});
+ onWord({dataset:{exampleWord:"through"}});
+ onWord({dataset:{exampleWord:"suddenly"}});
+ onWord({dataset:{exampleWord:"<script>"}});
+ assert.deepEqual(calls,["through","suddenly"]);
+ assert.equal(originalCard.open,true,"example audio must not close or replace the originating study card");
+});
