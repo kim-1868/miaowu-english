@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.DS_Store
+.env
+.env.*
+*secret*
+*token*
+*.sql
+*.sqlite*
+*.db
+projects/
+demo-workspace/
+*.zip
+# private/user-specific content review snapshots should not be committed
+*content-review.json
