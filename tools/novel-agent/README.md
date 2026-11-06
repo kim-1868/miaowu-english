@@ -1,132 +1,78 @@
-# 🐾 WordLetter 小说生产 Agent V1.1：先验剧情，再选词写作
+# 🐾 妙屋英语 WordLetter · 小说生产 Agent V2
 
-**这版专门修复 AI 小说“啰嗦、没有逻辑、每章缺少看点”的生产流程缺陷。** 适用于完成当前首本测试以后启动的**新项目**。你正在使用 V1 生成的《雾中第七封信》不要中途覆盖软件文件。当前 Codex 网络重连与这项开发是两回事。
+> 版本：2026-11-06 · 独立安装包 · 本地运行 · **不修改网站生产数据库，不自动上传/上架**。
 
-### 新版创作顺序
+## 这次解决什么
 
-`输入书名和题材 → 先生成完整剧情 Bible/各章因果卡 → 本地结构闸门 → 独立 AI 故事主编逐章审稿 → 最多自动返工两轮 → 审稿通过后才选词 → 词卡/正文生成 → 英语初审/打包`。
+V1/V1.2 可以一部一部生成，但难以规划整批词库；还出现了 Codex 网络重连耗时长、词卡空搭配、故事不吸引人和跨书重复身份不统一等问题。
 
-**新增的前置剧情闸门：** 每章必须包含目标、阻力、人物抉择、真实后果、新信息、追读问题及与上章的因果关系；全书有角色动机、失败代价、差异化设计与结局兑现。独立 AI 评分满分100，建议达到85分且没有 P0/P1 才允许向下生成。必须附逐章问题和对应事件证据；不合格最多改稿2轮后停下，不靠延长篇幅凑分。
+V2 的新增能力：
 
-**重要边界：** 分数是“AI 大纲预检”，不是文学质量证明。后续正文仍然需要整书读者视角检查、语言审核和人工决定是否上架。当前独立审稿使用已登录的 Codex CLI，模型网络或额度不足时可能暂停，可断点恢复。程序不会访问 Cloudflare 正式数据库。
+1. **锁定词库范围**：CSV/TSV/TXT 词表，按照排名选前 N 个（或指定开始和结束），锁定英文词目。AI **不能在已标注学习词卡里新增范围外的词**，若出现则 P0 阻断；原始参考音标/词义未经核验不作为教学定稿。
+2. **整批先规划**：一次规划 1–12 本，跨本统筹“首次覆盖”和“复现”，输出每本候选词清单及整批计划；同时用一次 Codex 调用策划不同题材、不同书名和冲突。考研、六级、雅思不套用四级 35% 的既定目标。
+3. **故事质量先行**：每本先形成完整 Story Bible，独立审稿，检查人物动机、因果、可见的情节变化、结局回收；允许最多两轮大纲返工，未通过则不开始写正文。
+4. **高效生产**：利用 V1.2 的双章连写 / 双章审校和合并词卡批次；模型单阶段运行有可配置超时和有限重试，日志落在对应书籍项目目录。
+5. **整本读者盲审**：全文完成后按章审视“去掉英文要求是否仍好看”，独立打分并附问题证据；有严重问题不得标为可发布。
+6. **断点续跑与防重复**：按批次/书籍留存已完成产物，重新执行只继续未完成部分；同一批次通过文件锁避免两个终端同时写入。
+7. **完整交付**：每本独立 `出版台导入包.json + QA.json + 阅读稿 + 词卡/候选词表 + ZIP`，以及整批词汇**实际正文引用**覆盖率和汇总报告；所有作品默认 0 免费试读。
 
-### 与 V1 相容性
+**请注意：** 自动审核 ≠ 真人质量通过；真实出版台 `validatePackage` 和用户学习身份端到端验证仍需后台测试，V2 从不会自行发布小说。
 
-- 新 V1.1 创建的项目：`config.json` 默认 `storyGateVersion: 2`，才启用故事先行流程。
-- 原 V1 已开始的项目：没有这个字段，自动沿用 V1 流程；不要修改它的 `config.json` 或删掉已完成的词卡/章节。
-- 新增文件：`story_gate.py`、`STORY_GATE_STANDARD.md`；只下载其中某一个文件并覆盖 V1 不构成完整升级。
-- 审核文件在项目目录：`story_gate_report.json`、`story_review.json`，以及被自动修订前的备份 `story_history/`。
-- AI 初评过关并不使小说自动发布；0试读、跨书一义一卡、真人/权威词典校对仍须独立确认。
+## 目前内置的考研参考词库
 
----
+`data/postgrad_top1500_unverified.csv`：从你之前提供的《考研英语真题词频词汇表》衍生的“核心高频 500 + 高频 1,000”**英文词目/排名候选清单**，已排除其它分区重复的编号，共 1,500 个不同词目。
 
-# 妙屋英语 WordLetter · 可运行小说生产 Agent（Codex CLI 版）
+这是**第三方 PDF 衍生的参考数据，不是我们独立核验的官方考研词表**。其中原始音标和中文释义存在识别错误风险，因此此清单特意**不含音标/词义**；由 Agent 先按小说语境生成一义一词卡，再进行审校和人工词典复核。不得在宣传页写“考研官方前 1500 高频词全部验证”。
 
-这是一个**真正有生成入口、质量检查、出版格式构建与打包能力的本地工具**，不是提示词文档。核心程序只用 Python 标准库，不保存 API Key；小说的 AI 写作由你在 Mac 上**已经登录的 Codex CLI**完成。
+对新的 CSV，可用表头 `rank,headword`；可选 `pos,meaningZh,source_status`。例如 `1,evidence`。多个义项目前按**词目**分配，跨书学习身份是否已合并仍需网站侧验证。
 
-## 一、运行前的准备（只做一次）
+## Mac 如何安装（不影响已经运行的 V1）
 
-1. Mac 已有 Python 3.9 或以上：在终端输入 `python3 --version`。此前 P5 工具已运行，通常可直接继续。
-2. 安装 Codex CLI。推荐 [OpenAI 官方安装说明](https://github.com/openai/codex)：
+1. **暂时不要关闭正在运行的《雾中第七封信》V1。** 本包解压后独立保存为 `~/Documents/WordLetter-Novel-Agent-V2`，不要替换 `~/Documents/WordLetter-Novel-Agent`。
+2. 你已安装并登录 Codex，可以继续使用，无需重新安装或重复付费。
+3. 双击 `启动小说工厂.command`。如果 macOS 提示文件不允许直接打开，可打开“终端”并执行：
 
    ```bash
-   npm install -g @openai/codex
+   cd ~/Documents/WordLetter-Novel-Agent-V2
+   bash 启动小说工厂.command
    ```
 
-   或使用官方独立安装命令：`curl -fsSL https://chatgpt.com/codex/install.sh | sh`。按你的安全习惯选择方式；不用同时安装两种。
-3. 在终端运行 `codex`，选择 **Sign in with ChatGPT** 登录并完成授权。不要将账号密码、Token 发送给 Agent。
-4. 解压本文件包到 Mac 文件夹，例如 `~/Documents/WordLetter-Novel-Agent`。不要放在此前的生产 SQL 备份文件夹中。
-5. **完全不需要上传生产数据库 SQL**；工具已带 2026-11-06 的*匿名已出版词卡快照*供初始复现统计。发布更多小说后请更新快照。
+4. 菜单中选择 `1` 新建批次。默认：`postgrad`、`data/postgrad_top1500_unverified.csv`、排名 1–1500、3 本、每本 10 章、110 个规划词目；你都可以修改。**建议首次只规划不运行**，先检查 `整批规划报告.md`。
+5. 确认旧 V1 完成/停止后，再选择已有批次“继续生产”，按提示输入 `YES`，它才真正调用 Codex。生成过程中需要保持终端及网络可用，**不会脱离终端后台运行**。
 
-> Codex CLI 消耗你现有 ChatGPT 计划的相关使用额度，可能有使用限额；不是无限免费。工具本身不要求单独配置付费 OpenAI API Key。
-
-## 二、最简单使用方法
-
-在终端进入解压后的文件夹，运行：
+## 命令行用户（可跳过图形菜单）
 
 ```bash
-cd ~/Documents/WordLetter-Novel-Agent
-bash start.command
+cd ~/Documents/WordLetter-Novel-Agent-V2
+# 只规划 3 本考研小说，严格锁定排名前 1500 词的范围
+python3 factory_v2.py init --category postgrad --lexicon data/postgrad_top1500_unverified.csv \
+  --first 1 --last 1500 --count 3 --chapters 10 --words 110 --out batches/my-first-postgrad
+
+# 生成并从断点继续（只有此命令会调用 Codex）
+python3 factory_v2.py run --batch batches/my-first-postgrad
+
+# 只读查看进度
+python3 factory_v2.py status --batch batches/my-first-postgrad
+
+# 候选包汇总 ZIP（尚未发布）
+python3 factory_v2.py export --batch batches/my-first-postgrad
+
+# 纯本地模拟测试（不调用 Codex）
+python3 -m unittest discover -s tests -q
 ```
 
-按提示填：书名、题材、等级、章节数、目标独立目标词量。选择 `y` 后自动运行：
+## 运行太慢怎么办？
 
-`创建项目 → 原创提纲和词汇规划 → 按批生成词卡 → 分章创作 → 独立 AI 逐章审校 → 离线验收 → 打包`。
+- V2 顺序执行每本小说，不会因为有 10 本而同时占用 10 个 Codex 进程。
+- 双章生成减少的是**独立调用次数**，不保证总耗时按比例缩短。内容更长、审校更严格可能增加推理开销。
+- V2 每个阶段会保存日志 `codex_logs/` 和耗时记录 `codex_timings.jsonl`；网络超时可有限重试，若最终失败可重新执行 `run` 续跑。
+- 如果电脑打开了导致错误的 Canva MCP，可**自行决定**是否在终端临时执行 `export WORDLETTER_IGNORE_USER_CODEX_CONFIG=1` 再运行：该模式尝试让 Codex 忽略用户配置，但也可能忽略你原来的模型/网络代理设置，**默认关闭**，而且需当前 Codex CLI 支持对应参数。
+- 旧 V1/V1.2 已完成部分不要复制进 V2 批量目录；它们的批次锁定规则不同。单本继续用原来的旧文件夹续跑。
 
-生成会调用 Codex 多次，期间可能因使用额度、网络或文本复杂度中断。**不会丢失已完成的项目**，在相同目录再次运行 `run` 会跳过已生成阶段。日志和结果全在本机。
+## 人工验收前绝不能直接销售
 
-## 三、命令行示例（更可控）
-
-```bash
-# 1. 创建四级悬疑小说项目（默认零试读、8章、130目标词）
-python3 novel_agent.py new --title "档案室的第七封信" --genre "悬疑" --category cet4 --chapters 8 --words 130 --out projects/archives-seven
-
-# 2. 全部生成 + 独立初审 + 出版包（需要 Codex CLI 已登录）
-python3 novel_agent.py run --project projects/archives-seven
-
-# 3. 断点续跑，不会重复生成已有 JSON
-python3 novel_agent.py run --project projects/archives-seven
-
-# 4. AI 生成之后重新离线打包
-python3 novel_agent.py pack --project projects/archives-seven
-
-# 5. 检查已存在的出版 JSON（无需 Codex）
-python3 novel_agent.py check --file /path/to/小说.json
-
-# 6. 只测程序与结构打包（无需 Codex，合成虚拟故事不能售卖）
-python3 novel_agent.py demo --out projects/demo
-
-# 7. 自动化单元测试（无需 Codex）
-python3 -m unittest discover -s tests -v
-```
-
-如果你有新的 P5 小说词卡快照，创建新项目时可加 `--shelf ~/Downloads/p5-content-review.json`。还可用 `--lexicon /path/to/vocabulary.csv` 提供明确来源的候选词表。**别将生产 SQL 交给 Codex**。
-
-## 四、文件产物（自动生成）
-
-`projects/<项目>/` 下包含：
-
-- `config.json` — 本书配置，永久稳定的书籍 ID。
-- `outline.json` — 全书原创大纲。
-- `vocab_plan.json` — 按义项规划的词库（含生成 ID、词性、当前义项和计划章节）。
-- `cards/merged.json` — 含英美 IPA、双语例句和搭配的词卡。
-- `chapters/chNN.json` — 独立生成的完整章节；默认 0 章试读。
-- `review/chNN.json` — 第二轮 AI 对每个已用单词的内容初审。
-- `output/出版台导入包.json` — 按此前已成功处理的真实示例 JSON 契约构建。
-- `output/QA.json`、`质量与覆盖报告.md` — P0/P1 和可再计算的重复率、实际词频。
-- `output/故事大纲.md`、`完整小说阅读稿.md`、`最终词卡审校表.csv`。
-- `WordLetter_<bookId>_审核待确认.zip` — 打包以上文件（**不含生产 SQL 和账号信息**）。
-
-**当前程序不生成封面图，也不会自动上传、发布。** 封面可在合法授权前提下另行制作，仍按竖版 3:4 / 推荐 900x1200、统一等级标签的规范管理。
-
-## 五、质量与安全边界（务必了解）
-
-- 格式校验参考《第十三张底片》此前修复版的真实 `version=1` / `book` / `words` / `chapters` / `segments` 结构。**尚未取得最新运行时 `src/editorial-content.js` 或线上 `validatePackage` 源码，因而不是正式后台预检通过证明。**
-- 英文 IPA 格式、空搭配、悬疑剧情、自然度的自动检测只能发现一部分风险。由 Codex 另跑的 AI 复核亦不能替代真人或权威词典核验。
-- 四级重复率按去重英文词目与同级已发布书架比对，不按 `word_id`；`shelf_20261106_sanitized.json` 源自 2026-11-06 备份的内容审核数据。**已上架新书后它就会过期。**
-- 词义候选 `headword + POS + 意义` 只是复用候选，不保证当前网站已经统一 `sense_id`。新书跨书去重必须继续在读者测试账号下验证。
-- 出版包从未自动修改 D1、账号权益、发码、运营台或线上小说。发布前要做：人工语义/音标/版权终审、当前后台导入预检、权限及学习状态测试。
-- **产生 P0 或 P1 错误时必须修订后才能申请发布。** 完成机器预检只是中间阶段。
-
-## 六、常见问题
-
-**命令提示 `codex: command not found`：** 先按官方指引安装并执行 `codex` 登录。
-
-**Codex 失败/报限额：** 不要删项目；再次执行 `run` 可继续已完成步骤。若已有文件语义错误，可编辑对应 JSON 并重跑 `pack`，对某一章节确需重写时先备份并删该章 `chapters/chNN.json` 再重新 `run --stage chapters`。
-
-**后台提示 INVALID_NOVEL_PACKAGE：** 检查 `output/QA.json` 是否存在空格文本片段/ID等问题；有些服务端逻辑只能在实际上传预检中验证，不能声称自动通过。
-
-**是否还要花 API 费用？** 使用 ChatGPT 登录的 Codex CLI 路线通常不需要单独购买 API Key，但具体使用额度和产品政策以账号当前显示为准。若改为 API Key 登录，其费用路径另算。
-
-**已有旧词卡需要迁移吗？** 不需要。此工具只生产**新书文件**，不会做旧数据库 ID 合并或学习状态迁移。
-
-## V1.2 高效模式（2026-11-06）
-
-**为解决 V1 8章/130词需约23次 Codex 请求、频繁重连的问题，V1.2 添加 `run --fast`。** 新书默认每批44张词卡、相邻2章一次写作、相邻2章一次独立复核，保存单章 JSON 并继续 P0/P1 审校；单本目标调用数约减为12次（不含新书 Story Gate 前置审核）。实际速度取决于网络、输出体量和模型，不保证按比例缩短。网络重连本身需要检查网络环境。
-
-- 已有项目中断时，先确认原来的 `bash start.command`/Codex 任务**确实停止**，再从新版目录运行 `bash 快速续跑.command`。
-- 仍可使用 `python3 novel_agent.py run --project /path --fast`；若长输出在双章模式经常超时，可不加 `--fast`，回退逐章。
-- `codex_timings.jsonl` 记录每个实际模型阶段的耗时，便于后续科学优化。
-- 不要在任务运行中覆盖/修改旧版项目或同时运行两个生成进程。新版文件夹必须和 V1 并列放置。
-
-详细操作见 `V1.2_提速说明.md`。
+- 故事好看：真人通读，检查节奏、重复式情节、逻辑、人物动机。
+- 目标词真实：核验英语词性/义项/音标、例句翻译与真实搭配。
+- 跨书重复：同词同义对应同一学习身份；不同义项分别教学，不直接更新正式数据库 ID。
+- 正式出版：按现行后台 `validatePackage` 验证成功、封面版权、零免费章节、付费权限与阅读学习状态均通过。
+- 生产安全：已有 SQL 备份继续保留，**绝不把含用户/订单/激活码的 SQL 复制到 Agent 目录或提交 GitHub**。
