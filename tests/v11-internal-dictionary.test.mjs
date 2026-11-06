@@ -100,10 +100,13 @@ test("V1.1 dictionary token checker refuses substrings, unsafe words and oversiz
  assert.equal(isExampleToken("<script>hello</script>","<script>"),false);
  assert.equal(isExampleToken("a".repeat(3001),"a"),false);
 });
-test("V1.1 frontend uses a source word ID and labels dictionary-only words",()=>{
+test("V1.1 internal dictionary remains server-side but example clicks are immediate pronunciation",()=>{
  const js=src("public/app.js");
+ const api=src("src/example-word-lookup.js");
  assert.match(js,/data-example-origin/);
- assert.match(js,/originWordId=/);
- assert.match(js,/referenceOnly/);
- assert.match(js,/内部词典补充 · 仅供理解例句，不计入学习词卡/);
+ assert.match(js,/function pronounceExampleWord\(button\)/);
+ assert.doesNotMatch(js,/\/api\/lexicon\/lookup\?word=/);
+ assert.doesNotMatch(js,/function showExampleLookup/);
+ assert.match(api,/internalDictionaryLookup/);
+ assert.match(api,/referenceOnly/);
 });
