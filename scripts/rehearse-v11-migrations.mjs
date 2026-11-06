@@ -42,8 +42,8 @@ export function rehearseV11Migrations(db){
   "V11_DICTIONARY_SEED_MUST_BE_IDEMPOTENT");
  // 013 may only add new curated dictionary rows, never users, story words or history.
  const withoutAllowed=sqls[4].replace(/INSERT OR IGNORE INTO supplemental_dictionary/gi,"");
- assert(!/\\b(?:INSERT|UPDATE|DELETE|DROP|ALTER|REPLACE)\\b\\s+(?:INTO|FROM|TABLE|[a-z_]+)/i.test(
-  withoutAllowed.replace(/--[^\\n]*/g,"")), "V11_DICTIONARY_SEED_TARGET_MISMATCH");
+ assert(!/\b(?:INSERT|UPDATE|DELETE|DROP|ALTER|REPLACE)\b\s+(?:INTO|FROM|TABLE|[a-z_]+)/i.test(
+  withoutAllowed.replace(/--[^\n]*/g,"")), "V11_DICTIONARY_SEED_TARGET_MISMATCH");
  for(const sql of sqls){
   assert(!/\b(?:ALTER\s+TABLE|DROP\s+TABLE|DELETE\s+FROM|UPDATE\s+[a-z_]|INSERT\s+INTO|REPLACE\s+INTO)\b/i.test(sql),
    "V11_NON_ADDITIVE_DDL_FOUND");
