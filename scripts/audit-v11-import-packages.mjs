@@ -1,11 +1,10 @@
 // Read-only V1.1 editorial import-package audit. Never modifies novels or D1.
-import {readFileSync} from "node:fs";
+import {readFileSync,readdirSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {resolve} from "node:path";
-const defaults=[
- "content/release-packages/20261104-ex-husband-business-client-FIXED-LEXICON-IDS.json",
- "content/release-packages/20261104-substitute-bride-tears-contract-FIXED-LEXICON-IDS.json"
-];
+const packageDir="content/release-packages";
+const defaults=()=>readdirSync(resolve(packageDir)).filter(name=>name.endsWith(".json"))
+ .sort().map(name=>packageDir+"/"+name);
 const present=v=>typeof v==="string"&&v.trim().length>0;
 const normalized=v=>String(v||"").normalize("NFKC").toLocaleLowerCase("en-US").trim().replace(/\s+/g," ");
 const signature=w=>[normalized(w.headword),normalized(w.partOfSpeech),normalized(String(w.meaningZh||"").split(/[；;]/)[0])].join("|");
@@ -74,14 +73,14 @@ export function auditPackages(packages){
   uniqueWordIds:ids.size,crossBookSharedDefinitions:duplicates,wordOccurrences:refs,
   issues,counts,summaries,blockers:blockers.length};
 }
-export function auditFiles(paths=defaults){
+export function auditFiles(paths=defaults()){
  const packages=paths.map(path=>({path,doc:JSON.parse(readFileSync(resolve(path),"utf8"))}));
  return auditPackages(packages);
 }
 const called=process.argv[1]&&fileURLToPath(import.meta.url)===resolve(process.argv[1]);
 if(called){
  const args=process.argv.slice(2),paths=args.filter(s=>!s.startsWith("--"));
- const report=auditFiles(paths.length?paths:defaults);
+ const report=auditFiles(paths.length?paths:defaults());
  console.log(JSON.stringify(report,null,2));
  if(!report.ok||args.includes("--strict")&&report.issues.length)process.exitCode=1;
 }
