@@ -15,6 +15,7 @@ import os
 import re
 import shutil
 import subprocess
+import time
 import sys
 import textwrap
 import zipfile
@@ -151,7 +152,15 @@ def codex_run(project:Path, task:str, prompt:str, output:Path):
     # Uses least-privilege writable project sandbox; NO full-access or bypass flags.
     argv=["codex","exec","--skip-git-repo-check","--sandbox","workspace-write","-C",str(project),"-"]
     # Codex receives task context via stdin. No shell=True, no API credentials stored.
-    result=subprocess.run(argv,input=prompt,encoding="utf-8",cwd=project,check=False)
+    # Do not echo long novel/card JSON into final chat output: it is already saved to disk.
+    t0=time.monotonic()
+    result=subprocess.run(argv,input=prompt+"\n\n最后回复仅用一句中文说明已经写入哪些文件，不要在终端回显任何小说正文、词卡 JSON 或完整大纲。",encoding="utf-8",cwd=project,check=False)
+    elapsed=round(time.monotonic()-t0,1)
+    log=project/"codex_timings.jsonl"
+    with log.open("a",encoding="utf-8") as f:
+        f.write(json.dumps({"utc":timestamp(),"task":task,"elapsedSeconds":elapsed,
+                            "exitCode":result.returncode,"output":str(output.relative_to(project))},ensure_ascii=False)+"\n")
+    print(f"[Codex] {task} 耗时 {elapsed} 秒；记录：codex_timings.jsonl",flush=True)
     if result.returncode!=0:
         raise RuntimeError(f"Codex 阶段 {task} 失败，退出码 {result.returncode}；生成文件可保留，重新执行会跳过已完成阶段")
     if not output.is_file():
@@ -277,6 +286,47 @@ def gather_editorial_review(project:Path):
     return summary
 
 
+def grouped_chapter_prompt(project:Path, numbers:list[int], outline:dict, cards:list):
+    """Compose adjacent chapters in a single call while writing separate chapter JSON files.
+
+    Never overwrite completed chapters. Group at most two to cap output size and
+    preserve the preceding chapter's causal continuity.
+    """
+    if not numbers or len(numbers)>2 or numbers!=list(range(numbers[0],numbers[-1]+1)):
+        raise ValueError("章节分组必须是最多两章连续序号")
+    base=[]
+    for no in numbers:
+        _,p=chapter_prompt(project,no,outline,cards)  # writes per-chapter selection input
+        base.append(p)
+    names="、".join(f"chapters/ch{no:02d}.json" for no in numbers)
+    return (project/"chapters"/f"ch{numbers[0]:02d}.json",
+            "你是妙屋原创小说作者。一次完成相邻章节，但必须各自写入独立 JSON 文件，不能合并章节。\n"
+            +"对每章逐一遵照以下生产规则（文件结构和正文最低字数均保持不变）：\n\n"
+            +"\n\n".join(base)
+            +f"\n\n本次仅修改 {names}；先完成前一章再写后一章，后章必须接续前章的具体行动和代价。"
+            +"各章都需满足独立正文篇幅和语境质量，禁止为节省时间压缩章节、跳过词卡核对或修改已有其他章节。")
+
+
+def grouped_review_prompt(project:Path, numbers:list[int]):
+    """Review adjacent chapters in one Codex call, still requiring full per-ID notes."""
+    if not numbers or len(numbers)>2:
+        raise ValueError("审校分组最多两章")
+    items=[review_prompt(project,no) for no in numbers]
+    prompts=[prompt for _,prompt,_ in items]
+    names="、".join(f"review/ch{no:02d}.json" for no in numbers)
+    return (items[0][0],"你是没有参与创作的独立内容编辑，请逐章独立审校，每个已出现词卡 ID 必须逐项覆盖，不能因为批量处理而省略。\n"
+            +"\n\n".join(prompts)
+            +f"\n\n本次必须分别写入 {names}。若存在跨章矛盾，应在对应 storyIssues 明确列出具体章节证据。"
+            +"不要改动正文和词卡，不要把 AI 初审当成真人审核。")
+
+
+def ensure_generated_jsons(project:Path, targets:list[Path], kind:str):
+    for target in targets:
+        if not target.is_file():
+            raise RuntimeError(f"{kind} 缺少文件：{target.relative_to(project)}；可再次执行 --fast 续跑")
+        read_json(target)
+
+
 def combine_cards(project:Path, expected:list):
     files=sorted((project/"cards").glob("batch_*.json"))
     all_cards=[]
@@ -295,9 +345,11 @@ def combine_cards(project:Path, expected:list):
     return merged
 
 
-def run_agent(project:Path,stage:str, batch_size:int=22):
+def run_agent(project:Path,stage:str, batch_size:int=22,fast:bool=False):
     if not (project/"config.json").is_file(): raise ValueError("找不到项目 config.json")
     cfg=read_json(project/"config.json")
+    if fast:
+        print("\n⚡ 高效模式：只压缩重复调用，不跳过独立审校；仍须人工终审。",flush=True)
     if stage in ("all","outline"):
         if cfg.get("storyGateVersion",1)>=2:
             story_gate.ensure_story_ready(project,codex_run)
@@ -312,26 +364,73 @@ def run_agent(project:Path,stage:str, batch_size:int=22):
             raise RuntimeError("请先运行 --stage outline，通过故事预审后再生成词卡或章节")
     if stage in ("all","cards"):
         outline,vocab=validate_plan(project)
-        for i in range(0,len(vocab),batch_size):
-            chunk=vocab[i:i+batch_size]
-            idx=i//batch_size+1
-            output,prompt=cards_prompt(project,chunk,idx)
-            if not (project/output).exists():
-                codex_run(project,f"逐义项词卡 {idx}",prompt,project/output)
-        combine_cards(project,vocab)
+        merged=project/"cards"/"merged.json"
+        if fast and merged.exists() and {w["id"] for w in read_json(merged)}=={w["id"] for w in vocab}:
+            print("[断点] 已有全部词卡，跳过生成。",flush=True)
+        else:
+            inputs=sorted((project/"cards").glob("input_*.json"))
+            if fast and inputs:
+                # Existing V1 batches must never be resized: that would corrupt resume IDs.
+                existing_size=len(read_json(inputs[0]))
+                batch_size=existing_size
+                print(f"[兼容] 发现历史词卡批次：继续使用原每批 {batch_size} 张，避免覆盖。",flush=True)
+            elif fast and batch_size==22:
+                batch_size=44
+            for i in range(0,len(vocab),batch_size):
+                chunk=vocab[i:i+batch_size]
+                idx=i//batch_size+1
+                output,prompt=cards_prompt(project,chunk,idx)
+                if not (project/output).exists():
+                    codex_run(project,f"逐义项词卡 {idx}",prompt,project/output)
+            combine_cards(project,vocab)
     if stage in ("all","chapters"):
         outline,vocab=validate_plan(project)
         if not (project/"cards"/"merged.json").exists(): raise ValueError("请先生成词卡，运行 --stage cards")
         cards=read_json(project/"cards"/"merged.json")
-        for no in range(1,cfg["chapters"]+1):
-            output,prompt=chapter_prompt(project,no,outline,cards)
-            if not output.exists():codex_run(project,f"创作第{no}章",prompt,output)
-            if not isinstance(read_json(output).get("paragraphs"),list):
-                raise ValueError(f"第 {no} 章没有 paragraphs，需修订该章节 JSON")
+        if fast:
+            no=1
+            while no<=cfg["chapters"]:
+                path=project/"chapters"/f"ch{no:02d}.json"
+                if path.exists():
+                    if not isinstance(read_json(path).get("paragraphs"),list):
+                        raise ValueError(f"第 {no} 章没有 paragraphs，需修订该章节 JSON")
+                    no+=1;continue
+                group=[no]
+                if no+1<=cfg["chapters"] and not (project/"chapters"/f"ch{no+1:02d}.json").exists():
+                    group.append(no+1)
+                target,prompt=grouped_chapter_prompt(project,group,outline,cards)
+                task=f"连写第{group[0]}-{group[-1]}章" if len(group)>1 else f"创作第{group[0]}章"
+                codex_run(project,task,prompt,target)
+                ensure_generated_jsons(project,[project/"chapters"/f"ch{k:02d}.json" for k in group],"正文")
+                for k in group:
+                    if not isinstance(read_json(project/"chapters"/f"ch{k:02d}.json").get("paragraphs"),list):
+                        raise ValueError(f"第{k}章正文结构错误")
+                no=group[-1]+1
+        else:
+            for no in range(1,cfg["chapters"]+1):
+                output,prompt=chapter_prompt(project,no,outline,cards)
+                if not output.exists():codex_run(project,f"创作第{no}章",prompt,output)
+                if not isinstance(read_json(output).get("paragraphs"),list):
+                    raise ValueError(f"第 {no} 章没有 paragraphs，需修订该章节 JSON")
     if stage in ("all","review"):
-        for no in range(1,cfg["chapters"]+1):
-            target,prompt,required=review_prompt(project,no)
-            if not target.exists():codex_run(project,f"独立复核第{no}章",prompt,target)
+        if fast:
+            no=1
+            while no<=cfg["chapters"]:
+                path=project/"review"/f"ch{no:02d}.json"
+                if path.exists():
+                    read_json(path);no+=1;continue
+                group=[no]
+                if no+1<=cfg["chapters"] and not (project/"review"/f"ch{no+1:02d}.json").exists():
+                    group.append(no+1)
+                target,prompt=grouped_review_prompt(project,group)
+                task=f"独立复核第{group[0]}-{group[-1]}章" if len(group)>1 else f"独立复核第{group[0]}章"
+                codex_run(project,task,prompt,target)
+                ensure_generated_jsons(project,[project/"review"/f"ch{k:02d}.json" for k in group],"审校")
+                no=group[-1]+1
+        else:
+            for no in range(1,cfg["chapters"]+1):
+                target,prompt,required=review_prompt(project,no)
+                if not target.exists():codex_run(project,f"独立复核第{no}章",prompt,target)
         summary=gather_editorial_review(project)
         print("AI 编辑复核：",summary["status"],"；待处理条目：",len(summary["issues"]))
     if stage=="all":
@@ -608,6 +707,7 @@ def main():
     p=sub.add_parser("run",help="使用已登录的 Codex 分阶段生成完整小说")
     p.add_argument("--project",required=True);p.add_argument("--stage",choices=["all","outline","cards","chapters","review"],default="all")
     p.add_argument("--batch-size",type=int,default=22)
+    p.add_argument("--fast",action="store_true",help="高效模式：双章编写/双章复核，合并词卡批次；不降低质量门槛")
     p=sub.add_parser("pack",help="从已生成章节和词卡打包离线出版候选文件")
     p.add_argument("--project",required=True)
     p=sub.add_parser("check",help="检查已有出版社 JSON 文件 (只读)")
@@ -619,7 +719,7 @@ def main():
     args=parser.parse_args()
     try:
         if args.command=="new":make_config(args)
-        elif args.command=="run":run_agent(Path(args.project).expanduser().resolve(),args.stage,args.batch_size)
+        elif args.command=="run":run_agent(Path(args.project).expanduser().resolve(),args.stage,args.batch_size,args.fast)
         elif args.command=="pack":package_project(Path(args.project).expanduser().resolve())
         elif args.command=="check":
             b=read_json(Path(args.file).expanduser())
@@ -642,7 +742,7 @@ def main():
                                    min_chars=750,out=str(dest),shelf=None,lexicon=None)
             pr=make_config(req)
             answer=input("现在开始调用 Codex 生成？[y/N] ").strip().lower()
-            if answer=="y":run_agent(pr,"all")
+            if answer=="y":run_agent(pr,"all",fast=True)
             else:print("以后运行: python3 novel_agent.py run --project",pr)
     except (ValueError, AssertionError, RuntimeError, FileNotFoundError, KeyError, json.JSONDecodeError) as e:
         print("\n错误：",str(e),file=sys.stderr)
