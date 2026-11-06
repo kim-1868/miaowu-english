@@ -1,4 +1,4 @@
-import {studyKey,relatedAccessibleWordIds,uniqueStudyRows} from './study-identity.js';
+import {studyKey,relatedAccessibleWordIds,uniqueStudyRows,countUserDueSenses} from './study-identity.js';
 import {studyScheduleReady,applySenseReview,setSenseManualState} from './study-schedule-store.js';
 // S4: Real reader learning state in Cloudflare D1.
 // Never allow paid reading state changes without valid category entitlements.
@@ -84,10 +84,8 @@ async function wordList(env,userId){
     "ORDER BY uw.last_seen_at DESC LIMIT 4000",userId).all();
   // The old list is capped for display, but the fast-learning due counter
   // must count the user's entire entitled collection, not only 200 rows.
-  const dueRows=await sql(env,"SELECT uw.word_id,w.headword,w.part_of_speech,w.meaning_zh "+
-    "FROM user_words uw JOIN words w ON w.id=uw.word_id "+
-    "WHERE uw.user_id=? AND uw.bookmarked=1 AND "+flashVisible+" "+flashScope("due"),userId).all();
-  return json({flashDue:uniqueStudyRows(dueRows.results||[]).length,
+  const allDue=await countUserDueSenses(env,userId);
+  return json({flashDue:allDue,
     words:uniqueStudyRows(result.results||[]).slice(0,200).map(w=>{
     let pairs=[];try{const parsed=JSON.parse(w.collocations_json||"[]");if(Array.isArray(parsed))pairs=parsed.slice(0,8)}catch{}
     const {collocations_json,...fields}=w;return {...fields,collocations:pairs};
@@ -169,19 +167,21 @@ const flashVisible=
   "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
   "WHERE e.user_id=uw.user_id AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked'))))";
 const flashScope=(scope)=>scope==="due"?
-  "AND uw.status!='mastered' AND uw.due_at IS NOT NULL AND uw.due_at<=CURRENT_TIMESTAMP":
-  scope==="learning"?"AND uw.status!='mastered'":"";
+  "AND uw.status!='mastered' AND uw.due_at IS NOT NULL AND datetime(uw.due_at)<=CURRENT_TIMESTAMP":
+  scope==="learning"||scope==="all"?"AND uw.status!='mastered'":
+  scope==="saved"?"AND uw.bookmarked=1 AND uw.status!='mastered'":
+  scope==="mastered"?"AND uw.status='mastered'":"";
 async function flashcardPool(req,env,userId){
   const params=new URL(req.url).searchParams;
   const scope=params.get("scope")||"due";
   const pageString=params.get("page")||"1";
   const sizeString=params.get("size")||"10";
-  if(!["due","learning","all"].includes(scope)||!/^[1-9][0-9]{0,3}$/.test(pageString)||
+  if(!["due","learning","all","saved","mastered"].includes(scope)||!/^[1-9][0-9]{0,3}$/.test(pageString)||
      !["10","20"].includes(sizeString))
     return err("INVALID_FLASHCARD_SCOPE",400);
   const page=Number(pageString),limit=Number(sizeString),offset=(page-1)*limit;
   const from="FROM user_words uw JOIN words w ON w.id=uw.word_id "+
-    "WHERE uw.user_id=? AND uw.bookmarked=1 AND "+flashVisible+" "+flashScope(scope);
+    "WHERE uw.user_id=? AND "+flashVisible+" "+flashScope(scope);
   // Deduplicate BEFORE pagination, otherwise ten aliases could consume ten card slots.
   const result=await sql(env,
     "SELECT uw.word_id,uw.status,uw.due_at,w.headword,w.meaning_zh,w.phonetic_uk,"+
@@ -221,7 +221,7 @@ async function flashcardAnswer(req,env,userId){
   }
   const word=await sql(env,"SELECT w.headword,w.meaning_zh,uw.status FROM user_words uw "+
     "JOIN words w ON w.id=uw.word_id WHERE uw.user_id=? AND uw.word_id=? "+
-    "AND uw.bookmarked=1 AND "+flashVisible,userId,wordId).first();
+    "AND "+flashVisible,userId,wordId).first();
   if(!word)return err("FLASHCARD_WORD_UNAVAILABLE",403);
   // Flip cards are honest self-ratings; spelling is ALWAYS evaluated here.
   const correct=mode==="flip"?judgment==="known":
