@@ -55,7 +55,7 @@ test("P5 accepts a trusted local legacy SQL export, never publishes private rows
  assert.equal(report.productionReleaseApproved,false);
 });
 test("P5 rejects export without required historical tables or mismatched migration baseline",async()=>{
- await assert.rejects(rehearseV11BackupRestore({sqlText:"CREATE TABLE only_one (id INTEGER); "+" ".repeat(150)}),
+ await assert.rejects(rehearseV11BackupRestore({sqlText:"CREATE TABLE only_one (id INTEGER, fake_username TEXT, fake_category TEXT, fake_chapter TEXT, fake_data TEXT, fake_note TEXT);"}),
   /BACKUP_REQUIRED_TABLES_MISSING/);
  await assert.rejects(rehearseV11BackupRestore({fixture:false}),/RESTORE_REQUIRES_FIXTURE_OR_LOCAL_SQL/);
  await assert.rejects(rehearseV11BackupRestore({fixture:true,sqlText:"test"}),/RESTORE_REQUIRES_FIXTURE_OR_LOCAL_SQL/);
