@@ -4,7 +4,7 @@
 import {chromium} from "playwright";
 import {resolve} from "node:path";
 const widths=[320,344,360,375,390,430,540,600,601,680,768,820,821,1024,1280,1440,1920];
-const shell=String.raw\`
+const shell=String.raw`
 <!doctype html><html lang="zh-CN"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
 <div class="app-shell">
@@ -70,7 +70,7 @@ const shell=String.raw\`
   <div class="quiz-card"><div class="quiz-foot"><button data-measure>继续做题</button><button data-measure>回到书架</button></div></div>
  </section>
 </div>
-</body></html>\`;
+</body></html>`;
 let browser;
 try{
  browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
