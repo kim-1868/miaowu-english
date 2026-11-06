@@ -67,5 +67,5 @@ test("S132 production builds only approved SVG and customer assets",()=>{
    "shelf-cet4.svg","shelf-cet6.svg","shelf-postgrad.svg","shelf-ielts.svg"]){
   assert.ok(report.assets.includes(f));
  }
- assert.equal(report.assets.length,45);
+ assert.equal(report.assets.length,46);
 });
