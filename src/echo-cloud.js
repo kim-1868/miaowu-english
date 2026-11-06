@@ -102,12 +102,37 @@ async function answer(req,env,user){
   if(!data||!validId(data.wordId)||!validId(data.chapterId)||!MODES.has(data.gameType)||
     typeof data.answer!=="string"||data.answer.length>90||!data.answer.trim()||
     typeof data.hinted!=="boolean"||
-    (data.choiceId!==undefined&&(!validId(data.choiceId)||data.gameType==="spell")))
+    (data.choiceId!==undefined&&(!validId(data.choiceId)||data.gameType==="spell"))||
+    (data.requestId!==undefined&&
+      (typeof data.requestId!=="string"||
+       !/^[0-9a-f]{8}-[0-9a-f-]{27,44}$/i.test(data.requestId))))
     return fail("INVALID_ANSWER");
   const q=await exec(env,"SELECT w.id,w.headword,w.part_of_speech,w.meaning_zh,w.phonetic_uk,w.phonetic_us,"+
     "cw.context_sentence,ch.id chapter_id "+chapterCore()+
     " AND w.id=? LIMIT 1",data.chapterId,user.id,data.wordId).first();
   if(!q)return fail("REVIEW_WORD_UNAVAILABLE",403);
+  if(data.requestId){
+    const prior=await exec(env,
+      "SELECT user_id,word_id,chapter_id,game_type,result FROM review_events WHERE id=?",
+      data.requestId).first();
+    if(prior){
+      if(prior.user_id!==user.id||prior.word_id!==q.id||
+         prior.chapter_id!==data.chapterId||prior.game_type!==data.gameType)
+        return fail("REVIEW_REQUEST_REUSED",409);
+      const current=await exec(env,
+        "SELECT status,due_at FROM user_words WHERE user_id=? AND word_id=?",
+        user.id,q.id).first();
+      const dueMs=current?.due_at?Date.parse(current.due_at.replace(" ","T")+"Z"):NaN;
+      const days=current?.status==="mastered"?null:Number.isFinite(dueMs)?
+        Math.max(0,Math.ceil((dueMs-Date.now())/86400000)):null;
+      return reply({saved:true,alreadyApplied:true,
+        correct:prior.result==="correct"||prior.result==="hinted",
+        result:prior.result,expected:q.headword,meaning:q.meaning_zh,
+        phonetic:q.phonetic_uk||q.phonetic_us||"",
+        context:q.context_sentence,status:current?.status||"learning",
+        nextReviewDays:days});
+    }
+  }
   // Keep the legacy 5-second guard only before the additive 011 migration.
   // Canonical replay safety comes from its explicit schedule and same-day cap;
   // a user may switch from flipping to story practice immediately.
@@ -142,7 +167,7 @@ async function answer(req,env,user){
   if(await studyScheduleReady(env)){
     const saved=await applySenseReview(env,{userId:user.id,wordId:q.id,
       chapterId:data.chapterId,gameType:data.gameType,result,
-      correct:right&&!data.hinted,eventId:crypto.randomUUID()});
+      correct:right&&!data.hinted,eventId:data.requestId||crypto.randomUUID()});
     return reply({...saved,correct:right,expected:q.headword,meaning:q.meaning_zh,
       phonetic:q.phonetic_uk||q.phonetic_us||"",context:q.context_sentence});
   }
@@ -155,7 +180,7 @@ async function answer(req,env,user){
   const days=status==="mastered"?null:right&&!data.hinted?Math.min(14,streak*3):1;
   await env.DB.batch([
     exec(env,"INSERT INTO review_events(id,user_id,word_id,chapter_id,game_type,result) "+
-      "VALUES(?,?,?,?,?,?)",crypto.randomUUID(),user.id,q.id,data.chapterId,data.gameType,result),
+      "VALUES(?,?,?,?,?,?)",data.requestId||crypto.randomUUID(),user.id,q.id,data.chapterId,data.gameType,result),
     ...related.map(alias=>exec(env,
       "INSERT INTO user_words(user_id,word_id,status,bookmarked,last_seen_at,due_at) "+
       "VALUES(?,?,?,0,CURRENT_TIMESTAMP,"+
