@@ -67,24 +67,28 @@ test("V1.1 word lookup validates term and method",async()=>{
  assert.equal((await handleExampleWordLookup(req("sample","POST"),env,null)).status,405);
  assert.equal((await handleExampleWordLookup(req("1234"),env,null)).status,400);
 });
-test("V1.1 example UI is clickable, uses one card and hides incomplete collocations",()=>{
+test("V1.1 example words are audio-only and never replace the active novel word card",()=>{
  const html=read("public/index.html");
  const js=read("public/app.js");
+ const echo=read("public/echo-cloud.js");
  const css=read("public/v11-wordbook.css");
- assert.match(html,/id="exampleWordLookup"/);
+ assert.doesNotMatch(html,/id="exampleWordLookup"/,"nested lookup dialog is removed");
  assert.match(html,/我的记忆生词本/);
  assert.doesNotMatch(html,/记忆藏书票/);
  assert.match(js,/function renderExampleWords\(value,originWordId=null\)/);
  assert.match(js,/data-example-word/);
- assert.match(js,/function showExampleLookup\(button\)/);
- assert.match(js,/if\(\$\('wordPop'\)\.classList\.contains\('on'\)\)closeWord\(\)/);
- assert.match(js,/\/api\/lexicon\/lookup\?word=/);
- assert.match(js,/data-lookup-save/);
- assert.match(js,/serverRequest\('\/api\/me\/words\//);
+ assert.match(js,/function pronounceExampleWord\(button\)/);
+ assert.match(js,/speakWord\(word\)/);
+ assert.match(js,/if\(word\)\{e\.preventDefault\(\);e\.stopPropagation\(\);pronounceExampleWord\(word\);return\}/);
+ assert.doesNotMatch(js,/function showExampleLookup/);
+ assert.doesNotMatch(js,/if\(\$\('wordPop'\)\.classList\.contains\('on'\)\)closeWord\(\)/);
+ assert.doesNotMatch(js,/closeExampleLookup/);
  assert.match(js,/w\.example_en\?'<div class="word-extra"/);
  assert.match(js,/pairs\.length\?'<div class="word-extra"/);
  assert.doesNotMatch(js,/暂无搭配/);
  assert.match(js,/wordExampleSpeak/);
- assert.match(css,/\.v11-example-lookup\[hidden\]/);
+ assert.match(echo,/window\.MiaowuExampleLookup\?\.renderWords/,"post-answer example words still use the same renderer");
+ assert.match(css,/\.v11-example-word/);
+ assert.doesNotMatch(css,/\.v11-example-lookup\{/);
  assert.doesNotThrow(()=>new Script(js,{filename:"app.js"}));
 });
