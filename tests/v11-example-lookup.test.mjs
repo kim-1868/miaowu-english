@@ -74,7 +74,7 @@ test("V1.1 example UI is clickable, uses one card and hides incomplete collocati
  assert.match(html,/id="exampleWordLookup"/);
  assert.match(html,/我的记忆生词本/);
  assert.doesNotMatch(html,/记忆藏书票/);
- assert.match(js,/function renderExampleWords\(value\)/);
+ assert.match(js,/function renderExampleWords\(value,originWordId=null\)/);
  assert.match(js,/data-example-word/);
  assert.match(js,/function showExampleLookup\(button\)/);
  assert.match(js,/if\(\$\('wordPop'\)\.classList\.contains\('on'\)\)closeWord\(\)/);
