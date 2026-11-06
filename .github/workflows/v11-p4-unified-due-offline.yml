@@ -2,6 +2,8 @@ name: V1.1 P4 unified due read model — offline regression
 on:
   push:
     branches: [feature/v11-p4-unified-due-views-20261106]
+  pull_request:
+    branches: [fix/v11-study-alias-legacy-mastery-20261106]
   workflow_dispatch:
 permissions:
   contents: read
