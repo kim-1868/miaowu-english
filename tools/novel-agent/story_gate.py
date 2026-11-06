@@ -68,9 +68,10 @@ def outline_issues(outline:dict,chapter_count:int):
 
 def story_outline_prompt(project:Path):
     cfg=_read(project/"config.json")
+    unique_brief=("额外独创要求："+cfg["storyBrief"]+"。必须在 storyBible.distinctiveElement 中体现，严禁和本批其他故事重复。" if cfg.get("storyBrief") else "")
     return f"""你是妙屋英语的原创小说主编。第一阶段只设计一部**拿掉所有英语词依然好看**的中文小说，不写词表、不写词卡、不写正文。
 读取 AGENTS.md、PRODUCTION_RULES.md、config.json；只写项目内 outline.json，不修改其他文件。
-设定：书名《{cfg["title"]}》，题材{cfg["genre"]}，总计{cfg["chapters"]}章。
+设定：书名《{cfg["title"]}》，题材{cfg["genre"]}，总计{cfg["chapters"]}章。{unique_brief}
 严格要求：先决定故事核心悬念/情绪承诺及最终答案，人物欲望和代价，首章真实钩子；每章要有可见事件、行动受阻、人物主动选择、实质性状态变化、由上一章导致的因果链、引出下一章的追读问题。避免主角反复查看资料、谈话、犹豫但什么都没改变；不能靠凭空证据解谜。后半段逐步收束伏笔，完结必须偿还初始悬念、让人物付出代价或产生改变。
 写入合法 JSON，示例结构：
 {{"title":"{cfg['title']}","description":"具有独特冲突与故事钩子的简介","storyBible":{{"storyPromise":"读者为什么想看、核心问题","centralConflict":"具体人物与目标如何冲突","stakes":"失败的真实后果与升级","distinctiveElement":"区别于常见套路的具体机制","endingPayoff":"开篇悬念如何在结局被有因果地解答","characters":[{{"name":"姓名","want":"具体可验证的愿望","fear":"害怕的损失","flaw":"影响选择的缺点","change":"故事中的真实转变"}},{{"name":"另一位姓名","want":"目标","fear":"损失","flaw":"缺点","change":"改变"}}]}},"chapters":[{{"number":1,"title":"章节名","beat":"本章发生的具体事件，40字以上","turn":"造成局面改变的转折","goal":"这一章主角主动要做什么","obstacle":"阻挡目标的具体事件或人物","decision":"主角作出的有代价的决定","consequence":"决定导致的可见后果","newInformation":"新线索/新情报和可信获得方式","hook":"结尾真正让读者想继续读的问题","causalLink":"由何种已知事实引发本章事件"}}]}}
@@ -116,8 +117,14 @@ def critique_issues(critique:dict,chapters:int):
 def vocab_prompt(project:Path):
     cfg=_read(project/"config.json")
     repetition=("四级跨书去重目标30%–40%，优先35%" if cfg["category"]=="cet4" else "该等级未制定跨书复现硬目标，只报告实际比例，不套用四级35%的标准")
+    allocation=project/"lexicon_allocation.json"
+    if cfg.get("lockedLexicon"):
+        if not allocation.is_file():raise RuntimeError("当前批次缺少锁定词表，不允许自由编词")
+        n=len(_read(allocation).get("items",[]))
+        constraint=f"这是已通过本批统一规划的锁定候选词库。必须读取 lexicon_allocation.json；严格使用其中 {n} 条词目、词性和中文释义，逐条与之完全相同，不增删/改变任何义项；为每条编排 plannedChapters（1..本书章节数），只修改 vocab_plan.json。若某词不适合剧情，不能偷偷换词，须报错并返回批量分配阶段重新规划。"
+    else:constraint="没有指定批量锁定词库。"
     return f"""你是妙屋英语词汇课程设计师。**剧情方案已通过独立 AI 大纲评审**，请先读 config.json、outline.json、story_review.json、shelf.json、AGENTS.md 和 PRODUCTION_RULES.md。
-故事必须原样保留，不为凑单词改动大纲。只写 vocab_plan.json，不修改 outline.json、story_review.json 和其他已有文件。
+故事必须原样保留，不为凑单词改动大纲。只写 vocab_plan.json，不修改 outline.json、story_review.json 和其他已有文件。{constraint}
 围绕各章的具体人物行动自然选择约{cfg["targetUniqueWords"]}个不同目标词；适合嵌入原句和语境的优先，不合适的词放弃，不要提前认定词汇通过权威等级核验。
 输出 JSON 数组 [{{"headword":"evidence","partOfSpeech":"n.","meaningZh":"证据","senseKey":"evidence|n.|证据","sourceStatus":"reference_candidate","plannedChapters":[2,5]}}]；所有计划章节介于 1 和 {cfg["chapters"]}，同一英文+词性+义项不可重复。
 {repetition}，只能基于 shelf.json 真实旧词目做候选对比，不能只根据wordId判断。不同义项不得合并。同书词汇可自然复现。对于难以自然嵌入的词，不要凑够数字而牺牲剧情。
