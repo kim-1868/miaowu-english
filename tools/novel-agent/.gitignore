@@ -1,15 +1,15 @@
 __pycache__/
 *.pyc
 .DS_Store
-.env
-.env.*
-*secret*
-*token*
-*.sql
-*.sqlite*
-*.db
+batches/
 projects/
 demo-workspace/
+codex_logs/
+codex_timings.jsonl
+*.sql
+*.sqlite
+*.db
 *.zip
-# private/user-specific content review snapshots should not be committed
-*content-review.json
+# The private user-supplied PDF derived vocabulary reference is shipped only in the private ZIP,
+# NOT in GitHub's source PR.
+data/postgrad_top1500_unverified.csv
