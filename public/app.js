@@ -546,10 +546,10 @@
       }catch(error){toast(error.message||'章节目录加载失败');}
     }
 
-    function renderExampleWords(value){
+    function renderExampleWords(value,originWordId=null){
       return String(value||'').split(/([A-Za-z]+(?:['-][A-Za-z]+)*)/g).map(part=>
         /^[A-Za-z]+(?:['-][A-Za-z]+)*$/.test(part)?
-        '<button type="button" class="v11-example-word" data-example-word="'+safe(part.toLowerCase())+'">'+safe(part)+'</button>':
+        '<button type="button" class="v11-example-word" data-example-word="'+safe(part.toLowerCase())+'"'+(originWordId?' data-example-origin="'+safe(originWordId)+'"':'')+'>'+safe(part)+'</button>':
         safe(part)).join('');
     }
     let exampleLookupRequest=0;
@@ -573,7 +573,7 @@
       panel.style.top=Math.round(top)+'px';
     }
     async function showExampleLookup(button){
-      const panel=$('exampleWordLookup'),token=button.dataset.exampleWord;
+      const panel=$('exampleWordLookup'),token=button.dataset.exampleWord,origin=button.dataset.exampleOrigin||'';
       if(!token||!panel)return;
       const position=button.getBoundingClientRect();
       if($('wordPop').classList.contains('on'))closeWord(); // never stack popovers
@@ -585,9 +585,10 @@
       placeExampleLookup(position);
       $('exampleLookupClose').onclick=closeExampleLookup;
       try{
-        const data=await serverRequest('/api/lexicon/lookup?word='+encodeURIComponent(token));
+        const data=await serverRequest('/api/lexicon/lookup?word='+encodeURIComponent(token)+(origin?'&originWordId='+encodeURIComponent(origin):''));
         if(seq!==exampleLookupRequest||panel.hidden)return;
         const entries=Array.isArray(data.entries)?data.entries:[];
+        const fallback=data.fallback?.referenceOnly?data.fallback:null;
         panel.innerHTML='<div class="v11-lookup-header"><strong>'+safe(token)+'</strong>'+
           '<button type="button" id="exampleLookupClose" aria-label="关闭查询">×</button></div>'+
           (entries.length?entries.map(w=>'<section class="v11-lookup-sense">'+
@@ -596,8 +597,13 @@
             '<div class="v11-lookup-actions"><button type="button" data-lookup-play="'+safe(w.wordId)+'">♫ 听发音</button>'+
             '<button type="button" data-lookup-save="'+safe(w.wordId)+'" '+(w.bookmarked?'disabled':'')+'>'+
             (w.bookmarked?'✓ 已在生词本':user?'＋ 添加生词本':'登录后添加')+'</button></div></section>').join(''):
-            '<p class="v11-lookup-empty">妙屋当前可用词库暂未收录此词的可靠释义。</p>'+
-            '<button class="v11-lookup-pronounce" type="button" id="exampleLookupUnknownSound">♫ 听发音</button>');
+            (fallback?'<section class="v11-lookup-sense"><div class="v11-lookup-part">'+
+              safe(fallback.partOfSpeech||'')+' <span>'+safe(fallback.phonetic||'')+'</span></div>'+
+              '<p>'+safe(fallback.meaning||'')+'</p>'+
+              '<p class="v11-lookup-source">内部词典补充 · 仅供理解例句，不计入学习词卡</p>'+
+              '<button class="v11-lookup-pronounce" type="button" id="exampleLookupUnknownSound">♫ 听发音</button></section>':
+              '<p class="v11-lookup-empty">此词暂未收录可靠的中文释义，可以先听发音。</p>'+
+              '<button class="v11-lookup-pronounce" type="button" id="exampleLookupUnknownSound">♫ 听发音</button>'));
         $('exampleLookupClose').onclick=closeExampleLookup;
         if($('exampleLookupUnknownSound'))$('exampleLookupUnknownSound').onclick=()=>speakWord(token);
         panel.querySelectorAll('[data-lookup-play]').forEach(btn=>btn.onclick=()=>{
@@ -682,7 +688,7 @@
         loading?'<p class="study-loading" role="status">正在读取这张词卡的学习资料…</p>':
           (w.example_en?'<div class="word-extra"><div class="v11-example-heading"><strong>例句</strong>'+
             '<button id="wordExampleSpeak" type="button" aria-label="朗读完整例句">♫ 朗读例句</button></div>'+
-            '<p>'+renderExampleWords(w.example_en)+'</p>'+
+            '<p>'+renderExampleWords(w.example_en,w.word_id)+'</p>'+
             (w.example_zh?'<span class="study-translation">'+safe(w.example_zh)+'</span>':'')+'</div>':'')+
           (pairs.length?'<div class="word-extra"><strong>常用搭配</strong><br>'+
             pairs.map(x=>safe(x.en)+' · '+safe(x.zh)).join('<br>')+'</div>':'') )+
@@ -1029,7 +1035,7 @@
           '<p>'+safe(w.part_of_speech||'')+' '+safe(w.meaning_zh||'')+'</p>'+
           (w.example_en?'<div class="vocab-section"><b>例句 / EXAMPLE</b>'+
           '<button class="v11-example-audio" type="button" data-example-audio="'+safe(w.word_id)+'">♫ 朗读例句</button>'+
-          '<div class="vocab-example">'+renderExampleWords(w.example_en)+'</div>'+
+          '<div class="vocab-example">'+renderExampleWords(w.example_en,w.word_id)+'</div>'+
           (w.example_zh?'<p class="vocab-translation">'+safe(w.example_zh)+'</p>':'')+'</div>':'')+
           (pairs.length?'<div class="vocab-section"><b>常用搭配 / COLLOCATIONS</b>'+
           pairs.map(p=>'<div class="vocab-collocation"><span>'+safe(p.en)+'</span><span>'+
