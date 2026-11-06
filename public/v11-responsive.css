@@ -60,6 +60,19 @@
     font-size:clamp(10px,1.45vw,12px);
   }
 }
+/* Two-column tablet cards are narrower than both mobile single-column
+   and desktop 3-column cards because of the sidebar and original cover ratio. */
+@media(min-width:601px) and (max-width:820px){
+  #view-library .home-shelf-layout .cloud-book-item{
+    grid-template-columns:minmax(0,43%) minmax(0,1fr);
+    gap:8px;
+    padding:8px;
+  }
+  #view-library .home-shelf-layout .cloud-book-item .book-actions button{
+    font-size:11px;
+    padding-inline:3px;
+  }
+}
 @media(max-width:600px){
   #view-library .home-shelf-layout .cloud-book-item{
     /* Give the text half enough space on a 320px viewport while preserving
