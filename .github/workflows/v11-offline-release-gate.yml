@@ -1,4 +1,5 @@
 name: V1.1 release readiness OFFLINE only (no production access)
+# P5 dictionary 012–013 now included in offline rehearsal; staging remains isolated.
 on:
   push:
     branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
