@@ -139,3 +139,27 @@ test('P4 pure projection processes all aliases before filtering and respects sch
  assert.equal(projectStudySenseRows(rows,plan,'due').length,1);
  assert.equal(projectStudySenseRows(rows,plan,'saved').length,0);
 });
+
+test('P4 bookmarked wordbook displays mastered even if the bookmarked alias is stale learning',async()=>{
+ const f=fixture();try{
+  f.insert('wa','mastered',0,null);
+  f.insert('wb','learning',1);
+  const wordbook=await f.call('/api/me/words');
+  assert.equal(wordbook.status,200);
+  assert.equal(wordbook.data.words.length,1);
+  assert.equal(wordbook.data.words[0].status,'mastered');
+  assert.equal(wordbook.data.words[0].study_key,'sense:record|n|记录');
+  assert.equal(wordbook.data.flashDue,0);
+  assert.equal((await f.call('/api/me/flashcards?scope=mastered')).data.total,1);
+ }finally{f.db.close()}
+});
+test('P4 after explicit unbookmark canonical false, old bookmarked alias must not show in wordbook',async()=>{
+ const f=fixture();try{
+  f.insert('wa','learning',1);
+  const key='sense:record|n|记录';
+  f.db.prepare('INSERT INTO user_study_schedules(user_id,study_key,mastered,bookmarked) VALUES(?,?,0,0)').run('u1',key);
+  const r=await f.call('/api/me/words');
+  assert.equal(r.data.words.length,0);
+  assert.equal((await f.call('/api/me/flashcards?scope=saved')).data.total,0);
+ }finally{f.db.close()}
+});
