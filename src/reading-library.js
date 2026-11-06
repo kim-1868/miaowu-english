@@ -213,16 +213,22 @@ async function flashcardAnswer(req,env,userId){
      (mode==="spell"&&(typeof answer!=="string"||answer.length>100||!answer.trim())))
     return err("INVALID_FLASHCARD_ANSWER",400);
   const existing=await sql(env,"SELECT user_id,word_id,game_type,result FROM review_events WHERE id=?",requestId).first();
-  if(existing){
-    if(existing.user_id!==userId||existing.word_id!==wordId||
-       existing.game_type!=="bookplate-"+mode)return err("FLASHCARD_REQUEST_REUSED",409);
-    return json({saved:true,alreadyApplied:true,correct:existing.result==="correct",
-      result:existing.result});
-  }
-  const word=await sql(env,"SELECT w.headword,w.meaning_zh,uw.status FROM user_words uw "+
+  if(existing&&(existing.user_id!==userId||existing.word_id!==wordId||
+       existing.game_type!=="bookplate-"+mode))return err("FLASHCARD_REQUEST_REUSED",409);
+  const word=await sql(env,"SELECT w.headword,w.meaning_zh,uw.status,uw.due_at FROM user_words uw "+
     "JOIN words w ON w.id=uw.word_id WHERE uw.user_id=? AND uw.word_id=? "+
     "AND "+flashVisible,userId,wordId).first();
   if(!word)return err("FLASHCARD_WORD_UNAVAILABLE",403);
+  if(existing){
+    // Response replay after lost network acknowledgement: never count a second
+    // event, and return a complete result so the user can continue normally.
+    const dueMs=word.due_at?Date.parse(word.due_at.replace(" ","T")+"Z"):NaN;
+    const days=word.status==="mastered"?null:
+      Number.isFinite(dueMs)?Math.max(0,Math.ceil((dueMs-Date.now())/86400000)):null;
+    return json({saved:true,alreadyApplied:true,correct:existing.result==="correct",
+      result:existing.result,expected:word.headword,meaning:word.meaning_zh||"",
+      status:word.status,nextReviewDays:days});
+  }
   // Flip cards are honest self-ratings; spelling is ALWAYS evaluated here.
   const correct=mode==="flip"?judgment==="known":
     answer.trim().normalize("NFKC").toLocaleLowerCase("en-US")===
