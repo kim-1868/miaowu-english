@@ -1,0 +1,33 @@
+name: V1.1 P5 reviewed sense shadow — website offline QA
+on:
+  push:
+    branches: [feature/v11-p5-reviewed-sense-shadow-20261107]
+  pull_request:
+    branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
+permissions:
+  contents: read
+jobs:
+  sense-review-shadow:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout V1.1 source without persisted GitHub credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Website syntax and production asset dry-build
+        run: npm run check
+      - name: All website regression tests with isolated local SQLite
+        run: npm test
+      - name: Strict P5 shadow review regression
+        run: node --experimental-sqlite --test tests/v11-shadow-sense-audit.test.mjs
+      - name: Confirm production data and deployment remain untouched
+        run: |
+          echo "NO_PRODUCTION_D1_READ_OR_WRITE"
+          echo "NO_REMOTE_DEPLOYMENT"
+          echo "NO_AUTOMATIC_WORD_ID_MERGE"
