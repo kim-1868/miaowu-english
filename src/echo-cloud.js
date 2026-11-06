@@ -116,10 +116,15 @@ async function answer(req,env,user){
     "cw.context_sentence,ch.id chapter_id "+chapterCore()+
     " AND w.id=? LIMIT 1",data.chapterId,user.id,data.wordId).first();
   if(!q)return fail("REVIEW_WORD_UNAVAILABLE",403);
-  const last=await exec(env,"SELECT created_at FROM review_events "+
-    "WHERE user_id=? AND word_id=? AND created_at>datetime('now','-5 seconds') "+
-    "ORDER BY created_at DESC LIMIT 1",user.id,q.id).first();
-  if(last)return fail("REVIEW_TOO_FAST",429);
+  // Keep the legacy 5-second guard only before the additive 011 migration.
+  // Canonical replay safety comes from its explicit schedule and same-day cap;
+  // a user may switch from flipping to story practice immediately.
+  if(!await studyScheduleReady(env)){
+    const last=await exec(env,"SELECT created_at FROM review_events "+
+      "WHERE user_id=? AND word_id=? AND created_at>datetime('now','-5 seconds') "+
+      "ORDER BY created_at DESC LIMIT 1",user.id,q.id).first();
+    if(last)return fail("REVIEW_TOO_FAST",429);
+  }
   const right=data.answer.trim().toLocaleLowerCase("en-US")===
     q.headword.trim().toLocaleLowerCase("en-US");
   const result=right?(data.hinted?"hinted":"correct"):"incorrect";
