@@ -18,7 +18,7 @@ function renderHome(loggedIn,saved,due){
   const el=host();if(!el)return;
   el.innerHTML='<div class="flash-intro"><div>'+
     '<span class="eyebrow">MIAOWU · QUICK MEMORY</span>'+
-    '<h2>喵呜，翻开下一张生词本</h2>'+
+    '<h2>喵呜，翻开下一张生词卡</h2>'+
     '<p>不必打开单独的复习页。听一听、想一想、翻一张，几分钟就能完成一轮。</p></div>'+
     '<div class="flash-kpis"><span>已收藏 <strong>'+saved+'</strong></span>'+
     '<span>今日待复习 <strong>'+due+'</strong></span></div></div>'+
