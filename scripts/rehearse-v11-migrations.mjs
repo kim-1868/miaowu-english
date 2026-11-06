@@ -29,7 +29,8 @@ export function rehearseV11Migrations(db){
  assert(fkValid(db),"V11_BASELINE_FOREIGN_KEYS_FAILED");
  const original=baseTables(db);
  for(const name of ["users","books","chapters","words","activation_codes",
-  "entitlements","sessions","reading_progress","user_words","review_events"])
+  "entitlements","sessions","reading_progress","user_words","review_events",
+  "ops_operators","ops_audit_events","ops_book_content_versions","ops_publication_approvals"])
   assert(original.includes(name),"V11_MISSING_BASE_TABLE_"+name);
  const hashes=Object.fromEntries(original.map(name=>[name,fingerprint(db,name)]));
  const originalSchema=db.prepare("SELECT type,name,tbl_name,sql FROM sqlite_master "+
