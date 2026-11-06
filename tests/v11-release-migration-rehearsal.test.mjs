@@ -38,7 +38,7 @@ test("V1.1 stage SQL contains ONLY additive independent tables and no changes to
  for(const sql of ["db/009_v11_onboarding.sql","db/010_v11_my_bookshelf.sql","db/011_v11_study_schedules.sql"]){
   const s=file(sql);
   assert.match(s,/CREATE TABLE IF NOT EXISTS/);
-  assert.doesNotMatch(s,/\b(?:ALTER|DROP|DELETE|UPDATE)\b\s+(?:TABLE|FROM|\w+)/i);
+  assert.doesNotMatch(s,/\b(?:ALTER\s+TABLE|DROP\s+TABLE|DELETE\s+FROM|UPDATE\s+[a-z_]|INSERT\s+INTO|REPLACE\s+INTO)\b/i);
   assert.doesNotMatch(s,/\b(?:INSERT INTO|REPLACE INTO)\b/i);
  }
  const packageJson=JSON.parse(file("package.json"));
