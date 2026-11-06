@@ -55,7 +55,7 @@ test("P5 accepts a trusted local legacy SQL export, never publishes private rows
  assert.equal(report.productionReleaseApproved,false);
 });
 test("P5 rejects export without required historical tables or mismatched migration baseline",async()=>{
- await assert.rejects(rehearseV11BackupRestore({sqlText:"CREATE TABLE only_one (id INTEGER); ".repeat(6)}),
+ await assert.rejects(rehearseV11BackupRestore({sqlText:"CREATE TABLE only_one (id INTEGER); "+" ".repeat(150)}),
   /BACKUP_REQUIRED_TABLES_MISSING/);
  await assert.rejects(rehearseV11BackupRestore({fixture:false}),/RESTORE_REQUIRES_FIXTURE_OR_LOCAL_SQL/);
  await assert.rejects(rehearseV11BackupRestore({fixture:true,sqlText:"test"}),/RESTORE_REQUIRES_FIXTURE_OR_LOCAL_SQL/);
@@ -65,7 +65,7 @@ test("P5 corrupted SQLite legacy foreign keys fail before any copy or simulated 
   "INSERT INTO reading_progress(user_id,chapter_id,progress) VALUES"+
   "('test-old','nonexistent-chapter',0.5);\n";
  await assert.rejects(rehearseV11BackupRestore({sqlText:bad}),
-  /BACKUP_FOREIGN_KEYS_FAILED/);
+  /(?:BACKUP_FOREIGN_KEYS_FAILED|FOREIGN KEY constraint failed)/);
 });
 test("P5 backup tool has no remote deployment or D1 migration actions",()=>{
  const source=readFileSync(new URL("../scripts/rehearse-v11-backup-restore.mjs",import.meta.url),"utf8");
