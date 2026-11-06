@@ -44,7 +44,7 @@ test("V1.1 dictionary is isolated from learning state and safe to seed twice",as
   assert.ok(x.db.prepare("SELECT COUNT(*) AS n FROM supplemental_dictionary").get().n>=100);
   assert.equal(x.db.prepare("SELECT COUNT(*) AS n FROM user_words").get().n,0);
   assert.equal(x.db.prepare("SELECT COUNT(*) AS n FROM review_events").get().n,0);
-  assert.equal(x.db.prepare("SELECT COUNT(*) AS n FROM user_study_schedules").get(),undefined);
+  assert.equal(x.db.prepare("SELECT name FROM sqlite_master WHERE name='user_study_schedules'").get(),undefined);
  }finally{x.db.close()}
 });
 test("V1.1 clicking a missing word in an authorized example returns labeled translation without creating a card",async()=>{
