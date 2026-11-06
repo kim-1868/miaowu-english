@@ -20,6 +20,8 @@ class PipelineWithoutRealModelTest(unittest.TestCase):
             pr=Path(tmp)/"book"
             a.make_config(Namespace(title="演示独创",genre="悬疑",category="cet6",chapters=2,words=10,
                                     min_chars=0,out=str(pr),shelf=None,lexicon=None))
+            # Legacy V1 resumes unchanged; story-first gates apply to *new V1.1* projects.
+            cfg=a.read_json(pr/"config.json");cfg["storyGateVersion"]=1;a.write_json(pr/"config.json",cfg)
             def fake_codex(project,task,prompt,output):
                 calls.append(task)
                 if task.startswith("故事大纲"):
