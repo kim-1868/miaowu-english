@@ -80,3 +80,5 @@ jobs:
 # P5 UI sizing: Chromium verified 17 viewports (320–1920px); book CTAs now single-line stacked.
 
 # V1.1 staging read-model integration review: #170 + #171, commit d3b705e15fc28dd4e3414a3b50250819ced4eea9; staging/test D1 only.
+
+# V1.1 preview promotion: wordbook example words are inline underlined text (PR #172); Chromium phone/desktop day/night verified. Staging/test D1 only.
