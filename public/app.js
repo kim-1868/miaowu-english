@@ -1721,6 +1721,7 @@ $('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalO
       saved:()=>cloudSaved.size,due:()=>cloudFlashDue,
       login:showLogin
     });
+    window.MiaowuExampleLookup=Object.freeze({renderWords:renderExampleWords});
     window.MiaowuOnboardingNavigate=navigate;
     window.MiaowuOnboardingRedeem=showRedeem;
     applyTheme();applyReadingPrefs();renderLibrary();renderReminder();renderWords();renderQuiz();renderAccount();initialSessionPromise=loadServerSession();refreshCloudCategories();
