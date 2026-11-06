@@ -56,7 +56,7 @@ async function listCodes(db,search,status,category,page){
  const rows=await stmt(db,
   "SELECT a.id,a.status,a.order_reference,a.created_at,a.redeemed_at, "+
   "u.username AS redeemed_username,c.slug AS category_slug,c.title AS category_title, "+
-  "CASE WHEN a.status='redeemed' AND e.user_id IS NOT NULL AND e.revoked_at IS NULL THEN 1 ELSE 0 END AS entitlement_active "+
+  "CASE WHEN a.status<>'revoked' AND e.user_id IS NOT NULL AND e.revoked_at IS NULL THEN 1 ELSE 0 END AS entitlement_active "+
   joins+"LEFT JOIN entitlements e ON e.source_code_id=a.id AND e.user_id=a.redeemed_by "+
   "WHERE "+where+" ORDER BY a.created_at DESC,a.id DESC LIMIT ? OFFSET ?",
   ...binds,PAGE_SIZE,(page-1)*PAGE_SIZE).all();
