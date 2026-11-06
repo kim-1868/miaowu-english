@@ -82,3 +82,11 @@
 - 当历史备份还没有 `self_service_claims` 时，脚本明确显示七项可用、第八项 `null`、需要人工核验；不会将缺少数据当作“零异常”。已有异常不做自动变更/纠正，仅输出异常类别与数量。
 - 本次全部使用虚构数据：新增 5 项独立测试，连同上一批磁盘恢复测试，10/10 项通过；完整 S1 测试 551 项，其中 550 通过、0 失败、1 跳过。<https://github.com/kim-1868/miaowu-english/actions/runs/42248394687>。
 - **真实正式 D1 的备份、Time Travel 恢复验证及私人订单核验依然没有执行**。本次不改变线上发码、兑换、权益或学习数据；不能因此将正式发布门禁标记完成。
+
+## 十、V1.1 发布候选版证据门禁（2026-11-07）
+
+- 新增 `scripts/v11-release-readiness.mjs` 和 `npm run release:v11:readiness -- --candidate-sha <固定完整SHA>`。其输出明确列出**七类正式发布证据的缺口**：正式 D1 真实备份、真实备份独立恢复、正式库只读/权益审核、词义审校、运营订单/兑换验收、双端读者验收、回滚方案。真实验证信息只能在受控私有记录中核验。
+- `release:v11:offline-check` 已增加生产/测试路由与 D1 UUID 静态隔离检查；新 GitHub Actions `v11-p5-release-readiness-offline.yml` 会运行本地 SQLite 备份恢复、导入包校验和完整网站回归，明确输出 `BLOCKED_PRE_RELEASE` 作为当前**正确结果**。
+- 把私有 JSON 证据记录填齐**不等于**已经核验 Cloudflare 真实备份或站长亲自批准；自动化的 `productionReleaseApproved` 和 `permissionToDeployProduction` 固定为 `false`。
+- GitHub 开发合并 PR #176 仅用于建设发布前检查，**没有**迁移/部署正式站。另有独立 Draft PR #168（Agent V2 导入预检）和 #169（词义影子审核）尚未合并或人工验收；总 PR #154 仍 Draft。V1.1 尚未冻结正式发布 SHA。
+- 专用测试 8/8，通过全套离线检测：559 项中 558 通过、0 失败、1 跳过。<https://github.com/kim-1868/miaowu-english/actions/runs/42250661028>。完整说明见 `docs/v11-p5-release-candidate-gate.md`。
