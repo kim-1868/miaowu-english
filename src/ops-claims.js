@@ -16,7 +16,7 @@ async function list(db,d){
  const where=" WHERE (?='' OR instr(lower(s.order_reference),lower(?))>0 OR instr(lower(COALESCE(u.username,'')),lower(?))>0 OR instr(lower(c.title),lower(?))>0) AND (?='' OR s.review_status=?)";
  const args=[search,search,search,search,status,status];
  const total=await sql(db,"SELECT COUNT(*) AS n"+joins+where,...args).first();
- const rows=await sql(db,"SELECT s.id,s.order_reference,s.claimed_at,s.review_status,s.reviewed_at,s.review_note,c.title AS category_title,c.slug AS category_slug,a.status AS code_status,a.redeemed_at,u.username,CASE WHEN a.status='redeemed' AND e.revoked_at IS NULL AND e.user_id IS NOT NULL THEN 1 ELSE 0 END AS entitlement_active"+joins+where+" ORDER BY s.claimed_at DESC,s.id DESC LIMIT 10 OFFSET ?",...args,(page-1)*10).all();
+ const rows=await sql(db,"SELECT s.id,s.order_reference,s.claimed_at,s.review_status,s.reviewed_at,s.review_note,c.title AS category_title,c.slug AS category_slug,a.status AS code_status,a.redeemed_at,u.username,CASE WHEN a.status<>'revoked' AND e.revoked_at IS NULL AND e.user_id IS NOT NULL THEN 1 ELSE 0 END AS entitlement_active"+joins+where+" ORDER BY s.claimed_at DESC,s.id DESC LIMIT 10 OFFSET ?",...args,(page-1)*10).all();
  const counts=await db.prepare("SELECT COUNT(*) AS n,SUM(review_status='pending') AS pending,SUM(review_status='verified') AS verified,SUM(review_status='abnormal') AS abnormal FROM self_service_claims").first();
  return answer({page,pageSize:10,total:Number(total?.n||0),items:rows.results||[],overview:{all:Number(counts?.n||0),pending:Number(counts?.pending||0),verified:Number(counts?.verified||0),abnormal:Number(counts?.abnormal||0)}});
 }
