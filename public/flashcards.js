@@ -6,7 +6,7 @@ let api=null,userName=null,scope="due",roundSize=20,round=null,busy=false,loadSe
 const host=()=>$("flashcardTrainer");
 const word=()=>round?.queue[round.index]?.word||null;
 const cursor=()=>round?.queue[round.index]||null;
-const actions=()=>({due:"今日到期",learning:"学习中",all:"全部收藏"});
+const actions=()=>({due:"今日到期",learning:"学习中",saved:"我的生词本",all:"全部已学",mastered:"已掌握"});
 function clearRound(){round=null;busy=false;loadSerial++;}
 function counts(){
   const list=round?.answers||[];
@@ -44,7 +44,7 @@ function renderHome(loggedIn,saved,due){
   });
   const open=mode=>{
     if(!loggedIn){api?.login?.();return;}
-    if(!saved){api?.toast?.("先在小说中收藏一些单词，再来速记吧。");return;}
+    if(scope==="saved"&&!saved){api?.toast?.("先在故事里添加几张生词卡，再来复习吧。");return;}
     void begin(mode);
   };
   $("flashStartFlip").onclick=()=>open("flip");
