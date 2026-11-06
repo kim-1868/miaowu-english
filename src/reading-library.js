@@ -82,14 +82,23 @@ async function wordList(env,userId){
     "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e WHERE e.user_id=uw.user_id "+
     "AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked')))) "+
     "ORDER BY uw.last_seen_at DESC LIMIT 4000",userId).all();
-  // The old list is capped for display, but the fast-learning due counter
-  // must count the user's entire entitled collection, not only 200 rows.
-  const allDue=await countUserDueSenses(env,userId);
-  return json({flashDue:allDue,
-    words:uniqueStudyRows(result.results||[]).slice(0,200).map(w=>{
-    let pairs=[];try{const parsed=JSON.parse(w.collocations_json||"[]");if(Array.isArray(parsed))pairs=parsed.slice(0,8)}catch{}
-    const {collocations_json,...fields}=w;return {...fields,collocations:pairs};
-  })});
+  // Resolve visible bookmarked rows through the same per-sense status used by
+  // the due counter and quick-card list. The old bookmark query can select
+  // a stale learning alias while another alias is explicitly mastered.
+  const [allDue,bookmarkedSenses]=await Promise.all([
+    countUserDueSenses(env,userId),
+    listUserStudySenses(env,userId,"bookmarked")
+  ]);
+  const byKey=new Map(bookmarkedSenses.map(w=>[w.study_key,w]));
+  const words=uniqueStudyRows(result.results||[]).filter(w=>byKey.has(studyKey(w)))
+    .slice(0,200).map(w=>{
+      const canonical=byKey.get(studyKey(w));
+      let pairs=[];try{const parsed=JSON.parse(w.collocations_json||"[]");if(Array.isArray(parsed))pairs=parsed.slice(0,8)}catch{}
+      const {collocations_json,...fields}=w;
+      return {...fields,status:canonical.status,bookmarked:canonical.bookmarked,
+        due_at:canonical.due_at,study_key:canonical.study_key,collocations:pairs};
+    });
+  return json({flashDue:allDue,words});
 }
 async function setWord(req,env,userId,id){
   if(!ID.test(id))return err("WORD_NOT_AVAILABLE",404);
