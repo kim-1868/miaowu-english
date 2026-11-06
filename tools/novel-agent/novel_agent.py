@@ -210,6 +210,17 @@ def validate_plan(project:Path):
         w.setdefault("sourceStatus","reference_candidate")
         ids.append(w["id"])
     assert len(set(ids))==len(ids)
+    # V2 batches lock the supplied vocabulary *before* Codex writes prose.
+    # A different gloss/POS is a different sense and must never be silently substituted.
+    alloc_file=project/"lexicon_allocation.json"
+    if cfg.get("lockedLexicon"):
+        if not alloc_file.is_file():raise ValueError("V2 项目缺锁定词表 lexicon_allocation.json")
+        assigned=read_json(alloc_file).get("items",[])
+        expected={(norm(w["headword"]),norm_pos(w["partOfSpeech"]),norm(w["meaningZh"])) for w in assigned}
+        actual={(norm(w["headword"]),norm_pos(w["partOfSpeech"]),norm(w["meaningZh"])) for w in vocab}
+        if expected != actual or len(assigned)!=len(vocab):
+            missing=expected-actual;extra=actual-expected
+            raise ValueError(f"V2 锁定词表未匹配：缺少{len(missing)}义项，额外{len(extra)}义项。请按分配词表修复，而不能偷偷扩词")
     write_json(project/"vocab_plan.json",vocab)
     return outline,vocab
 
