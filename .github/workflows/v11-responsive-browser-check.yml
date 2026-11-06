@@ -1,0 +1,32 @@
+name: V1.1 local responsive Chromium viewport matrix (no deployment)
+on:
+  push:
+    branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
+    paths: [.github/workflows/v11-responsive-browser-check.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  responsive-matrix:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-phase1-mobile-and-install-guide-20261106' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout isolated V1.1 branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install local browser test dependency (no app services)
+        run: npm install --no-save --ignore-scripts playwright@1.56.1
+      - name: Install chromium for responsive layout measurement
+        run: npx playwright install --with-deps chromium
+      - name: Verify actual home card text fits across 17 widths, no wrapping
+        run: node scripts/test-v11-responsive-browser.mjs
+      - name: Offline-only confirmation
+        run: |
+          echo "V11_BROWSER_RESPONSIVE_MATRIX_DONE"
+          echo "NO_CLOUDFLARE_DATABASE_OR_DEPLOYMENT_ACCESS"
