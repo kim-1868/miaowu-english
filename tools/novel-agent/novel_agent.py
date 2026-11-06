@@ -18,6 +18,7 @@ import subprocess
 import sys
 import textwrap
 import zipfile
+import story_gate
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -117,7 +118,7 @@ def make_config(args):
             "genre":args.genre,"chapters":args.chapters,"targetUniqueWords":args.words,
             "minimumChineseCharsPerChapter":args.min_chars,"previewChapters":0,
             "createdUtc":timestamp(),"generationProvider":"Codex CLI (authenticated locally)",
-            "sourceClaim":"reference_candidate_only_unless_reviewed"}
+            "sourceClaim":"reference_candidate_only_unless_reviewed","storyGateVersion":2}
     write_json(folder/"config.json",config)
     shelf_source = Path(args.shelf).expanduser() if args.shelf else ROOT/"data"/"shelf_20261106_sanitized.json"
     if shelf_source.exists():
@@ -134,6 +135,7 @@ def make_config(args):
     (folder/"AGENTS.md").write_text((ROOT/"AGENTS.md").read_text(encoding="utf-8"),encoding="utf-8")
     guide=ROOT/"PRODUCTION_RULES.md"
     (folder/"PRODUCTION_RULES.md").write_text(guide.read_text(encoding="utf-8"),encoding="utf-8")
+    (folder/"STORY_GATE_STANDARD.md").write_text((ROOT/"STORY_GATE_STANDARD.md").read_text(encoding="utf-8"),encoding="utf-8")
     print("项目创建成功：",folder)
     print("内部书籍编号：",book_id)
     print("书架状态：",read_json(folder/"shelf.json")["status"])
@@ -227,6 +229,7 @@ def chapter_prompt(project:Path,no:int, outline:dict, cards:list):
     point=outline["chapters"][no-1]
     return target, f"""你是 WordLetter 小说作家兼英语混排编辑。阅读 AGENTS.md、PRODUCTION_RULES.md、config.json、outline.json、vocab_plan.json 和 cards/merged.json。
 本章目标：第{no}章《{point['title']}》；剧情：{point['beat']}；转折：{point['turn']}。上一章：{previous}，请读取以保持人物和时序一致。
+角色行动与后果（来自已通过故事预审的大纲；若旧书没有则沿用基础大纲）：目标={point.get('goal','见章节大纲')}；阻力={point.get('obstacle','见章节大纲')}；主角的抉择={point.get('decision','见章节大纲')}；后果={point.get('consequence','见章节大纲')}；新事实={point.get('newInformation','见章节大纲')}；追读问题={point.get('hook','见章节大纲')}；因果承接={point.get('causalLink','见章节大纲')}。必须把这些抽象概述写成有具体行为、情节和代价的场景，而不是复制大纲句子。
 使用本章候选词清单 {data.relative_to(project)}，只能引用 cards/merged.json 真实存在的 id。所列词可自然取舍，但必须保证章节完整、人物行为因果成立，且全书最终使用尽可能多计划词。
 只写文件 chapters/ch{no:02d}.json，格式：{{"id":"{cfg['bookId']}-ch{no:02d}","number":{no},"title":"{point['title']}","preview":false,"paragraphs":[{{"segments":[{{"text":"自然中文叙事片段"}},{{"wordId":"已有id","surface":"英文词形","gloss":"与正文用法一致的简洁中文义项"}},{{"text":"继续中文叙事"}}]}}]}}。
 硬约束：每个纯文本段 trim 后都必须非空；不允许 {{"text":" "}}；按真实中文语法自然嵌词（不要 work室、meeting上、从系统missing）；通常有词的句子2–5个目标英文单词，段落平均3–6处，关键台词可以例外；正文汉字总量至少 {cfg['minimumChineseCharsPerChapter']} 字（不是把多个重复句凑字数）；叙事有场景和冲突，原创且本章推进明确。无免费试读章节。
@@ -241,7 +244,7 @@ def review_prompt(project:Path,no:int):
     source=project/"review"/f"input_ch{no:02d}.json"
     write_json(source,{"chapter":ch,"usedWordCards":[cards[w] for w in unique_ids if w in cards],"requiredIds":unique_ids})
     prompt=f"""你是独立编辑质检 Agent，不是作者。读取 AGENTS.md、PRODUCTION_RULES.md、review/input_ch{no:02d}.json 和 config.json。
-对第{no}章实际出现的每个单词 ID，逐个审查正文真实词义、词性、英美 IPA 重音、英语例句是否符合主释义、中文例句翻译、collocations 是否自然。对剧情因果和生硬中英混排也给出问题清单。
+对第{no}章实际出现的每个单词 ID，逐个审查正文真实词义、词性、英美 IPA 重音、英语例句是否符合主释义、中文例句翻译、collocations 是否自然。对剧情因果和生硬中英混排也给出问题清单。针对故事读者体验，逐段排查重复交代、无目的会议/调查、没有后果的冲突、泛泛说教、机械语言与缺乏悬念的章节结尾；问题必须包含具体段落证据和可执行删改建议，不得只说“节奏流畅”。
 只写 review/ch{no:02d}.json，有且只有这些键：
 {{"chapterNumber":{no},"cards":[{{"wordId":"完全照原ID","verdict":"pass|revise|uncertain","severity":"none|P0|P1|P2","reason":"审查依据（说清具体句子和义项）","suggestion":"如需修改请给新值"}}],"storyIssues":[{{"severity":"P0|P1|P2","reason":"...","suggestion":"..."}}],"note":"AI审校，仅是待人工复核，不代表权威词典已核验"}}
 必须覆盖 input 文件中 requiredIds 的每个 ID，禁止漏项。对不确定 IPA 必须标 uncertain，而不是猜测为正确。遇到 leak=泄密却正文漏水、power=权力却正文电力、sign 名词误做动词、record n/v 重音错误、work室 等，标 P0/P1。不得自动将 verdict=pass 等同于人工已审核。不得修改章节正文或词卡原文件，只提交审校意见。"""
@@ -296,9 +299,17 @@ def run_agent(project:Path,stage:str, batch_size:int=22):
     if not (project/"config.json").is_file(): raise ValueError("找不到项目 config.json")
     cfg=read_json(project/"config.json")
     if stage in ("all","outline"):
-        if not (project/"outline.json").exists() or not (project/"vocab_plan.json").exists():
-            codex_run(project,"故事大纲/选词",plan_prompt(project),project/"vocab_plan.json")
+        if cfg.get("storyGateVersion",1)>=2:
+            story_gate.ensure_story_ready(project,codex_run)
+            if not (project/"vocab_plan.json").exists():
+                codex_run(project,"通过剧情预审后规划词汇",story_gate.vocab_prompt(project),project/"vocab_plan.json")
+        else:  # V1 projects preserve their original behavior; do not disrupt in-flight generation.
+            if not (project/"outline.json").exists() or not (project/"vocab_plan.json").exists():
+                codex_run(project,"故事大纲/选词",plan_prompt(project),project/"vocab_plan.json")
         validate_plan(project)
+    if cfg.get("storyGateVersion",1)>=2 and stage in ("cards","chapters","review"):
+        if not story_gate.approved(project):
+            raise RuntimeError("请先运行 --stage outline，通过故事预审后再生成词卡或章节")
     if stage in ("all","cards"):
         outline,vocab=validate_plan(project)
         for i in range(0,len(vocab),batch_size):
@@ -491,6 +502,13 @@ def package_project(project:Path):
     pkg=build_package(project)
     shelf=read_json(project/"shelf.json").get("senses",[]) if (project/"shelf.json").exists() else []
     qa=validate_package(pkg,shelf,cfg["chapters"],cfg["minimumChineseCharsPerChapter"])
+    if cfg.get("storyGateVersion",1)>=2:
+        story_report=project/"story_gate_report.json"
+        if not story_gate.approved(project):
+            qa["errors"].append(issue("P0","STORY_GATE_NOT_PASSED","story", "故事先行大纲审核未通过"))
+            qa["status"]="待修订（故事策划未通过）"
+        else:
+            qa["metrics"]["storyOutlineAIPrecheckPassed"]=True
     review_source=project/"review"/"summary.json"
     if review_source.exists():
         review=read_json(review_source)
@@ -524,6 +542,9 @@ def package_project(project:Path):
             wr.writerow([w.get("id"),w.get("headword"),w.get("partOfSpeech"),w.get("meaningZh"),w.get("phoneticUk"),w.get("phoneticUs"),w.get("exampleEn"),w.get("exampleZh"),json.dumps(w.get("collocations",[]),ensure_ascii=False),"待人工审核",""])
     if review_source.exists():
         shutil.copyfile(review_source,folder/"AI逐章复核汇总.json")
+    if cfg.get("storyGateVersion",1)>=2:
+        for source,dest in (("story_gate_report.json","故事先行检查结果.json"),("story_review.json","独立大纲审核.json")):
+            if (project/source).exists():shutil.copyfile(project/source,folder/dest)
     plan_source=project/"vocab_plan.json"
     if plan_source.exists():
         plan=read_json(plan_source)
