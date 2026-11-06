@@ -117,3 +117,38 @@ test("V33 publisher can verify, revoke and restore ONLY the claimed code entitle
   assert.deepEqual(acts.map(x=>x.action),["revoke","restore","flag","verify"]);
  }finally{db.close();}
 });
+
+test("V1.1 P5 self-service claim reconciliation never labels revoked code as active despite stale grant",async()=>{
+ const db=new D1(),env=config(db);
+ try{
+  const digest=await digestOpsToken(opsToken,opsSecret);
+  db.sql.prepare("INSERT INTO ops_operators(id,display_name,role,environment,key_digest) VALUES (?,?,?,?,?)")
+   .run("p5-claim-owner","Claim reviewer","publisher","production",digest);
+  const issued=await worker.fetch(request("/api/claim/issue","POST",{
+   orderReference:"12345678901239",categoryId:"cet4"
+  }),env);
+  assert.equal(issued.status,201);
+  const {activationCode}=await issued.json();
+  const registered=await worker.fetch(request("/api/auth/register","POST",{
+   username:"p5-claim-buyer",password:"p5-claim-buyer-pass-2026",activationCode
+  }),env);
+  assert.equal(registered.status,201);
+  const cookie=(registered.headers.get("set-cookie")||"").split(";")[0];
+  const chapter=()=>worker.fetch(new Request(origin+"/api/chapters/claim-ch",{headers:{Origin:origin,Cookie:cookie}}),env);
+  const ledger=()=>worker.fetch(request("/api/ops/claims/query","POST",{page:1},true),env).then(r=>r.json());
+  assert.equal((await chapter()).status,200);
+  assert.equal((await ledger()).items[0].entitlement_active,1);
+  // Simulate inconsistent legacy state without writing to actual customers.
+  db.sql.exec("UPDATE activation_codes SET status='revoked' WHERE redeemed_by IS NOT NULL");
+  assert.equal(db.sql.prepare("SELECT revoked_at FROM entitlements LIMIT 1").get().revoked_at,null);
+  assert.equal((await chapter()).status,403);
+  const inactive=(await ledger()).items[0];
+  assert.equal(inactive.code_status,"revoked");
+  assert.equal(inactive.entitlement_active,0);
+  db.sql.exec("UPDATE activation_codes SET status='redeemed' WHERE redeemed_by IS NOT NULL");
+  assert.equal((await chapter()).status,200);
+  assert.equal((await ledger()).items[0].entitlement_active,1);
+  assert.equal(db.sql.prepare("SELECT COUNT(*) AS n FROM self_service_claim_actions").get().n,0,
+   "read-only reconciliation must not create actions or audit writes");
+ }finally{db.close()}
+});
