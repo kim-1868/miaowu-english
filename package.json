@@ -23,7 +23,10 @@
     "db:production:preflight": "node --experimental-sqlite scripts/check-production-fresh-schema.mjs",
     "db:production:prepare-bootstrap": "node --experimental-sqlite scripts/check-production-fresh-schema.mjs --write-private",
     "assets:production:build": "node scripts/build-production-assets.mjs",
-    "worker:production:dry-run": "npm run assets:production:build && wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/dryrun-production"
+    "worker:production:dry-run": "npm run assets:production:build && wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/dryrun-production",
+    "db:dry-run-v11": "node --experimental-sqlite scripts/rehearse-v11-migrations.mjs",
+    "content:check-release-packages": "node scripts/audit-v11-import-packages.mjs",
+    "release:v11:offline-check": "npm run db:dry-run-v11 && npm run content:check-release-packages && npm run check && npm test"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"
