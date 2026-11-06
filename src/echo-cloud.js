@@ -1,4 +1,4 @@
-import {relatedAccessibleWordIds,uniqueStudyRows} from './study-identity.js';
+import {relatedAccessibleWordIds,uniqueStudyRows,countUserDueSenses} from './study-identity.js';
 import {studyScheduleReady,applySenseReview} from './study-schedule-store.js';
 // S6: real Story Echo. Return questions only from accessible, completed D1 chapters.
 // Server scores submitted answers and updates spaced-repeat review events and due dates.
@@ -88,19 +88,9 @@ async function available(env,user,url){
     note:scope==="chapter"?"当前已打开章节的目标词可立即练习，无需完成阅读或先收藏。":"仅展示已读完且有权读取的章节目标词。"});
 }
 async function stats(env,user){
-  const count=await exec(env,"SELECT uw.word_id,w.headword,w.part_of_speech,w.meaning_zh FROM user_words uw JOIN words w ON w.id=uw.word_id WHERE uw.user_id=? "+
-    "AND uw.status!='mastered' AND uw.due_at IS NOT NULL "+
-    "AND uw.due_at<=CURRENT_TIMESTAMP AND EXISTS("+
-    "SELECT 1 FROM reading_progress p JOIN chapters ch ON ch.id=p.chapter_id "+
-    "JOIN books b ON b.id=ch.book_id JOIN categories c ON c.id=b.category_id "+
-    "JOIN chapter_words cw ON cw.chapter_id=ch.id "+
-    "WHERE p.user_id=uw.user_id AND p.completed_at IS NOT NULL AND cw.word_id=uw.word_id "+
-    "AND b.status='published' AND c.is_visible=1 "+
-    "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
-    "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
-    "WHERE e.user_id=p.user_id AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked'))))",
-    user.id).all();
-  return reply({due:uniqueStudyRows(count.results||[]).length});
+  // Same eligible unique senses as /api/me/words.flashDue.
+  const due=await countUserDueSenses(env,user.id);
+  return reply({due});
 }
 async function answer(req,env,user){
   if(!/^application\/json(?:;|$)/i.test(req.headers.get("content-type")||""))
