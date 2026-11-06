@@ -9,10 +9,11 @@ const cursor=()=>round?.queue[round.index]||null;
 const actions=()=>({due:"今日到期",learning:"学习中",saved:"我的生词本",all:"全部已学",mastered:"已掌握"});
 function clearRound(){round=null;busy=false;loadSerial++;}
 function counts(){
-  const list=round?.answers||[];
-  return {attempted:list.length,remembered:list.filter(x=>x.correct&&!x.retry).length,
-    forgotten:list.filter(x=>!x.correct&&!x.retry).length,
-    retrieved:list.filter(x=>x.retry&&x.correct).length};
+  const events=round?.answers||[],lastBySense=new Map();
+  events.forEach(event=>lastBySense.set(event.studyKey||event.wordId,event.correct));
+  const results=[...lastBySense.values()];
+  return {distinct:results.length,attempts:events.length,
+    remembered:results.filter(Boolean).length,forgotten:results.filter(x=>!x).length};
 }
 function renderHome(loggedIn,saved,due){
   const el=host();if(!el)return;
@@ -33,11 +34,11 @@ function renderHome(loggedIn,saved,due){
     '</div></div>'+
     '<div class="flash-choices"><button type="button" class="flash-choice" id="flashStartFlip">'+
     '<span class="flash-choice-icon" aria-hidden="true">✦</span><strong>快刷词卡</strong>'+
-    '<small>翻开释义 → 判断记忆 → 立即下一张</small><b>开始速记 →</b></button>'+
+    '<small>翻开释义 → 判断记忆 → 主动进入下一张</small><b>开始速记 →</b></button>'+
     '<button type="button" class="flash-choice" id="flashStartSpell">'+
     '<span class="flash-choice-icon" aria-hidden="true">♫</span><strong>听音拼写</strong>'+
-    '<small>听发音 / 看中文 → 键入或系统手写 → 核对</small><b>开始拼写 →</b></button></div>'+
-    '<p class="flash-footnote">每次提交后同步学习记录。忘记的词会在本轮稍后再出现一次；单次答对不会自动标记「已掌握」。</p>'+
+    '<small>先听发音 → 键入或系统手写 → 核对</small><b>开始拼写 →</b></button></div>'+
+    '<p class="flash-footnote">每次提交后同步学习记录。忘记的词会在本轮稍后最多再出现两次；单次答对不会自动标记「已掌握」。</p>'+
     '<div class="flash-status" id="flashStatus" role="status" aria-live="polite"></div></div>';
   el.querySelectorAll("[data-flash-scope]").forEach(b=>b.onclick=()=>{
     scope=b.dataset.flashScope;renderHome(loggedIn,saved,due);
@@ -71,7 +72,7 @@ async function begin(mode,page=1){
       return;
     }
     round={mode,scope,page,total:data.total,hasMore:data.hasMore,
-      queue:batch.map(w=>({word:w,retry:false})),index:0,shown:false,
+      queue:batch.map(w=>({word:w,retry:false,submitPayload:null})),index:0,shown:false,
       feedback:null,answers:[],retryCounts:new Map(),startedAt:Date.now()};
     draw();
   }catch(error){api.toast(error.message);if(state)state.textContent="词卡获取失败，请重试。";}
@@ -102,8 +103,11 @@ function draw(){
         '<p class="flash-mystery">先听发音，再回忆英文拼写</p>')+
       (feedback?'<p class="flash-letters">'+Array.from(w.headword||"").length+' 个字符</p>':'')+
       (feedback?
-        '<div class="flash-reveal-answer"><strong>'+esc(w.headword)+'</strong>'+
-        '<span>'+esc(w.phonetic_us||w.phonetic_uk||"")+'</span></div>':
+        '<div class="flash-spelling-comparison">'+
+        '<div class="flash-spelling-line '+(feedback.correct?'correct':'incorrect')+'">'+
+        '<span>你的填写</span><strong>'+esc(feedback.submittedAnswer||"")+'</strong></div>'+
+        '<div class="flash-spelling-line correct"><span>正确答案</span><strong>'+esc(feedback.expected||w.headword)+'</strong></div></div>'+
+        '<div class="flash-reveal-answer"><span>'+esc(w.phonetic_us||w.phonetic_uk||"")+'</span></div>':
         '<label class="flash-input-label" for="flashAnswer">输入或手写英文单词</label>'+
         '<input id="flashAnswer" class="flash-answer" type="text" inputmode="text" autocomplete="off" '+
         'autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="100" '+
@@ -169,13 +173,20 @@ async function vote(judgment,answer){
   const local=round,w=word(),entry=cursor(),i=round.index;
   areaBusy(true);
   try{
-    const body={wordId:w.word_id,mode:round.mode,requestId:crypto.randomUUID()};
-    if(round.mode==="spell")body.answer=answer;
-    else body.judgment=judgment;
+    // Keep the SAME idempotency key/payload when a save times out. Never
+    // create an extra answer event for a simple network retry.
+    if(!entry.submitPayload){
+      const body={wordId:w.word_id,mode:round.mode,requestId:crypto.randomUUID()};
+      if(round.mode==="spell")body.answer=answer;
+      else body.judgment=judgment;
+      entry.submitPayload=body;
+    }
+    const body=entry.submitPayload;
     const result=await api.request("/api/me/flashcards/answer","POST",body);
     if(local!==round||i!==round.index||!api.user())return;
-    local.feedback=result;
-    local.answers.push({wordId:w.word_id,correct:result.correct,retry:entry.retry});
+    local.feedback={...result,submittedAnswer:body.answer||""};
+    local.answers.push({wordId:w.word_id,studyKey:w.study_key||w.word_id,
+      correct:result.correct,retry:entry.retry});
     // Up to TWO automatic revisits, after 4-6 intervening cards when available.
     // A short round may put the retry near the end; do not pad with duplicates.
     if(!result.correct){
@@ -184,7 +195,7 @@ async function vote(judgment,answer){
         local.retryCounts.set(w.word_id,times+1);
         const afterOthers=4+((i+times)%3);
         const later=Math.min(local.queue.length,local.index+1+afterOthers);
-        local.queue.splice(later,0,{word:w,retry:true});
+        local.queue.splice(later,0,{word:w,retry:true,submitPayload:null});
       }
     }
     if(result.correct&&navigator.vibrate)try{navigator.vibrate(14)}catch{}
@@ -194,7 +205,7 @@ async function vote(judgment,answer){
   finally{busy=false;areaBusy(false);}
 }
 function areaBusy(flag){
-  host()?.querySelectorAll("button,input").forEach(x=>{if(x.id!=="flashExit")x.disabled=flag;});
+  host()?.querySelectorAll("button,input").forEach(x=>{x.disabled=flag;});
 }
 function advance(){
   if(!round||busy)return;
@@ -208,10 +219,10 @@ function finish(){
     '<span class="eyebrow">MIAOWU · MEMORIES KEPT</span><h2>这一轮，翻完啦！</h2>'+
     '<p>你把生词本里的故事，又记住了一点点。</p>'+
     '<div class="flash-finish-stats">'+
-    '<div><strong>'+summary.attempted+'</strong><span>完成次数</span></div>'+
-    '<div><strong>'+summary.remembered+'</strong><span>首次记住</span></div>'+
-    '<div><strong>'+summary.forgotten+'</strong><span>需要再练</span></div>'+
-    '<div><strong>'+summary.retrieved+'</strong><span>回炉记住</span></div></div>'+
+    '<div><strong>'+summary.distinct+'</strong><span>不同词义</span></div>'+
+    '<div><strong>'+summary.remembered+'</strong><span>最终记住</span></div>'+
+    '<div><strong>'+summary.forgotten+'</strong><span>仍需巩固</span></div>'+
+    '<div><strong>'+summary.attempts+'</strong><span>答题次数</span></div></div>'+
     '<p class="flash-finish-note">约 '+elapsed+' 分钟 · 每张提交均已同步到账号；“记住了”不等于永久掌握。</p>'+
     '<div class="flash-finish-actions"><button id="flashAgain" class="flash-primary" type="button">再来一轮</button>'+
     (last.hasMore?'<button id="flashMore" type="button">下一组词卡 →</button>':'')+
