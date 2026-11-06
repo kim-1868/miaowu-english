@@ -66,7 +66,7 @@ test("V1.1 dictionary cannot be used to look up arbitrary words, locked example 
  try{
   assert.equal((await x.lookup("suddenly",null)).fallback,null);
   assert.equal((await x.lookup("suddenly","w6")).fallback,null);
-  assert.equal((await x.lookup("the","w4")).fallback,null,"not in the actual authorized example");
+  assert.equal((await x.lookup("because","w4")).fallback,null,"not in the actual authorized example");
   assert.equal((await x.lookup("suddenly","w4","u2")).fallback,null);
   assert.equal((await x.lookup("suddenly","not-allowed")).fallback,null);
   assert.equal((await x.lookup("through","w4")).fallback?.headword,"through");
