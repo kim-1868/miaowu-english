@@ -87,7 +87,7 @@ const utcTime=value=>{
  return Date.parse(s.includes("T")?s:s.replace(" ","T")+"Z");
 };
 export function projectStudySenseRows(rows,plans=[],scope="due",now=new Date()){
- if(!["due","learning","all","saved","mastered"].includes(scope))throw Error("INVALID_STUDY_SCOPE");
+ if(!["due","learning","all","saved","bookmarked","mastered"].includes(scope))throw Error("INVALID_STUDY_SCOPE");
  const current=now instanceof Date?now.getTime():new Date(now).getTime();
  const schedule=new Map((plans||[]).map(s=>[s.study_key,s]));
  const groups=new Map();
@@ -118,7 +118,8 @@ export function projectStudySenseRows(rows,plans=[],scope="due",now=new Date()){
   const due=Number.isFinite(utcTime(dueAt))&&utcTime(dueAt)<=current;
   const allowed=scope==="due"?!mastered&&due:
    scope==="mastered"?mastered:
-   scope==="saved"?!mastered&&bookmarked:!mastered;
+   scope==="saved"?!mastered&&bookmarked:
+   scope==="bookmarked"?bookmarked:!mastered;
   if(!allowed)continue;
   const {_mastered,_bookmarked,_legacyDue,...publicRow}=g;
   out.push({...publicRow,status:mastered?"mastered":"learning",
