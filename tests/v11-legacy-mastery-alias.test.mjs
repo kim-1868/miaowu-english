@@ -11,7 +11,7 @@ function fixture(rows){
   return {bind(userId,...headwords){return {async all(){
    calls.push({userId,headwords});
    return {results:rows.filter(x=>x.user_id===userId&&headwords.includes(x.headword.toLowerCase()))};
-  }}};
+  }}}};
  }}};
  return {env,calls};
 }
