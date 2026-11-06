@@ -129,3 +129,47 @@ test("S158: production assets and page expose the read-only customer interface",
  assert.doesNotMatch(server,/SELECT\s+\*/i);
  assert.doesNotMatch(server,/UPDATE\s+(users|activation_codes|entitlements)/i);
 });
+
+test("V1.1 P5 customer account and voucher ledger agree with REAL paid access when a legacy code is revoked",async()=>{
+ const db=new D1(),app=env(db);
+ try{
+  const digest=await digestOpsToken(opsToken,opsPepper);
+  db.sql.prepare("INSERT INTO ops_operators(id,display_name,role,environment,key_digest) VALUES (?,?,?,?,?)")
+   .run("p5-ops","P5 Publisher","publisher","production",digest);
+  const issued=await worker.fetch(req("/api/ops/sales/issue","POST",{
+   categoryId:"cet4",paymentConfirmed:true,contentConfirmed:true,orderReference:"20261106-P5-CUSTOMER"
+  }),app);
+  assert.equal(issued.status,201);
+  const {activationCode}=await issued.json();
+  const reg=await worker.fetch(req("/api/auth/register","POST",{
+   username:"p5-reader",password:"p5-reader-pass-2026",activationCode
+  },null),app);
+  assert.equal(reg.status,201);
+  const cookie=(reg.headers.get("set-cookie")||"").split(";")[0];
+  const id=db.sql.prepare("SELECT id FROM activation_codes WHERE order_reference='ORD-20261106-P5-CUSTOMER'").get().id;
+  const customers=async mode=>(await worker.fetch(req("/api/ops/customers/query","POST",{
+   mode,search:"20261106-P5-CUSTOMER"
+  }),app)).json();
+  const me=()=>worker.fetch(new Request(origin+"/api/auth/me",{headers:{Origin:origin,Cookie:cookie}}),app).then(x=>x.json());
+  assert.equal((await customers("codes")).items[0].entitlement_active,1);
+  assert.match((await customers("users")).items[0].packages,/四级/);
+  assert.deepEqual((await me()).categories.map(c=>c.slug),["cet4"]);
+  // Historical/manual inconsistency: code is revoked but e.revoked_at is
+  // still NULL. Paid chapter/auth-me deny access already; operator UI must
+  // not falsely label this code or package active.
+  db.sql.prepare("UPDATE activation_codes SET status='revoked' WHERE id=?").run(id);
+  assert.equal(db.sql.prepare("SELECT revoked_at FROM entitlements WHERE source_code_id=?").get(id).revoked_at,null);
+  assert.deepEqual((await me()).categories,[]);
+  const codeList=await customers("codes"),userList=await customers("users");
+  assert.equal(codeList.items[0].status,"revoked");
+  assert.equal(codeList.items[0].entitlement_active,0);
+  assert.equal(userList.items[0].packages,null);
+  assert.ok(!JSON.stringify({codeList,userList}).includes(activationCode));
+  assert.equal(db.sql.prepare("SELECT COUNT(*) n FROM entitlements").get().n,1,"query is read only");
+  // Consistent restoration is still reflected by both read models.
+  db.sql.prepare("UPDATE activation_codes SET status='redeemed' WHERE id=?").run(id);
+  assert.deepEqual((await me()).categories.map(c=>c.slug),["cet4"]);
+  assert.equal((await customers("codes")).items[0].entitlement_active,1);
+  assert.match((await customers("users")).items[0].packages,/四级/);
+ }finally{db.close()}
+});
