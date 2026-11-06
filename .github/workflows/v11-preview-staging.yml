@@ -82,3 +82,5 @@ jobs:
 # V1.1 staging read-model integration review: #170 + #171, commit d3b705e15fc28dd4e3414a3b50250819ced4eea9; staging/test D1 only.
 
 # V1.1 preview promotion: wordbook example words are inline underlined text (PR #172); Chromium phone/desktop day/night verified. Staging/test D1 only.
+
+# V1.1 P5 staging-only regression: ops entitlement display/claims read-model fixed in PR #173; protected staging and test D1 only.
