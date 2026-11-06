@@ -77,15 +77,63 @@ export function uniqueStudyRows(rows){
 }
 
 
-// V1.1: one shared due/overdue counter for home, quick flashcards and Story Echo.
-// A word is due only after an explicit learning/review event scheduled a due_at;
-// passive tapping/reading alone never enters this pool.
-export async function countUserDueSenses(env,userId){
- const rows=await stmt(env,
-  "SELECT uw.word_id,w.headword,w.part_of_speech,w.meaning_zh "+
-  "FROM user_words uw JOIN words w ON w.id=uw.word_id "+
-  "WHERE uw.user_id=? AND uw.status!='mastered' AND uw.due_at IS NOT NULL "+
-  "AND datetime(uw.due_at)<=CURRENT_TIMESTAMP "+
+// V1.1 P4: one visible, account-scoped projection for home, fast cards and
+// Story Echo due scope. Read ALL accessible aliases before filtering any
+// status, so a stale learning copy cannot resurrect an explicitly mastered
+// sense or inflate today's counter. Do not mutate historical user_words.
+const utcTime=value=>{
+ if(!value)return NaN;
+ const s=String(value);
+ return Date.parse(s.includes("T")?s:s.replace(" ","T")+"Z");
+};
+export function projectStudySenseRows(rows,plans=[],scope="due",now=new Date()){
+ if(!["due","learning","all","saved","mastered"].includes(scope))throw Error("INVALID_STUDY_SCOPE");
+ const current=now instanceof Date?now.getTime():new Date(now).getTime();
+ const schedule=new Map((plans||[]).map(s=>[s.study_key,s]));
+ const groups=new Map();
+ for(const row of rows||[]){
+  const key=studyKey(row);
+  const g=groups.get(key);
+  if(!g)groups.set(key,{...row,study_key:key,
+   alias_word_ids:[row.word_id],_mastered:row.status==="mastered",
+   _bookmarked:Boolean(row.bookmarked),
+   _legacyDue:row.due_at&&Number.isFinite(utcTime(row.due_at))?row.due_at:null});
+  else{
+   g.alias_word_ids.push(row.word_id);
+   g._mastered ||= row.status==="mastered";
+   g._bookmarked ||= Boolean(row.bookmarked);
+   if(row.due_at&&Number.isFinite(utcTime(row.due_at))&&
+      (!g._legacyDue||utcTime(row.due_at)<utcTime(g._legacyDue)))
+    g._legacyDue=row.due_at;
+  }
+ }
+ const out=[];
+ for(const g of groups.values()){
+  const plan=schedule.get(g.study_key);
+  // Once a canonical schedule exists, it overrides legacy projections,
+  // including a deliberate explicit unmaster or bookmark removal.
+  const mastered=plan?Boolean(plan.mastered):g._mastered;
+  const bookmarked=plan?Boolean(plan.bookmarked):g._bookmarked;
+  const dueAt=mastered?null:(plan?plan.due_at:g._legacyDue);
+  const due=Number.isFinite(utcTime(dueAt))&&utcTime(dueAt)<=current;
+  const allowed=scope==="due"?!mastered&&due:
+   scope==="mastered"?mastered:
+   scope==="saved"?!mastered&&bookmarked:!mastered;
+  if(!allowed)continue;
+  const {_mastered,_bookmarked,_legacyDue,...publicRow}=g;
+  out.push({...publicRow,status:mastered?"mastered":"learning",
+   bookmarked:bookmarked?1:0,due_at:dueAt||null});
+ }
+ out.sort((a,b)=>scope==="due"?
+   utcTime(a.due_at)-utcTime(b.due_at)||a.word_id.localeCompare(b.word_id):
+   a.headword.localeCompare(b.headword,"en")||a.word_id.localeCompare(b.word_id));
+ return out;
+}
+export async function listUserStudySenses(env,userId,scope="due",{detail=false,now=new Date()}={}){
+ const fields="uw.word_id,uw.status,uw.bookmarked,uw.due_at,w.headword,w.part_of_speech,w.meaning_zh"+
+  (detail?",w.phonetic_uk,w.phonetic_us,w.example_en,w.example_zh,w.collocations_json":"");
+ const found=await stmt(env,"SELECT "+fields+
+  " FROM user_words uw JOIN words w ON w.id=uw.word_id WHERE uw.user_id=? "+
   "AND EXISTS(SELECT 1 FROM chapter_words cw JOIN chapters ch ON ch.id=cw.chapter_id "+
   "JOIN books b ON b.id=ch.book_id JOIN categories c ON c.id=b.category_id "+
   "WHERE cw.word_id=uw.word_id AND b.status='published' AND c.is_visible=1 "+
@@ -93,6 +141,14 @@ export async function countUserDueSenses(env,userId){
   "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
   "WHERE e.user_id=uw.user_id AND e.category_id=b.category_id AND e.revoked_at IS NULL "+
   "AND NOT EXISTS(SELECT 1 FROM activation_codes v "+
-  "WHERE v.id=e.source_code_id AND v.status='revoked'))))",userId).all();
- return uniqueStudyRows(rows.results||[]).length;
+  "WHERE v.id=e.source_code_id AND v.status='revoked')))) "+
+  "ORDER BY w.headword COLLATE NOCASE ASC,uw.word_id ASC",userId).all();
+ const table=await stmt(env,
+  "SELECT name FROM sqlite_master WHERE type='table' AND name='user_study_schedules'").first();
+ const plans=table?.name==="user_study_schedules"?
+  (await stmt(env,"SELECT study_key,mastered,bookmarked,due_at FROM user_study_schedules WHERE user_id=?",userId).all()).results||[]:[];
+ return projectStudySenseRows(found.results||[],plans,scope,now);
+}
+export async function countUserDueSenses(env,userId){
+ return (await listUserStudySenses(env,userId,"due")).length;
 }
