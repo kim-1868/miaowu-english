@@ -14,40 +14,24 @@ html[data-theme="dark"] #wordPop .v11-pron-ipa{color:var(--ink,#eee2d8)}
 html[data-theme="dark"] #wordPop .v11-pron-part{color:#f4d2db;background:#42353c}
 @media(max-width:700px){#wordPop .v11-word-pron{gap:5px}#wordPop .v11-pron-ipa{font-size:14px}}
 
-/* Inline words in trusted example sentences: click reveals only licensed lexical senses. */
+/* Example words are small pronunciation controls, never a secondary popover.
+   The parent novel card and active bookplate stay visible after each tap. */
 .v11-example-word{
- display:inline;background:transparent;border:0;border-bottom:1px dotted currentColor;
- margin:0;padding:0;color:var(--wine,#672b41);font:inherit;line-height:inherit;
- cursor:pointer;text-underline-offset:3px;
+ display:inline;
+ border:0;
+ border-bottom:1px dotted currentColor;
+ background:transparent;
+ color:var(--wine,#672b41);
+ font:inherit;
+ line-height:inherit;
+ text-align:inherit;
+ margin:0;
+ padding:0;
+ cursor:pointer;
+ text-underline-offset:3px;
 }
-.v11-example-word:hover,.v11-example-word:focus-visible{background:rgba(175,110,132,.12)}
-.v11-example-lookup{
- position:fixed;z-index:2147483010;width:min(350px,calc(100vw - 26px));
- max-height:72vh;overflow-y:auto;padding:16px;border-radius:16px;
- background:var(--paper,#fffcf7);border:1px solid var(--line,#e7ddd4);
- box-shadow:0 18px 45px rgba(30,20,29,.28);
- color:var(--ink,#322a2b);
-}
-.v11-example-lookup[hidden]{display:none!important}
-.v11-lookup-header{display:flex;align-items:center;justify-content:space-between;gap:12px;
- padding:0 0 9px;border-bottom:1px solid var(--line,#e7ddd4)}
-.v11-lookup-header strong{font:normal 24px Georgia,serif;color:var(--wine,#672b41)}
-.v11-lookup-header button{border:none;background:transparent;font-size:23px;color:var(--wine,#672b41);
- min-width:36px;min-height:36px}
-.v11-lookup-loading,.v11-lookup-empty{color:var(--muted,#847675);font-size:12px;line-height:1.7;margin:12px 0}
-.v11-lookup-sense{padding:13px 0 9px;border-bottom:1px solid var(--line,#e7ddd4)}
-.v11-lookup-sense:last-child{border-bottom:0}
-.v11-lookup-part{display:flex;gap:10px;align-items:center;color:var(--wine,#672b41);font:600 12px Georgia,serif}
-.v11-lookup-part span{color:var(--muted,#847675);font-weight:400}
-.v11-lookup-sense p{margin:7px 0 9px;font-size:13px;line-height:1.6}
-.v11-lookup-actions{display:flex;gap:8px;flex-wrap:wrap}
-.v11-lookup-actions button,.v11-lookup-pronounce{border:1px solid var(--line,#e7ddd4);
- background:transparent;color:var(--wine,#672b41);border-radius:12px;
- font-size:12px;min-height:35px;padding:7px 11px}
-.v11-lookup-actions button:disabled{opacity:.65}
-@media(max-width:700px){
- .v11-example-lookup{left:0!important;top:auto!important;bottom:0;width:100%;
- max-width:100vw;max-height:60dvh;border-radius:18px 18px 0 0;
- padding:16px 15px calc(18px + env(safe-area-inset-bottom))}
+.v11-example-word:hover,.v11-example-word:focus-visible{
+ background:rgba(175,110,132,.12);
+ outline-offset:2px;
 }
 html[data-theme="dark"] .v11-example-word{color:#f1b8c6}
