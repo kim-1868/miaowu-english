@@ -26,8 +26,8 @@ jobs:
       - name: Refuse secrets and production deployment credentials
         run: |
           set -euo pipefail
-          test -z "\${CLOUDFLARE_API_TOKEN:-}"
-          test -z "\${CLOUDFLARE_ACCOUNT_ID:-}"
+          test -z "${CLOUDFLARE_API_TOKEN:-}"
+          test -z "${CLOUDFLARE_ACCOUNT_ID:-}"
           echo "OFFLINE_ONLY_NO_CLOUDFLARE_ACCESS"
       - name: Validate isolation, production routing configuration and no auto migrations
         run: |
