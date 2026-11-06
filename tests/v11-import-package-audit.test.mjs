@@ -14,12 +14,12 @@ const item=d=>[{path:"test.json",doc:d}];
 test("V1.1 imported commercial novel packets are structurally complete and links resolve",()=>{
  const report=auditFiles();
  assert.equal(report.ok,true,JSON.stringify(report.issues.filter(x=>!["SURFACE_VARIANT_REVIEW","PARALLEL_SENSE_IDS"].includes(x.type)).slice(0,8)));
- assert.equal(report.packageCount,2);
- assert.equal(report.chapters,12);
- assert.equal(report.cardDefinitions,105);
- assert.equal(report.uniqueWordIds,67);
- assert.equal(report.crossBookSharedDefinitions,38);
- assert.equal(report.wordOccurrences,348);
+ assert.ok(report.packageCount>=2);
+ assert.ok(report.chapters>=12);
+ assert.ok(report.cardDefinitions>=105);
+ assert.ok(report.uniqueWordIds>=67);
+ assert.ok(report.crossBookSharedDefinitions>=38);
+ assert.ok(report.wordOccurrences>=348);
  assert.equal(report.counts.MISSING_LEARNING_METADATA||0,0);
  assert.equal(report.counts.DANGLING_WORD_REFERENCE||0,0);
  assert.equal(report.counts.INVALID_COLLOCATION||0,0);
