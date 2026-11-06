@@ -1,4 +1,5 @@
 import {studyKey,relatedAccessibleWordIds,uniqueStudyRows} from './study-identity.js';
+import {studyScheduleReady,applySenseReview,setSenseManualState} from './study-schedule-store.js';
 // S4: Real reader learning state in Cloudflare D1.
 // Never allow paid reading state changes without valid category entitlements.
 const HEADERS={"content-type":"application/json; charset=utf-8","cache-control":"private, no-store",
@@ -99,6 +100,11 @@ async function setWord(req,env,userId,id){
   if(typeof bookmarked!=="boolean"||!["learning","mastered"].includes(status))
     return err("INVALID_WORD_STATE",400);
   if(!(await canStudyWord(env,id,userId)))return err("WORD_NOT_AVAILABLE",403);
+  // Additive 011 migration gates the new canonical schedule. Older schemas
+  // continue to use the unchanged legacy projection during safe deployment.
+  if(await studyScheduleReady(env))return json(await setSenseManualState(env,{
+    userId,wordId:id,status,bookmarked
+  }));
   // One explicit learning decision applies to every accessible copy of the same sense.
   // Keep legacy word IDs untouched for chapters and historical review events.
   const related=await relatedAccessibleWordIds(env,id,userId);
@@ -125,6 +131,12 @@ async function quickReview(req,env,userId){
     "WHERE e.user_id=? AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked')))",
     wordId,chapterId,userId).first();
   if(!match)return err("WORD_NOT_AVAILABLE",403);
+  if(await studyScheduleReady(env)){
+    const saved=await applySenseReview(env,{userId,wordId,chapterId,
+      gameType:"chapter-quick-review",result:remembered?"correct":"incorrect",
+      correct:remembered,eventId:crypto.randomUUID(),addBookmarkOnWrong:true});
+    return json({...saved,remembered});
+  }
   // An answer of "remembered" does not imply permanently mastered.
   // The prior bookmark status is preserved; "forgot" adds a bookmark.
   const due=remembered?"+3 days":"+1 day";
@@ -216,6 +228,11 @@ async function flashcardAnswer(req,env,userId){
     answer.trim().normalize("NFKC").toLocaleLowerCase("en-US")===
     word.headword.trim().normalize("NFKC").toLocaleLowerCase("en-US");
   const result=correct?"correct":mode==="flip"&&judgment==="unsure"?"hinted":"incorrect";
+  if(await studyScheduleReady(env)){
+    const saved=await applySenseReview(env,{userId,wordId,gameType:"bookplate-"+mode,
+      result,correct,eventId:requestId});
+    return json({...saved,expected:word.headword,meaning:word.meaning_zh||""});
+  }
   const history=await sql(env,"SELECT result FROM review_events WHERE user_id=? AND word_id=? "+
     "AND game_type IN ('bookplate-flip','bookplate-spell') "+
     "ORDER BY rowid DESC LIMIT 3",userId,wordId).all();
