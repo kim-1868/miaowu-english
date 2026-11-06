@@ -31,7 +31,7 @@ test("V1.1 009-011 migrations are idempotent and preserve all old customers, ent
 test("V1.1 rehearsal refuses a wrong baseline (does not pretend to have migrated)",()=>{
  const db=new DatabaseSync(":memory:");
  try{db.exec(file("db/001_schema.sql"));
-  assert.throws(()=>rehearseV11Migrations(db),/V11_MISSING_BASE_TABLE_request_throttle|V11_MISSING_BASE_TABLE_sessions/);
+  assert.throws(()=>rehearseV11Migrations(db),/V11_MISSING_BASE_TABLE_ops_operators/);
  }finally{db.close()}
 });
 test("V1.1 stage SQL contains ONLY additive independent tables and no changes to existing access policy",()=>{
