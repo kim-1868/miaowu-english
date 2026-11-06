@@ -51,7 +51,13 @@ export async function annotateStudyWords(env,userId,words){
       const key=studyKey(row);
       const prev=state.get(key);
       if(!prev)state.set(key,{status:row.status,bookmarked:!!row.bookmarked,seen:true});
-      else prev.bookmarked ||= !!row.bookmarked;
+      else {
+        // Legacy copies can disagree before a reviewed mapping migration.
+        // Keep any explicit mastered status; never let a newer learning alias
+        // resurrect the same sense as an unseen/unmastered card.
+        prev.bookmarked ||= !!row.bookmarked;
+        if(row.status==="mastered") prev.status="mastered";
+      }
     }
   }
   return words.map((w,i)=>{
