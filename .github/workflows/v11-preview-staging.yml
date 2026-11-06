@@ -74,3 +74,5 @@ jobs:
           test "$code" = "401" || { echo "Preview must refuse anonymous requests: got $code"; exit 1; }
           grep -Fq 'Staging preview: credentials required.' /tmp/preview-anonymous
           echo "PASS protected preview: $url"
+
+# P5 preview correction: example-word buttons now speak only and preserve the originating study card.
