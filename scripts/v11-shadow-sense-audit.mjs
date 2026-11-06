@@ -8,6 +8,22 @@ const normal=value=>String(value??'').normalize('NFKC').trim().toLocaleLowerCase
 const normalizedPos=value=>normal(value).replace(/[.。]/gu,'').replace(/[／]/gu,'/');
 const sortedUnique=arr=>[...new Set(arr)].sort((a,b)=>a.localeCompare(b,'en'));
 const noControl=v=>typeof v==='string'&&!/[\u0000-\u001f]/.test(v)&&v.trim().length>0;
+// Context is evidence for a teaching sense; a book ID alone is not an example.
+// Never print the context, only its stable SHA-256 digest.
+const stableJson=value=>JSON.stringify(value,(key,v)=>
+ v&&typeof v==='object'&&!Array.isArray(v)?
+ Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
+const realContext=value=>
+ noControl(value)||
+ (value&&typeof value==='object'&&
+  [value.context_sentence,value.sentence,value.text,value.paragraph].some(noControl));
+const contextInfo=row=>{
+ const contexts=Array.isArray(row?.contexts)?row.contexts:[];
+ const entries=contexts.map(stableJson).sort();
+ return {contextCount:contexts.length,
+  hasContext:contexts.some(realContext),
+  contextSha256:createHash('sha256').update(entries.join('\n')).digest('hex')};
+};
 function normalizedCard(row){
  const wordId=String(row?.word_id||row?.wordId||row?.sourceWordId||row?.id||'');
  const headword=String(row?.headword||'');
@@ -17,7 +33,7 @@ function normalizedCard(row){
   throw Error('INVALID_WORD_ID_OR_TEACHING_FIELDS:'+wordId);
  return {wordId,headword,pos,meaning,ipaUk:String(row?.phonetic_uk??row?.phoneticUk??''),
   ipaUs:String(row?.phonetic_us??row?.phoneticUs??''),
-  contexts:Array.isArray(row.contexts)?row.contexts.length:0};
+  ...contextInfo(row)};
 }
 function asCards(input){
  const rows=Array.isArray(input)?input:Array.isArray(input?.cards)?input.cards:Array.isArray(input?.senses)?input.senses:null;
@@ -26,7 +42,7 @@ function asCards(input){
  return rows.map(normalizedCard);
 }
 function fingerprint(cards){
- const serial=cards.map(c=>[c.wordId,normal(c.headword),normalizedPos(c.pos),normal(c.meaning),c.ipaUk,c.ipaUs])
+ const serial=cards.map(c=>[c.wordId,normal(c.headword),normalizedPos(c.pos),normal(c.meaning),c.ipaUk,c.ipaUs,c.contextCount,c.contextSha256])
    .sort((a,b)=>a[0].localeCompare(b[0],'en')).map(x=>JSON.stringify(x)).join('\n');
  return createHash('sha256').update(serial).digest('hex');
 }
@@ -42,7 +58,9 @@ export function buildSenseShadow(snapshot,approvalManifest=null,{includeCandidat
   } else byId.set(row.wordId,row);
  }
  const unique=[...byId.values()].sort((a,b)=>a.wordId.localeCompare(b.wordId,'en'));
- const sourceFingerprint=fingerprint(unique);
+ // Hash ALL records, not only the first copy of a word ID. This ensures
+ // review approval expires when contexts change, including a chapter rewrite.
+ const sourceFingerprint=fingerprint(rows);
  const byCandidate=new Map(),byHeadword=new Map();
  for(const row of unique){
   const key=studyKey({word_id:row.wordId,headword:row.headword,part_of_speech:row.pos,meaning_zh:row.meaning});
@@ -53,7 +71,7 @@ export function buildSenseShadow(snapshot,approvalManifest=null,{includeCandidat
   candidateKey,wordIds:items.map(x=>x.wordId).sort(),headword:items[0].headword,
   differentIpa:sortedUnique(items.map(x=>x.ipaUk+'|'+x.ipaUs)).length>1,
   differentSecondaryGloss:sortedUnique(items.map(x=>normal(x.meaning))).length>1,
-  contextCount:items.reduce((n,x)=>n+x.contexts,0),
+  contextCount:items.reduce((n,x)=>n+x.contextCount,0),
   status:'requires_semantic_review_not_auto_merge'
  })).sort((a,b)=>b.wordIds.length-a.wordIds.length||a.candidateKey.localeCompare(b.candidateKey));
  const assignments=new Map(unique.map(x=>[x.wordId,'legacy:'+x.wordId]));
@@ -65,7 +83,7 @@ export function buildSenseShadow(snapshot,approvalManifest=null,{includeCandidat
    blockers.push(makeProblem('APPROVAL_SNAPSHOT_MISMATCH','Review approval is not pinned to this exact snapshot'));
   for(const [i,g] of (Array.isArray(approvalManifest?.groups)?approvalManifest.groups:[]).entries()){
    const label='approval group '+(i+1);
-   if(!g||g.status!=='approved'||!/^reviewed:[a-z0-9_-]{3,80}$/.test(g.senseId||'')||
+   if(!g||g.status!=='approved'||typeof g.senseId!=='string'||!/^reviewed:[a-z0-9_-]{3,80}$/.test(g.senseId)||
       !noControl(g.reviewer)||!noControl(g.evidence)||/^\d{4}-\d{2}-\d{2}$/.test(g.reviewedAt||'')===false||
       !Array.isArray(g.wordIds)||g.wordIds.length<2||g.wordIds.length>500){
      blockers.push(makeProblem('APPROVAL_GROUP_INVALID',label));continue;
@@ -78,6 +96,9 @@ export function buildSenseShadow(snapshot,approvalManifest=null,{includeCandidat
    }
    if(ids.some(id=>seenApprovedIds.has(id))){
     blockers.push(makeProblem('WORD_ID_APPROVED_IN_MULTIPLE_SENSES',label,ids));continue;
+   }
+   if(found.some(x=>!x.hasContext)){
+    blockers.push(makeProblem('APPROVAL_MISSING_STORY_CONTEXT',label,ids));continue;
    }
    if(sortedUnique(found.map(x=>normal(x.headword))).length!==1||
       sortedUnique(found.map(x=>normalizedPos(x.pos))).length!==1||
