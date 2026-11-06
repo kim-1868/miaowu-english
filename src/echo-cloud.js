@@ -1,4 +1,5 @@
 import {relatedAccessibleWordIds,uniqueStudyRows} from './study-identity.js';
+import {studyScheduleReady,applySenseReview} from './study-schedule-store.js';
 // S6: real Story Echo. Return questions only from accessible, completed D1 chapters.
 // Server scores submitted answers and updates spaced-repeat review events and due dates.
 const H={"content-type":"application/json; charset=utf-8","cache-control":"private, no-store",
@@ -122,6 +123,13 @@ async function answer(req,env,user){
   const right=data.answer.trim().toLocaleLowerCase("en-US")===
     q.headword.trim().toLocaleLowerCase("en-US");
   const result=right?(data.hinted?"hinted":"correct"):"incorrect";
+  if(await studyScheduleReady(env)){
+    const saved=await applySenseReview(env,{userId:user.id,wordId:q.id,
+      chapterId:data.chapterId,gameType:data.gameType,result,
+      correct:right&&!data.hinted,eventId:crypto.randomUUID()});
+    return reply({...saved,correct:right,expected:q.headword,meaning:q.meaning_zh,
+      phonetic:q.phonetic_uk||q.phonetic_us||"",context:q.context_sentence});
+  }
   const related=await relatedAccessibleWordIds(env,q.id,user.id);
   const recent=await exec(env,"SELECT result FROM review_events "+
     "WHERE user_id=? AND word_id IN ("+related.map(()=>"?").join(",")+
