@@ -26,8 +26,9 @@
     "worker:production:dry-run": "npm run assets:production:build && wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/dryrun-production",
     "db:dry-run-v11": "node --experimental-sqlite scripts/rehearse-v11-migrations.mjs",
     "content:check-release-packages": "node scripts/audit-v11-import-packages.mjs",
-    "release:v11:offline-check": "npm run db:restore:rehearsal && npm run db:dry-run-v11 && npm run content:check-release-packages && npm run check && npm test",
-    "db:restore:rehearsal": "node --experimental-sqlite scripts/rehearse-v11-backup-restore.mjs --fixture"
+    "release:v11:offline-check": "node scripts/check-v11-preview-config.mjs && node scripts/check-production-config.mjs deploy/production.wrangler.jsonc && npm run db:restore:rehearsal && npm run db:dry-run-v11 && npm run content:check-release-packages && npm run check && npm test",
+    "db:restore:rehearsal": "node --experimental-sqlite scripts/rehearse-v11-backup-restore.mjs --fixture",
+    "release:v11:readiness": "node scripts/v11-release-readiness.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"

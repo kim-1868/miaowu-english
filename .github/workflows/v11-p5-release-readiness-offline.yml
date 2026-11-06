@@ -1,0 +1,43 @@
+name: V1.1 P5 release candidate preflight (no deployment)
+on:
+  push:
+    branches: [feature/v11-p5-release-readiness-gate-20261107]
+  pull_request:
+    branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
+permissions:
+  contents: read
+jobs:
+  offline-evidence-gate:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout immutable CI SHA without saved credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Full static configuration, synthetic recovery, import package and website regression checks
+        run: npm run release:v11:offline-check
+      - name: Release gate unit tests (must stay fail closed)
+        run: node --experimental-sqlite --test tests/v11-p5-release-readiness.test.mjs
+      - name: Show accurate missing production evidence, never owner approval
+        env:
+          CANDIDATE_SHA: ${{ github.sha }}
+        run: |
+          node scripts/v11-release-readiness.mjs --candidate-sha "$CANDIDATE_SHA" > "$RUNNER_TEMP/v11-readiness.json"
+          node --input-type=module -e '
+          import {readFileSync} from "node:fs";
+          const r=JSON.parse(readFileSync(process.env.RUNNER_TEMP+"/v11-readiness.json","utf8"));
+          if(r.status!=="BLOCKED_PRE_RELEASE"||r.productionReleaseApproved||r.productionDatabaseAccessed||r.permissionToDeployProduction||r.missingOrInvalidEvidence.length!==7)process.exit(1);
+          console.log("SAFE: offline checks completed; actual production release is BLOCKED on real evidence and user approval.");
+          console.log("Missing evidence:",r.missingOrInvalidEvidence.join(", "));
+          '
+      - name: Explicitly exclude remote writes and production deployment
+        run: |
+          echo "NO_CLOUDFLARE_SECRETS_REQUESTED"
+          echo "NO_REMOTE_D1_ACCESSED"
+          echo "NO_PUBLIC_SITE_DEPLOYMENT"
