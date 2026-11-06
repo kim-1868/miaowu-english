@@ -1,4 +1,4 @@
-// V1.1 P5: entirely offline 009/010/011 migration rehearsal.
+// V1.1 P5: entirely offline 009..013 migration/seed rehearsal.
 // No network, Wrangler, Cloudflare secrets, or remote database write paths.
 // Optionally accepts a trusted local SQL export, never uploads it.
 import {DatabaseSync} from "node:sqlite";
@@ -7,11 +7,13 @@ import {readFileSync,statSync} from "node:fs";
 import {resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 
-const stages=["009_v11_onboarding","010_v11_my_bookshelf","011_v11_study_schedules"];
+const stages=["009_v11_onboarding","010_v11_my_bookshelf","011_v11_study_schedules",
+ "012_v11_supplemental_dictionary","013_v11_supplemental_starter"];
 const expected={
  user_onboarding:["user_id","completed_at","completion_kind","first_word_tip_at","first_bookmark_tip_at","created_at"],
  user_bookmarks:["user_id","book_id","created_at"],
- user_study_schedules:["user_id","study_key","stage_index","due_at","last_positive_day","last_reviewed_at","mastered","bookmarked","created_at","updated_at"]
+ user_study_schedules:["user_id","study_key","stage_index","due_at","last_positive_day","last_reviewed_at","mastered","bookmarked","created_at","updated_at"],
+ supplemental_dictionary:["word","phonetic","pos","translation_zh","source","source_version","updated_at"]
 };
 const assert=(value,code)=>{if(!value)throw Error(code)};
 const quot=s=>'"'+s.replaceAll('"','""')+'"';
@@ -36,6 +38,12 @@ export function rehearseV11Migrations(db){
  const originalSchema=db.prepare("SELECT type,name,tbl_name,sql FROM sqlite_master "+
   "WHERE name NOT LIKE 'sqlite_%' ORDER BY type,name").all();
  const sqls=stages.map(name=>readFileSync(new URL("../db/"+name+".sql",import.meta.url),"utf8"));
+ assert(sqls[4].includes("INSERT OR IGNORE INTO supplemental_dictionary"),
+  "V11_DICTIONARY_SEED_MUST_BE_IDEMPOTENT");
+ // 013 may only add new curated dictionary rows, never users, story words or history.
+ const withoutAllowed=sqls[4].replace(/INSERT OR IGNORE INTO supplemental_dictionary/gi,"");
+ assert(!/\\b(?:INSERT|UPDATE|DELETE|DROP|ALTER|REPLACE)\\b\\s+(?:INTO|FROM|TABLE|[a-z_]+)/i.test(
+  withoutAllowed.replace(/--[^\\n]*/g,"")), "V11_DICTIONARY_SEED_TARGET_MISMATCH");
  for(const sql of sqls){
   assert(!/\b(?:ALTER\s+TABLE|DROP\s+TABLE|DELETE\s+FROM|UPDATE\s+[a-z_]|INSERT\s+INTO|REPLACE\s+INTO)\b/i.test(sql),
    "V11_NON_ADDITIVE_DDL_FOUND");
@@ -48,8 +56,10 @@ export function rehearseV11Migrations(db){
    assert(baseTables(db).includes(table),"V11_TABLE_MISSING_"+table);
    assert(JSON.stringify(columns(db,table))===JSON.stringify(expectedColumns),
      "V11_TABLE_SHAPE_MISMATCH_"+table);
-   assert(db.prepare("SELECT count(*) AS n FROM "+quot(table)).get().n===0,
-     "V11_NEW_TABLE_UNEXPECTED_ROWS_"+table);
+   const rows=db.prepare("SELECT count(*) AS n FROM "+quot(table)).get().n;
+   if(table==="supplemental_dictionary"){
+     assert(rows>=100&&rows<=180,"V11_DICTIONARY_STARTER_COUNT_INVALID");
+   }else assert(rows===0,"V11_NEW_TABLE_UNEXPECTED_ROWS_"+table);
   }
   for(const table of original)
    assert(fingerprint(db,table)===hashes[table],"V11_LEGACY_TABLE_CHANGED_"+table);
