@@ -122,7 +122,7 @@
     function asMeaning(c){return WORDS[c]?`${safe(c)}：${safe(WORDS[c].meaning)}`:safe(c)}
     function reportExamResult(q,ans,hint=false){if(quizAnswer!==null)return;quizAnswer=ans;const ok=ans.toLowerCase().trim()===q.word; if(ok)quizScore++;recordAnswer(q.word,ok,hint);renderQuiz()}
 
-    function navigate(to){closeExampleLookup();if(view==='echo'&&echoMode==='cloud'&&window.MiaowuCloudEcho?.running()){window.MiaowuCloudEcho.leave(to);return}if(view==='echo'&&echoMode==='demo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='reader'&&to!=='reader'){closeWord();clearTimeout(readingSaveTimer);void saveReadingProgress({quiet:true});stopReading();}view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words')renderWords();if(to==='echo')renderQuiz();if(to==='account'){renderAccount();if(user)void loadPersonalBookshelf()}$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
+    function navigate(to){if(view==='echo'&&echoMode==='cloud'&&window.MiaowuCloudEcho?.running()){window.MiaowuCloudEcho.leave(to);return}if(view==='echo'&&echoMode==='demo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='reader'&&to!=='reader'){closeWord();clearTimeout(readingSaveTimer);void saveReadingProgress({quiet:true});stopReading();}view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words')renderWords();if(to==='echo')renderQuiz();if(to==='account'){renderAccount();if(user)void loadPersonalBookshelf()}$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
 
     // D1 is the primary reader source. Legacy chapter sample stays unreachable from default book cards.
     // No paid chapter bodies are bundled into app.js or held in a client-side book constant.
@@ -552,83 +552,12 @@
         '<button type="button" class="v11-example-word" data-example-word="'+safe(part.toLowerCase())+'"'+(originWordId?' data-example-origin="'+safe(originWordId)+'"':'')+'>'+safe(part)+'</button>':
         safe(part)).join('');
     }
-    let exampleLookupRequest=0;
-    function closeExampleLookup(){
-      ++exampleLookupRequest;
-      const panel=$('exampleWordLookup');
-      if(panel){panel.hidden=true;panel.replaceChildren()}
-    }
-    function placeExampleLookup(rect){
-      const panel=$('exampleWordLookup');
-      if(window.matchMedia('(max-width:700px)').matches){
-        panel.style.removeProperty('left');panel.style.removeProperty('top');return;
-      }
-      const margin=12,width=Math.min(350,window.innerWidth-margin*2);
-      const height=Math.min(panel.scrollHeight||360,window.innerHeight*.7);
-      const left=Math.max(margin,Math.min(window.innerWidth-width-margin,rect.left));
-      const below=window.innerHeight-rect.bottom>Math.min(height,250);
-      const top=below?Math.min(window.innerHeight-height-margin,rect.bottom+8):
-        Math.max(margin,rect.top-height-8);
-      panel.style.left=Math.round(left)+'px';
-      panel.style.top=Math.round(top)+'px';
-    }
-    async function showExampleLookup(button){
-      const panel=$('exampleWordLookup'),token=button.dataset.exampleWord,origin=button.dataset.exampleOrigin||'';
-      if(!token||!panel)return;
-      const position=button.getBoundingClientRect();
-      if($('wordPop').classList.contains('on'))closeWord(); // never stack popovers
-      const seq=++exampleLookupRequest;
-      panel.hidden=false;
-      panel.innerHTML='<div class="v11-lookup-header"><strong>'+safe(token)+'</strong>'+
-        '<button type="button" id="exampleLookupClose" aria-label="关闭查询">×</button></div>'+
-        '<p class="v11-lookup-loading">正在查找已收录的词义…</p>';
-      placeExampleLookup(position);
-      $('exampleLookupClose').onclick=closeExampleLookup;
-      try{
-        const data=await serverRequest('/api/lexicon/lookup?word='+encodeURIComponent(token)+(origin?'&originWordId='+encodeURIComponent(origin):''));
-        if(seq!==exampleLookupRequest||panel.hidden)return;
-        const entries=Array.isArray(data.entries)?data.entries:[];
-        const fallback=data.fallback?.referenceOnly?data.fallback:null;
-        panel.innerHTML='<div class="v11-lookup-header"><strong>'+safe(token)+'</strong>'+
-          '<button type="button" id="exampleLookupClose" aria-label="关闭查询">×</button></div>'+
-          (entries.length?entries.map(w=>'<section class="v11-lookup-sense">'+
-            '<div class="v11-lookup-part">'+safe(w.partOfSpeech||'')+' <span>'+safe(w.phonetic||'')+'</span></div>'+
-            '<p>'+safe(w.meaning||'该词义暂未核验')+'</p>'+
-            '<div class="v11-lookup-actions"><button type="button" data-lookup-play="'+safe(w.wordId)+'">♫ 听发音</button>'+
-            '<button type="button" data-lookup-save="'+safe(w.wordId)+'" '+(w.bookmarked?'disabled':'')+'>'+
-            (w.bookmarked?'✓ 已在生词本':user?'＋ 添加生词本':'登录后添加')+'</button></div></section>').join(''):
-            (fallback?'<section class="v11-lookup-sense"><div class="v11-lookup-part">'+
-              safe(fallback.partOfSpeech||'')+' <span>'+safe(fallback.phonetic||'')+'</span></div>'+
-              '<p>'+safe(fallback.meaning||'')+'</p>'+
-              '<p class="v11-lookup-source">内部词典补充 · 仅供理解例句，不计入学习词卡</p>'+
-              '<button class="v11-lookup-pronounce" type="button" id="exampleLookupUnknownSound">♫ 听发音</button></section>':
-              '<p class="v11-lookup-empty">此词暂未收录可靠的中文释义，可以先听发音。</p>'+
-              '<button class="v11-lookup-pronounce" type="button" id="exampleLookupUnknownSound">♫ 听发音</button>'));
-        $('exampleLookupClose').onclick=closeExampleLookup;
-        if($('exampleLookupUnknownSound'))$('exampleLookupUnknownSound').onclick=()=>speakWord(token);
-        panel.querySelectorAll('[data-lookup-play]').forEach(btn=>btn.onclick=()=>{
-          const item=entries.find(x=>x.wordId===btn.dataset.lookupPlay);
-          if(item)speakWord(item.headword);
-        });
-        panel.querySelectorAll('[data-lookup-save]').forEach(btn=>btn.onclick=async()=>{
-          const item=entries.find(x=>x.wordId===btn.dataset.lookupSave);
-          if(!item)return;
-          if(!user){closeExampleLookup();showLogin();return}
-          btn.disabled=true;
-          try{
-            await serverRequest('/api/me/words/'+encodeURIComponent(item.wordId),'PUT',{
-              bookmarked:true,status:item.status==='mastered'?'mastered':'learning'
-            });
-            btn.textContent='✓ 已在生词本';
-            await refreshCloudLearning();
-            toast('已添加生词本');
-          }catch(error){toast(error.message||'添加失败');btn.disabled=false}
-        });
-        placeExampleLookup(position);
-      }catch(error){
-        if(seq!==exampleLookupRequest||panel.hidden)return;
-        panel.querySelector('.v11-lookup-loading').textContent='词义查询暂时不可用，请稍后重试。';
-      }
+    // V1.1: tapping an example word is audio-only. It never replaces the
+    // active novel study card or opens a nested dictionary/learning card.
+    function pronounceExampleWord(button){
+      const word=button?.dataset?.exampleWord;
+      if(!word||!/^[a-z](?:[a-z'-]{0,30}[a-z])?$/.test(word))return;
+      speakWord(word);
     }
 
     function renderD1Paragraph(paragraph,index){
@@ -1677,8 +1606,7 @@
     });
     document.addEventListener('click',e=>{
       const word=e.target.closest?.('[data-example-word]');
-      if(word){e.preventDefault();e.stopPropagation();void showExampleLookup(word);return}
-      if(!$('exampleWordLookup')?.hidden&&!e.target.closest?.('#exampleWordLookup'))closeExampleLookup();
+      if(word){e.preventDefault();e.stopPropagation();pronounceExampleWord(word);return}
     });
     $('storyText').addEventListener('click',e=>{
       const word=e.target.closest('[data-cloud-word]');
@@ -1711,7 +1639,7 @@
         if(segment>=0)seekSpeech(segment);
       }
     });
-$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeExampleLookup();closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
+$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
     // Cloud reading progress is saved automatically on scroll and chapter navigation.
     window.MiaowuChapterWords?.configure({
       request:serverRequest,refresh:refreshCloudLearning,
