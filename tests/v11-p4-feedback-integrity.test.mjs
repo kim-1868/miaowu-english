@@ -95,6 +95,28 @@ test("V1.1 P4 Story Echo multiple-choice distinguishes identical spelling with d
   assert.equal(forged.status,400,"submitted text must match chosen ID");
  }finally{f.db.close()}
 });
+test("V1.1 P4 Story Echo network replay does not duplicate cross-game review",async()=>{
+ const f=fixture();
+ try{
+  const requestId=randomUUID();
+  const body={wordId:"w1",chapterId:"ch4",gameType:"fill",
+   answer:"record",choiceId:"w2",hinted:false,requestId};
+  const first=await f.call("/api/me/echo/answer",body);
+  assert.equal(first.status,200,JSON.stringify(first.body));
+  assert.equal(first.body.correct,true);
+  const replay=await f.call("/api/me/echo/answer",body);
+  assert.equal(replay.status,200,JSON.stringify(replay.body));
+  assert.equal(replay.body.alreadyApplied,true);
+  assert.equal(replay.body.correct,true);
+  assert.equal(replay.body.expected,"record");
+  assert.equal(replay.body.meaning,"记录");
+  assert.equal(typeof replay.body.nextReviewDays,"number");
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM review_events").get().n,1);
+  const altered=await f.call("/api/me/echo/answer",{...body,wordId:"w3"});
+  assert.equal(altered.status,409,"reuse of the same id for another sense is blocked");
+ }finally{f.db.close()}
+});
+
 test("V1.1 P4 student sees honest spelling correction and only post-answer clickable words",()=>{
  const flash=read("public/flashcards.js");
  const echo=read("public/echo-cloud.js");
@@ -110,7 +132,9 @@ test("V1.1 P4 student sees honest spelling correction and only post-answer click
  assert.match(echo,/data-choice-id/);
  assert.match(echo,/你的选择/);
  assert.match(echo,/正确答案/);
- assert.match(echo,/submittedAnswer:value,submittedChoiceId:choiceId/);
+ assert.match(echo,/submittedAnswer:body\.answer,submittedChoiceId:body\.choiceId\|\|null/);
+ assert.match(echo,/requestId:crypto\.randomUUID\(\)/);
+ assert.match(echo,/q\.submitPayload=body/);
  assert.match(app,/window\.MiaowuExampleLookup=Object\.freeze/);
  assert.doesNotThrow(()=>new Script(flash,{filename:"flashcards.js"}));
  assert.doesNotThrow(()=>new Script(echo,{filename:"echo-cloud.js"}));
