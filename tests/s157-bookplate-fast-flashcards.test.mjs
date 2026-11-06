@@ -213,7 +213,7 @@ test("S157: customer learning screen is reachable and original bookplate grid an
   assert.ok(!read("../src/reading-library.js").includes("flashSource("));
   assert.ok(ui.includes('"/api/me/flashcards/answer"'));
   assert.ok(ui.includes('crypto.randomUUID()'));
-  assert.ok(ui.includes('local.queue.splice(later,0,{word:w,retry:true})'));
+  assert.ok(ui.includes('local.queue.splice(later,0,{word:w,retry:true,submitPayload:null})'));
   assert.ok(ui.includes('retryCounts:new Map()'));
   assert.ok(ui.includes('if(times<2)'));
   assert.ok(ui.includes('roundSize=20'));
