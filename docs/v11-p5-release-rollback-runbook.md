@@ -68,3 +68,10 @@
 - 新增 `tests/v11-responsive-actions.test.mjs` 与 `scripts/test-v11-responsive-browser.mjs`。本地 Chromium 在 17 种 320–1920px 宽度下测量按钮内容宽度、行数和页面横向溢出，**全部通过**：GitHub Actions https://github.com/kim-1868/miaowu-english/actions/runs/42176454688（`V11_RESPONSIVE_BROWSER_MATRIX_PASSED`）。
 - 上述自动化是**本地 DOM 夹具的 Chromium 测试**，不能替代用户对真实小说封面、手机 Safari、Android、夜间模式与账号各状态的实机截图审查。生产发布前建议进一步按真实内容做视觉抽样。
 - 按产品发布门禁要求，正式环境不随 UI 预览更新；须验收 staging 后再进行独立生产发布。
+
+## 八、P5 本地磁盘恢复演练补充（2026-11-06）
+
+- 新增 `scripts/rehearse-v11-backup-restore.mjs`：使用 Node 22 原生 SQLite backup API 创建**实际磁盘数据库文件**；备份后重新打开，复制到隔离迁移数据库执行 009–013 两遍；核对全部旧表 SHA-256 行指纹、既有 schema、外键和完整性。最后从未修改的原备份再次**独立恢复**，再次比对指纹，并清理临时文件。
+- 新增 `npm run db:restore:rehearsal` 和 `tests/v11-p5-backup-restore.test.mjs`；5 项专门测试通过，完整 S1 回归 545 通过、0 失败、1 跳过。<https://github.com/kim-1868/miaowu-english/actions/runs/42246943333> 与 <https://github.com/kim-1868/miaowu-english/actions/runs/42247073319>。
+- `npm run release:v11:offline-check` 已将上述磁盘恢复作为新增自动化门禁。通过可信私有 SQL 导出路径的运行方式另见 `docs/v11-p5-backup-recovery-gate.md`。
+- **此验证所用历史数据均为虚构，未验证真实 Cloudflare D1 Time Travel 恢复能力，也未取得生产备份。正式 D1 的独立真实备份、受控私有恢复演练和运营历史记录抽样核查依然阻断正式 V1.1 发布。**
