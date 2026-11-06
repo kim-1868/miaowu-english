@@ -1,4 +1,4 @@
-import {studyKey,relatedAccessibleWordIds,uniqueStudyRows,countUserDueSenses} from './study-identity.js';
+import {studyKey,relatedAccessibleWordIds,uniqueStudyRows,countUserDueSenses,listUserStudySenses} from './study-identity.js';
 import {studyScheduleReady,applySenseReview,setSenseManualState} from './study-schedule-store.js';
 // S4: Real reader learning state in Cloudflare D1.
 // Never allow paid reading state changes without valid category entitlements.
@@ -82,14 +82,23 @@ async function wordList(env,userId){
     "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e WHERE e.user_id=uw.user_id "+
     "AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked')))) "+
     "ORDER BY uw.last_seen_at DESC LIMIT 4000",userId).all();
-  // The old list is capped for display, but the fast-learning due counter
-  // must count the user's entire entitled collection, not only 200 rows.
-  const allDue=await countUserDueSenses(env,userId);
-  return json({flashDue:allDue,
-    words:uniqueStudyRows(result.results||[]).slice(0,200).map(w=>{
-    let pairs=[];try{const parsed=JSON.parse(w.collocations_json||"[]");if(Array.isArray(parsed))pairs=parsed.slice(0,8)}catch{}
-    const {collocations_json,...fields}=w;return {...fields,collocations:pairs};
-  })});
+  // Resolve visible bookmarked rows through the same per-sense status used by
+  // the due counter and quick-card list. The old bookmark query can select
+  // a stale learning alias while another alias is explicitly mastered.
+  const [allDue,bookmarkedSenses]=await Promise.all([
+    countUserDueSenses(env,userId),
+    listUserStudySenses(env,userId,"bookmarked")
+  ]);
+  const byKey=new Map(bookmarkedSenses.map(w=>[w.study_key,w]));
+  const words=uniqueStudyRows(result.results||[]).filter(w=>byKey.has(studyKey(w)))
+    .slice(0,200).map(w=>{
+      const canonical=byKey.get(studyKey(w));
+      let pairs=[];try{const parsed=JSON.parse(w.collocations_json||"[]");if(Array.isArray(parsed))pairs=parsed.slice(0,8)}catch{}
+      const {collocations_json,...fields}=w;
+      return {...fields,status:canonical.status,bookmarked:canonical.bookmarked,
+        due_at:canonical.due_at,study_key:canonical.study_key,collocations:pairs};
+    });
+  return json({flashDue:allDue,words});
 }
 async function setWord(req,env,userId,id){
   if(!ID.test(id))return err("WORD_NOT_AVAILABLE",404);
@@ -166,11 +175,6 @@ const flashVisible=
   "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
   "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
   "WHERE e.user_id=uw.user_id AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked'))))";
-const flashScope=(scope)=>scope==="due"?
-  "AND uw.status!='mastered' AND uw.due_at IS NOT NULL AND datetime(uw.due_at)<=CURRENT_TIMESTAMP":
-  scope==="learning"||scope==="all"?"AND uw.status!='mastered'":
-  scope==="saved"?"AND uw.bookmarked=1 AND uw.status!='mastered'":
-  scope==="mastered"?"AND uw.status='mastered'":"";
 async function flashcardPool(req,env,userId){
   const params=new URL(req.url).searchParams;
   const scope=params.get("scope")||"due";
@@ -180,26 +184,19 @@ async function flashcardPool(req,env,userId){
      !["10","20"].includes(sizeString))
     return err("INVALID_FLASHCARD_SCOPE",400);
   const page=Number(pageString),limit=Number(sizeString),offset=(page-1)*limit;
-  const from="FROM user_words uw JOIN words w ON w.id=uw.word_id "+
-    "WHERE uw.user_id=? AND "+flashVisible+" "+flashScope(scope);
-  // Deduplicate BEFORE pagination, otherwise ten aliases could consume ten card slots.
-  const result=await sql(env,
-    "SELECT uw.word_id,uw.status,uw.due_at,w.headword,w.meaning_zh,w.phonetic_uk,"+
-    "w.phonetic_us,w.part_of_speech,w.example_en,w.example_zh,w.collocations_json "+
-    from+" ORDER BY "+
-    (scope==="due"?"uw.due_at ASC,uw.word_id ASC":
-      "w.headword COLLATE NOCASE ASC,uw.word_id ASC")+
-    " LIMIT 8000",userId).all();
-  const unique=uniqueStudyRows(result.results||[]);
-  const pageRows=unique.slice(offset,offset+limit);
-  return json({scope,page,pageSize:limit,total:unique.length,
-    hasMore:offset+limit<unique.length,
+  // Filter only AFTER grouping all visible aliases by study_key.
+  // Otherwise one old "learning/due" row can leak into ordinary flashcards
+  // even if another alias or the canonical schedule is already mastered.
+  const visible=await listUserStudySenses(env,userId,scope,{detail:true});
+  const pageRows=visible.slice(offset,offset+limit);
+  return json({scope,page,pageSize:limit,total:visible.length,
+    hasMore:offset+limit<visible.length,
     words:pageRows.map(w=>{
       let collocations=[];try{
         const p=JSON.parse(w.collocations_json||"[]");
         if(Array.isArray(p))collocations=p.slice(0,5);
       }catch{}
-      const {collocations_json,...rest}=w;
+      const {collocations_json,alias_word_ids,...rest}=w;
       return {...rest,collocations};
     })});
 }
