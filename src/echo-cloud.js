@@ -1,4 +1,4 @@
-import {studyKey,relatedAccessibleWordIds,uniqueStudyRows,countUserDueSenses} from './study-identity.js';
+import {studyKey,relatedAccessibleWordIds,uniqueStudyRows,countUserDueSenses,listUserStudySenses} from './study-identity.js';
 import {studyScheduleReady,applySenseReview} from './study-schedule-store.js';
 // S6: real Story Echo. Return questions only from accessible, completed D1 chapters.
 // Server scores submitted answers and updates spaced-repeat review events and due dates.
@@ -63,25 +63,42 @@ async function available(env,user,url){
     if(bookId){scoped+=" AND b.id=?";binds.push(bookId)}
     scoped+=" AND ch.chapter_no BETWEEN ? AND ?";
     binds.push(from,to);
-  }else if(scope==="due"){
-    scoped+=" AND EXISTS(SELECT 1 FROM user_words uw "+
-      "WHERE uw.user_id=p.user_id AND uw.word_id=cw.word_id "+
-      "AND uw.status!='mastered' AND uw.due_at IS NOT NULL "+
-      "AND uw.due_at<=CURRENT_TIMESTAMP)";
   }
-  const rows=await exec(env,"SELECT ch.id chapter_id,ch.chapter_no,ch.book_id,b.title book_title,"+
-    "cw.context_sentence,w.id word_id,w.headword,w.phonetic_uk,w.phonetic_us,"+
-    "w.meaning_zh,w.part_of_speech,w.example_en,w.example_zh "+scoped+
-    (scope==="chapter"?
-      " ORDER BY ch.chapter_no DESC,cw.context_anchor ASC LIMIT 600":
-      " ORDER BY p.updated_at DESC,ch.chapter_no DESC,cw.context_anchor ASC LIMIT 600"),
-    ...binds).all();
-  let data=rows.results||[];
+  // Due eligibility comes from the SAME canonical sense projection as the
+  // homepage and flashcards. Do not filter legacy user_words before checking
+  // other aliases and the canonical study schedule.
+  let dueWordBatches=null;
+  if(scope==="due"){
+    const due=await listUserStudySenses(env,user.id,"due");
+    const ids=[...new Set(due.flatMap(x=>x.alias_word_ids))];
+    if(!ids.length)return reply({scope,words:[],availableGames:[],distinctWords:0,manualOnly:false,
+      note:"今日没有已到期且可复习的词义。"});
+    dueWordBatches=[];
+    for(let i=0;i<ids.length;i+=200)dueWordBatches.push(ids.slice(i,i+200));
+  }
+  const batches=dueWordBatches||[null];
+  const allRows=[];
+  for(const ids of batches){
+    const restriction=ids?" AND cw.word_id IN ("+ids.map(()=>"?").join(",")+")":"";
+    const rows=await exec(env,"SELECT ch.id chapter_id,ch.chapter_no,ch.book_id,b.title book_title,"+
+      "cw.context_sentence,w.id word_id,w.headword,w.phonetic_uk,w.phonetic_us,"+
+      "w.meaning_zh,w.part_of_speech,w.example_en,w.example_zh"+
+      (scope==="due"?",p.updated_at AS __sort_at":"")+" "+scoped+restriction+
+      (scope==="chapter"?
+        " ORDER BY ch.chapter_no DESC,cw.context_anchor ASC LIMIT 600":
+        " ORDER BY p.updated_at DESC,ch.chapter_no DESC,cw.context_anchor ASC LIMIT 600"),
+      ...binds,...(ids||[])).all();
+    allRows.push(...(rows.results||[]));
+  }
+  if(scope==="due")allRows.sort((a,b)=>
+    String(b.__sort_at||"").localeCompare(String(a.__sort_at||""))||b.chapter_no-a.chapter_no||
+    a.word_id.localeCompare(b.word_id));
+  let data=allRows;
   if(scope==="recent"){
     const ids=[...new Set(data.map(x=>x.chapter_id))].slice(0,3);
     data=data.filter(x=>ids.includes(x.chapter_id));
   }
-  data=uniqueStudyRows(data).slice(0,60);
+  data=uniqueStudyRows(data).slice(0,60).map(({__sort_at,...word})=>word);
   return reply({scope,words:data,availableGames:data.length>=4?
     ["fill","situation","spell"]:data.length?["spell"]:[],
     distinctWords:data.length,manualOnly:false,
