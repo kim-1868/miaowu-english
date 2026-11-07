@@ -9,4 +9,6 @@
 - **禁止直接将本仓库设为 Public 或复制 Git 历史到新公共仓库。** 迁移仅通过经过检查的白名单文件，保持线上站点和预览环境不变。
 - 详细范围、验收及迁移步骤见 [docs/DUAL_REPOSITORY_PUBLIC_CI_POLICY_20261107.md](docs/DUAL_REPOSITORY_PUBLIC_CI_POLICY_20261107.md)。
 
-当前阶段仅落实仓库治理规范；公共测试和代码安全迁移尚未完成，不能视为已解决全部私有 Actions 额度问题。
+**当前状态**：18 个公共前端文件已安全迁移，公共 UI 演示、文件白名单与 GitHub Actions 离线测试已投入使用；私人 V1.1 分支已优化过时检查取消逻辑。生产站仍使用私人仓库代码快照，跨仓库自动整合及剩余私人 CI 优化尚待推进，因此不能声称 2,000 分钟限制已完全消失。
+
+公共仓库迁移明细：[PUBLIC_MIGRATION_MANIFEST.md](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/PUBLIC_MIGRATION_MANIFEST.md)。
