@@ -97,7 +97,10 @@ async function verify(){
   identity=data.operator;
   $("operatorIdentity").textContent=identity.displayName+" · "+identity.role+" · "+identity.environment;
   status("已通过运营身份校验。所有数据只从后台接口读取。");
-  await loadBooks();
+  // Announcement management is isolated: an unrelated bookshelf lookup error
+  // must not prevent a verified publisher from managing preview announcements.
+  try{await loadBooks();}catch(e){status("书目暂时无法加载："+e.message+"；公告管理仍可单独使用。");}
+  if(!connected())return;
   try{await loadSaleCategories();}catch(e){saleStatus('发码功能暂不可用：'+e.message);}
   try{await mountCustomerAdmin();}catch(e){$("customerResult").textContent="查询暂不可用："+e.message;}
   try{await mountClaimAdmin();}catch(e){$("claimsStatus").textContent="对账功能暂不可用："+e.message;}
