@@ -174,3 +174,29 @@
 - [私人 SHA 候选手动 Gate](PRIVATE_CANDIDATE_INTEGRATION_GATE_20261107.md)
 
 每次更新继续填写完整提交 SHA、文件清单、测试、是否部署、与并行分支差异、遗留问题，不允许只在聊天中宣布完成。
+
+## 十二、PUBLIC-09 公共交付只读整合预检 + CI-COST-02 私人预览减额（2026-11-07）
+
+### 公共仓库交付工具（已通过）
+
+- [PUBLIC-09 PR #15](https://github.com/kim-1868/miaowu-english-public/pull/15) 已合并，提交 `1cc2f465889a306e0240651ee3c06be65fc5f435`。
+- 新增公共 `scripts/plan-public-ui-handoff.mjs`、`tests/public-handoff.test.mjs`，并更新 `package.json`、白名单、README 与公共日志。CLI 只读核对 PUBLIC-06 18 文件交付包的完整来源 SHA（必须独立指定）、SHA-256、长度、额外文件、符号链接；读取**本地**私人 checkout 时仅报告相同/版本差异/缺失，**绝不自动写回**。
+- [PR Actions #42385304701](https://github.com/kim-1868/miaowu-english-public/actions/runs/42385304701) 和 [main Actions #42385335370](https://github.com/kim-1868/miaowu-english-public/actions/runs/42385335370) 均成功。该工具不能单凭 manifest 自述的 SHA 证明来源可信，正式整合仍须人工核对已审阅的公共完整 SHA 和 Actions Artifact。
+- **最新对照快照**：公共 `1cc2f465889a306e0240651ee3c06be65fc5f435` ↔ 私人 V1.1 `0cf00b37ffa029997436fa3c0b2c67e35b114aa4`。18 个同名公共文件，14 个 Git blob SHA 完全一致，4 个存在预期差异：`public/site-updates.js`、`public/v11-reader.css`、`public/v11-wordbook.css`、`public/v11-responsive.css`。无文件缺失。后续只允许逐项审阅并安全整合，不得全量替换。
+
+### 私人预览 Actions 触发微调（已合并）
+
+- [私人 CI-COST-02 PR #189](https://github.com/kim-1868/miaowu-english/pull/189) 已合并到 `feature/v11-phase1-mobile-and-install-guide-20261106`，提交 `0cf00b37ffa029997436fa3c0b2c67e35b114aa4`。
+- 私人 `.github/workflows/v11-preview-staging.yml` 移除 `tests/v11-announcements-preview.test.mjs` 作为 **push 自动部署触发条件**，因为仅修改测试不应重新发布测试 Worker；其它真实源代码路径、手动 `workflow_dispatch`、完整 `npm run check && npm test`、密码保护及测试 D1 绑定均未改。
+- 仅修改私人工作流和 `docs/V11_PRIVATE_ACTIONS_COST_REDUCTION_20261107.md`。没有修改小说/词库/订单/账号/真实 D1、正式或预览 Worker 内容；不触发预览部署。以后真实公告/首页代码变化时，预览按原逻辑安全部署。
+- **验收范围**：PR 差异确认只有 2 个工作流/文档文件。由于没有执行真实预览部署，本次不能称预览已重新验收；也不能凭运行次数推算实际 GitHub Billing 减额金额。
+
+### 执行边界和未完成
+
+1. 公开 UI 和测试在公共仓库迭代；公共构建产物需人工确认具体 source SHA、manifest 和文件哈希。
+2. 真实私人业务、授权、订单、小说和 D1 一律私人受控；公共 CLI 不自动读取 GitHub 私人账号或连接线上环境。
+3. 下一步按现有四个冲突文件逐条审阅；未确认私人版本稳定前不执行自动覆盖、生产或预览部署。
+4. 正式上线前还要执行私人固定 SHA 手动候选 QA、测试 D1 与权益/订单等全链路回归；该门禁尚未实际触发。
+5. 月度私人 2,000 分钟配额仍存在，是否降低消耗需用后续 GitHub Billing 真实统计核验。
+
+公开更新台账：[公共 UPDATE_LOG](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md)。
