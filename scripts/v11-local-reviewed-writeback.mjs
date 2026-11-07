@@ -80,10 +80,14 @@ function writeState(db,userId,key,next,bookmarked){
  * approval on an isolated SQLite fixture. No HTTP/Cloudflare APIs.
  */
 export function commitLocalReviewedAction(db,userId,{
- wordId,mode,requestId=null,chapterId=null,answer=null,choiceId=null,judgment=null,
+ wordId,mode,requestId=null,chapterId=null,echoGameType="spell",answer=null,choiceId=null,judgment=null,
  status=null,bookmarked=null,now=new Date(),failBeforeCommit=false
 }={}){
  if(!modes.has(mode))fail("WRITEBACK_INVALID_MODE");
+ if(mode==="echo"&&(!["fill","situation","spell"].includes(echoGameType)||
+    (echoGameType==="spell"&&choiceId!==null)))
+  fail("WRITEBACK_INVALID_ECHO_GAME");
+ const eventType=mode==="echo"?echoGameType:"bookplate-"+mode;
  if(!(now instanceof Date)||!Number.isFinite(now.getTime()))fail("WRITEBACK_INVALID_TIME");
  if(mode==="manual"&&(!(status==="learning"||status==="mastered")||
      typeof bookmarked!=="boolean"))fail("WRITEBACK_INVALID_MANUAL_STATE");
@@ -101,7 +105,7 @@ export function commitLocalReviewedAction(db,userId,{
   const prior=db.prepare("SELECT user_id,word_id,game_type,result "+
    "FROM review_events WHERE id=?").get(requestId);
   if(prior){
-   if(prior.user_id!==userId||prior.word_id!==wordId||prior.game_type!=="bookplate-"+mode)
+   if(prior.user_id!==userId||prior.word_id!==wordId||prior.game_type!==eventType)
     fail("WRITEBACK_REQUEST_ID_REUSED");
    return {saved:true,alreadyApplied:true,wordId,studyKey:ctx.mapping.sense_id,
     productionTouched:false};
@@ -133,7 +137,7 @@ export function commitLocalReviewedAction(db,userId,{
    db.prepare("INSERT INTO review_events "+
     "(id,user_id,word_id,chapter_id,game_type,result) "+
     "VALUES(?,?,?,?,?,?)").run(requestId,userId,wordId,mode==="echo"?chapterId:null,
-      "bookplate-"+mode,result);
+      eventType,result);
   }
   for(const key of ctx.keys)writeState(db,userId,key,next,bookmarked);
   for(const id of ctx.aliases){
