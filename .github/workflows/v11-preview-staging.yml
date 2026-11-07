@@ -6,7 +6,7 @@ name: V1.1 staging preview deployment (not production)
 on:
   push:
     branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
-    paths: [.github/workflows/v11-preview-staging.yml, public/index.html, public/site-updates.css]
+    paths: [.github/workflows/v11-preview-staging.yml, public/index.html, public/site-updates.css, public/site-updates.js, src/site-announcements.js, tests/v11-announcements-preview.test.mjs]
   workflow_dispatch:
 permissions:
   contents: read
