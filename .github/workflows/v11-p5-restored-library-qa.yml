@@ -2,8 +2,8 @@ name: V1.1 P5 restored corpus coverage - offline private-data safe
 on:
   push:
     branches: [feature/v11-p5-restored-library-qa-20261107]
-  pull_request:
-    branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
+# PUBLIC-06: run on owning feature branch; general V1.1 PR updates use public UI CI.
+# Reviewed private candidates use default-branch manual integration gate instead.
 permissions:
   contents: read
 jobs:

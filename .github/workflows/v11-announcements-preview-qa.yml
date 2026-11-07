@@ -2,8 +2,8 @@ name: V1.1 preview-only site announcements QA
 on:
   push:
     branches: [feature/v11-updates-notice-mvp-20261107]
-  pull_request:
-    branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
+# PUBLIC-06: run on owning feature branch; general V1.1 PR updates use public UI CI.
+# Reviewed private candidates use default-branch manual integration gate instead.
 permissions:
   contents: read
 jobs:
