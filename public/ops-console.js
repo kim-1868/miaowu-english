@@ -101,7 +101,9 @@ async function verify(){
   try{await loadSaleCategories();}catch(e){saleStatus('发码功能暂不可用：'+e.message);}
   try{await mountCustomerAdmin();}catch(e){$("customerResult").textContent="查询暂不可用："+e.message;}
   try{await mountClaimAdmin();}catch(e){$("claimsStatus").textContent="对账功能暂不可用："+e.message;}
-  try{await mountUpdatesAdmin();}catch(e){$("updatesAdminStatus").textContent="公告管理暂不可用："+e.message;}
+  if($("updatesAdminForm")){
+    try{await mountUpdatesAdmin();}catch(e){$("updatesAdminStatus").textContent="公告管理暂不可用："+e.message;}
+  }
 }
 async function mountUpdatesAdmin(){
   if(!updatesAdmin){
