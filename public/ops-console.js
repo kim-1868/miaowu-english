@@ -102,7 +102,11 @@ async function verify(){
   try{await mountCustomerAdmin();}catch(e){$("customerResult").textContent="查询暂不可用："+e.message;}
   try{await mountClaimAdmin();}catch(e){$("claimsStatus").textContent="对账功能暂不可用："+e.message;}
   if($("updatesAdminForm")){
-    try{await mountUpdatesAdmin();}catch(e){$("updatesAdminStatus").textContent="公告管理暂不可用："+e.message;}
+    try{await mountUpdatesAdmin();}catch(e){
+      $("updatesAdminStatus").textContent=String(e.message).includes("ANNOUNCEMENTS_SCHEMA_REQUIRED")?
+        "预览演示模式：通告栏与历史页面可查看，云端保存需要测试 D1 权限，当前暂不开放发布按钮。":
+        "公告管理暂不可用："+e.message;
+    }
   }
 }
 async function mountUpdatesAdmin(){
