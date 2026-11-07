@@ -1,0 +1,34 @@
+name: V1.1 P5 reviewed sense five-view read bridge — offline only
+on:
+  push:
+    branches: [feature/v11-p5-reviewed-sense-shadow-views-20261107]
+  pull_request:
+    branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
+permissions:
+  contents: read
+jobs:
+  reviewed-sense-shadow:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout without storing credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22 for local SQLite shadow checks
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reviewed sense reading, wordbook, flash, spelling and Story Echo shadow checks
+        run: node --experimental-sqlite --test tests/v11-p5-reviewed-sense-shadow-views.test.mjs
+      - name: Full website source, asset and transactional regression checks
+        run: |
+          npm run check
+          npm test
+      - name: No production or staging database access or deployment
+        run: |
+          echo "SHADOW_READ_ONLY_LOCAL_SQLITE"
+          echo "NO_REMOTE_CLOUDFLARE_D1_ACCESS"
+          echo "NO_RUNTIME_LEARNING_IDENTITY_SWITCH"
+          echo "NO_USER_HISTORY_REWRITE"
