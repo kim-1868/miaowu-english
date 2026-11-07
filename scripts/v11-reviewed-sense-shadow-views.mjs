@@ -85,7 +85,7 @@ function rekeyPlans(studied,originalPlans,aliasKey){
  const out=[];
  for(const [key,rows] of groups){
   const oldKeys=unique(rows.map(oldKey));
-  const matching=oldKeys.map(k=>planMap.get(k)).filter(Boolean);
+  const matching=[planMap.get(key),...oldKeys.map(k=>planMap.get(k))].filter(Boolean);
   if(matching.some(p=>!sameSchedule(p,matching[0])))
    fail("REVIEWED_SHADOW_CONFLICTING_SCHEDULES");
   // Current canonical decisions must not be overwritten by an old stale
@@ -218,6 +218,8 @@ export function previewReviewedFeedback(db,userId,{wordId,mode,answer=null,
   projectedMastered:next.mastered,
   projectedDueAt:next.dueAt,
   stageIndex:next.stageIndex,
+  projectedLastPositiveDay:next.lastPositiveDay,
+  projectedLastReviewedAt:next.lastReviewedAt,
   persisted:false,reviewEventInserted:false,productionTouched:false
  };
 }
