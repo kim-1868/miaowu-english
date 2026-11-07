@@ -236,3 +236,15 @@
 ### PUBLIC-11 后续并行任务已排期（2026-11-07）
 
 已在公共仓库创建 [Issue #18](https://github.com/kim-1868/miaowu-english-public/issues/18)，专门分模块抽离当前私人 `public/app.js` 中的可公开 DOM/UI 与交互展示。**不会直接整体公开 app.js，更不会触碰账号权限、词卡持久化、内容或订单后端**。每步独立公共 PR、公开离线/合成浏览器测试、固定 SHA 只读差异核对，私人候选验收后才可能同步给预览站。此任务只是已安排，尚未宣称代码拆分完成。
+
+
+## 十四、PUBLIC-11-01 将真实阅读 UI 控制逻辑从私人 app.js 模块化（2026-11-07）
+
+- **公共源基线**：查看私人 `feature/v11-phase1-mobile-and-install-guide-20261106` 的 `public/app.js` 固定提交 `0cf00b37ffa029997436fa3c0b2c67e35b114aa4`；只审阅/提取 `applyTheme`、`applyReadingPrefs` 和字号/主题事件控制逻辑。
+- **公共 PR**：[PUBLIC-11 #19](https://github.com/kim-1868/miaowu-english-public/pull/19) 已 Squash 合并，公共核心提交 `627326c6ad63807d69840b58ced5a9000d14812a`。
+- **公开新增**：`public/reader-preferences.js`、合成独立页面 `showcase/reader-controls-contract.html/css`、`showcase/reader-controls-demo.js`、`tests/public-reader-controls.test.mjs`，并更新公共白名单、构建包、只读交付预检和 Chromium 脚本，**公开交付包从 24 扩至 25 个文件**。
+- **原有体验保持**：字体默认 18px、12–24px 范围、标题按正文 1.75 倍缩放、原本的局部显示偏好存储键，以及全站/阅读器夜间样式联动。新增显式 `create().mount()` 与 `unmount()`，没有自动绑定或读取私人业务。
+- **公开 CI**：[Node 安全及单元 42387193020](https://github.com/kim-1868/miaowu-english-public/actions/runs/42387193020)、[Chromium 42387193140](https://github.com/kim-1868/miaowu-english-public/actions/runs/42387193140) 和 [main 42387278052](https://github.com/kim-1868/miaowu-english-public/actions/runs/42387278052) 全部通过；25 文件交付 Artifact `wordletter-public-ui-627326c6ad63807d69840b58ced5a9000d14812a` ID `13579903426`，包含每文件 SHA-256 清单。
+- **并行开发保护**：此轮没有修改任何私人 `public/app.js`、真实小说/词库/订单、D1 或 Cloudflare；正式、预览均未部署。未来私人集成必须**先审阅最新 app.js 并移除旧日夜/字号双重监听**，否则不能简单把新的浏览器脚本叠加到已有页面。
+- **未完成**：真实网站用户流程与跨设备集成、私人候选 Gate；公共 Issue #18 仍开放，继续逐步拆分下一块不涉及用户权限的 UI。公共文档： [UPDATE_LOG](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md)。
+
