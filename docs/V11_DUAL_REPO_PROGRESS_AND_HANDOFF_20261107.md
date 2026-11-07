@@ -340,3 +340,19 @@
 - **私人开发状态完全保留**：没有改私人 V1.1 活动分支 `feature/v11-phase1-mobile-and-install-guide-20261106`、已有 Draft 接线 PR #190、业务数据、预览或正式 Worker/D1。私人 `main` 此次只追加本交接记录。当前 PUBLIC-11 五个 UI 模块仍只有书架分页在隔离 Draft PR 中接线，未合入实际活动分支。
 - **相关规范**：[公共 BUILD/Release 交接指南](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/PUBLIC_BUILD_RELEASE_HANDOFF_20261108.md)、[公共 UPDATE_LOG](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md)、[五组件真人业务整合门禁](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/PUBLIC11_COMPONENT_INTEGRATION_GATE_20261108.md)。
 
+
+
+## 二十二、PUBLIC-DEV-CORE-WAVE1 开发期公开纯计算与合成测试迁移（2026-11-08）
+
+- **用户架构确认**：现处早期建设、大量自动测试期，推荐最大限度让公共标准 GitHub-hosted Actions 负责公开可分发前端、纯业务计算、Node 合成合同和 Chromium 浏览器 UI；**现有私人仓库不整体公开**，也不复制私人提交历史、真实小说草稿、商业词库、账号/订单、运营权限、激活码或 D1/Cloudflare Secrets。上线后仍保留私人受控业务与部署。
+- **第一批真实安全迁移已完成**：公共 [PR #30](https://github.com/kim-1868/miaowu-english-public/pull/30) 合并源码提交 `9b1157f5e2ab7b8bdbaff72f6c6e796416bfb686`。从私人 V1.1 固定完整 SHA `0cf00b37ffa029997436fa3c0b2c67e35b114aa4` 分别审阅并独立复制以下三项**无数据库或网络调用**的纯计算源码：
+  1. `public/novel-file-parser.js`：作者 TXT/Markdown 小说本地解析、英文教学锚点识别、候选标签，Git blob `ad3fa8f20bcd67448b62c495d6af68a5c87b9e17`。
+  2. `src/editorial-code-switch-lint.js`：中英混排词性语法风险提示，Git blob `82dee63309f23a01aef739df33235d994ad3ef7d`。
+  3. `src/spaced-review.js`：1/3/7/14/30 天学习调度和同日不重复延后纯计算，Git blob `f05dab3a98c145cf7e99c0d8f0af5b173ff0502c`。
+- **已验证私人源与公共副本完全一致**：三个源文件在私人源固定版本与公共合并源码的 Git blob SHA 一致；没有迁移私人完整历史、客户/订单、真实小说、出版导入包、词库编辑表、D1/Worker 授权。
+- **公共测试成果**：新增 `tests/public-dev-core-wave1.test.mjs` 使用虚构港口故事和完全合成教学词卡，覆盖分章/显式词义匹配拒绝/付费内容标志、词性风险、候选标签、跨日复习和“已掌握”状态不被错题重置；公共白名单和 JS 语法检查扩大。[PR Node #42401829724](https://github.com/kim-1868/miaowu-english-public/actions/runs/42401829724)、[公共 Chromium #42401829635](https://github.com/kim-1868/miaowu-english-public/actions/runs/42401829635)、[主分支 #42401931687](https://github.com/kim-1868/miaowu-english-public/actions/runs/42401931687) 均成功。日常验证都发生在公共 Actions，未触发私人 Actions。
+- **交付限制**：原公共 UI 29 文件 allowlist 未变化，本批新增的是公共**研发/测试源码**，不会暗中打入可公开下载的当前 UI Release 包，也不自动覆盖私人站点。公共 main 产物 `wordletter-public-ui-9b1157f5e2ab7b8bdbaff72f6c6e796416bfb686`（Artifact ID `13585926397`）已通过现有 SHA-256 校验；尚未创建新的 GitHub Release。
+- **网站当前状态**：私人 V1.1 活动分支保持 `0cf00b37ffa029997436fa3c0b2c67e35b114aa4`；没有改变小说工厂真实数据、Cloudflare 预览和生产、D1/订单；私人 `main` 此次**只追加交接说明**。新的纯逻辑在公共测试环境运行，并不代表私人真实登录、权限/学习状态/出版业务或自动同步已验收。
+- **下一批与上线门禁**：继续审阅无真实内容、无运营/权限的纯 UI/核心计算，将大部分日常静态/单测转到公共 CI；公共与私人源按固定 SHA/manifest 对照；私人仅做候选接线后的真正业务、受限数据和部署验证。审查/合并公共 GitHub Release 与私人接收机制时必须逐项防止公开商业内容。
+- **公开开发政策**：[第一批模块审查说明](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/PUBLIC_DEV_CORE_WAVE1_20261108.md) · [公共开发更新日志](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md)。
+
