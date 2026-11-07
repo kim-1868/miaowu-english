@@ -6,6 +6,7 @@ import {buildSenseShadow} from "../scripts/v11-shadow-sense-audit.mjs";
 import {readLocalSenseSnapshot} from "../scripts/v11-reviewed-sense-impact.mjs";
 import {applyReviewedMappingSchema,stageReviewedSenseAliases} from
  "../scripts/v11-stage-reviewed-sense-aliases.mjs";
+import {commitLocalReviewedAction,newLocalReviewId} from "../scripts/v11-local-reviewed-writeback.mjs";
 import {previewReviewedLearningViews,previewReviewedFeedback} from
  "../scripts/v11-reviewed-sense-shadow-views.mjs";
 import {handleLearningState} from "../src/reading-library.js";
@@ -249,4 +250,156 @@ test("V1.1 P5 this module is never imported by production site routes",()=>{
  assert.ok(!runtime.includes("REVIEWED_SENSE_SHADOW"));
  const module=read("scripts/v11-reviewed-sense-shadow-views.mjs").replace(/\/\/[^\n]*/g,"");
  assert.doesNotMatch(module,/child_process|execSync\(|spawn\(|\bfetch\(|CLOUDFLARE_API_TOKEN/);
+});
+
+test("P5 writeback: mastering in book A becomes mastered in B and one bookmark entry, no duplicate card",()=>{
+ const f=fixture();try{
+  f.learn("wa","learning",1);f.learn("wb","learning",0);f.stage();
+  const before=view(f.db,true);
+  assert.equal(before.homeDueCount,1);
+  const result=commitLocalReviewedAction(f.db,"u1",{wordId:"wa",mode:"manual",
+   status:"mastered",bookmarked:true,now:NOW});
+  assert.equal(result.saved,true);
+  assert.equal(result.productionTouched,false);
+  const after=view(f.db,true);
+  assert.equal(after.homeDueCount,0);
+  assert.equal(after.wordbook.length,1);
+  assert.equal(after.wordbook[0].status,"mastered");
+  assert.equal(after.flashcardDue.length,0);
+  assert.equal(after.listeningSpellingDue.length,0);
+  assert.equal(after.storyEchoDue.length,0);
+  assert.deepEqual(after.reading.filter(x=>["wa","wb"].includes(x.wordId))
+    .map(x=>x.status),["mastered","mastered"]);
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM review_events").get().n,0);
+  assert.equal(f.db.prepare("SELECT COUNT(DISTINCT word_id) n FROM user_words WHERE user_id='u1'").get().n,2);
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM user_study_schedules "+
+    "WHERE user_id='u1' AND study_key='reviewed:record_n_001'").get().n,1);
+ }finally{f.db.close()}
+});
+test("P5 writeback: explicit unmaster and remove bookmark creates a fresh review without resurrecting old mastery",()=>{
+ const f=fixture();try{
+  f.learn("wa","learning",1);f.learn("wb");f.stage();
+  commitLocalReviewedAction(f.db,"u1",{wordId:"wa",mode:"manual",status:"mastered",bookmarked:true,now:NOW});
+  const result=commitLocalReviewedAction(f.db,"u1",{wordId:"wb",mode:"manual",
+   status:"learning",bookmarked:false,now:NOW});
+  assert.equal(result.bookmarked,false);
+  assert.equal(result.mastered,false);
+  const projected=view(f.db,true);
+  assert.equal(projected.wordbook.length,0);
+  assert.equal(projected.homeDueCount,0,"unmastered next due is 1 day later");
+  assert.equal(projected.flashcardDue.length,0);
+  assert.ok(projected.reading.filter(x=>["wa","wb"].includes(x.wordId))
+   .every(x=>x.status==="learning"&&!x.bookmarked));
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM user_words WHERE "+
+    "user_id='u1' AND bookmarked=1").get().n,0);
+  const due=f.db.prepare("SELECT due_at FROM user_study_schedules "+
+    "WHERE user_id='u1' AND study_key='reviewed:record_n_001'").get().due_at;
+  assert.equal(due,"2026-11-08 00:00:00");
+ }finally{f.db.close()}
+});
+test("P5 writeback: quick flip updates legacy and reviewed schedule atomically; spell and Echo see one future review",()=>{
+ const f=fixture();try{
+  f.learn("wa");f.learn("wb");f.stage();
+  const id=newLocalReviewId();
+  const answer=commitLocalReviewedAction(f.db,"u1",{wordId:"wb",mode:"flip",
+    requestId:id,judgment:"known",now:NOW});
+  assert.equal(answer.correct,true);
+  assert.equal(answer.studyKey,"reviewed:record_n_001");
+  assert.deepEqual(answer.affectedReviewedAliases,["wa","wb"]);
+  const after=view(f.db,true);
+  assert.equal(after.homeDueCount,0);
+  assert.equal(after.echoStatsDueCount,0);
+  assert.equal(after.listeningSpellingDue.length,0);
+  assert.equal(after.flashcardDue.length,0);
+  assert.equal(answer.dueAt,"2026-11-10T00:00:00.000Z");
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM review_events").get().n,1);
+  assert.equal(f.db.prepare("SELECT word_id FROM review_events WHERE id=?").get(id).word_id,"wb");
+  const replay=commitLocalReviewedAction(f.db,"u1",{wordId:"wb",mode:"flip",
+    requestId:id,judgment:"known",now:NOW});
+  assert.equal(replay.alreadyApplied,true);
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM review_events").get().n,1);
+ }finally{f.db.close()}
+});
+test("P5 writeback: Story Echo keeps original completed chapter ID and cannot submit uncompleted chapter",()=>{
+ const f=fixture();try{
+  f.learn("wa");f.learn("wb");f.stage();
+  assert.throws(()=>commitLocalReviewedAction(f.db,"u1",{wordId:"wb",mode:"echo",
+    chapterId:"chb",requestId:newLocalReviewId(),answer:"record",now:NOW}),
+    /REVIEWED_SHADOW_ECHO_CHAPTER_NOT_COMPLETED|WRITEBACK_ECHO_REQUIRES_COMPLETED_CHAPTER/);
+  const id=newLocalReviewId();
+  const saved=commitLocalReviewedAction(f.db,"u1",{wordId:"wa",mode:"echo",
+    chapterId:"cha",requestId:id,echoGameType:"situation",answer:"record",choiceId:"wb",now:NOW});
+  assert.equal(saved.correct,true);
+  const event=f.db.prepare("SELECT word_id,chapter_id,game_type FROM review_events WHERE id=?").get(id);
+  assert.deepEqual({...event},{word_id:"wa",chapter_id:"cha",game_type:"situation"});
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM review_events").get().n,1);
+ }finally{f.db.close()}
+});
+test("P5 writeback: invalid same-spelling different-POS Echo choice is marked incorrect, never share verb plan",()=>{
+ const f=fixture();try{
+  f.learn("wa");f.learn("wb");f.learn("wv");f.stage();
+  const outcome=commitLocalReviewedAction(f.db,"u1",{wordId:"wa",mode:"echo",
+   chapterId:"cha",requestId:newLocalReviewId(),echoGameType:"situation",answer:"record",choiceId:"wv",now:NOW});
+  assert.equal(outcome.correct,false);
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM user_study_schedules "+
+   "WHERE user_id='u1' AND study_key='sense:record|v|录制'").get().n,0);
+  assert.equal(view(f.db,true).flashcardDue.filter(x=>x.wordId==="wv").length,1);
+ }finally{f.db.close()}
+});
+test("P5 writeback: forced mid-transaction failure retains old events, plans, word IDs and progress",()=>{
+ const f=fixture();try{
+  f.learn("wa");f.learn("wb");f.stage();
+  const before={
+    words:f.db.prepare("SELECT * FROM user_words ORDER BY word_id").all(),
+    progress:f.db.prepare("SELECT * FROM reading_progress").all(),
+    plans:f.db.prepare("SELECT * FROM user_study_schedules").all(),
+    events:f.db.prepare("SELECT * FROM review_events").all()
+  };
+  assert.throws(()=>commitLocalReviewedAction(f.db,"u1",{wordId:"wa",mode:"spell",
+   requestId:newLocalReviewId(),answer:"record",now:NOW,failBeforeCommit:true}),
+   /WRITEBACK_INJECTED_ROLLBACK/);
+  assert.deepEqual(f.db.prepare("SELECT * FROM user_words ORDER BY word_id").all(),before.words);
+  assert.deepEqual(f.db.prepare("SELECT * FROM reading_progress").all(),before.progress);
+  assert.deepEqual(f.db.prepare("SELECT * FROM user_study_schedules").all(),before.plans);
+  assert.deepEqual(f.db.prepare("SELECT * FROM review_events").all(),before.events);
+  assert.equal(f.db.prepare("PRAGMA integrity_check").get().integrity_check,"ok");
+ }finally{f.db.close()}
+});
+test("P5 writeback: withdrawn entitlement and other account must not be able to update reviewed learning",()=>{
+ const f=fixture();try{
+  f.learn("wa");f.learn("wb");f.learn("wa","learning",0,DUE,"u2");f.stage();
+  assert.throws(()=>commitLocalReviewedAction(f.db,"u2",{wordId:"wa",mode:"manual",
+   status:"mastered",bookmarked:true,now:NOW}),
+   /WRITEBACK_NO_ENTITLEMENT/);
+  f.db.exec("DELETE FROM entitlements WHERE user_id='u1'");
+  assert.throws(()=>commitLocalReviewedAction(f.db,"u1",{wordId:"wa",mode:"manual",
+   status:"mastered",bookmarked:true,now:NOW}),
+   /WRITEBACK_NO_ENTITLEMENT/);
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM review_events").get().n,0);
+ }finally{f.db.close()}
+});
+test("P5 writeback: changed chapter context and conflicting old schedules refuse writes",()=>{
+ const f=fixture();try{
+  f.learn("wa");f.learn("wb");f.stage();
+  f.db.exec("INSERT INTO user_study_schedules(user_id,study_key,stage_index,due_at,mastered,bookmarked) VALUES"+
+   "('u1','sense:record|n|记录',1,'2026-11-09 00:00:00',0,0),"+
+   "('u1','sense:record|n|档案',2,'2026-11-12 00:00:00',0,0)");
+  assert.throws(()=>commitLocalReviewedAction(f.db,"u1",{wordId:"wa",mode:"manual",
+    status:"mastered",bookmarked:true,now:NOW}),
+    /REVIEWED_SHADOW_CONFLICTING_SCHEDULES/);
+  f.db.exec("DELETE FROM user_study_schedules");
+  f.db.exec("UPDATE chapter_words SET context_sentence='PRIVATE UPDATED CONTEXT' WHERE word_id='wb'");
+  assert.throws(()=>commitLocalReviewedAction(f.db,"u1",{wordId:"wa",mode:"manual",
+    status:"mastered",bookmarked:true,now:NOW}),
+    /REVIEWED_SHADOW_STALE_STORY_SNAPSHOT/);
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM review_events").get().n,0);
+ }finally{f.db.close()}
+});
+test("P5 writeback stays imported nowhere in Worker and never runs remote Cloudflare commands",()=>{
+ const files=["src/worker.js","src/reading-library.js","src/echo-cloud.js",
+  "src/study-schedule-store.js","public/app.js"];
+ const online=files.map(read).join("\n");
+ assert.doesNotMatch(online,/v11-local-reviewed-writeback|commitLocalReviewedAction/);
+ const source=read("scripts/v11-local-reviewed-writeback.mjs").replace(/\/\/[^\n]*/g,"");
+ assert.doesNotMatch(source,/fetch\(|execSync\(|spawn\(|child_process|CLOUDFLARE_API_TOKEN/);
 });
