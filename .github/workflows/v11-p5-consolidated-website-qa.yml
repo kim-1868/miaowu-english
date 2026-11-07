@@ -1,0 +1,43 @@
+name: V1.1 final website QA (responsive, learning, ops, corpus) - no deploy
+on:
+  push:
+    branches: [feature/v11-p5-safe-writeback-qa-20261107]
+  pull_request:
+    branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
+permissions:
+  contents: read
+jobs:
+  browser-and-ops-qa:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout inspected code without stored credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Repository-only 23-title / 2-package inventory (no live D1)
+        run: |
+          node scripts/v11-p5-local-corpus-audit.mjs
+          node --experimental-sqlite --test tests/v11-p5-local-corpus-audit.test.mjs
+      - name: Learn, review, flash, wordbook, order and entitlement regression
+        run: |
+          node --experimental-sqlite --test tests/v11-p5-reviewed-sense-shadow-views.test.mjs tests/v11-unified-due-views.test.mjs tests/s158-customer-redemption-view.test.mjs tests/s159-self-service-claims.test.mjs tests/s162-voucher-control.test.mjs
+          npm run check
+      - name: Install chromium in temporary QA container
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Browser mobile and desktop 16-viewport layout matrix
+        run: node scripts/test-v11-responsive-browser.mjs
+      - name: Browser day and night wordbook example pronunciation styling
+        run: node scripts/test-v11-wordbook-example-browser.mjs
+      - name: Document limits
+        run: |
+          echo "NO_ACTUAL_IPHONE_OR_ANDROID_HARDWARE"
+          echo "NO_REAL_23_BOOK_D1_AUDIT"
+          echo "NO_CLOUDFLARE_REMOTE_D1_OR_PRODUCTION_RELEASE"
