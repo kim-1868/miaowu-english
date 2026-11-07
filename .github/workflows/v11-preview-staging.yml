@@ -86,3 +86,5 @@ jobs:
 # V1.1 P5 staging-only regression: ops entitlement display/claims read-model fixed in PR #173; protected staging and test D1 only.
 
 # V1.1 P5 guarded staging preview: PR #181 canonical wordbook bookmark fix and 625/626 offline regression plus browser QA. Test D1 only; 014 reviewed mapping remains offline and disabled.
+
+# V1.1 P5 staging promotion: PR #183 canonical chapter-reader mastery/bookmark alignment. Announcements stay requirements-only; reviewed 014 remains disabled. Password-gated preview with test D1 only.
