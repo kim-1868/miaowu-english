@@ -200,3 +200,35 @@
 5. 月度私人 2,000 分钟配额仍存在，是否降低消耗需用后续 GitHub Billing 真实统计核验。
 
 公开更新台账：[公共 UPDATE_LOG](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md)。
+
+
+## 十三、PUBLIC-10 扩大公共前端归属到 24 个文件（2026-11-07）
+
+**用户进一步确认**：网站开发期间尽量让所有公开前端更新在公共仓库完成，避免消耗私人 Actions 分钟；私人仓库只保留真正敏感资产、业务逻辑和最终发布。此规定已在公共仓库单独形成 [公开前端代码所有权规范](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/PUBLIC_FRONTEND_OWNERSHIP_20261107.md)，以后相关开发会话依照此文档选择默认仓库。
+
+### 已落实
+
+- **迁移方式**：严格从本私人 V1.1 固定提交 `0cf00b37ffa029997436fa3c0b2c67e35b114aa4` 的 **6 个公开浏览器文件**建立公共独立提交，不镜像私人 Git 历史、不回写或删除私人原有文件。
+- **新增公共文件**：`public/index.html`、`public/updates.html`、`public/flashcards.js`、`public/chapter-words.js`、`public/echo-cloud.js`、`public/onboarding.js`。这些是用户可见的页面标记/客户端展示和 API 调用代码，不含真实用户数据或后端权限实现。
+- **公共交付包**：24 个精确白名单文件，公开构建脚本、SHA-256 manifest、只读交付差异检查工具及源接口合同测试均已升级。公共 [PR #17](https://github.com/kim-1868/miaowu-english-public/pull/17) 合并 SHA `0105b212b226a9898e7696cd314b999785826278`。
+- **公共验证**：补齐原先固定 18 文件的测试断言后，[PR 安全/单测 42386170949](https://github.com/kim-1868/miaowu-english-public/actions/runs/42386170949)、[真实 Chromium 合成浏览器验收 42386170973](https://github.com/kim-1868/miaowu-english-public/actions/runs/42386170973)、[合并后 main 检查 42386247604](https://github.com/kim-1868/miaowu-english-public/actions/runs/42386247604) 均成功。
+- **已核实 Artifact**：`wordletter-public-ui-0105b212b226a9898e7696cd314b999785826278`，GitHub Actions Artifact ID `13579168592`，只含公开 UI 交付源码和哈希。
+- **文件对照**：合并后 24 项公开 `public/` 文件与私人 V1.1 `0cf00b37ffa029997436fa3c0b2c67e35b114aa4` 比对，20 个 Git blob SHA 一致、4 个待按差异整合：`public/site-updates.js`、`public/v11-reader.css`、`public/v11-responsive.css`、`public/v11-wordbook.css`；零缺失。不能因首次迁移时一致而忽略今后的版本变化。
+- **新规范已落公共**：`docs/PUBLIC_FRONTEND_OWNERSHIP_20261107.md`（公共基线、允许/禁止范围、混合需求拆分、CI/打包/差异审查/上线关口），并同步更新公共 README、迁移清单、路线图与更新日志。
+
+### 仍然私人、严禁迁走的内容
+
+- 任何 `src/**` 中的真实账号、订单、激活权益、鉴权/付费判断、学习状态数据库持久化、D1 迁移与 Workers 生产配置；
+- `content/**` 小说/词库/审核资料、真实数据库备份与订单/用户记录；
+- `public/app.js`、`public/ops*`、`public/editor*`、`public/claim.js`、`public/novel-file-parser.js`（含尚未拆分的业务或运营流程），以及所有 Cloudflare Token/密钥、Pepper 等；
+- **公共 `index.html` 仍引用私人 `/app.js` 和受控业务接口，因此公共 24 文件包本身不是完整可部署网站**。
+
+### 并行开发与上线边界
+
+- 本轮**只修改公共仓库及私人 `main` 的交接文档**；私人开发分支未覆盖、未重置、未进入预览或正式发布。
+- 以后公开 UI 优先公共 PR + 免费标准托管 CI；需同步到私人网站时，按固定 SHA 校验 public artifact，在最新私人分支审阅 4 个差异文件，再进行私有权益/订单/词义身份与进度回归。
+- 私人固定 SHA 手动候选整体验收和真实预览业务验收尚未执行；不能宣称已经上线或 2,000 分钟限制已解除。
+- 公开组件和私有业务同时开发时，以最新受控私人候选为最终整合基线，不能直接整份用公共 HTML/JS/CSS 覆盖，避免阻塞其他 Agent 进度。
+
+公共项目更新台账：[docs/UPDATE_LOG.md](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md)。
+
