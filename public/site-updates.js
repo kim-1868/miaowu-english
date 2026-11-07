@@ -4,6 +4,9 @@
 const $=id=>document.getElementById(id);
 const KIND={feature:"功能更新",books:"新书上架",maintenance:"维护通知",other:"妙屋消息"};
 const storageKey="miaowu_notice_dismissed_id_v1";
+let currentLatest=null;
+let historyRows=[],historyPage=1,historyHasMore=true,historyVisible=5,historyLoading=false,historyError=false;
+const HISTORY_STEP=5;
 const text=(el,value)=>{if(el)el.textContent=String(value??"");};
 const safeDate=value=>{
  if(!value)return "";
@@ -36,16 +39,106 @@ async function home(){
     url.searchParams.delete("previewAnnouncement");
     history.replaceState(history.state,"",url.pathname+url.search+url.hash);
   }
-  if(!latest||!latest.id||dismissed()===latest.id){section.hidden=true;return}
+  if(!latest||!latest.id||dismissed()===latest.id){currentLatest=null;section.hidden=true;return}
+  currentLatest=latest;
   text($("siteUpdateTitle"),latest.title);
   text($("siteUpdateMeta"),safeDate(latest.publishedAt)+" · "+(KIND[latest.category]||"更新"));
-  $("siteUpdateDetail").href="/updates.html#"+encodeURIComponent(latest.id);
+  $("siteUpdateDetail").onclick=()=>openAnnouncementDialog();
   $("siteUpdateDismiss").onclick=()=>{
    dismiss(latest.id);
    section.hidden=true;
   };
   section.hidden=false;
  }catch{section.hidden=true}
+}
+function setAnnouncementTab(tab){
+ const latest=tab==="latest";
+ const latestTab=$("siteUpdateTabLatest"),historyTab=$("siteUpdateTabHistory");
+ if(!latestTab||!historyTab)return;
+ latestTab.setAttribute("aria-selected",String(latest));
+ historyTab.setAttribute("aria-selected",String(!latest));
+ $("siteUpdatePanelLatest").hidden=!latest;
+ $("siteUpdatePanelHistory").hidden=latest;
+ if(!latest)void ensureHistory();
+}
+function openAnnouncementDialog(){
+ const dialog=$("siteUpdateDialog");
+ if(!dialog||!currentLatest)return;
+ text($("siteUpdateDialogDate"),safeDate(currentLatest.publishedAt)+" · "+(KIND[currentLatest.category]||"妙屋消息"));
+ text($("siteUpdateDialogHeadline"),currentLatest.title);
+ text($("siteUpdateDialogBody"),currentLatest.body||currentLatest.summary||"");
+ historyVisible=HISTORY_STEP;
+ setAnnouncementTab("latest");
+ if(!dialog.open)dialog.showModal();
+}
+function renderCompactHistory(){
+ const root=$("siteUpdateCompactList"),more=$("siteUpdateHistoryMore"),status=$("siteUpdateHistoryInlineStatus");
+ if(!root||!more||!status)return;
+ root.replaceChildren();
+ for(const item of historyRows.slice(0,historyVisible)){
+  const row=document.createElement("div");
+  row.className="mw-updates-history-row";
+  const button=document.createElement("button");
+  button.type="button";button.className="mw-updates-history-toggle";
+  button.setAttribute("aria-expanded","false");
+  const date=document.createElement("time");
+  date.dateTime=item.publishedAt||"";
+  date.textContent=safeDate(item.publishedAt);
+  const title=document.createElement("span");
+  title.className="mw-updates-history-title";
+  title.textContent=item.title||"更新公告";
+  const arrow=document.createElement("span");
+  arrow.className="mw-updates-history-chevron";
+  arrow.setAttribute("aria-hidden","true");
+  arrow.textContent="⌄";
+  button.append(date,title,arrow);
+  const body=document.createElement("p");
+  body.className="mw-updates-history-body";
+  body.textContent=item.body||item.summary||"";
+  body.hidden=true;
+  button.addEventListener("click",()=>{
+   const opening=body.hidden;
+   root.querySelectorAll(".mw-updates-history-body").forEach(p=>{p.hidden=true});
+   root.querySelectorAll(".mw-updates-history-toggle").forEach(b=>b.setAttribute("aria-expanded","false"));
+   body.hidden=!opening;
+   button.setAttribute("aria-expanded",String(opening));
+  });
+  row.append(button,body);root.append(row);
+ }
+ text(status,historyLoading?"正在读取更新记录…":
+   historyError?"更新记录暂时无法读取，点击“查看更多”重试。":
+   historyRows.length===0&&!historyHasMore?"还没有历史公告。":"");
+ more.hidden=historyLoading||(!historyError&&historyRows.length<=historyVisible&&!historyHasMore);
+ more.disabled=historyLoading;
+}
+async function ensureHistory(){
+ if(historyLoading)return;
+ if(historyRows.length>=historyVisible||!historyHasMore){renderCompactHistory();return}
+ historyLoading=true;historyError=false;renderCompactHistory();
+ try{
+  while(historyRows.length<historyVisible&&historyHasMore){
+   const result=await get("/api/updates?page="+historyPage);
+   const rows=Array.isArray(result.updates)?result.updates:[];
+   const known=new Set(historyRows.map(x=>x.id));
+   historyRows.push(...rows.filter(x=>x&&x.id&&!known.has(x.id)));
+   historyHasMore=Boolean(result.hasMore)&&rows.length>0;
+   historyPage++;
+  }
+ }catch{historyError=true}
+ finally{historyLoading=false;renderCompactHistory()}
+}
+function initAnnouncementDialog(){
+ const dialog=$("siteUpdateDialog");
+ if(!dialog)return;
+ $("siteUpdateDialogClose").addEventListener("click",()=>dialog.close());
+ $("siteUpdateTabLatest").addEventListener("click",()=>setAnnouncementTab("latest"));
+ $("siteUpdateTabHistory").addEventListener("click",()=>setAnnouncementTab("history"));
+ $("siteUpdateHistoryMore").addEventListener("click",()=>{
+  if(historyError){historyError=false}
+  else historyVisible+=HISTORY_STEP;
+  void ensureHistory();
+ });
+ dialog.addEventListener("click",e=>{if(e.target===dialog)dialog.close()});
 }
 async function archive(){
  const root=$("siteUpdateHistory");
@@ -89,8 +182,8 @@ if($("siteUpdateHistory")){
  catch{}
 }
 if(document.readyState==="loading")
- document.addEventListener("DOMContentLoaded",()=>{void home();void archive()},{once:true});
-else{void home();void archive()}
+ document.addEventListener("DOMContentLoaded",()=>{initAnnouncementDialog();void home();void archive()},{once:true});
+else{initAnnouncementDialog();void home();void archive()}
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)void home()});
 // Restore from history (including bfcache): simply refresh; never dismiss on navigation.
 window.addEventListener("pageshow",()=>{if($("siteUpdateBanner"))void home()});
