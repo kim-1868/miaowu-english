@@ -4,7 +4,7 @@
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>妙屋英语 · 运营出版台</title>
 <link rel="stylesheet" href="/ops-console.css?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;layout=20261106-v42">
-<script src="/ops-console.js?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;tags=20261106-v40&amp;layout=20261106-v42" defer></script>
+<script src="/ops-console.js?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;tags=20261106-v40&amp;layout=20261106-v42&amp;updates=20261107-preview1" defer></script>
 </head><body>
 <header><div class="brand">喵 · 妙屋英语 <span>THE STORY & WORD LIBRARY</span></div>
   <div class="strap">运营出版台 <span class="pill">受控操作</span></div></header>
@@ -290,6 +290,44 @@
       <p id="uploadPreviewWord" class="hint">点击预览里的英文单词，可检查词义、音标与浏览器发音。</p>
     </div>
     <p class="hint">发音沿用浏览器语音合成。建议优先上传已加工、审核过的完整 JSON；这里的技术预检不会代替作品版权与语言质量判断。</p>
+  </section>
+  <section class="panel mw-ops-update-panel" aria-label="更新公告管理">
+    <details id="updatesFold" class="ops-record-section">
+      <summary class="ops-record-section-summary">
+        <span class="ops-section-title"><strong>更新公告管理</strong><small>新书与功能更新 · 首页轻量通知 · 历史更新日志</small></span>
+        <span class="ops-fold-caret" aria-hidden="true">⌄</span>
+      </summary>
+      <div class="ops-record-section-content">
+        <p class="hint">公告会在首页 Banner 下方显示一条简短提示，读者可以关闭。所有已发布公告保留在公开的「妙屋更新日志」中。当前仅用于 V1.1 受保护预览环境。</p>
+        <div id="updatesAdminStatus" class="status" role="status" aria-live="polite">请先验证运营身份。</div>
+        <div class="row"><button id="updatesNew" type="button" class="secondary" disabled>＋ 新建公告</button>
+        <button id="updatesRefresh" type="button" class="secondary" disabled>刷新公告列表</button></div>
+        <div class="mw-ops-updates-layout">
+          <div id="updatesAdminList" class="mw-ops-updates-list" aria-label="公告历史列表">验证运营身份后显示公告。</div>
+          <form id="updatesAdminForm" class="mw-ops-updates-form">
+            <h3 id="updatesFormHeading">新建妙屋公告</h3>
+            <label for="updatesTitle">公告标题（首页最多展示两行）
+              <input id="updatesTitle" maxlength="90" required placeholder="例如：书架新添了三本故事"></label>
+            <label for="updatesKind">公告类型
+              <select id="updatesKind">
+                <option value="feature">功能更新</option><option value="books">新书上架</option>
+                <option value="maintenance">维护通知</option><option value="other">其他</option>
+              </select></label>
+            <label for="updatesSummary">简短摘要
+              <input id="updatesSummary" maxlength="180" required placeholder="首页可见的简短提醒"></label>
+            <label for="updatesBody">公告正文（读者可在历史更新中查看）
+              <textarea id="updatesBody" maxlength="4000" rows="5" required placeholder="写下这次更新的内容……"></textarea></label>
+            <label class="mw-ops-updates-checkbox"><input type="checkbox" id="updatesOnHome" checked> 在首页 Banner 下方展示最新一条</label>
+            <div class="row">
+              <button id="updatesSave" type="submit" disabled>保存草稿 / 修改</button>
+              <button id="updatesPublish" type="button" disabled>发布公告</button>
+              <button id="updatesWithdraw" type="button" class="secondary" disabled>下架公告</button>
+            </div>
+            <p class="hint">保存草稿不会公开；发布后首页最多显示一条。编辑已发布公告，不会让关闭过它的用户重新收到提醒；要重新提醒请新建公告。</p>
+          </form>
+        </div>
+      </div>
+    </details>
   </section>
   <section class="panel"><h2>⑧ 操作审计</h2><p class="hint">最近最多30条操作；审核和上架动作分别留痕，日志不会记录原始密钥或小说正文。</p>
     <div id="audit" class="audit"><p class="soft">请选择书目查看。</p></div></section>
