@@ -33,6 +33,14 @@
   </div>
   <main class="app-shell">
     <section id="view-library" class="view active">
+      <section id="siteUpdateBanner" class="mw-update-strip" aria-label="妙屋新鲜事" hidden>
+        <div class="mw-update-inner">
+          <span class="mw-update-paw" aria-hidden="true">🐾</span>
+          <div class="mw-update-message"><strong id="siteUpdateTitle"></strong><span id="siteUpdateMeta" class="mw-update-meta"></span></div>
+          <a id="siteUpdateDetail" class="mw-update-action" href="/updates.html">详情 ›</a>
+          <button id="siteUpdateDismiss" class="mw-update-dismiss" type="button" aria-label="关闭当前公告" title="关闭这条公告">×</button>
+        </div>
+      </section>
       <div class="hero story-home-hero" id="miaowuHomeScene">
         <div class="hero-copy">
           <span class="eyebrow">MIAOWU · YOUR COZY WORD LIBRARY</span>
@@ -49,14 +57,7 @@
           <span class="home-scene-lamp" aria-hidden="true"></span>
         </div>
       </div>
-      <section id="siteUpdateBanner" class="mw-update-strip" aria-label="妙屋新鲜事" hidden>
-        <div class="mw-update-inner">
-          <span class="mw-update-paw" aria-hidden="true">🐾</span>
-          <div class="mw-update-message"><strong id="siteUpdateTitle"></strong><span id="siteUpdateMeta" class="mw-update-meta"></span></div>
-          <a id="siteUpdateDetail" class="mw-update-action" href="/updates.html">详情 ›</a>
-          <button id="siteUpdateDismiss" class="mw-update-dismiss" type="button" aria-label="关闭当前公告" title="关闭这条公告">×</button>
-        </div>
-      </section>
+
       <aside class="home-reminder-strip" aria-label="词汇复习提醒">
         <div id="reviewReminder" class="review-reminder" aria-live="polite"></div>
       </aside>
