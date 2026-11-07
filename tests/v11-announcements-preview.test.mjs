@@ -242,8 +242,10 @@ test("V1.1 password-gated staging shows clearly labeled public DEMO notices with
   assert.equal((await call(f.env,"/api/updates/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb")).status,404);
   assert.equal((await call(f.env,"/api/ops/updates")).status,401);
   await f.ready();
-  assert.equal((await call(f.env,"/api/ops/updates","GET",null,{authorized:true})).status,503,
-   "Without test D1 permissions, mutations cannot pretend to persist");
+  const setupNeeded=await call(f.env,"/api/ops/updates","GET",null,{authorized:true});
+  assert.equal(setupNeeded.status,200);
+  assert.equal(setupNeeded.data.setupRequired,true,
+   "Publisher sees an explicit staging-only setup action rather than a hidden database write");
   assert.equal(f.db.prepare("SELECT COUNT(*) n FROM ops_audit_events").get().n,0);
  }finally{f.db.close()}
 });
@@ -437,4 +439,70 @@ test("V1.1 notice outer strip and flex whitespace are not clickable",()=>{
  assert.match(js,/\$\("siteUpdateMeta"\)\.onclick/);
  assert.match(css,/\.mw-update-title-trigger\{[^}]*flex:0 1 auto/);
  assert.doesNotMatch(css,/\.mw-update-message\{[^}]*cursor:pointer/);
+});
+
+test("V1.1 publisher-only staging setup safely creates isolated announcement schema once",async()=>{
+ const f=fixture({table:false});
+ try{
+  const beforeTables=["users","activation_codes","entitlements","user_words","reading_progress","ops_operators"];
+  const before=beforeTables.map(name=>f.db.prepare("SELECT COUNT(*) n FROM "+name).get().n);
+  f.env.PREVIEW_ANNOUNCEMENT_DEMO="true";
+  await f.ready();
+  assert.equal((await call(f.env,"/api/ops/updates/setup","POST",{})).status,401);
+  assert.equal((await call(f.env,"/api/ops/updates/setup","GET",null,{authorized:true})).status,404);
+  const peek=await call(f.env,"/api/ops/updates","GET",null,{authorized:true});
+  assert.deepEqual(peek.data,{updates:[],setupRequired:true});
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM sqlite_master WHERE type='table' AND name='site_announcements'").get().n,0);
+  const initialized=await call(f.env,"/api/ops/updates/setup","POST",{}, {authorized:true});
+  assert.deepEqual(initialized.data,{ready:true,created:true});
+  assert.equal(initialized.status,200);
+  assert.equal(f.db.prepare("PRAGMA table_info(site_announcements)").all().length>0,true);
+  const repeat=await call(f.env,"/api/ops/updates/setup","POST",{}, {authorized:true});
+  assert.deepEqual(repeat.data,{ready:true,created:false});
+  const list=await call(f.env,"/api/ops/updates","GET",null,{authorized:true});
+  assert.equal(list.status,200);
+  assert.deepEqual(list.data.updates,[]);
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM site_announcements").get().n,0);
+  const after=beforeTables.map(name=>f.db.prepare("SELECT COUNT(*) n FROM "+name).get().n);
+  assert.deepEqual(after,before,"staging setup must not affect customer, book or operator records");
+  const draft=await call(f.env,"/api/ops/updates","POST",form,{authorized:true});
+  assert.equal(draft.status,201);
+  assert.equal((await call(f.env,"/api/updates/latest")).data.latest,null,
+   "Preview sample must disappear when real draft is created");
+  assert.equal((await call(f.env,"/api/updates")).data.total,0,
+   "Draft content never becomes public");
+  const publish=await call(f.env,"/api/ops/updates/"+draft.data.id+"/publish","POST",
+   {revision:1},{authorized:true});
+  assert.equal(publish.status,200);
+  assert.equal((await call(f.env,"/api/updates/latest")).data.latest.id,draft.data.id);
+  const index=f.db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'idx_site_announcements_%'").all();
+  assert.equal(index.length,2);
+ }finally{f.db.close()}
+});
+test("V1.1 unauthorized roles cannot setup even staging-only standalone notice storage",async()=>{
+ const f=fixture({table:false,role:"reviewer"});try{
+  await f.ready();
+  const denial=await call(f.env,"/api/ops/updates/setup","POST",{}, {authorized:true});
+  assert.equal(denial.status,403);
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM sqlite_master WHERE type='table' AND name='site_announcements'").get().n,0);
+ }finally{f.db.close()}
+ const production=fixture({table:false,environment:"production"});try{
+  await production.ready();
+  assert.equal((await call(production.env,"/api/ops/updates/setup","POST",{}, {authorized:true})).status,404);
+  assert.equal(production.db.prepare("SELECT COUNT(*) n FROM sqlite_master WHERE type='table' AND name='site_announcements'").get().n,0);
+ }finally{production.db.close()}
+});
+test("V1.1 operator console contains setup entry and derives optional summary from headline",()=>{
+ const html=read("public/ops.html"),js=read("public/ops-updates.js"),root=read("public/ops-console.js");
+ assert.match(html,/id="updatesFold"/);
+ assert.match(html,/id="updatesSetupPanel"/);
+ assert.match(html,/id="updatesSetup" type="button"/);
+ assert.match(html,/公告展示在首页导航栏下方/);
+ assert.match(html,/简短摘要（选填）/);
+ assert.match(js,/api\("\/api\/ops\/updates\/setup","POST"/);
+ assert.match(js,/setupRequired=result\.setupRequired===true/);
+ assert.match(js,/summary:\$\("updatesSummary"\)\.value\.trim\(\)\|\|title/);
+ assert.match(js,/dirty&&\!window\.confirm/);
+ assert.match(root,/ops-updates\.js\?v=20261107-ops2/);
+ assert.match(html,/updates=20261107-ops2/);
 });
