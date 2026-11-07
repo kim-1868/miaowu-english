@@ -304,3 +304,14 @@
 - **下一步技术关口**：优先在公共仓库制作 5 个 UI 组件的“私有集成接线与旧逻辑替换合同”，基于双方冻结 SHA 只读审阅差异；待私人当前开发稳定，再由授权的私人候选整合人员一次性删除旧卡片 DOM/监听，接入服务端授权的词卡状态与词义 ID，并执行登录/付费墙、跨书去重、掌握、复习、手机词卡、进度、订单/备份安全回归。必须经过私人 Gate 和用户正式发布确认，公共 Actions 的通过不能替代。
 - **记录**：[公共 UPDATE_LOG](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md) 和 [PUBLIC-11 #18](https://github.com/kim-1868/miaowu-english-public/issues/18)。
 
+
+
+## 十九、PUBLIC-11-06 五个公共 UI 组件的私人安全接线门禁（2026-11-08）
+
+- **实际完成的是集成合同和公开自动防误用测试**，不是私人站已接线；当前 PUBLIC-11 的 5 个纯显示模块（阅读字号/日夜、书架分页、书架卡片、阅读抽屉/释义、阅读词卡）已在公共合成环境完成，但私人真实 `app.js` 接线仍 **0/5**。
+- **公共 PR**：[PUBLIC-11-06 #24](https://github.com/kim-1868/miaowu-english-public/pull/24) 已合并至公共 `main`，核心提交 `3cf89c44188c8f4a2a5717b70f3a4ed5d628ab48`，新增 [五组件私人整合门禁和逐个旧逻辑替换指南](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/PUBLIC11_COMPONENT_INTEGRATION_GATE_20261108.md)、`tests/public11-integration-boundary.test.mjs`，更新白名单和日志。所有内容都是通用公开接口规范，不复制私人词库、小说或任何用户信息。
+- **测试及交付**：[PR 安全/防重复监听测试 42393623856](https://github.com/kim-1868/miaowu-english-public/actions/runs/42393623856) 和 [公共 main 42393655589](https://github.com/kim-1868/miaowu-english-public/actions/runs/42393655589) 成功。29 文件 `wordletter-public-ui-3cf89c44188c8f4a2a5717b70f3a4ed5d628ab48`、SHA-256 manifest、Artifact ID `13582676147` 已确认。只是增加公共 CI/文档，29 个浏览器源文件内容和数量不变。
+- **双仓库冻结对照**：参考私人活动分支 `0cf00b37ffa029997436fa3c0b2c67e35b114aa4`，20 个相同 Git blob、4 个公共既有差异、5 个公共新增模块尚未存在私人运行站。用户继续开发时应重新获取**最新私人完整 SHA**，旧对照不代表未来强制覆盖依据。
+- **明确的后续整合程序**：私人候选先锁定 SHA → 只读核对公开 29 文件的独立 source SHA 和 manifest → 审查公告 JS、阅读/响应式/词本 CSS 四个差异 → 五组件逐个删除旧 `onclick`/HTML 生成位置并接入私人数据/回调 → 私人 SHA 手动 Gate → 隔离 D1 预览验证真实权限、词义 ID、跨书去重、学习/掌握/复习、阅读进度、订单与回滚 → 需用户明确批准才能正式部署。
+- **无私有 Actions 支出或网站操作**：本轮所有代码/测试在公共 GitHub Actions 完成；私人 `main` 只追加交接文档。没有修改私人 V1.1 活动分支、Secrets、D1、Cloudflare 预览或生产站，不能宣称已整合上线，也不能把前端模拟合格等同真实用户端测试。
+
