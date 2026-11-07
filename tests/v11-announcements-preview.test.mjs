@@ -19,12 +19,16 @@ function fixture({table=true,role="publisher",environment="staging"}={}){
  db.exec(read("db/007_ops_identity_audit.sql"));
  if(table)db.exec(read("db/015_v11_site_announcements.sql"));
  const D1={
-  prepare(sql){return {bind(...args){return {
-   sql,args,
-   first:async()=>db.prepare(sql).get(...args)||null,
-   all:async()=>({results:db.prepare(sql).all(...args)}),
-   run:async()=>db.prepare(sql).run(...args)
-  }}}},
+  prepare(sql){return {
+   all:async()=>({results:db.prepare(sql).all()}),
+   first:async()=>db.prepare(sql).get()||null,
+   bind(...args){return {
+    sql,args,
+    first:async()=>db.prepare(sql).get(...args)||null,
+    all:async()=>({results:db.prepare(sql).all(...args)}),
+    run:async()=>db.prepare(sql).run(...args)
+   }}
+  }},
   async batch(statements){
    db.exec("BEGIN IMMEDIATE");
    try{
