@@ -92,3 +92,32 @@
 
 `日期 / 需求或 Issue / 修改仓库 / 源分支与完整 SHA / 文件清单 / 变更摘要 / 测试与 Actions 结果 / 当前线上是否受影响 / 私人集成风险 / 待办`。  
 公共研发在公共更新日志中写公开部分，涉及核心业务的更新只写入本私人记录；无论哪个仓库，都**不能只在聊天中说完成而不留仓库记录**。
+
+
+## 九、PUBLIC-03 跨设备排版与词卡可读性优化（2026-11-07）
+
+### 本轮已完成
+
+- **工作归属**：公共仓库 [Issue #3](https://github.com/kim-1868/miaowu-english-public/issues/3) / [PR #6](https://github.com/kim-1868/miaowu-english-public/pull/6)，Squash 合并到公共 `main`，合并提交 `82facd627376b2dbb81cfa109375a5bfb2adcdd7`。
+- **实际改动**：公共 `public/v11-responsive.css`、`public/v11-reader.css`、`public/v11-wordbook.css` 增加 320–430px 排版保护、44px 移动触控、长词义/标题换行、字号滑块伸缩与夜间按钮/标签对比；合成书架预览新增移动端展示微调。
+- **新增离线设施**：`showcase/responsive-contract.html`、`showcase/responsive-contract.css`、`showcase/responsive-contract.js` 使用真实公共 CSS 选择器，提供虚构书架、词卡、阅读字号 12–24px 和日夜切换演示；`tests/responsive-layout.test.mjs` 增加 CSS/断点/对比度/虚构界面/字号交互测试，并更新公共白名单和 npm 检查。
+- **验证**：公共分支 Actions [42382105946](https://github.com/kim-1868/miaowu-english-public/actions/runs/42382105946) 及 PR Actions [42382144682](https://github.com/kim-1868/miaowu-english-public/actions/runs/42382144682) 均通过。**此为离线自动合同测试，不等于真实设备截图、点击体验已验收。**
+- **未发布**：未更改生产或预览 Pages/Workers/D1，未动私人活动功能分支及用户、订单、小说/词库/词卡主状态、阅读进度、正式部署。
+- **日志已写**：[公共逐次更新日志](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md)，合并版本及测试信息已固定记录。
+
+### 并行开发差异保护（2026-11-07 当前快照）
+
+- 公共当前提交（日志更新后）：`9b8adb9fd0bafc16b9dba56118a2a2679c2cd0cc`。
+- 私人持续开发分支当前提交：`feature/v11-phase1-mobile-and-install-guide-20261106` / `135abf94579f10619974572dde78a4110fbc030e`。
+- 两仓原先迁移的 18 个公共文件中，**14 个 Git blob SHA 仍一致，4 个因公共优化已出现预期差异**：`public/site-updates.js`、`public/v11-reader.css`、`public/v11-responsive.css`、`public/v11-wordbook.css`。
+- **严禁把这四个公共新文件直接整份覆盖到私人运行站**；要先读私人最新提交、三方审查 CSS/公告逻辑差异，保留用户另一开发流程中新完成的功能，之后在私人受控测试环境做端到端验收。
+- 检查私人 `main` 时发现另一条并行工作新增了独立交接文档；本次仅向本交接文件追加记录，没有重置或覆盖其他人/Agent 的提交。
+
+### 后续任务顺序
+
+1. PUBLIC-03：真实浏览器 320/375/390/430px + 平板/桌面视觉、触控与夜间对比验收；保留 Issue #3 直到完成。
+2. PUBLIC-01 / PUBLIC-02：处理此前待做的真实浏览器回归与可访问性边角问题。
+3. CI-COST-01：继续分析私人工作流高频触发和 GitHub Actions 月度实际消耗，把可公开的纯 UI 检查留公共；不要直接取消生产安全门禁。
+4. PRIVATE-INT-01：在用户其他网站修改稳定后的受控候选版本中审阅跨仓库差异，验证登录/权益/词卡/学习记录/运营公告/订单，再决定是否进入预览部署。
+
+**持续规则**：今后每次更新必须补充日期、文件清单、完整 SHA、CI 结果、部署范围、并行冲突与未完成事项。不得只在聊天中汇报。
