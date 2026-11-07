@@ -445,9 +445,9 @@ test("V1.1 publisher-only staging setup safely creates isolated announcement sch
  const f=fixture({table:false});
  try{
   const beforeTables=["users","activation_codes","entitlements","user_words","reading_progress","ops_operators"];
-  const before=beforeTables.map(name=>f.db.prepare("SELECT COUNT(*) n FROM "+name).get().n);
   f.env.PREVIEW_ANNOUNCEMENT_DEMO="true";
   await f.ready();
+  const before=beforeTables.map(name=>f.db.prepare("SELECT COUNT(*) n FROM "+name).get().n);
   assert.equal((await call(f.env,"/api/ops/updates/setup","POST",{})).status,401);
   assert.equal((await call(f.env,"/api/ops/updates/setup","GET",null,{authorized:true})).status,404);
   const peek=await call(f.env,"/api/ops/updates","GET",null,{authorized:true});
