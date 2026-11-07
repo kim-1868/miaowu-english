@@ -33,6 +33,8 @@
 
     node --experimental-sqlite scripts/v11-p5-restored-library-audit.mjs --local-sqlite /ABSOLUTE/PRIVATE/rehearsal.sqlite --require-historic-coverage
 
+如果需要技术完整性硬闸门，再加 `--require-clean-content`；一旦有未发布章节、缺失词卡、正文与位置索引不一致、章节损坏、上下文缺失、音标或英汉例句缺项、来源审核指纹失败，该命令返回失败码。技术闸门通过也**不代表语言释义和发音经专业审稿**。
+
 当真实库书目与历史快照不一致时，该命令会失败；**不应未经核对就自动把历史快照的缺失书补回数据库**。由于书库可能正常新增/下架，应人工比较差异原因，而不是用 23 强行限制当前真实书数。
 
 ## 自动化测试与验收边界
