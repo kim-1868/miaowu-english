@@ -191,3 +191,25 @@ test("P5 CLI --require-clean-content exits nonzero on incomplete published novel
   assert.ok(!p.stdout.includes("PRIVATE_STORY_CONTEXT"));
  }finally{rmSync(dir,{recursive:true,force:true})}
 });
+
+test("P5 a shared old wordId supplies context from both books, not just the first chapter",()=>{
+ const db=fixture();try{
+  const row=db.prepare("SELECT content_json FROM chapters WHERE id='chb'").get();
+  const chapter=JSON.parse(row.content_json);
+  chapter.paragraphs[0].segments.push({wordId:"wa",surface:"record",gloss:"记录"});
+  db.prepare("UPDATE chapters SET content_json=? WHERE id='chb'").run(JSON.stringify(chapter));
+  db.prepare("INSERT INTO chapter_words(chapter_id,word_id,context_anchor,context_sentence) VALUES(?,?,?,?)")
+    .run("chb","wa","p0:s3","PRIVATE_SECOND_BOOK_CONTEXT_FOR_WA");
+  const {privateQueue,summary}=auditRestoredLibrary(db,{
+   historicRegistry:registry,includePrivateQueue:true
+  });
+  assert.equal(summary.unindexedMentions,0);
+  assert.equal(summary.unmatchedIndexedAnchors,0);
+  const group=privateQueue.candidates.find(c=>c.wordIds.includes("wa"));
+  assert.ok(group);
+  const contexts=group.contexts.filter(c=>c.wordId==="wa");
+  assert.deepEqual(contexts.map(c=>c.bookId),["ba","bb"]);
+  assert.ok(contexts.some(c=>c.contextSentence==="PRIVATE_SECOND_BOOK_CONTEXT_FOR_WA"));
+  assert.ok(!JSON.stringify(summary).includes("PRIVATE_SECOND_BOOK_CONTEXT_FOR_WA"));
+ }finally{db.close()}
+});
