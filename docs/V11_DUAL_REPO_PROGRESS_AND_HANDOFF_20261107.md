@@ -121,3 +121,16 @@
 4. PRIVATE-INT-01：在用户其他网站修改稳定后的受控候选版本中审阅跨仓库差异，验证登录/权益/词卡/学习记录/运营公告/订单，再决定是否进入预览部署。
 
 **持续规则**：今后每次更新必须补充日期、文件清单、完整 SHA、CI 结果、部署范围、并行冲突与未完成事项。不得只在聊天中汇报。
+
+
+## 十、PUBLIC-05 公共 CI 重复运行优化（2026-11-07）
+
+- **公共任务**：[Issue #7](https://github.com/kim-1868/miaowu-english-public/issues/7)、[PR #8](https://github.com/kim-1868/miaowu-english-public/pull/8)，已合并到公共主分支，核心合并提交 `2656e0acdbcb77ab3c329b5776f81a72c2553c3a`。
+- **实际改动文件（公共仓库）**：`.github/workflows/public-guard.yml`、`tests/workflow-triggers.test.mjs`、`scripts/audit-public.mjs`、`docs/UPDATE_LOG.md`、`docs/PARALLEL_DEVELOPMENT_AND_ROADMAP_20261107.md`。
+- **变动**：公共仓库 feature 分支不再对每次 push 自动重复执行检查；PR 检查照常执行，合并到公共 `main` 时也检查一次；保留手动触发（workflow_dispatch）。只读权限、无密钥、CI 取消过期任务、安全白名单、Node 22 测试和超时不变。
+- **验证**：公共 PR run [42382432358](https://github.com/kim-1868/miaowu-english-public/actions/runs/42382432358) 和合并后主分支 run [42382464164](https://github.com/kim-1868/miaowu-english-public/actions/runs/42382464164) 均成功；PR 创建前该 feature 最新提交没有新增重复的 push Actions。
+- **用户在同步完善网站**：继续保护私人 V1.1 活动分支 `135abf94579f10619974572dde78a4110fbc030e`；本轮只修改公共 CI 与本私人交接文档，**未修改私人业务代码、数据库或任何线上部署**。
+- **计费**：仅减少公共仓库重复检查，**不能**据此声称私人仓库每月 2,000 分钟限制消失。私人 Actions 需要未来继续按安全边界优化。
+- **剩余事项**：PUBLIC-01/02/03 的真实浏览器视觉验收、4 个公共/私人文件的版本差异审阅、私人全链路集成验收；CI-COST-01 需用实际 GitHub 账单验证私有运行分钟消耗。
+
+**公开更新留痕**：[docs/UPDATE_LOG.md](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md)。所有后续 PR 仍须留下版本号、差异、测试和部署状态后才能交付。
