@@ -2,14 +2,14 @@ name: V1.1 wordbook example underline — offline visual check
 on:
   push:
     branches: [fix/v11-wordbook-example-inline-underline-20261106]
-  pull_request:
-    branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
+# PUBLIC-06: owning feature push retains specialized QA; generic PR triggers removed.
+# Manual private candidate gate in default main runs integrated release checks.
 permissions:
   contents: read
 jobs:
   inline-wordbook-example:
     if: ${{ github.repository == 'kim-1868/miaowu-english' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - name: Checkout reviewed V1.1 branch, no credentials

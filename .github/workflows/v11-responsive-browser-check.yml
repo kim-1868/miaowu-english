@@ -9,7 +9,7 @@ permissions:
 jobs:
   responsive-matrix:
     if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-phase1-mobile-and-install-guide-20261106' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - name: Checkout isolated V1.1 branch
