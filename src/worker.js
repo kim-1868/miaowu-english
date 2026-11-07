@@ -5,6 +5,7 @@ import { handleEditor } from "./editorial-admin.js";
 import { handleOps } from "./ops-access.js";
 import { handleOpsPublication } from "./ops-publication.js";
 import { handleOpsConsole } from "./ops-console.js";
+import {handleSiteAnnouncements} from "./site-announcements.js";
 import { handleOpsSales } from "./ops-sales.js";
 import { handleOpsCustomers } from "./ops-customers.js";
 import {handleOpsVoucher} from "./ops-vouchers.js";
@@ -647,6 +648,8 @@ async function api(req, env) {
   if (path.startsWith("/api/ops/")) {
     if (["POST","PUT","PATCH","DELETE"].includes(req.method) && !checkOrigin(req)) return reject("INVALID_ORIGIN",403);
     if(path==="/api/ops/me")return handleOps(req,env,path);
+    if(path==="/api/ops/updates"||path.startsWith("/api/ops/updates/"))
+      return handleSiteAnnouncements(req,env,path);
     if(/^\/api\/ops\/books\/[a-zA-Z0-9_-]{1,80}\/cover$/.test(path))
       return handleBookCover(req,env,path);
     if(/^\/api\/ops\/books\/[a-zA-Z0-9_-]{1,80}\/tags$/.test(path))
@@ -664,6 +667,8 @@ async function api(req, env) {
       return handleOpsConsole(req,env,path);
     return handleOpsPublication(req,env,path);
   }
+  if(path==="/api/updates"||path==="/api/updates/latest"||/^\/api\/updates\/[a-f0-9-]{36}$/i.test(path))
+    return handleSiteAnnouncements(req,env,path);
   if(path.startsWith("/api/claim/"))return handlePublicClaim(req,env,path);
   if (!env.DB || !env.ACTIVATION_PEPPER || env.ACTIVATION_PEPPER.length < 32) {
     return reject("SERVICE_NOT_CONFIGURED", 503);
