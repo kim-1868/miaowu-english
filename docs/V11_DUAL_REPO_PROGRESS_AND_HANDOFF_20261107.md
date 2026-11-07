@@ -276,3 +276,17 @@
 - **进一步计划**：优先继续在公共开发阅读工具栏、词卡的纯视图与安全 DOM 渲染；私人仓库保留真实身份、会员、内容和发布，避免重新引入私人高频 UI CI。
 - **项目记录**：[公共 UPDATE_LOG](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md) 与 [公共代码归属规范](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/PUBLIC_FRONTEND_OWNERSHIP_20261107.md)。
 
+
+
+## 十七、PUBLIC-11-04 纯阅读工具栏/释义视图迁入公共仓库（2026-11-08）
+
+- **私人源基线**：当前私人 V1.1 开发分支 `feature/v11-phase1-mobile-and-install-guide-20261106`，源提交 `0cf00b37ffa029997436fa3c0b2c67e35b114aa4`。只审阅私人 `public/app.js` 中移动目录、词汇面板和显隐释义的用户可见交互；原阅读字号/夜间显示组件已单独在公共维护，本轮没有重复拆分。
+- **公共已合并代码**：[PUBLIC-11-04 PR #22](https://github.com/kim-1868/miaowu-english-public/pull/22)，Squash 提交 `9db45dba7b072f716992eb0fdba2e0517886ec86`。新增 `public/reader-panels.js`、纯合成 `showcase/reader-panels-contract.html/css/js`、`tests/public-reader-panels.test.mjs`，扩大公共安全白名单、完整 SHA-256 交付、只读交接验证和 Chromium UI 检查。
+- **职责范围**：`MiaowuReaderPanels.create({document,onGlossChange}).mount()` 处理目录/本章词汇抽屉互斥、遮罩/Esc 关闭、关闭后焦点还原和 `aria-expanded`，以及对 `storyText` 施加 `no-gloss` CSS 并通知调用方显示提示。**不接入小说真实内容、账号登录、朗读、词卡学习身份、阅读进度、数据库或运营后台**；真实权限与数据始终由私人代码/Workers 检查。
+- **公共验收**：安全/Node [Actions 42391549720](https://github.com/kim-1868/miaowu-english-public/actions/runs/42391549720) 成功；真实 Chromium 合成页面的 320/390/1440px 验证 [42391549751](https://github.com/kim-1868/miaowu-english-public/actions/runs/42391549751) 成功；公共 `main` [42391644048](https://github.com/kim-1868/miaowu-english-public/actions/runs/42391644048) 成功。最初测试因桌面端按设计隐藏移动关闭按钮而失败，修正**测试交互路径**后通过，未为测试修改正常 UI 逻辑。
+- **新交付包**：`wordletter-public-ui-9db45dba7b072f716992eb0fdba2e0517886ec86`，28 个白名单前端文件及 manifest SHA-256，Artifact ID `13581776893`。
+- **跨仓 SHA 对照**：对照私人 V1.1 `0cf00b37ffa029997436fa3c0b2c67e35b114aa4`，20 个相同 Git blob、4 个已知差异（`public/site-updates.js`、`public/v11-reader.css`、`public/v11-responsive.css`、`public/v11-wordbook.css`）、4 个公共新组件（`public/reader-preferences.js`、`public/shelf-pagination.js`、`public/shelf-card.js`、`public/reader-panels.js`），这些公共新组件**尚未接入私人用户网站**。
+- **本轮对私人站点的影响**：**没有**改私人 V1.1 活动分支、Cloudflare 预览/正式 Pages/Workers、D1 和真实用户数据。本条只追加私人 `main` 交接文档，不需用户手动操作。
+- **后续集成门禁**：当私人站同期其他开发稳定后，读取其**最新**候选 SHA，逐文件审阅前述 4 个 CSS/公告差异；新 UI 组件接入 `app.js` 前必须替换旧事件绑定、避免双份字号/抽屉/释义监听，再对注册、兑换、阅读权限、章节词汇、复习、进度和订单做私有环境回归。私人固定 SHA 手动 Gate、测试 D1 以及正式上线批准仍不能跳过。
+- **公开留痕**：[更新日志](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md)、[公共组件代码归属](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/PUBLIC_FRONTEND_OWNERSHIP_20261107.md)、[PUBLIC-11 Issue #18](https://github.com/kim-1868/miaowu-english-public/issues/18)。
+
