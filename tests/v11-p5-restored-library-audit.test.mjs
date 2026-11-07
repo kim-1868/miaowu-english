@@ -154,3 +154,40 @@ test("P5 restored audit never imports Worker routes, user tokens, or Cloudflare 
   assert.equal(auditRestoredLibrary(db,{historicRegistry:registry}).summary.humanSenseReviewComplete,false);
  }finally{db.close()}
 });
+
+test("P5 strict structural gate blocks unpublished chapters and missing teaching metadata, but not legal human signoff",()=>{
+ const db=fixture();try{
+  const original=auditRestoredLibrary(db,{historicRegistry:registry});
+  assert.equal(original.summary.technicalContentReady,false);
+  assert.ok(original.summary.technicalBlockerCodes.includes("PUBLISHED_BOOK_HAS_UNPUBLISHED_CHAPTER"));
+ }finally{db.close()}
+ const db2=fixture();try{
+  db2.exec("UPDATE chapters SET published_at='2026-10-01 00:00:00' WHERE id='chc'");
+  const clean=auditRestoredLibrary(db2,{historicRegistry:registry});
+  assert.equal(clean.summary.technicalContentReady,true);
+  assert.deepEqual(clean.summary.technicalBlockerCodes,[]);
+  assert.equal(clean.summary.humanSenseReviewComplete,false,
+   "structural check cannot replace semantic review");
+ }finally{db2.close()}
+ const db3=fixture();try{
+  db3.exec("UPDATE chapters SET published_at='2026-10-01 00:00:00' WHERE id='chc'");
+  db3.exec("UPDATE words SET example_en=NULL WHERE id='wb'");
+  const missing=auditRestoredLibrary(db3,{historicRegistry:registry});
+  assert.equal(missing.summary.technicalContentReady,false);
+  assert.ok(missing.summary.technicalBlockerCodes.includes("MISSING_ENGLISH_EXAMPLE"));
+ }finally{db3.close()}
+});
+test("P5 CLI --require-clean-content exits nonzero on incomplete published novel",()=>{
+ const dir=mkdtempSync(join(tmpdir(),"mw-restored-strict-"));
+ const path=join(dir,"private.sqlite");
+ try{
+  const db=fixture(path);db.close();
+  const script=resolve(new URL("../scripts/v11-p5-restored-library-audit.mjs",import.meta.url).pathname);
+  const p=spawnSync(process.execPath,["--experimental-sqlite",script,
+   "--local-sqlite",path,"--require-clean-content"],
+   {encoding:"utf8",timeout:30000});
+  assert.equal(p.status,1);
+  assert.equal(JSON.parse(p.stdout).technicalContentReady,false);
+  assert.ok(!p.stdout.includes("PRIVATE_STORY_CONTEXT"));
+ }finally{rmSync(dir,{recursive:true,force:true})}
+});
