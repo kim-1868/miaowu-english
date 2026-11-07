@@ -197,3 +197,23 @@ test("V1.1 site strips and history links use DOM textContent, never HTML of user
  assert.match(read("public/updates.html"),/id="siteUpdateHistory"/);
  assert.match(read("src/site-announcements.js"),/env\.APP_ENV!=="staging"/);
 });
+
+test("V1.1 password-gated staging shows clearly labeled public DEMO notices without any D1 write capability",async()=>{
+ const f=fixture({table:false});try{
+  f.env.PREVIEW_ANNOUNCEMENT_DEMO="true";
+  const banner=await call(f.env,"/api/updates/latest");
+  assert.equal(banner.status,200);
+  assert.equal(banner.data.previewOnly,true);
+  assert.match(banner.data.latest.title,/预览示例/);
+  const history=await call(f.env,"/api/updates");
+  assert.equal(history.data.total,2);
+  assert.ok(history.data.updates.every(x=>x.title.startsWith("预览示例")));
+  assert.equal((await call(f.env,"/api/updates/"+banner.data.latest.id)).status,200);
+  assert.equal((await call(f.env,"/api/updates/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb")).status,404);
+  assert.equal((await call(f.env,"/api/ops/updates")).status,401);
+  await f.ready();
+  assert.equal((await call(f.env,"/api/ops/updates","GET",null,{authorized:true})).status,503,
+   "Without test D1 permissions, mutations cannot pretend to persist");
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM ops_audit_events").get().n,0);
+ }finally{f.db.close()}
+});
