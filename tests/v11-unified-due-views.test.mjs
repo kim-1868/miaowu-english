@@ -163,3 +163,33 @@ test('P4 after explicit unbookmark canonical false, old bookmarked alias must no
   assert.equal((await f.call('/api/me/flashcards?scope=saved')).data.total,0);
  }finally{f.db.close()}
 });
+
+test('P5 wordbook shows explicitly bookmarked study sense even when every legacy alias has bookmarked=0',async()=>{
+ const f=fixture();try{
+  f.insert('wa','learning',0);
+  f.insert('wb','learning',0);
+  f.db.prepare('INSERT INTO user_study_schedules(user_id,study_key,stage_index,due_at,mastered,bookmarked) VALUES(?,?,?,?,?,?)')
+   .run('u1','sense:record|n|记录',0,'2026-01-01 00:00:00',0,1);
+  const result=await f.call('/api/me/words');
+  assert.equal(result.status,200);
+  assert.equal(result.data.words.length,1);
+  assert.equal(result.data.words[0].bookmarked,1);
+  assert.equal(result.data.words[0].study_key,'sense:record|n|记录');
+  assert.equal(result.data.words[0].context_sentence,'A record remains.');
+  assert.equal(result.data.words[0].headword,'record');
+  assert.equal(result.data.flashDue,1);
+  assert.equal((await f.call('/api/me/flashcards?scope=saved')).data.total,1);
+  assert.equal(f.db.prepare('SELECT count(*) n FROM user_words WHERE bookmarked=1').get().n,0,
+   'read model must not write legacy rows');
+ }finally{f.db.close()}
+});
+test('P5 wordbook does not leak newly bookmarked study words from an unentitled book',async()=>{
+ const f=fixture();try{
+  f.insert('wd','learning',0);
+  f.db.prepare('INSERT INTO user_study_schedules(user_id,study_key,stage_index,due_at,mastered,bookmarked) VALUES(?,?,?,?,?,?)')
+   .run('u1','sense:sustain|v|维持',0,'2026-01-01 00:00:00',0,1);
+  const result=await f.call('/api/me/words');
+  assert.equal(result.data.words.length,0);
+  assert.equal(result.data.flashDue,0);
+ }finally{f.db.close()}
+});
