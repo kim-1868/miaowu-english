@@ -4,7 +4,7 @@ export function initUpdatesAdmin({api,connected}){
  const list=$("updatesAdminList"),form=$("updatesAdminForm"),message=$("updatesAdminStatus");
  if(!list||!form||!message)throw Error("UPDATES_ADMIN_LAYOUT_MISSING");
  const labels={feature:"功能更新",books:"新书上架",maintenance:"维护通知",other:"其他"};
- let records=[],selected=null,busy=false,active=false;
+ let records=[],selected=null,busy=false,active=false,serverReady=false;
  const say=value=>{message.textContent=value};
  const button=(id,on)=>{$(id).disabled=!active||busy||!on};
  function fields(){
@@ -23,7 +23,7 @@ export function initUpdatesAdmin({api,connected}){
   sync();renderList();
  }
  function sync(){
-  active=Boolean(connected());
+  active=Boolean(connected()&&serverReady);
   button("updatesNew",true);button("updatesRefresh",true);
   button("updatesSave",true);
   button("updatesPublish",selected&&selected.status!=="published");
@@ -49,8 +49,8 @@ export function initUpdatesAdmin({api,connected}){
  }
  async function refresh(preferred){
   if(!connected()){reset();return}
-  active=true;sync();
   const result=await api("/api/ops/updates");
+  serverReady=true;sync();
   records=result.updates||[];
   const keep=preferred||selected?.id;
   const found=keep?records.find(x=>x.id===keep):null;
@@ -93,7 +93,7 @@ export function initUpdatesAdmin({api,connected}){
   await refresh(id);say("公告已下架，后台历史记录已保留。");
  }));
  function reset(){
-  records=[];active=false;selected=null;busy=false;select(null);
+  records=[];active=false;serverReady=false;selected=null;busy=false;select(null);
   list.replaceChildren();
   const note=document.createElement("p");note.className="hint";
   note.textContent="请先验证运营身份。";list.append(note);
