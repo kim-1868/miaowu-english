@@ -115,10 +115,13 @@ export function auditRestoredLibrary(db,{
    if(!indexed.mentioned.has(k))info.unmatchedIndexedAnchors++;
   }else info.unknownAnchorFormats++;
   const contexts=cardContext.get(row.word_id)||[];
-  if(contexts.length<6)contexts.push({
-   bookId:row.book_id,chapterId:row.chapter_id,
-   contextSentence:row.context_sentence,wordId:row.word_id
-  });
+  // Keep one grounding sentence from EACH book whenever possible, not the
+  // first two chapters of one book. The queue stays private and review-only.
+  if(contexts.length<25&&!contexts.some(c=>c.bookId===row.book_id))
+   contexts.push({
+    bookId:row.book_id,chapterId:row.chapter_id,
+    contextSentence:row.context_sentence,wordId:row.word_id
+   });
   cardContext.set(row.word_id,contexts);
  }
  for(const ch of chapters){
@@ -219,7 +222,7 @@ export function auditRestoredLibrary(db,{
    unexpectedPublishedBookIds:unexpectedPublished,
    candidates:crossBookCandidates.map(group=>({
     ...group,
-    contexts:group.wordIds.flatMap(id=>(cardContext.get(id)||[]).slice(0,2)
+    contexts:group.wordIds.flatMap(id=>(cardContext.get(id)||[]).slice(0,25)
       .map(item=>({...item,contextSha256:hash(item.contextSentence)})))
    }))
   };
