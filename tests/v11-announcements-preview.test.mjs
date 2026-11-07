@@ -265,6 +265,8 @@ test("V1.1 notice stays visible after details return until the close button is c
    siteUpdateMeta:{textContent:""},
    siteUpdateDetail:{href:""},
    siteUpdateMessage:{onclick:null},
+   siteUpdateTitle:{onclick:null},
+   siteUpdateMeta:{onclick:null},
    siteUpdateDismiss:{onclick:null}
   };
   const location={get href(){return url.href},get search(){return url.search}};
@@ -290,7 +292,9 @@ test("V1.1 notice stays visible after details return until the close button is c
  assert.equal(first.search,"","preview query must be consumed once");
  assert.equal(storage.has(key),false,"preview reset clears only the old demo dismissal");
  assert.equal(typeof first.nodes.siteUpdateDetail.onclick,"function","details is an in-page action");
- assert.equal(typeof first.nodes.siteUpdateMessage.onclick,"function","title and date open same in-page dialog");
+ assert.equal(typeof first.nodes.siteUpdateTitle.onclick,"function","title opens modal");
+ assert.equal(typeof first.nodes.siteUpdateMeta.onclick,"function","date opens modal");
+ assert.equal(first.nodes.siteUpdateMessage.onclick,null,"empty message wrapper must not be a click target");
  const back=await visit(); // history page's "返回首页" points to /
  assert.equal(back.nodes.siteUpdateBanner.hidden,false,"detail/return should not hide notice");
  back.events.pageshow(); // bfcache/history restoration
@@ -312,8 +316,8 @@ test("V1.1 text-only announcement is borderless and responsive at mobile, tablet
  assert.match(css,/\.mw-update-action\{[^}]*min-height:32px/);
  assert.match(css,/html\[data-theme="dark"\] \.mw-update-strip/);
  const index=read("public/index.html");
- assert.match(index,/site-updates\.css\?v=20261107-preview5/);
- assert.match(index,/site-updates\.js\?v=20261107-preview5/);
+ assert.match(index,/site-updates\.css\?v=20261107-preview6/);
+ assert.match(index,/site-updates\.js\?v=20261107-preview6/);
 });
 
 // Modal interactions: no route changes, cached newest text, compact expandable history.
@@ -361,8 +365,8 @@ test("V1.1 modal instantly shows latest then five history headings, expands on d
  runInNewContext(read("public/site-updates.js"),context);
  await new Promise(resolve=>setImmediate(resolve));
  assert.equal(calls.length,1,"initial page loads only latest notice");
- nodes.siteUpdateMessage.onclick();
- assert.equal(nodes.siteUpdateDialog.open,true,"title and date click opens dialog");
+ nodes.siteUpdateTitle.onclick();
+ assert.equal(nodes.siteUpdateDialog.open,true,"title click opens dialog");
  assert.equal(nodes.siteUpdateDialogHeadline.textContent,"最新公告");
  assert.equal(nodes.siteUpdateDialogBody.textContent,"弹窗直接展示完整正文");
  assert.equal(calls.length,1,"opening dialog should be immediate without an additional fetch");
@@ -390,6 +394,9 @@ test("V1.1 modal instantly shows latest then five history headings, expands on d
  assert.equal(nodes.siteUpdatePanelLatest.hidden,false,"dialog reopens on latest tab");
  assert.equal(nodes.siteUpdateTabLatest.attributes["aria-selected"],"true");
  nodes.siteUpdateDialog.close();
+ nodes.siteUpdateMeta.onclick();
+ assert.equal(nodes.siteUpdateDialog.open,true,"date click opens same modal");
+ nodes.siteUpdateDialog.close();
  nodes.siteUpdateDetail.onclick();
  assert.equal(nodes.siteUpdateDialog.open,true,"details opens same modal");
  nodes.siteUpdateDialog.close();
@@ -399,10 +406,14 @@ test("V1.1 modal instantly shows latest then five history headings, expands on d
 test("V1.1 modal is accessible, center-aligned, mobile-adaptive and never links from details to archive page",()=>{
  const html=read("public/index.html"),css=read("public/site-updates.css");
  assert.match(html,/id="siteUpdateDetail"[^>]*type="button"[^>]*aria-haspopup="dialog"/);
- assert.ok(html.includes('id="siteUpdateMessage" class="mw-update-message" type="button" aria-haspopup="dialog"'));
- assert.ok(html.includes('<strong id="siteUpdateTitle"></strong><span id="siteUpdateMeta"'));
- assert.ok(css.includes('text-align:left;cursor:pointer'));
- assert.ok(css.includes('.mw-update-message:focus-visible'));
+ assert.ok(html.includes('<div id="siteUpdateMessage" class="mw-update-message">'));
+ assert.ok(html.includes('id="siteUpdateTitle" class="mw-update-title-trigger" type="button" aria-haspopup="dialog"'));
+ assert.ok(html.includes('id="siteUpdateMeta" class="mw-update-meta" type="button" aria-haspopup="dialog"'));
+ assert.doesNotMatch(html,/<button id="siteUpdateMessage"/);
+ assert.ok(css.includes('.mw-update-title-trigger{display:block;flex:0 1 auto;'));
+ assert.ok(css.includes('.mw-update-message{min-width:0;flex:1;'));
+ assert.doesNotMatch(css,/\.mw-update-message\{[^}]*cursor:pointer/);
+ assert.ok(css.includes('.mw-update-title-trigger:focus-visible'));
  assert.match(html,/<dialog id="siteUpdateDialog"/);
  assert.match(html,/id="siteUpdateTabLatest"[^>]*role="tab"/);
  assert.match(html,/id="siteUpdateTabHistory"[^>]*role="tab"/);
@@ -412,4 +423,18 @@ test("V1.1 modal is accessible, center-aligned, mobile-adaptive and never links 
  assert.match(css,/@media\(max-width:600px\)/);
  assert.match(css,/html\[data-theme="dark"\] \.mw-updates-dialog/);
  assert.doesNotMatch(html,/id="siteUpdateDetail"[^>]*href=/);
+});
+
+// Regression: announcement whitespace remains inert, only text buttons are interactive.
+test("V1.1 notice outer strip and flex whitespace are not clickable",()=>{
+ const html=read("public/index.html"),js=read("public/site-updates.js"),css=read("public/site-updates.css");
+ assert.match(html,/<div id="siteUpdateMessage" class="mw-update-message">/);
+ assert.match(html,/id="siteUpdateTitle" class="mw-update-title-trigger" type="button"/);
+ assert.match(html,/id="siteUpdateMeta" class="mw-update-meta" type="button"/);
+ assert.doesNotMatch(html,/id="siteUpdateMessage"[^>]*type="button"/);
+ assert.doesNotMatch(js,/\$\("siteUpdateMessage"\)\.onclick/);
+ assert.match(js,/\$\("siteUpdateTitle"\)\.onclick/);
+ assert.match(js,/\$\("siteUpdateMeta"\)\.onclick/);
+ assert.match(css,/\.mw-update-title-trigger\{[^}]*flex:0 1 auto/);
+ assert.doesNotMatch(css,/\.mw-update-message\{[^}]*cursor:pointer/);
 });
