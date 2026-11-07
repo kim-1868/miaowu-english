@@ -15,6 +15,18 @@ function fixture({canonical=true}={}){
    "('wa','record','n.','记录；档案'),"+
    "('wb','record','n.','记录'),"+
    "('wc','record','v.','录制')");
+ db.exec("INSERT INTO categories(id,slug,title,is_visible) VALUES"+
+   "('c4','cet4','四级',1)");
+ db.exec("INSERT INTO books(id,category_id,title,status) VALUES"+
+   "('book-a','c4','Book A','published'),('book-b','c4','Book B','published')");
+ db.exec("INSERT INTO chapters(id,book_id,chapter_no,title,content_json,published_at) VALUES"+
+   "('chapter-a','book-a',1,'A','{}','2026-01-01 00:00:00'),"+
+   "('chapter-b','book-b',1,'B','{}','2026-01-01 00:00:00')");
+ db.exec("INSERT INTO chapter_words(chapter_id,word_id,context_anchor,context_sentence) VALUES"+
+   "('chapter-a','wa','p0:s0','A private record.'),"+
+   "('chapter-b','wb','p0:s0','Another private record.'),"+
+   "('chapter-a','wc','p0:s1','Record audio here.')");
+ db.exec("INSERT INTO entitlements(user_id,category_id) VALUES('u1','c4')");
  db.exec("INSERT INTO user_words(user_id,word_id,status,bookmarked,due_at) VALUES "+
    "('u1','wa','mastered',1,NULL),"+
    "('u1','wb','learning',1,'2026-01-01 00:00:00')");
@@ -102,5 +114,71 @@ test("P5 real SQLite: canonical word query is bound in limited batches for long 
   const statements=f.queries.filter(x=>x.sql.includes("FROM user_study_schedules"));
   assert.equal(statements.length,2);
   assert.ok(statements.every(x=>x.args.length<=61));
+ }finally{f.db.close()}
+});
+
+test("P5 reader does not inherit old mastery from a never-purchased category",async()=>{
+ const f=fixture();try{
+  f.db.exec("INSERT INTO categories(id,slug,title,is_visible) VALUES('c6','cet6','六级',1)");
+  f.db.exec("UPDATE books SET category_id='c6' WHERE id='book-a'");
+  f.db.exec("DELETE FROM user_words WHERE user_id='u1' AND word_id='wb'");
+  const [word]=await annotateStudyWords(f.env,"u1",[f.words[1]]);
+  assert.equal(word.study_seen,false);
+  assert.equal(word.study_status,null);
+  assert.equal(word.study_bookmarked,false);
+  assert.equal(f.db.prepare("SELECT status FROM user_words WHERE word_id='wa'").get().status,"mastered");
+ }finally{f.db.close()}
+});
+test("P5 reader excludes old alias from a revoked code despite historical entitlement",async()=>{
+ const f=fixture();try{
+  f.db.exec("INSERT INTO categories(id,slug,title,is_visible) VALUES('c6','cet6','六级',1)");
+  f.db.exec("UPDATE books SET category_id='c6' WHERE id='book-a'");
+  f.db.exec("INSERT INTO activation_codes(id,code_hash,category_id,status,redeemed_by) VALUES"+
+   "('old-code','private-hash','c6','revoked','u1')");
+  f.db.exec("INSERT INTO entitlements(user_id,category_id,source_code_id) VALUES"+
+   "('u1','c6','old-code')");
+  f.db.exec("DELETE FROM user_words WHERE user_id='u1' AND word_id='wb'");
+  const [word]=await annotateStudyWords(f.env,"u1",[f.words[1]]);
+  assert.equal(word.study_seen,false);
+  assert.equal(word.study_status,null);
+  assert.equal(word.study_bookmarked,false);
+ }finally{f.db.close()}
+});
+test("P5 revoked alias remains eligible when its chapter is explicitly free preview",async()=>{
+ const f=fixture();try{
+  f.db.exec("INSERT INTO categories(id,slug,title,is_visible) VALUES('c6','cet6','六级',1)");
+  f.db.exec("UPDATE books SET category_id='c6' WHERE id='book-a'");
+  f.db.exec("UPDATE chapters SET is_preview=1 WHERE id='chapter-a'");
+  f.db.exec("DELETE FROM user_words WHERE user_id='u1' AND word_id='wb'");
+  const [word]=await annotateStudyWords(f.env,"u1",[f.words[1]]);
+  assert.equal(word.study_seen,true);
+  assert.equal(word.study_status,"mastered");
+  assert.equal(word.study_bookmarked,true);
+ }finally{f.db.close()}
+});
+test("P5 unpublished or hidden legacy chapter cannot introduce old mastery into a valid chapter",async()=>{
+ const f=fixture();try{
+  f.db.exec("DELETE FROM user_words WHERE user_id='u1' AND word_id='wb'");
+  f.db.exec("UPDATE books SET status='draft' WHERE id='book-a'");
+  let [word]=await annotateStudyWords(f.env,"u1",[f.words[1]]);
+  assert.equal(word.study_seen,false);
+  f.db.exec("UPDATE books SET status='published' WHERE id='book-a'");
+  f.db.exec("UPDATE chapters SET published_at=NULL WHERE id='chapter-a'");
+  [word]=await annotateStudyWords(f.env,"u1",[f.words[1]]);
+  assert.equal(word.study_seen,false);
+ }finally{f.db.close()}
+});
+test("P5 global canonical user decision remains available in an authorized new book even when old source entitlement is gone",async()=>{
+ const f=fixture();try{
+  f.db.exec("INSERT INTO categories(id,slug,title,is_visible) VALUES('c6','cet6','六级',1)");
+  f.db.exec("UPDATE books SET category_id='c6' WHERE id='book-a'");
+  f.db.exec("DELETE FROM user_words WHERE user_id='u1' AND word_id='wb'");
+  f.db.exec("INSERT INTO user_study_schedules(user_id,study_key,mastered,bookmarked) VALUES"+
+   "('u1','sense:record|n|记录',1,0)");
+  const [word]=await annotateStudyWords(f.env,"u1",[f.words[1]]);
+  assert.equal(word.study_seen,true);
+  assert.equal(word.study_status,"mastered");
+  assert.equal(word.study_bookmarked,false);
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM user_study_schedules").get().n,1);
  }finally{f.db.close()}
 });

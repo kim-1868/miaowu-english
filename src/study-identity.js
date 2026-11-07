@@ -41,11 +41,25 @@ export async function annotateStudyWords(env,userId,words){
   const state=new Map();
   for(let i=0;i<headwords.length;i+=60){
     const batch=headwords.slice(i,i+60);
+    // Old alias rows remain stored after a category is revoked, unpublished
+    // or hidden. A surviving chapter must not inherit those unavailable
+    // aliases as fresh mastery/bookmarks; canonical explicit user decisions
+    // are still applied below independently of this legacy fallback.
     const query="SELECT uw.word_id,uw.status,uw.bookmarked,uw.last_seen_at,uw.due_at,"+
       "w.headword,w.part_of_speech,w.meaning_zh "+
       "FROM user_words uw JOIN words w ON w.id=uw.word_id "+
       "WHERE uw.user_id=? AND LOWER(TRIM(w.headword)) IN ("+
-      batch.map(()=>"?").join(",")+") ORDER BY uw.last_seen_at DESC,uw.rowid DESC";
+      batch.map(()=>"?").join(",")+") "+
+      "AND EXISTS(SELECT 1 FROM chapter_words cw "+
+      "JOIN chapters ch ON ch.id=cw.chapter_id "+
+      "JOIN books b ON b.id=ch.book_id JOIN categories c ON c.id=b.category_id "+
+      "WHERE cw.word_id=uw.word_id AND b.status='published' AND c.is_visible=1 "+
+      "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
+      "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
+      "WHERE e.user_id=uw.user_id AND e.category_id=b.category_id "+
+      "AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v "+
+      "WHERE v.id=e.source_code_id AND v.status='revoked')))) "+
+      "ORDER BY uw.last_seen_at DESC,uw.rowid DESC";
     const result=await stmt(env,query,userId,...batch).all();
     for(const row of result.results||[]){
       const key=studyKey(row);
