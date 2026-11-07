@@ -290,3 +290,17 @@
 - **后续集成门禁**：当私人站同期其他开发稳定后，读取其**最新**候选 SHA，逐文件审阅前述 4 个 CSS/公告差异；新 UI 组件接入 `app.js` 前必须替换旧事件绑定、避免双份字号/抽屉/释义监听，再对注册、兑换、阅读权限、章节词汇、复习、进度和订单做私有环境回归。私人固定 SHA 手动 Gate、测试 D1 以及正式上线批准仍不能跳过。
 - **公开留痕**：[更新日志](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md)、[公共组件代码归属](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/PUBLIC_FRONTEND_OWNERSHIP_20261107.md)、[PUBLIC-11 Issue #18](https://github.com/kim-1868/miaowu-english-public/issues/18)。
 
+
+
+## 十八、PUBLIC-11-05 非阻塞词卡展示层安全抽离（2026-11-08）
+
+- **源对照**：从私人 V1.1 活动分支源提交 `0cf00b37ffa029997436fa3c0b2c67e35b114aa4` 只阅读 `public/app.js` 中 `showCloudWord` 的可见词卡结构、词序/按钮文案和移动端非阻塞弹层布局；**没有迁移** `saveCloudWord`、`cloudSaved` 学习状态、`serverRequest` 或任何受控词库/真实数据。
+- **公共完成**：[PR #23](https://github.com/kim-1868/miaowu-english-public/pull/23) 已 Squash 合并，核心提交 `8f1cbdf6e55b99bdf30eaf93bbeb1d311da0e2a8`。新增 `public/word-card-view.js`、合成 `showcase/word-card-contract.html/css/js`、`tests/public-word-card-view.test.mjs`，以及 29 文件白名单/构建/只读整合预检和 Chromium 合成场景。
+- **功能范围**：`MiaowuWordCardView.create({document,onSpeak,onBookmark,onMastery,onNavigate,onClose}).show({wordId,word,position,total,loading,missing,bookmarked,mastered,anchor})` 只使用 DOM/textContent 展示音标、词性、释义、例句与译文、最多三组搭配、前后词、加载/缺失、收藏和已掌握按钮；手机词卡固定底部而**不出现阻塞阅读的全屏遮罩**。切卡后清除旧高亮；关闭后可恢复原单词焦点。
+- **重大业务边界**：公共按钮只提交 `onBookmark` / `onMastery` 的意图，不立即乐观改变已收藏/已掌握文案；必须待私人服务端成功后由业务层带新状态重新渲染。服务器仍管理词义唯一性、跨小说同义项去重、不同义项分开掌握、用户注册、权益/章节和订单，绝不能迁到公共脚本中。音频仅通过 `onSpeak` 回调，不自带 TTS 或网络请求。
+- **公开验收**：[Node 白名单和安全/功能测试 #42393095483](https://github.com/kim-1868/miaowu-english-public/actions/runs/42393095483) 成功；[Chromium 真浏览器 320/390/1440px #42393095543](https://github.com/kim-1868/miaowu-english-public/actions/runs/42393095543) 成功；[合并后 main 构建 #42393184164](https://github.com/kim-1868/miaowu-english-public/actions/runs/42393184164) 成功。
+- **公开交付包**：`wordletter-public-ui-8f1cbdf6e55b99bdf30eaf93bbeb1d311da0e2a8`，29 个白名单文件与 SHA-256 manifest；GitHub Artifact ID `13581784780`。固定私人 V1.1 参照版本比对：20 个 Git Blob SHA 一致；4 个公共已有改动待审（`public/site-updates.js`、`public/v11-reader.css`、`public/v11-responsive.css`、`public/v11-wordbook.css`）；5 个公共新增 UI 组件（`reader-preferences.js`、`shelf-pagination.js`、`shelf-card.js`、`reader-panels.js`、`word-card-view.js`）**尚未集成**。
+- **私人不受影响**：本轮未修改私人 `app.js`、词卡身份规则、D1、Cloudflare Workers/Pages、预览或正式站；没有更动用户/订单/激活/小说/词库。本私人 `main` 仅追加交接文档，用户并行开发可继续。
+- **下一步技术关口**：优先在公共仓库制作 5 个 UI 组件的“私有集成接线与旧逻辑替换合同”，基于双方冻结 SHA 只读审阅差异；待私人当前开发稳定，再由授权的私人候选整合人员一次性删除旧卡片 DOM/监听，接入服务端授权的词卡状态与词义 ID，并执行登录/付费墙、跨书去重、掌握、复习、手机词卡、进度、订单/备份安全回归。必须经过私人 Gate 和用户正式发布确认，公共 Actions 的通过不能替代。
+- **记录**：[公共 UPDATE_LOG](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md) 和 [PUBLIC-11 #18](https://github.com/kim-1868/miaowu-english-public/issues/18)。
+
