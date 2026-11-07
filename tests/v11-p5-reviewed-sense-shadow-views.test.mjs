@@ -331,7 +331,7 @@ test("P5 writeback: Story Echo keeps original completed chapter ID and cannot su
     chapterId:"cha",requestId:id,answer:"record",choiceId:"wb",now:NOW});
   assert.equal(saved.correct,true);
   const event=f.db.prepare("SELECT word_id,chapter_id FROM review_events WHERE id=?").get(id);
-  assert.deepEqual(event,{word_id:"wa",chapter_id:"cha"});
+  assert.deepEqual({...event},{word_id:"wa",chapter_id:"cha"});
   assert.equal(f.db.prepare("SELECT COUNT(*) n FROM review_events").get().n,1);
  }finally{f.db.close()}
 });
