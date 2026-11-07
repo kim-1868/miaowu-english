@@ -24,7 +24,11 @@ async function home(){
  try{
   const result=await get("/api/updates/latest");
   const latest=result?.latest;
-  if(!latest||!latest.id||dismissed()===latest.id){section.hidden=true;return}
+  // Reviewer-only preview link can reveal the sample once after it was dismissed.
+  // This never overrides the dismissal rule for real published announcements.
+  const forcePreview=result?.previewOnly===true &&
+    new URLSearchParams(location.search).get("previewAnnouncement")==="1";
+  if(!latest||!latest.id||(dismissed()===latest.id&&!forcePreview)){section.hidden=true;return}
   text($("siteUpdateTitle"),latest.title);
   text($("siteUpdateMeta"),safeDate(latest.publishedAt)+" · "+(KIND[latest.category]||"更新"));
   $("siteUpdateDetail").href="/updates.html#"+encodeURIComponent(latest.id);
