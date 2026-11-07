@@ -315,3 +315,15 @@
 - **明确的后续整合程序**：私人候选先锁定 SHA → 只读核对公开 29 文件的独立 source SHA 和 manifest → 审查公告 JS、阅读/响应式/词本 CSS 四个差异 → 五组件逐个删除旧 `onclick`/HTML 生成位置并接入私人数据/回调 → 私人 SHA 手动 Gate → 隔离 D1 预览验证真实权限、词义 ID、跨书去重、学习/掌握/复习、阅读进度、订单与回滚 → 需用户明确批准才能正式部署。
 - **无私有 Actions 支出或网站操作**：本轮所有代码/测试在公共 GitHub Actions 完成；私人 `main` 只追加交接文档。没有修改私人 V1.1 活动分支、Secrets、D1、Cloudflare 预览或生产站，不能宣称已整合上线，也不能把前端模拟合格等同真实用户端测试。
 
+
+
+## 二十、PUBLIC-11-07 公共书架分页首次私人隔离候选接线 + 极简离线验收（2026-11-08）
+
+- **不是直接发布**：新建私人隔离分支 `feature/public11-shelf-pagination-candidate-20261108`，从活动 V1.1 分支固定提交 `0cf00b37ffa029997436fa3c0b2c67e35b114aa4` 分出，独立 [Draft PR #190](https://github.com/kim-1868/miaowu-english/pull/190)；当前候选 HEAD `1e98a8ce9a1ae50bb1fe7a92ebddd5abbb2cb928`，**未合并入用户实际活动分支**。
+- **真实接线**：将公共 `public/shelf-pagination.js` 逐字节引入私人候选（公共 Git blob `be3864615c09a8475d5e4a15845e4fb26b0b48eb`，本次比对相同）。`public/index.html` 在旧 `app.js` 前加载模块；`app.js` 在模块存在时把 `renderShelfPagination` 的 DOM 输出交给公共组件，分类/页码状态、书籍查询和滚动回调继续私人控制；公共模块缺失时**只运行旧分页路径**，保证不会双重渲染。
+- **完整静态资源边界**：在私人候选 `scripts/build-production-assets.mjs` 将新文件加入精确生产静态白名单，`package.json` 的 check 增加新脚本语法；`tests/public11-shelf-candidate.test.mjs` 新增公共脚本存在/缺失两种环境、分页回调、单页无分页及旧 renderer fallback 合同；另附私人文档 `docs/PUBLIC11_SHELF_PAGINATION_CANDIDATE_20261108.md`。
+- **仅一次、小规模私人 CI**：候选分支专用 `.github/workflows/public11-shelf-candidate-offline.yml` 只在特定分支/改动触发。测试不安装 npm 依赖、不调用云端，也不接收 Secrets。已成功完成 [Actions #42396232279](https://github.com/kim-1868/miaowu-english/actions/runs/42396232279)：Node 22 语法、私人分页兼容/旧版回退测试、`s154` 原有服务端分页与展示静态合同、生产资产本地干运行。**未运行全套私有 Gate，亦未联网部署或访问 D1**。
+- **隔离条件**：公共 [PUBLIC-11 29 文件基线](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/PUBLIC11_COMPONENT_INTEGRATION_GATE_20261108.md) 已通过原公开 CI；本次仅将其中 `shelf-pagination.js` 先行作为**私人草稿候选**。当前 5/5 公共组件已完成；**1/5 有候选接线，0/5 合入私人活动开发分支，0/5 正式上线**。
+- **后续发布门禁**：核查用户其它会话最新私人 V1.1 完整 SHA，必要时重定基；预览测试环境核对分类/权限/翻页/进度和按钮、整套真人业务及回滚演练；其他组件按同样方式逐个受控候选接入，避免覆盖 concurrent 开发。必须取得用户正式发布批准；不得把 Draft PR 直接合并，不得在无私有 Gate 时声称成功上线。
+- **项目记录已双向同步**：公共 [docs/UPDATE_LOG.md](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md) 和 [PUBLIC11_COMPONENT_INTEGRATION_GATE_20261108.md](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/PUBLIC11_COMPONENT_INTEGRATION_GATE_20261108.md) 已写清候选进度与 0/5 已上线状态。
+
