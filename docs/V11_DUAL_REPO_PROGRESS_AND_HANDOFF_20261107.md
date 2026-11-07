@@ -134,3 +134,43 @@
 - **剩余事项**：PUBLIC-01/02/03 的真实浏览器视觉验收、4 个公共/私人文件的版本差异审阅、私人全链路集成验收；CI-COST-01 需用实际 GitHub 账单验证私有运行分钟消耗。
 
 **公开更新留痕**：[docs/UPDATE_LOG.md](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md)。所有后续 PR 仍须留下版本号、差异、测试和部署状态后才能交付。
+
+
+## 十一、CI-COST-01 / PUBLIC-06 / PUBLIC-08 双仓库更新流水线减额交付（2026-11-07）
+
+### 需求与结论
+
+用户确认“公开更新操作尽量都放公共仓库，私人内容留/迁入私人仓库”。本轮已真实调整仓库工作流；**不是将完整正式网站公开**，也绝不能让公共 Actions 持有私人小说、词库、用户/订单/授权数据或 Cloudflare 密钥。
+
+### A. 公共研发仓库：可重复生成、可验证的更新包
+
+- 公共 [PR #10](https://github.com/kim-1868/miaowu-english-public/pull/10) 已合并，提交 `199c9c4631f0e50f8646bfd46ef9d71ed88afbbf`。
+- 新增公开 UI 构建脚本、SHA-256 manifest 单测与公共 Actions artifact；仅包含 18 个审核白名单中的 CSS/JS/SVG。
+- [公共主分支 Actions 42383632259](https://github.com/kim-1868/miaowu-english-public/actions/runs/42383632259) 已成功，已核对实际交付 Artifact：`wordletter-public-ui-199c9c4631f0e50f8646bfd46ef9d71ed88afbbf`（ID 13578762144）。不自动回写私人代码，不部署 Cloudflare。
+- 为取代私人日常前端视觉回归，公共 [PR #13](https://github.com/kim-1868/miaowu-english-public/pull/13) 已合并，提交 `323d7c470af5127be9175341e5a56954f9b5fc36`，增加 `ubuntu-24.04` + Playwright 1.56.1 合成 UI 浏览器矩阵。实际 [运行 42384640070](https://github.com/kim-1868/miaowu-english-public/actions/runs/42384640070) 成功：320/375/390/430/768/1024/1440px、夜间对比、44px 手机点击区、12–24px 演示字号、无页面横向溢出，并生成只含合成界面的截图 Artifact（ID 13578639161）。公共 [main 回归 42384719422](https://github.com/kim-1868/miaowu-english-public/actions/runs/42384719422) 成功。
+- 另一条并行的公共“小说标注结构合成合同测试”由其他开发分支独立完成；在合并浏览器工作流时**保留**其 `scripts/annotation-contract.mjs`、`tests/annotation-contract.test.mjs`、`package.json` 与日志更改，没有覆盖对方的新功能。
+
+### B. 私人核心仓库：减少重复 Actions，但保留真实安全验证
+
+- 只读抽样：私人最近 100 次 Actions 中 S1 37 次、Production dry-run 36 次、V1.1 staging 部署 27 次。该统计是**运行次数，不是实际计费分钟或节省金额**。
+- 私有 [PR #187](https://github.com/kim-1868/miaowu-english/pull/187) 已合并至默认 `main`，提交 `008eaa984b4778cedb81816a5ad6bb2e78e4eb79`：创建默认分支上可见的手动、固定 40 位 SHA 私人候选整体验收工作流，禁止部署和远程 D1。
+- 私有 [PR #188](https://github.com/kim-1868/miaowu-english/pull/188) 已合并至 V1.1 活动分支，提交 `35fc21bfd8b44919bad404e2f76f02e4840dec6c`：S1 与 Production dry-run 不再因每次 `pull_request` 更新自动重复启动；保留原特定旧功能分支的 push 与 workflow_dispatch。
+- 随后两个仅修改工作流/交接文档的提交 `9b3e7662e7b92e8f8774ece82de29e0393514f6c`、`14a8aa545802d4933926a90bafa3b67941f11fc0`：把 13 个 P5/公告/阅读专项检查的高频通用 `pull_request` 触发移除，保留对应专项功能分支的 push 检查；正式私有业务回归须在候选阶段通过统一 SHA 手动 Gate。
+- 发现私人 [P5 浏览器失败运行 42383967270](https://github.com/kim-1868/miaowu-english/actions/runs/42383967270) 的原因是 `ubuntu-latest` 自动升级至 Ubuntu 26.04 后 Playwright 1.56.1 无法安装 Chromium，**不是业务测试断言错误**。已将 3 个相关工作流固定到 `ubuntu-24.04`，并通过私人 [Chromium 宽屏检查 42384312885](https://github.com/kim-1868/miaowu-english/actions/runs/42384312885) 验证。
+- 默认私人 Gate 随后更新到 `6f9a697056b1ba54ca5d777fb429a333e3c8e6a2`：固定 `ubuntu-24.04`、执行 `npm run release:v11:offline-check`（包含账户/订单/数据库恢复模拟及网站单元回归）、私人实际 Chromium 阅读/词卡检查、生产 Worker/Pages 本地 dry-run。**此手动整体验收流程尚未实际运行，不能宣称已通过。**
+
+### C. 未改动的生产/预览及必要后续
+
+- 本轮没有迁移私人小说/词库/用户/订单/激活码/数据备份到公共，没有改 `public/` 业务代码、`src/` 后端、D1、Cloudflare 绑定或发布 Secrets；私人 V1.1 预览部署的自动触发和其部署前完整回归**仍然保留**，避免影响用户同期其他 Agent 的预览开发。
+- 公开 UI 的 SHA 校验包**尚未自动集成**到私人正式站：必须先读取两个最新 SHA，审查公共/私人已有 4 个差异文件（公告 JS、阅读/响应式/词本 CSS），按差异合并，不得用旧公共完整文件覆盖私人当前修改。
+- 进入正式发布之前必须在私人默认分支 Actions 里对**冻结的私人候选完整 SHA**执行手动 `Private candidate integration and production build QA`，再完成 staging/test D1、用户实际手机/电脑验收、真实权益/订单隔离、安全备份与回滚、得到用户明确的正式上线授权。
+- 月度私人 2,000 分钟额度依然存在；真实节省需过一段时间查看 GitHub Billing 的实际计费分钟。当前只能确认触发规则已减少，并非额度本身被取消。
+- 之后的默认执行顺序：公开 UI 开发 → 公共测试/真实 Chromium → 公共 18 文件 SHA-256 artifact → 私人按固定版本差异整合 → 私人单次 SHA Gate → 受控预览验收 → 用户授权生产发布。
+
+### 记录与相关文档
+
+- [公共逐次更新日志](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md)
+- [私人 CI 调整明细与回滚](V11_PRIVATE_ACTIONS_COST_REDUCTION_20261107.md)
+- [私人 SHA 候选手动 Gate](PRIVATE_CANDIDATE_INTEGRATION_GATE_20261107.md)
+
+每次更新继续填写完整提交 SHA、文件清单、测试、是否部署、与并行分支差异、遗留问题，不允许只在聊天中宣布完成。
