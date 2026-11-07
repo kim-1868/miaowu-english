@@ -12,3 +12,5 @@
 **当前状态**：18 个公共前端文件已安全迁移，公共 UI 演示、文件白名单与 GitHub Actions 离线测试已投入使用；私人 V1.1 分支已优化过时检查取消逻辑。生产站仍使用私人仓库代码快照，跨仓库自动整合及剩余私人 CI 优化尚待推进，因此不能声称 2,000 分钟限制已完全消失。
 
 公共仓库迁移明细：[PUBLIC_MIGRATION_MANIFEST.md](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/PUBLIC_MIGRATION_MANIFEST.md)。
+
+**最新 V1.1 并行开发与交付记录**：[docs/V11_DUAL_REPO_PROGRESS_AND_HANDOFF_20261107.md](docs/V11_DUAL_REPO_PROGRESS_AND_HANDOFF_20261107.md)。网站同期的其它开发分支不由公共仓库自动覆盖；公共任务与私人集成按版本核对后推进。
