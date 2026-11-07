@@ -4,7 +4,7 @@
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>妙屋英语 · 运营出版台</title>
 <link rel="stylesheet" href="/ops-console.css?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;layout=20261106-v42">
-<script src="/ops-console.js?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;tags=20261106-v40&amp;layout=20261106-v42&amp;updates=20261107-preview1" defer></script>
+<script src="/ops-console.js?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;tags=20261106-v40&amp;layout=20261106-v42&amp;updates=20261107-ops2" defer></script>
 </head><body>
 <header><div class="brand">喵 · 妙屋英语 <span>THE STORY & WORD LIBRARY</span></div>
   <div class="strap">运营出版台 <span class="pill">受控操作</span></div></header>
@@ -298,8 +298,9 @@
         <span class="ops-fold-caret" aria-hidden="true">⌄</span>
       </summary>
       <div class="ops-record-section-content">
-        <p class="hint">公告会在首页 Banner 下方显示一条简短提示，读者可以关闭。所有已发布公告保留在公开的「妙屋更新日志」中。当前仅用于 V1.1 受保护预览环境。</p>
+        <p class="hint">公告展示在首页导航栏下方。点击标题、日期或「详情」可在当前页面打开弹窗；历史更新按标题折叠查看。新公告发布后，读者刷新首页即可看到。仅作用于受密码保护的 V1.1 预览站。</p>
         <div id="updatesAdminStatus" class="status" role="status" aria-live="polite">请先验证运营身份。</div>
+        <div id="updatesSetupPanel" class="mw-ops-updates-setup" hidden><p>首次使用，需要由发布者为<strong>测试数据库</strong>创建独立的公告表，仅需操作一次。不会修改小说、账号、订单或正式数据库。</p><button id="updatesSetup" type="button" class="secondary">启用公告管理（仅测试站）</button></div>
         <div class="row"><button id="updatesNew" type="button" class="secondary" disabled>＋ 新建公告</button>
         <button id="updatesRefresh" type="button" class="secondary" disabled>刷新公告列表</button></div>
         <div class="mw-ops-updates-layout">
@@ -313,17 +314,17 @@
                 <option value="feature">功能更新</option><option value="books">新书上架</option>
                 <option value="maintenance">维护通知</option><option value="other">其他</option>
               </select></label>
-            <label for="updatesSummary">简短摘要
-              <input id="updatesSummary" maxlength="180" required placeholder="首页可见的简短提醒"></label>
+            <label for="updatesSummary">简短摘要（选填）
+              <input id="updatesSummary" maxlength="180" placeholder="不填写则使用公告标题"></label>
             <label for="updatesBody">公告正文（读者可在历史更新中查看）
               <textarea id="updatesBody" maxlength="4000" rows="5" required placeholder="写下这次更新的内容……"></textarea></label>
-            <label class="mw-ops-updates-checkbox"><input type="checkbox" id="updatesOnHome" checked> 在首页 Banner 下方展示最新一条</label>
+            <label class="mw-ops-updates-checkbox"><input type="checkbox" id="updatesOnHome" checked> 允许展示在首页导航栏下方（首页最多展示一条）</label>
             <div class="row">
               <button id="updatesSave" type="submit" disabled>保存草稿 / 修改</button>
               <button id="updatesPublish" type="button" disabled>发布公告</button>
               <button id="updatesWithdraw" type="button" class="secondary" disabled>下架公告</button>
             </div>
-            <p class="hint">保存草稿不会公开；发布后首页最多显示一条。编辑已发布公告，不会让关闭过它的用户重新收到提醒；要重新提醒请新建公告。</p>
+            <p class="hint">请先保存，再发布。保存草稿不会公开；发布才会同步至首页和历史弹窗。已发布公告修改后无需重复发布，且不会重新提醒已关闭的读者；如需重新提醒，请新建公告。</p>
           </form>
         </div>
       </div>
