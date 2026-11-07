@@ -193,3 +193,59 @@ test('P5 wordbook does not leak newly bookmarked study words from an unentitled 
   assert.equal(result.data.flashDue,0);
  }finally{f.db.close()}
 });
+
+test('P5 Echo due finds same approved-looking sense in completed B even when only old A word ID was studied',async()=>{
+ const f=fixture();try{
+  f.insert('wa','learning',1,'2026-01-01 00:00:00');
+  // The owner studied in A, but has only completed B; B uses a different
+  // wordId for the same (headword, POS, first teaching meaning) identity.
+  f.db.exec("DELETE FROM reading_progress WHERE chapter_id='ch-a'");
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM user_words WHERE word_id='wb'").get().n,0);
+  const due=await f.call('/api/me/echo/available?scope=due');
+  assert.equal(due.status,200,JSON.stringify(due.data));
+  assert.equal(due.data.distinctWords,1);
+  assert.equal(due.data.words[0].word_id,'wb');
+  assert.equal(due.data.words[0].chapter_id,'ch-b');
+  assert.equal(due.data.words[0].headword,'record');
+  assert.equal((await f.call('/api/me/flashcards?scope=due')).data.total,1);
+  assert.equal((await f.call('/api/me/echo/stats')).data.due,1);
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM user_words").get().n,1,
+    'due query must never seed history or change an alias');
+ }finally{f.db.close()}
+});
+test('P5 Echo due never merges the same English spelling with a different part-of-speech',async()=>{
+ const f=fixture();try{
+  f.insert('wa','learning',1,'2026-01-01 00:00:00');
+  f.db.exec("DELETE FROM reading_progress WHERE chapter_id='ch-a'");
+  const due=await f.call('/api/me/echo/available?scope=due');
+  assert.equal(due.data.distinctWords,1);
+  assert.equal(due.data.words[0].word_id,'wb');
+  assert.equal(due.data.words[0].part_of_speech,'n.');
+  assert.ok(!due.data.words.some(w=>w.word_id==='wc'));
+ }finally{f.db.close()}
+});
+test('P5 Echo due scans past 600 wrong-POS occurrences to find a later completed valid synonym alias',async()=>{
+ const f=fixture();try{
+  f.insert('wa','learning',1,'2026-01-01 00:00:00');
+  f.db.exec("DELETE FROM reading_progress WHERE chapter_id='ch-a'");
+  const insert=f.db.prepare("INSERT INTO chapter_words(chapter_id,word_id,context_sentence,context_anchor) VALUES('ch-b','wc',?,?)");
+  for(let i=0;i<620;i++)insert.run('Repeated verb record occurrence','0'+String(i).padStart(4,'0'));
+  const due=await f.call('/api/me/echo/available?scope=due');
+  assert.equal(due.status,200);
+  assert.equal(due.data.distinctWords,1,"600 earlier verb usages must not hide the due noun");
+  assert.equal(due.data.words[0].word_id,'wb');
+  assert.equal(due.data.words[0].chapter_id,'ch-b');
+  assert.ok(!due.data.words.some(w=>w.word_id==='wc'));
+ }finally{f.db.close()}
+});
+test('P5 Echo due respects revoked category and completed-chapter gates with cross-book candidate IDs',async()=>{
+ const f=fixture();try{
+  f.insert('wa','learning',0,'2026-01-01 00:00:00');
+  f.db.exec("DELETE FROM reading_progress WHERE chapter_id='ch-a'");
+  f.db.exec("UPDATE entitlements SET revoked_at=CURRENT_TIMESTAMP WHERE user_id='u1'");
+  const result=await f.call('/api/me/echo/available?scope=due');
+  assert.equal(result.data.distinctWords,0);
+  assert.equal((await f.call('/api/me/echo/stats')).data.due,0);
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM user_words").get().n,1);
+ }finally{f.db.close()}
+});
