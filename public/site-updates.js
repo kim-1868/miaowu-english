@@ -24,11 +24,19 @@ async function home(){
  try{
   const result=await get("/api/updates/latest");
   const latest=result?.latest;
-  // Reviewer-only preview link can reveal the sample once after it was dismissed.
-  // This never overrides the dismissal rule for real published announcements.
-  const forcePreview=result?.previewOnly===true &&
+  // Preview-only reset is a ONE-TIME reviewer action. Leaving the history page
+  // must never make the notice disappear, and clicking × must remain final.
+  // Never reset a real published notice's dismissed state.
+  const previewRequested=result?.previewOnly===true && latest?.id &&
     new URLSearchParams(location.search).get("previewAnnouncement")==="1";
-  if(!latest||!latest.id||(dismissed()===latest.id&&!forcePreview)){section.hidden=true;return}
+  if(previewRequested){
+    try {if(dismissed()===latest.id)localStorage.removeItem(storageKey)} catch {}
+    // Consume the preview flag so a later explicit × is respected on refresh.
+    const url=new URL(location.href);
+    url.searchParams.delete("previewAnnouncement");
+    history.replaceState(history.state,"",url.pathname+url.search+url.hash);
+  }
+  if(!latest||!latest.id||dismissed()===latest.id){section.hidden=true;return}
   text($("siteUpdateTitle"),latest.title);
   text($("siteUpdateMeta"),safeDate(latest.publishedAt)+" · "+(KIND[latest.category]||"更新"));
   $("siteUpdateDetail").href="/updates.html#"+encodeURIComponent(latest.id);
@@ -84,4 +92,6 @@ if(document.readyState==="loading")
  document.addEventListener("DOMContentLoaded",()=>{void home();void archive()},{once:true});
 else{void home();void archive()}
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)void home()});
+// Restore from history (including bfcache): simply refresh; never dismiss on navigation.
+window.addEventListener("pageshow",()=>{if($("siteUpdateBanner"))void home()});
 })();
