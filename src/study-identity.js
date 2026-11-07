@@ -60,10 +60,35 @@ export async function annotateStudyWords(env,userId,words){
       }
     }
   }
+  // Reader annotations must honor the same explicit canonical decision
+  // used by the wordbook, fast cards, homepage and Story Echo. Otherwise an
+  // older mastered/bookmarked alias can resurrect after unmaster/unbookmark.
+  // Query only the senses in this authorized chapter, never all user plans.
+  const plans=new Map();
+  const distinctKeys=[...new Set(keys)];
+  for(let i=0;i<distinctKeys.length;i+=60){
+    const batch=distinctKeys.slice(i,i+60);
+    try{
+      const result=await stmt(env,
+        "SELECT study_key,mastered,bookmarked FROM user_study_schedules "+
+        "WHERE user_id=? AND study_key IN ("+batch.map(()=>"?").join(",")+")",
+        userId,...batch).all();
+      for(const row of result.results||[])plans.set(row.study_key,row);
+    }catch(error){
+      // Old installations before the additive schedule table existed must
+      // retain their previous alias behavior until the schema is available.
+      if(/no such table:\s*user_study_schedules/i.test(String(error?.message||error)))
+        break;
+      throw error;
+    }
+  }
   return words.map((w,i)=>{
-    const s=state.get(keys[i]);
-    return {...w,study_key:keys[i],study_seen:!!s,
-      study_status:s?.status||null,study_bookmarked:!!s?.bookmarked};
+    const legacy=state.get(keys[i]);
+    const plan=plans.get(keys[i]);
+    return {...w,study_key:keys[i],
+      study_seen:!!legacy||!!plan,
+      study_status:plan?(Number(plan.mastered)===1?"mastered":"learning"):(legacy?.status||null),
+      study_bookmarked:plan?Number(plan.bookmarked)===1:!!legacy?.bookmarked};
   });
 }
 export function uniqueStudyRows(rows){
