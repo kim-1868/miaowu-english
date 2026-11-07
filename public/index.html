@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="/v11-bookshelf.css?v=20261106-p2" />
   <link rel="stylesheet" href="/v11-wordbook.css?v=20261106-p5-inline-example" />
   <link rel="stylesheet" href="/v11-responsive.css?v=20261106-p5" />
-  <link rel="stylesheet" href="/site-updates.css?v=20261107-preview3" />
+  <link rel="stylesheet" href="/site-updates.css?v=20261107-preview4" />
 </head>
 <body>
   <div class="app-shell">
@@ -37,7 +37,7 @@
         <div class="mw-update-inner">
           <span class="mw-update-paw" aria-hidden="true">🐾</span>
           <div class="mw-update-message"><strong id="siteUpdateTitle"></strong><span id="siteUpdateMeta" class="mw-update-meta"></span></div>
-          <a id="siteUpdateDetail" class="mw-update-action" href="/updates.html">详情 ›</a>
+          <button id="siteUpdateDetail" class="mw-update-action" type="button" aria-haspopup="dialog" aria-controls="siteUpdateDialog">详情 ›</button>
           <button id="siteUpdateDismiss" class="mw-update-dismiss" type="button" aria-label="关闭当前公告" title="关闭这条公告">×</button>
         </div>
       </section>
@@ -127,6 +127,26 @@
     <p class="mw-welcome-error" id="mwWelcomeError" role="alert" hidden>暂时无法保存引导进度，请检查网络后重试。</p>
   </dialog>
   <div id="mwWordHint" class="mw-word-hint" role="status" data-open="false"><span>点击英文单词可以查看词义、听发音，还能加入生词本。</span><button type="button">知道啦</button></div>
+  <dialog id="siteUpdateDialog" class="mw-updates-dialog" aria-labelledby="siteUpdateDialogTitle">
+    <div class="mw-updates-dialog-heading">
+      <div><span class="mw-updates-eyebrow">WORDLETTER · WHAT'S NEW</span><h2 id="siteUpdateDialogTitle">妙屋新鲜事</h2></div>
+      <button id="siteUpdateDialogClose" class="mw-updates-dialog-close" type="button" aria-label="关闭公告详情">×</button>
+    </div>
+    <div class="mw-updates-tabs" role="tablist" aria-label="选择公告类型">
+      <button id="siteUpdateTabLatest" type="button" role="tab" aria-selected="true" aria-controls="siteUpdatePanelLatest">最新公告</button>
+      <button id="siteUpdateTabHistory" type="button" role="tab" aria-selected="false" aria-controls="siteUpdatePanelHistory">历史更新</button>
+    </div>
+    <section id="siteUpdatePanelLatest" class="mw-updates-panel" role="tabpanel" aria-labelledby="siteUpdateTabLatest">
+      <p id="siteUpdateDialogDate" class="mw-updates-date"></p>
+      <h3 id="siteUpdateDialogHeadline" class="mw-updates-headline"></h3>
+      <p id="siteUpdateDialogBody" class="mw-updates-body"></p>
+    </section>
+    <section id="siteUpdatePanelHistory" class="mw-updates-panel" role="tabpanel" aria-labelledby="siteUpdateTabHistory" hidden>
+      <div id="siteUpdateCompactList" class="mw-updates-list" aria-label="历史更新列表"></div>
+      <p id="siteUpdateHistoryInlineStatus" class="mw-updates-status" role="status" aria-live="polite"></p>
+      <button id="siteUpdateHistoryMore" class="mw-updates-more" type="button" hidden>查看更多</button>
+    </section>
+  </dialog>
   <dialog id="installGuideDialog" class="install-guide-dialog" aria-labelledby="installGuideTitle">
     <button type="button" class="install-guide-close" id="installGuideClose" aria-label="关闭添加到桌面教程">×</button>
     <h2 id="installGuideTitle">把妙屋添加到手机桌面</h2>
@@ -150,6 +170,6 @@
   <script src="/app.js?v=20261105-v30-flashcards"></script>
   <script src="/install-guide.js?v=20261106-v11-p1"></script>
   <script src="/onboarding.js?v=20261106-v11-p1"></script>
-  <script src="/site-updates.js?v=20261107-preview3"></script>
+  <script src="/site-updates.js?v=20261107-preview4"></script>
 </body>
 </html>
