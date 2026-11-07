@@ -248,3 +248,17 @@
 - **并行开发保护**：此轮没有修改任何私人 `public/app.js`、真实小说/词库/订单、D1 或 Cloudflare；正式、预览均未部署。未来私人集成必须**先审阅最新 app.js 并移除旧日夜/字号双重监听**，否则不能简单把新的浏览器脚本叠加到已有页面。
 - **未完成**：真实网站用户流程与跨设备集成、私人候选 Gate；公共 Issue #18 仍开放，继续逐步拆分下一块不涉及用户权限的 UI。公共文档： [UPDATE_LOG](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md)。
 
+
+
+## 十五、PUBLIC-11-02 书架分页显示层拆分到公共仓库（2026-11-07）
+
+- **参考私人代码**：活动分支 `feature/v11-phase1-mobile-and-install-guide-20261106` 当前源提交 `0cf00b37ffa029997436fa3c0b2c67e35b114aa4`，只审阅 `public/app.js` 中 `renderShelfPagination` 纯 DOM 分页显示逻辑。
+- **公共 PR**：[PUBLIC-11 #20](https://github.com/kim-1868/miaowu-english-public/pull/20) 已合并，公开组件的合并提交为 `bc3de0fe82c275204d26c5a2ffa1f4800e7ac6a3`。
+- **新增公开文件**：`public/shelf-pagination.js`（`MiaowuShelfPagination.create({document}).render({container,meta,currentPage,onPageChange})`），合成 `showcase/shelf-pagination-contract.html/css/js` 与 `tests/public-shelf-pagination.test.mjs`。公开接口仅负责页码、上一页/下一页、总数、无障碍标签及回调，不实现任何书籍获取、会员/章节权限或真实数据读写。
+- **验证**：公共 [Node/白名单单测 42387700757](https://github.com/kim-1868/miaowu-english-public/actions/runs/42387700757)、[Chromium 手机/桌面 42387700804](https://github.com/kim-1868/miaowu-english-public/actions/runs/42387700804)、[main 构建 42387778840](https://github.com/kim-1868/miaowu-english-public/actions/runs/42387778840) 均成功；公共源码交付包 `wordletter-public-ui-bc3de0fe82c275204d26c5a2ffa1f4800e7ac6a3`（Artifact ID `13580371015`）包括 26 个完整白名单文件和 SHA-256 校验清单。
+- **最新文件对照**：公共 26 项与私人 V1.1 固定基线比对，20 项 Git blob SHA 一致、4 项因公共优化产生待审阅差异（`public/site-updates.js`、`public/v11-reader.css`、`public/v11-responsive.css`、`public/v11-wordbook.css`），另外 2 个为公共新组件（`reader-preferences.js`、`shelf-pagination.js`），私人原分支没有同名文件是**正常待整合状态**。
+- **并行开发保护**：本轮**没有修改私人活动分支**的 `app.js`、书架查询、用户权益、小说内容、订单、D1、预览/正式 Cloudflare 绑定或部署。实际站点仍采用原 `app.js` 的分页逻辑；未来整合需删除原重复 DOM 渲染、将页码回调绑定最新私人书架 API，并验证切换分类、书架状态和权限隔离。
+- **完成范围**：PUBLIC-11 已成功拆分了第一批阅读主题/字号与第二批书架分页展示层；仍需继续拆解可公开的 UI 模块。**私人固定 SHA 业务候选 Gate 与正式/预览端到端验收尚未运行**，不能将公共组件通过当作已上线。
+- **后续规则**：公共前端优先、固定 SHA 与 manifest 校验、私人差异逐文件审阅、私有验收后才可安排上线，并继续每轮留下双仓库日志。
+
+[公共完整更新记录](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md) ｜ [公共代码归属与集成规范](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/PUBLIC_FRONTEND_OWNERSHIP_20261107.md)
