@@ -98,3 +98,13 @@
 - 最近完成修复：<https://github.com/kim-1868/miaowu-english/pull/185>
 
 **结论：已完成本轮交接记录；用户完成 Agent 事项前暂停实质推进。保留现有测试站和正式网站状态，不以“已记录”为由触发部署或生产数据操作。**
+
+## 9. 2026-11-07 新进度：更新公告仅在预览站演示
+
+- 用户解除此前「暂不开发公告」的限制，**只批准先在预览网站制作**。公告独立 PR [#186](https://github.com/kim-1868/miaowu-english/pull/186) 已合入 V1.1 开发分支。
+- 首页 Banner 下方轻量通知条、浏览器按公告 ID 关闭、公开历史更新页 `/updates.html`、运营台默认折叠的「更新公告管理」已开发。后端是独立增量表 `db/015_v11_site_announcements.sql`，具备草稿、新建、编辑、发布、下架与发布者密钥权限、审计、版本冲突保护，并通过合成 SQLite 测试。
+- **Cloudflare 当前 GitHub API Token 没有测试 D1 的读取/写入权限**：GitHub Actions 先后尝试针对**测试库**的 /import 和只读 /query，均返回身份权限错误 10000。因此 **015 没有真正应用到测试 D1**，不能声称运营台发布/保存已云端生效。严禁扩大到正式 D1 试权限。
+- 为先交付真实可看的页面，受密码保护的预览 Worker 使用 `PREVIEW_ANNOUNCEMENT_DEMO=true` 在**数据库尚无公告表时**只读返回两条明确标记「预览示例」的演示公告。用户可以看到小通告栏、点击关闭和历史日志。演示内容没有写入 D1；在新凭证授权之前，运营台公告表单应**不可保存**，明确显示云端持久化尚未开放。
+- 预览站：<https://miaowu-english-staging.kim10086a.workers.dev>；历史页：<https://miaowu-english-staging.kim10086a.workers.dev/updates.html>。部署工作流 `.github/workflows/v11-preview-staging.yml` 验证数据库仍绑定 `miaowu-english-test`、部署目标为 `miaowu-english-staging`，并在部署后验证匿名访问仍返回 401。
+- **正式网站不含公告静态资源、接口对非 staging 环境返回 404；正式 D1、用户订单/学习记录完全没动**。生产静态资源包仍严格保持原定 46 项。V1.1 主发布 PR #154 仍是 Draft；Agent V2 仍在独立推进。
+- 如果未来用户希望在测试站真正自主发布公告，需要为**测试 D1** 授权受限的 Cloudflare API Token，在有权限后只针对受保护的测试库审核/执行 `015`。发布到正式站及正式 D1 仍须用户另行明确批准。历史「公告暂不开发」段落仅代表更早的决定，以本节最新用户指令为准。
