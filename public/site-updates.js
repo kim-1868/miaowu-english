@@ -12,7 +12,7 @@ const safeDate=value=>{
  return Number.isNaN(date.getTime())?"":new Intl.DateTimeFormat("zh-CN",{year:"numeric",month:"long",day:"numeric"}).format(date);
 };
 async function get(path){
- const response=await fetch(path,{credentials:"omit",cache:"no-store",headers:{Accept:"application/json"}});
+ const response=await fetch(path,{credentials:"same-origin",cache:"no-store",headers:{Accept:"application/json"}});
  if(!response.ok)throw Error("更新日志暂时不可用");
  return response.json();
 }
@@ -71,6 +71,10 @@ async function archive(){
  }
  more.addEventListener("click",load);
  await load();
+}
+if($("siteUpdateHistory")){
+ try{document.documentElement.setAttribute("data-theme",localStorage.getItem("miaowu_theme")==="dark"?"dark":"light")}
+ catch{}
 }
 if(document.readyState==="loading")
  document.addEventListener("DOMContentLoaded",()=>{void home();void archive()},{once:true});
