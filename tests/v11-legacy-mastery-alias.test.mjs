@@ -4,9 +4,14 @@ import {annotateStudyWords} from '../src/study-identity.js';
 
 // Simulates the query results of older word aliases, sorted by last_seen_at.
 // No production D1, accounts, books, or migrations are used.
-function fixture(rows){
+function fixture(rows,plans=[]){
  const calls=[];
  const env={DB:{prepare(query){
+  if(query.includes("FROM user_study_schedules")){
+   return {bind(userId,...keys){return {async all(){
+    return {results:plans.filter(x=>x.user_id===userId&&keys.includes(x.study_key))};
+   }}}};
+  }
   assert.match(query,/FROM user_words uw JOIN words w/);
   return {bind(userId,...headwords){return {async all(){
    calls.push({userId,headwords});
@@ -57,4 +62,42 @@ test('P5 no learning status leaks across accounts and guest remains unstudied',a
  assert.equal(other[0].study_status,null);
  assert.equal(guest[0].study_seen,false);
  assert.equal(guest[0].study_status,null);
+});
+
+test('P5 chapter reader obeys explicit canonical unmaster and unbookmark over all old aliases',async()=>{
+ const key='sense:record|n|记录';
+ const f=fixture([
+  row('book-a','mastered','2026-11-05 10:00:00',1),
+  row('book-b','learning','2026-11-06 10:00:00',1)
+ ],[{user_id:'u1',study_key:key,mastered:0,bookmarked:0}]);
+ const [card]=await annotateStudyWords(f.env,'u1',[
+  {word_id:'new-book',headword:'record',part_of_speech:'n.',meaning_zh:'记录'}
+ ]);
+ assert.equal(card.study_seen,true);
+ assert.equal(card.study_status,'learning');
+ assert.equal(card.study_bookmarked,false);
+});
+test('P5 reader recognizes a canonical study plan even when its old word row is absent',async()=>{
+ const key='sense:record|n|记录';
+ const f=fixture([],[{user_id:'u1',study_key:key,mastered:1,bookmarked:1}]);
+ const [card]=await annotateStudyWords(f.env,'u1',[
+  {word_id:'future-new',headword:'record',part_of_speech:'n.',meaning_zh:'记录'}
+ ]);
+ assert.equal(card.study_seen,true);
+ assert.equal(card.study_status,'mastered');
+ assert.equal(card.study_bookmarked,true);
+});
+test('P5 canonical decision stays account-specific and never transfers noun state to verb',async()=>{
+ const f=fixture([
+  row('book-a','mastered','2026-11-05 10:00:00',1)
+ ],[{user_id:'u1',study_key:'sense:record|n|记录',mastered:0,bookmarked:0}]);
+ const input=[
+  {word_id:'a',headword:'record',part_of_speech:'n.',meaning_zh:'记录'},
+  {word_id:'b',headword:'record',part_of_speech:'v.',meaning_zh:'录制'}
+ ];
+ const original=await annotateStudyWords(f.env,'u1',input);
+ assert.equal(original[0].study_status,'learning');
+ assert.equal(original[1].study_seen,false);
+ const other=await annotateStudyWords(f.env,'u2',input);
+ assert.ok(other.every(w=>!w.study_seen&&!w.study_bookmarked));
 });
