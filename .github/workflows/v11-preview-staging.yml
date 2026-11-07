@@ -88,3 +88,5 @@ jobs:
 # V1.1 P5 guarded staging preview: PR #181 canonical wordbook bookmark fix and 625/626 offline regression plus browser QA. Test D1 only; 014 reviewed mapping remains offline and disabled.
 
 # V1.1 P5 staging promotion: PR #183 canonical chapter-reader mastery/bookmark alignment. Announcements stay requirements-only; reviewed 014 remains disabled. Password-gated preview with test D1 only.
+
+# V1.1 P5 staging promotion: PR #184 reader alias entitlement isolation. Offline 30/30 focus, 649/650 full regression and all PR checks passed. Keep reviewed 014 disabled; test D1/password preview only.
