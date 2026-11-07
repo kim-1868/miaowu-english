@@ -6,8 +6,10 @@ name: V1.1 staging preview deployment (not production)
 on:
   push:
     branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
-    paths: [wrangler.jsonc, public/index.html, public/site-updates.css, public/site-updates.js, public/ops.html, public/ops-console.js, public/ops-console.css, public/ops-updates.js, src/site-announcements.js, tests/v11-announcements-preview.test.mjs]
+    paths: [wrangler.jsonc, public/index.html, public/site-updates.css, public/site-updates.js, public/ops.html, public/ops-console.js, public/ops-console.css, public/ops-updates.js, src/site-announcements.js]
   workflow_dispatch:
+# Test-only edits should be validated in private candidate QA, not redeploy the
+# password-gated staging Worker. All actual Worker/UI source paths still trigger it.
 permissions:
   contents: read
 concurrency:

@@ -38,3 +38,10 @@
 - 发现原浏览器 QA 在 GitHub `ubuntu-latest` 现为 `ubuntu-26.04` 时，Playwright 1.56.1 安装 Chromium 因不支持 Ubuntu 26.04 报错（示例失败运行 42383967270，并非业务测试断言失败）。三个仍使用 Chromium 的私人测试工作流明确 pin 到 `ubuntu-24.04`，避免运行器升级造成重复失败和浪费分钟。
 - **特意保留**已有 `v11-preview-staging.yml` 自动部署与其完整 `npm run check && npm test`，以保护用户同时开发中的测试站显示和安全门禁。若未来将预览切为手动，还需单独确认实际预览更新流程。
 - 影响范围仅私人工作流与记录，不改任何小说、词卡/阅读器代码、生产配置、测试 D1 或真实数据库。
+
+## 补充：预览仅在实际可部署文件变化时触发（2026-11-07）
+
+- 私人 V1.1 的 `.github/workflows/v11-preview-staging.yml` 原本把 `tests/v11-announcements-preview.test.mjs` 放进自动部署路径；**只改测试而不改站点代码时不应重新部署测试 Worker**。
+- 已移除该单独测试文件的 push 自动部署触发，保留 `wrangler.jsonc`、`public/index.html`、公告相关公共前端与运营端源文件、`src/site-announcements.js` 等真实部署代码路径；`workflow_dispatch`、正式/测试 D1 隔离、部署前 `npm run check && npm test`、密码保护验证全部保持原样。
+- 这是对**无部署必要的测试-only 改动**减少私人 Actions 消耗，不是关闭预览功能；待下一次真实源代码改动时按原路径运行安全检查与部署。生产发布工作流完全没有改变。
+- 该 CI 修改无需更新 Cloudflare 或数据库，也未访问线上信息；GitHub 主体工作流是否仍能响应真实预览更新，应在下一次正常预览 CI 中核对。
