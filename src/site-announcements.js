@@ -61,11 +61,11 @@ async function initializeStagingAnnouncementSchema(db){
   "created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,"+
   "updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,"+
   "published_at TEXT,"+
-  "CHECK((status='draft' AND published_at IS NULL) OR status!='draft'))").run();
+  "CHECK((status='draft' AND published_at IS NULL) OR status!='draft'))").bind().run();
  await db.prepare("CREATE INDEX IF NOT EXISTS idx_site_announcements_public "+
-  "ON site_announcements(status,show_on_home,published_at DESC,id DESC)").run();
+  "ON site_announcements(status,show_on_home,published_at DESC,id DESC)").bind().run();
  await db.prepare("CREATE INDEX IF NOT EXISTS idx_site_announcements_admin "+
-  "ON site_announcements(updated_at DESC,id DESC)").run();
+  "ON site_announcements(updated_at DESC,id DESC)").bind().run();
  return schemaReady(db);
 }
 const select="id,title,summary,body,category,status,show_on_home,revision,"+
