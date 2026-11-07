@@ -11,8 +11,7 @@ const source=join(root,"public"),out=join(root,"dist-production","public");
 export const PRODUCTION_ASSET_ALLOWLIST=Object.freeze([
  "index.html","styles.css","flashcards.css","install-guide.css","onboarding.css","v11-reader.css","v11-bookshelf.css","v11-wordbook.css","v11-responsive.css","app.js","install-guide.js","onboarding.js","chapter-words.js","echo-cloud.js","flashcards.js",
  "live.html","live-reader.js","live-reader.css",
- "ops.html","ops-console.js","ops-customers.js","ops-claims.js","ops-updates.js","ops-console.css","novel-file-parser.js","rainy-night.html",
- "updates.html","site-updates.js","site-updates.css",
+ "ops.html","ops-console.js","ops-customers.js","ops-claims.js","ops-console.css","novel-file-parser.js","rainy-night.html",
  "rainy-night-cover.webp","rainy-night-cover-v2.svg",
  "cat-reading-window.svg","cat-reading-watercolor.webp","cat-reading-hd.avif",
  "cat-reading-tablet-1x.webp","cat-reading-tablet-2x.webp","cat-reading-tablet-2x.avif",
@@ -31,7 +30,7 @@ export function auditProductionAssets(){
  for(const file of files){
   if(forbidden.test(file))throw Error("QA_ASSET_IN_PRODUCTION_"+file);
  }
- for(const entry of ["index.html","updates.html","live.html","ops.html","claim.html","rainy-night.html","rejected-family-second-life.html"]){
+ for(const entry of ["index.html","live.html","ops.html","claim.html","rainy-night.html","rejected-family-second-life.html"]){
   const body=readFileSync(join(out,entry),"utf8");
   const refs=[...body.matchAll(/(?:src|href)=["'](\/[a-zA-Z][^"'?#]*)["']/g)]
     .map(x=>x[1].slice(1));
@@ -42,6 +41,23 @@ export function auditProductionAssets(){
  }
  return {status:"REVIEWED_STATIC_ASSETS_ONLY",assets:allowed};
 }
+// The news panel is approved for the PASSWORD-GATED staging preview only.
+// Do not include it or its public history route in the production bundle until
+// the owner separately accepts a production announcements release.
+function stripStagingUpdatesFromProduction(name,html){
+  if(name==="index.html"){
+    html=html.replace(/\s*<link[^>]*href="\/site-updates\.css[^"]*"[^>]*>/g,"")
+      .replace(/\s*<section id="siteUpdateBanner"[\s\S]*?<\/section>/,"")
+      .replace(/<a class="mw-update-footer" href="\/updates\.html">[\s\S]*?<\/a>/,"")
+      .replace(/\s*<script src="\/site-updates\.js[^"]*"><\/script>/g,"");
+  }
+  if(name==="ops.html"){
+    html=html.replace(/\s*<section class="panel mw-ops-update-panel"[\s\S]*?<\/section>/,"");
+  }
+  if(/site-updates|siteUpdateBanner|updatesAdminForm|updates\.html/.test(html))
+    throw Error("PREVIEW_ANNOUNCEMENTS_LEAKED_INTO_PRODUCTION_"+name);
+  return html;
+}
 export function buildProductionAssets(){
  rmSync(out,{recursive:true,force:true});
  mkdirSync(out,{recursive:true});
@@ -50,6 +66,9 @@ export function buildProductionAssets(){
    writeFileSync(join(out,name),buildS86FreeChapter());
   }else if(name==="rainy-night.html"){
    writeFileSync(join(out,name),buildRainyNightPublicSample());
+  }else if(name==="index.html"||name==="ops.html"){
+    writeFileSync(join(out,name),stripStagingUpdatesFromProduction(name,
+      readFileSync(join(source,name),"utf8")));
   }else copyFileSync(join(source,name),join(out,name));
  }
  return auditProductionAssets();
