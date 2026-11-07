@@ -264,6 +264,7 @@ test("V1.1 notice stays visible after details return until the close button is c
    siteUpdateTitle:{textContent:""},
    siteUpdateMeta:{textContent:""},
    siteUpdateDetail:{href:""},
+   siteUpdateMessage:{onclick:null},
    siteUpdateDismiss:{onclick:null}
   };
   const location={get href(){return url.href},get search(){return url.search}};
@@ -289,6 +290,7 @@ test("V1.1 notice stays visible after details return until the close button is c
  assert.equal(first.search,"","preview query must be consumed once");
  assert.equal(storage.has(key),false,"preview reset clears only the old demo dismissal");
  assert.equal(typeof first.nodes.siteUpdateDetail.onclick,"function","details is an in-page action");
+ assert.equal(typeof first.nodes.siteUpdateMessage.onclick,"function","title and date open same in-page dialog");
  const back=await visit(); // history page's "返回首页" points to /
  assert.equal(back.nodes.siteUpdateBanner.hidden,false,"detail/return should not hide notice");
  back.events.pageshow(); // bfcache/history restoration
@@ -310,8 +312,8 @@ test("V1.1 text-only announcement is borderless and responsive at mobile, tablet
  assert.match(css,/\.mw-update-action\{[^}]*min-height:32px/);
  assert.match(css,/html\[data-theme="dark"\] \.mw-update-strip/);
  const index=read("public/index.html");
- assert.match(index,/site-updates\.css\?v=20261107-preview4/);
- assert.match(index,/site-updates\.js\?v=20261107-preview4/);
+ assert.match(index,/site-updates\.css\?v=20261107-preview5/);
+ assert.match(index,/site-updates\.js\?v=20261107-preview5/);
 });
 
 // Modal interactions: no route changes, cached newest text, compact expandable history.
@@ -329,7 +331,7 @@ test("V1.1 modal instantly shows latest then five history headings, expands on d
    showModal(){this.open=true},close(){this.open=false}
   };
  }
- const ids=["siteUpdateBanner","siteUpdateTitle","siteUpdateMeta","siteUpdateDetail","siteUpdateDismiss",
+ const ids=["siteUpdateBanner","siteUpdateTitle","siteUpdateMeta","siteUpdateMessage","siteUpdateDetail","siteUpdateDismiss",
   "siteUpdateDialog","siteUpdateDialogClose","siteUpdateTabLatest","siteUpdateTabHistory",
   "siteUpdatePanelLatest","siteUpdatePanelHistory","siteUpdateDialogDate","siteUpdateDialogHeadline",
   "siteUpdateDialogBody","siteUpdateCompactList","siteUpdateHistoryInlineStatus","siteUpdateHistoryMore"];
@@ -359,8 +361,8 @@ test("V1.1 modal instantly shows latest then five history headings, expands on d
  runInNewContext(read("public/site-updates.js"),context);
  await new Promise(resolve=>setImmediate(resolve));
  assert.equal(calls.length,1,"initial page loads only latest notice");
- nodes.siteUpdateDetail.onclick();
- assert.equal(nodes.siteUpdateDialog.open,true);
+ nodes.siteUpdateMessage.onclick();
+ assert.equal(nodes.siteUpdateDialog.open,true,"title and date click opens dialog");
  assert.equal(nodes.siteUpdateDialogHeadline.textContent,"最新公告");
  assert.equal(nodes.siteUpdateDialogBody.textContent,"弹窗直接展示完整正文");
  assert.equal(calls.length,1,"opening dialog should be immediate without an additional fetch");
@@ -388,12 +390,19 @@ test("V1.1 modal instantly shows latest then five history headings, expands on d
  assert.equal(nodes.siteUpdatePanelLatest.hidden,false,"dialog reopens on latest tab");
  assert.equal(nodes.siteUpdateTabLatest.attributes["aria-selected"],"true");
  nodes.siteUpdateDialog.close();
+ nodes.siteUpdateDetail.onclick();
+ assert.equal(nodes.siteUpdateDialog.open,true,"details opens same modal");
+ nodes.siteUpdateDialog.close();
  nodes.siteUpdateDismiss.onclick();
  assert.equal(nodes.siteUpdateBanner.hidden,true,"only strip close hides the announcement");
 });
 test("V1.1 modal is accessible, center-aligned, mobile-adaptive and never links from details to archive page",()=>{
  const html=read("public/index.html"),css=read("public/site-updates.css");
  assert.match(html,/id="siteUpdateDetail"[^>]*type="button"[^>]*aria-haspopup="dialog"/);
+ assert.ok(html.includes('id="siteUpdateMessage" class="mw-update-message" type="button" aria-haspopup="dialog"'));
+ assert.ok(html.includes('<strong id="siteUpdateTitle"></strong><span id="siteUpdateMeta"'));
+ assert.ok(css.includes('text-align:left;cursor:pointer'));
+ assert.ok(css.includes('.mw-update-message:focus-visible'));
  assert.match(html,/<dialog id="siteUpdateDialog"/);
  assert.match(html,/id="siteUpdateTabLatest"[^>]*role="tab"/);
  assert.match(html,/id="siteUpdateTabHistory"[^>]*role="tab"/);
