@@ -5,6 +5,10 @@ on:
     branches:
       - dev/s1-auth-and-entitlements
       - dev/foundation-s0
+concurrency:
+  group: s1-checks-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
