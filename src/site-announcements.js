@@ -45,6 +45,29 @@ const schemaReady=async db=>{
    "revision","published_at","updated_at"].every(x=>names.has(x));
  }catch{return false}
 };
+// Explicit publisher-approved STAGING-ONLY setup. No deployment token or automatic
+// production schema mutation. Only creates an independent additive notice table.
+async function initializeStagingAnnouncementSchema(db){
+ await db.prepare("CREATE TABLE IF NOT EXISTS site_announcements ("+
+  "id TEXT PRIMARY KEY,"+
+  "title TEXT NOT NULL CHECK(length(title) BETWEEN 1 AND 90),"+
+  "summary TEXT NOT NULL CHECK(length(summary) BETWEEN 1 AND 180),"+
+  "body TEXT NOT NULL CHECK(length(body) BETWEEN 1 AND 4000),"+
+  "category TEXT NOT NULL CHECK(category IN ('feature','books','maintenance','other')),"+
+  "status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','published','withdrawn')),"+
+  "show_on_home INTEGER NOT NULL DEFAULT 1 CHECK(show_on_home IN (0,1)),"+
+  "revision INTEGER NOT NULL DEFAULT 1 CHECK(revision>=1),"+
+  "created_by TEXT NOT NULL,updated_by TEXT NOT NULL,"+
+  "created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,"+
+  "updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,"+
+  "published_at TEXT,"+
+  "CHECK((status='draft' AND published_at IS NULL) OR status!='draft'))").run();
+ await db.prepare("CREATE INDEX IF NOT EXISTS idx_site_announcements_public "+
+  "ON site_announcements(status,show_on_home,published_at DESC,id DESC)").run();
+ await db.prepare("CREATE INDEX IF NOT EXISTS idx_site_announcements_admin "+
+  "ON site_announcements(updated_at DESC,id DESC)").run();
+ return schemaReady(db);
+}
 const select="id,title,summary,body,category,status,show_on_home,revision,"+
  "created_at,updated_at,published_at";
 // Exactly two clearly labeled demonstration entries for a protected staging
@@ -92,7 +115,8 @@ async function publicRoute(req,env,path){
    "WHERE status='published' AND show_on_home=1 "+
    "ORDER BY published_at DESC,created_at DESC,id DESC LIMIT 1").first();
   if(!row&&env.APP_ENV==="staging"&&env.PREVIEW_ANNOUNCEMENT_DEMO==="true"){
-    const count=await q(env.DB,"SELECT COUNT(*) n FROM site_announcements WHERE status='published'").first();
+    // A real operator-created draft must NOT be replaced with a fake published banner.
+    const count=await q(env.DB,"SELECT COUNT(*) n FROM site_announcements").first();
     if(Number(count?.n||0)===0)return stagingOnlyDemo(env,path,req);
   }
   return respond({latest:row?view(row):null,available:true});
@@ -105,7 +129,8 @@ async function publicRoute(req,env,path){
   const totalRow=await q(env.DB,"SELECT COUNT(*) n FROM site_announcements WHERE status='published'").first();
   const total=Number(totalRow?.n||0);
   if(total===0&&env.APP_ENV==="staging"&&env.PREVIEW_ANNOUNCEMENT_DEMO==="true"){
-    return stagingOnlyDemo(env,path,req);
+    const count=await q(env.DB,"SELECT COUNT(*) n FROM site_announcements").first();
+    if(Number(count?.n||0)===0)return stagingOnlyDemo(env,path,req);
   }
   const result=await q(env.DB,"SELECT "+select+" FROM site_announcements WHERE status='published' "+
     "ORDER BY published_at DESC,created_at DESC,id DESC LIMIT ? OFFSET ?",size,offset).all();
@@ -132,7 +157,25 @@ async function adminRoute(req,env,path){
  const auth=await authenticateOperator(req,env);
  if(auth.response)return auth.response;
  if(!hasOpsRole(auth.operator,"publisher"))return err("OPS_ROLE_FORBIDDEN",403);
- if(!await schemaReady(env.DB))return err("ANNOUNCEMENTS_SCHEMA_REQUIRED",503);
+ const ready=await schemaReady(env.DB);
+ if(path==="/api/ops/updates/setup"){
+  if(req.method!=="POST")return err("NOT_FOUND",404);
+  // This route is available ONLY in password-protected staging and requires
+  // a verified publisher credential + same-origin POST (at the worker boundary).
+  if(env.APP_ENV!=="staging")return err("NOT_FOUND",404);
+  if(!ready){
+   try{if(!await initializeStagingAnnouncementSchema(env.DB))
+    return err("ANNOUNCEMENTS_SCHEMA_REQUIRED",503)}
+   catch{console.error("STAGING_ANNOUNCEMENTS_SETUP_FAILED");
+    return err("ANNOUNCEMENTS_SCHEMA_SETUP_FAILED",503)}
+  }
+  return respond({ready:true,created:!ready});
+ }
+ if(!ready){
+  if(path==="/api/ops/updates"&&req.method==="GET")
+   return respond({updates:[],setupRequired:true});
+  return err("ANNOUNCEMENTS_SCHEMA_REQUIRED",503);
+ }
  const actor=auth.operator;
  if(path==="/api/ops/updates"&&req.method==="GET"){
   const rows=await q(env.DB,"SELECT "+select+" FROM site_announcements "+
