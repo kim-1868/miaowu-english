@@ -198,6 +198,36 @@ test("V1.1 site strips and history links use DOM textContent, never HTML of user
  assert.match(read("src/site-announcements.js"),/env\.APP_ENV!=="staging"/);
 });
 
+test("V1.1 protected preview shows sample announcement with installed but empty announcement table",async()=>{
+ const f=fixture();try{
+  f.env.PREVIEW_ANNOUNCEMENT_DEMO="true";
+  const latest=(await call(f.env,"/api/updates/latest")).data;
+  assert.equal(latest.previewOnly,true);
+  assert.match(latest.latest.title,/预览示例/);
+  const history=(await call(f.env,"/api/updates")).data;
+  assert.equal(history.previewOnly,true);
+  assert.equal(history.total,2);
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM site_announcements").get().n,0);
+  await f.ready();
+  const draft=await call(f.env,"/api/ops/updates","POST",form,{authorized:true});
+  assert.equal(draft.status,201);
+  const published=await call(f.env,"/api/ops/updates/"+draft.data.id+"/publish","POST",{revision:1},{authorized:true});
+  assert.equal(published.status,200);
+  const live=(await call(f.env,"/api/updates/latest")).data;
+  assert.equal(live.latest.id,draft.data.id);
+  assert.equal(live.previewOnly,undefined);
+  assert.equal((await call(f.env,"/api/updates")).data.total,1);
+ }finally{f.db.close()}
+});
+test("V1.1 notice sits directly below top navigation and before homepage hero",()=>{
+ const html=read("public/index.html");
+ const nav=html.indexOf('</header>');
+ const notice=html.indexOf('id="siteUpdateBanner"');
+ const hero=html.indexOf('id="miaowuHomeScene"');
+ assert.ok(nav>=0&&nav<notice&&notice<hero);
+ assert.match(read("public/site-updates.js"),/previewAnnouncement/);
+});
+
 test("V1.1 password-gated staging shows clearly labeled public DEMO notices without any D1 write capability",async()=>{
  const f=fixture({table:false});try{
   f.env.PREVIEW_ANNOUNCEMENT_DEMO="true";
