@@ -157,6 +157,19 @@ export function auditRestoredLibrary(db,{
  const currentSet=new Set(books.map(x=>x.id));
  const missingHistoric=[...expectedSet].filter(id=>!currentSet.has(id));
  const unexpectedPublished=[...currentSet].filter(id=>!expectedSet.has(id));
+ const technicalBlockers=[
+  ["MISSING_WORD_IDS",count(bookRows,"missingReferencedWordIds")],
+  ["MISSING_CHAPTER_WORD_INDEXES",count(bookRows,"unindexedMentions")],
+  ["STORED_INDEX_NOT_IN_CHAPTER",count(bookRows,"unmatchedIndexedAnchors")],
+  ["UNRECOGNIZED_CHAPTER_WORD_INDEX_FORMAT",count(bookRows,"unknownAnchorFormats")],
+  ["EMPTY_STORY_CONTEXT",count(bookRows,"emptyContextSentences")],
+  ["BROKEN_CHAPTER_DOCUMENT",count(bookRows,"malformedChapterDocuments")],
+  ["PUBLISHED_BOOK_HAS_UNPUBLISHED_CHAPTER",count(bookRows,"unpublishedChapters")],
+  ["MISSING_UK_IPA",count(bookRows,"missingUKIPA")],
+  ["MISSING_US_IPA",count(bookRows,"missingUSIPA")],
+  ["MISSING_ENGLISH_EXAMPLE",count(bookRows,"missingEnglishExample")],
+  ["MISSING_CHINESE_EXAMPLE",count(bookRows,"missingChineseExample")]
+ ].filter(([,n])=>n>0).map(([code])=>code);
  const report={
   version:"v11-p5-restored-library/1",
   source:"LOCAL_READ_ONLY_RESTORED_SQLITE_NOT_REMOTE_D1",
@@ -185,6 +198,8 @@ export function auditRestoredLibrary(db,{
   differentWordIdsCrossBookSenseCandidates:crossBookCandidates.length,
   fingerprintForHumanReview:sourceFingerprint,
   reviewBlockerCodes:snapshotProblemCodes,
+  technicalBlockerCodes:technicalBlockers,
+  technicalContentReady:technicalBlockers.length===0&&snapshotProblemCodes.length===0,
   sameAsHistoricBookInventory:missingHistoric.length===0&&unexpectedPublished.length===0,
   humanSenseReviewComplete:false,
   userHistoriesInspected:false,
@@ -225,12 +240,13 @@ function writePrivate(target,queue){
  finally{closeSync(fd)}
 }
 function cli(argv){
- const options={db:null,privateOutput:null,requireHistoric:false};
+ const options={db:null,privateOutput:null,requireHistoric:false,requireClean:false};
  for(let i=0;i<argv.length;i++){
   const a=argv[i];
   if(a==="--local-sqlite")options.db=argv[++i];
   else if(a==="--private-review-queue")options.privateOutput=argv[++i];
   else if(a==="--require-historic-coverage")options.requireHistoric=true;
+  else if(a==="--require-clean-content")options.requireClean=true;
   else die("UNRECOGNIZED_AUDIT_ARGUMENT");
  }
  if(!options.db||!isAbsolute(options.db))die("ABSOLUTE_LOCAL_SQLITE_REQUIRED");
@@ -240,6 +256,8 @@ function cli(argv){
   if(options.privateOutput)writePrivate(options.privateOutput,r.privateQueue);
   process.stdout.write(JSON.stringify(r.summary,null,2)+"\n");
   if(options.requireHistoric&&!r.summary.sameAsHistoricBookInventory)
+   process.exitCode=1;
+  if(options.requireClean&&!r.summary.technicalContentReady)
    process.exitCode=1;
  }finally{db.close()}
 }
