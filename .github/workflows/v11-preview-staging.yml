@@ -49,19 +49,14 @@ jobs:
         run: |
           test "$HAS_TOKEN" = true || { echo 'Missing Cloudflare token. No deployment.'; exit 1; }
           test "$HAS_ACCOUNT" = true || { echo 'Missing Cloudflare account. No deployment.'; exit 1; }
-      - name: Apply isolated announcement schema and two DEMO notices to test D1 only
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Verify staging-only preview notice demo does NOT write D1
         run: |
           set -euo pipefail
           node scripts/check-v11-preview-config.mjs
+          test "$(node -p 'JSON.parse(require("fs").readFileSync("wrangler.jsonc","utf8")).vars.PREVIEW_ANNOUNCEMENT_DEMO')" = "true"
           test "$(node -p 'JSON.parse(require("fs").readFileSync("wrangler.jsonc","utf8")).d1_databases[0].database_name')" = "miaowu-english-test"
-          test "$(node -p 'JSON.parse(require("fs").readFileSync("wrangler.jsonc","utf8")).d1_databases[0].database_id')" = "88a817cb-23bb-4ae4-bcb8-92286c4165d4"
-          npx wrangler d1 execute miaowu-english-test --remote --config wrangler.jsonc --command 'SELECT 1 AS preview_permission_probe'
-          npx wrangler d1 execute miaowu-english-test --remote --config wrangler.jsonc --command "$(cat db/015_v11_site_announcements.sql)"
-          npx wrangler d1 execute miaowu-english-test --remote --config wrangler.jsonc --command "$(cat db/staging/015_v11_site_announcements_demo.sql)"
-          echo "PASS: announcement schema and two demonstration posts on staging test D1 only"
+          echo "STAGING_STATIC_DEMO_ONLY: existing Cloudflare token cannot access test D1 SQL API"
+          echo "NO_D1_MIGRATION_OR_SEED_EXECUTED"
       - name: Deploy only staging Worker (test D1; preserve existing secrets)
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
