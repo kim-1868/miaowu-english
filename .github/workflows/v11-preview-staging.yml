@@ -90,3 +90,5 @@ jobs:
 # V1.1 P5 staging promotion: PR #183 canonical chapter-reader mastery/bookmark alignment. Announcements stay requirements-only; reviewed 014 remains disabled. Password-gated preview with test D1 only.
 
 # V1.1 P5 staging promotion: PR #184 reader alias entitlement isolation. Offline 30/30 focus, 649/650 full regression and all PR checks passed. Keep reviewed 014 disabled; test D1/password preview only.
+
+# V1.1 P5 staging promotion: PR #185 fixes Echo due cross-book canonical sense pool and >600 repeated occurrences. Password-protected test-D1 only; no reviewed 014 activation, no production release.
