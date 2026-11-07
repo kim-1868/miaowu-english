@@ -327,3 +327,16 @@
 - **后续发布门禁**：核查用户其它会话最新私人 V1.1 完整 SHA，必要时重定基；预览测试环境核对分类/权限/翻页/进度和按钮、整套真人业务及回滚演练；其他组件按同样方式逐个受控候选接入，避免覆盖 concurrent 开发。必须取得用户正式发布批准；不得把 Draft PR 直接合并，不得在无私有 Gate 时声称成功上线。
 - **项目记录已双向同步**：公共 [docs/UPDATE_LOG.md](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md) 和 [PUBLIC11_COMPONENT_INTEGRATION_GATE_20261108.md](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/PUBLIC11_COMPONENT_INTEGRATION_GATE_20261108.md) 已写清候选进度与 0/5 已上线状态。
 
+
+
+## 二十一、PUBLIC-BUILD-01 公共仓库承担前端构建/测试及人工审核后 Release（2026-11-08）
+
+- **已完成的公共仓库 CI/CD 改动**：[公共 PR #27](https://github.com/kim-1868/miaowu-english-public/pull/27) 已 Squash 合并，公共代码提交 `bd3391e78f1b93664a87a7eae740a29b2617eb5f`。前端公共文件精确白名单目前为 29 项。公共 PR 与 main 自动执行 Node 语法、安全审计、合成合同测试、公开 UI 资源构建和单独的 SHA-256 完整性/源 SHA 复核；浏览器 UI 改动还保留公共 Chromium 合成真实点击测试。
+- **审查后 Release 已就绪但未发布**：新建公共 `.github/workflows/public-ui-release.yml`（仅手动 `workflow_dispatch`、必须匹配公共 main 的完整 40 位 SHA 并输入确认短语），通过校验后可公开发布 ZIP/manifest/SHA256SUMS。只有 Release 发布 job 具有公共仓库 `contents: write`，不允许 PR/push 自动发布、不访问私人 API 和 Cloudflare。**尚未实际触发/创建 GitHub Release**，当前公共 Releases 为空。
+- **独立安全门禁**：公共 `scripts/verify-public-ui-release.mjs` 与 `tests/public-release-bundle.test.mjs` 拒绝私有路径/额外文件、符号链接、损坏的 SHA-256、错误的 source SHA 或伪造 manifest；为此前公共 `main` 14 天有效的 Actions Artifact 再加一层复检。
+- **已完成验证**：[公共 PR CI #42399785161](https://github.com/kim-1868/miaowu-english-public/actions/runs/42399785161) 和 [公共 main CI #42399902636](https://github.com/kim-1868/miaowu-english-public/actions/runs/42399902636) 都成功；发布前公共合成产物 `wordletter-public-ui-bd3391e78f1b93664a87a7eae740a29b2617eb5f`（Artifact ID `13584619130`）可作为已通过校验的固定参考。之后公共 main 如有更新，必须重新审核**最新**完整 SHA，不能假设旧产物一直对应 main。
+- **核心安全要求**：绝对不应将私人完整源码/真实小说、词库、付费权限、用户/订单/兑换码、D1 备份或 Git 提交历史交给公开运行器“只做构建”。公共仓库只处理公开可分发的 UI 源和合成数据；发布的 ZIP 本身公开可下载。私人业务构建、身份/会员/订单/学习状态的真实回归、Cloudflare 密钥和最后部署仍在私人受控环境。
+- **节省私人额度的实际机制**：日常纯前端 PR/CI/Chromium/29 文件 Build 都在公共标准托管运行器；私人只需完成真正接线后的最小适配验证、敏感业务/测试 D1 的完整候选 Gate 和最后发布。此调整能减少重复私有 UI 测试，但**没有实际测得 GitHub Billing 节省分钟或金额**，也不能把私人运行分钟声明为零。
+- **私人开发状态完全保留**：没有改私人 V1.1 活动分支 `feature/v11-phase1-mobile-and-install-guide-20261106`、已有 Draft 接线 PR #190、业务数据、预览或正式 Worker/D1。私人 `main` 此次只追加本交接记录。当前 PUBLIC-11 五个 UI 模块仍只有书架分页在隔离 Draft PR 中接线，未合入实际活动分支。
+- **相关规范**：[公共 BUILD/Release 交接指南](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/PUBLIC_BUILD_RELEASE_HANDOFF_20261108.md)、[公共 UPDATE_LOG](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md)、[五组件真人业务整合门禁](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/PUBLIC11_COMPONENT_INTEGRATION_GATE_20261108.md)。
+
