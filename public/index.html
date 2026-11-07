@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="/v11-bookshelf.css?v=20261106-p2" />
   <link rel="stylesheet" href="/v11-wordbook.css?v=20261106-p5-inline-example" />
   <link rel="stylesheet" href="/v11-responsive.css?v=20261106-p5" />
+  <link rel="stylesheet" href="/site-updates.css?v=20261107-preview1" />
 </head>
 <body>
   <div class="app-shell">
@@ -48,6 +49,14 @@
           <span class="home-scene-lamp" aria-hidden="true"></span>
         </div>
       </div>
+      <section id="siteUpdateBanner" class="mw-update-strip" aria-label="妙屋新鲜事" hidden>
+        <div class="mw-update-inner">
+          <span class="mw-update-paw" aria-hidden="true">🐾</span>
+          <div class="mw-update-message"><strong id="siteUpdateTitle"></strong><span id="siteUpdateMeta" class="mw-update-meta"></span></div>
+          <a id="siteUpdateDetail" class="mw-update-action" href="/updates.html">详情 ›</a>
+          <button id="siteUpdateDismiss" class="mw-update-dismiss" type="button" aria-label="关闭当前公告" title="关闭这条公告">×</button>
+        </div>
+      </section>
       <aside class="home-reminder-strip" aria-label="词汇复习提醒">
         <div id="reviewReminder" class="review-reminder" aria-live="polite"></div>
       </aside>
@@ -92,7 +101,7 @@
         <div><h2 id="installGuideEntryTitle">添加到手机桌面</h2><p>下次打开妙屋更方便，不用再找网址啦。</p></div>
         <button type="button" id="openInstallGuide">查看教程 →</button>
       </section></section>
-    <div class="foot-note">MIAOWU · THE STORY & WORD LIBRARY <span style="color:#b79383">✦</span> DESIGNED FOR STORIES & WORDS<br><span style="font:11px sans-serif;color:#ac9b93;letter-spacing:0">在故事里相遇，让词汇慢慢留下来。</span></div>
+    <div class="foot-note">MIAOWU · THE STORY & WORD LIBRARY <span style="color:#b79383">✦</span> DESIGNED FOR STORIES & WORDS<br><span style="font:11px sans-serif;color:#ac9b93;letter-spacing:0">在故事里相遇，让词汇慢慢留下来。</span><br><a class="mw-update-footer" href="/updates.html">妙屋更新日志 · 历史公告</a></div>
   </main>
   <nav class="bottom-tabs" aria-label="手机导航"><button data-nav="library" class="active"><span class="tab-icon">⌂</span>首页</button><button data-nav="words"><span class="tab-icon">▤</span>生词本</button><button data-nav="echo"><span class="tab-icon">✧</span>剧情回声</button><button data-nav="account"><span class="tab-icon">♙</span>我的</button></nav>
   <div class="player" id="player" aria-label="章节朗读控制">
@@ -140,5 +149,6 @@
   <script src="/app.js?v=20261105-v30-flashcards"></script>
   <script src="/install-guide.js?v=20261106-v11-p1"></script>
   <script src="/onboarding.js?v=20261106-v11-p1"></script>
+  <script src="/site-updates.js?v=20261107-preview1"></script>
 </body>
 </html>
