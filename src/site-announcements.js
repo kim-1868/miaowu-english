@@ -8,7 +8,6 @@ const H={"content-type":"application/json; charset=utf-8","cache-control":"no-st
 const respond=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:H});
 const err=(code,status=400)=>respond({error:code},status);
 const q=(db,sql,...args)=>db.prepare(sql).bind(...args);
-const ID=/^[a-f0-9]{8}-[a-f0-9-]{27,44}$/i;
 const CATEGORIES=new Set(["feature","books","maintenance","other"]);
 const PUBLISHER_ENV=new Set(["production","staging"]);
 const view=r=>({id:r.id,title:r.title,summary:r.summary,body:r.body,
@@ -83,7 +82,7 @@ async function publicRoute(req,env,path){
 const audit=(env,actor,action,id,expectedRevision)=>q(env.DB,
  "INSERT INTO ops_audit_events(id,actor_id,event_type,resource_type,resource_id,request_id) "+
  "VALUES(?,?,CASE WHEN EXISTS(SELECT 1 FROM site_announcements WHERE id=? "+
- "AND revision=? AND updated_by=?) THEN ? ELSE NULL END,'announcement',?,?)",
+ "AND revision=? AND updated_by=?) AND changes()=1 THEN ? ELSE NULL END,'announcement',?,?)",
  crypto.randomUUID(),actor.id,id,expectedRevision,actor.id,"announcement."+action,id,crypto.randomUUID());
 async function adminRoute(req,env,path){
  if(!PUBLISHER_ENV.has(env.APP_ENV))return err("NOT_FOUND",404);
@@ -155,6 +154,8 @@ async function adminRoute(req,env,path){
  return respond({id,status:action==="publish"?"published":"withdrawn",revision:expectedRevision+1});
 }
 export async function handleSiteAnnouncements(req,env,path){
+ // Preview ONLY. This feature must not be reachable on the public site yet.
+ if(env.APP_ENV!=="staging")return err("NOT_FOUND",404);
  if(!env.DB)return err("DATABASE_UNAVAILABLE",503);
  if(path.startsWith("/api/ops/updates"))return adminRoute(req,env,path);
  try{return await publicRoute(req,env,path)}
