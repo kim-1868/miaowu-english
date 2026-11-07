@@ -262,3 +262,17 @@
 - **后续规则**：公共前端优先、固定 SHA 与 manifest 校验、私人差异逐文件审阅、私有验收后才可安排上线，并继续每轮留下双仓库日志。
 
 [公共完整更新记录](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md) ｜ [公共代码归属与集成规范](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/PUBLIC_FRONTEND_OWNERSHIP_20261107.md)
+
+
+## 十六、PUBLIC-11-03 公共书架卡片展示组件交付（2026-11-08）
+
+- **私人参考基线**：`feature/v11-phase1-mobile-and-install-guide-20261106` 的提交 `0cf00b37ffa029997436fa3c0b2c67e35b114aa4`。只阅读 `public/app.js` 的卡片显示结构，保留现有 `loadCloudBookCards`、真实查询、权益、收藏写入与进度持久化逻辑。
+- **已完成的公共修改**：[PR #21](https://github.com/kim-1868/miaowu-english-public/pull/21) 合并提交 `d8ea09f154d5e3a35787267ae886b1dd066a2eb3`，新增 `public/shelf-card.js` 纯 DOM 组件，合成 `showcase/shelf-card-contract.html/css/js` 和 `tests/public-shelf-card.test.mjs`，更新 Node 白名单、测试、Chromium 跨屏宽合同与 SHA-256 交付包。
+- **显示接口**：`MiaowuShelfCard.create({document}).render({book,index,category,entitled,hasProgress,bookmarked,coverUrl,onOpen,onBookmarkToggle})`。展示封面、半透明标签、解锁/会员提示、进度占位、阅读与收藏按钮；权益和书籍数据由私人业务层单方面提供，组件不判断谁应有权限、不更新数据库，也不进行自动收藏状态变更。
+- **安全回归结果**：[公共 Node 42390538871](https://github.com/kim-1868/miaowu-english-public/actions/runs/42390538871)、[真实 Chromium 合成浏览器 42390538839](https://github.com/kim-1868/miaowu-english-public/actions/runs/42390538839)、[合并后 main 构建 42390644374](https://github.com/kim-1868/miaowu-english-public/actions/runs/42390644374) 均通过。包括恶意书名/标签转义、封面 URL 白名单、按钮回调、320/390/1440px 布局与交互。
+- **交付包**：`wordletter-public-ui-d8ea09f154d5e3a35787267ae886b1dd066a2eb3`，Artifact ID `13580754886`，27 个公开前端文件与 SHA-256 清单。**本轮没有读取、复制、修改私人真实小说、词库、用户/订单、激活记录、D1 或 Cloudflare 密钥。**
+- **文件对照**：相对当前私人 V1.1，20 项同 Git blob SHA；4 项公共优化差异（`public/site-updates.js`、`public/v11-reader.css`、`public/v11-responsive.css`、`public/v11-wordbook.css`）；3 项公共新组件（`public/reader-preferences.js`、`public/shelf-pagination.js`、`public/shelf-card.js`），私人无同名文件属正常**尚未整合**状态。
+- **并行保护**：私人活动分支、预览站、生产站、D1 保持不变；此轮只向私人 `main` 追加交接说明。实际使用新组件前，须审阅**最新**私人 `app.js`，替换对应旧 DOM 渲染、正确连接私人 API 回调，覆盖标签和收藏/权益/进度/分类切换回归，不能额外加载两套重复组件。最终发布需私人候选 Gate 和用户明确批准。
+- **进一步计划**：优先继续在公共开发阅读工具栏、词卡的纯视图与安全 DOM 渲染；私人仓库保留真实身份、会员、内容和发布，避免重新引入私人高频 UI CI。
+- **项目记录**：[公共 UPDATE_LOG](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md) 与 [公共代码归属规范](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/PUBLIC_FRONTEND_OWNERSHIP_20261107.md)。
+
