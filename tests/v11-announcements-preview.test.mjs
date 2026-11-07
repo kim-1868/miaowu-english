@@ -247,3 +247,69 @@ test("V1.1 password-gated staging shows clearly labeled public DEMO notices with
   assert.equal(f.db.prepare("SELECT COUNT(*) n FROM ops_audit_events").get().n,0);
  }finally{f.db.close()}
 });
+
+
+test("V1.1 notice stays visible after details return until the close button is clicked",async()=>{
+ const {runInNewContext}=await import("node:vm");
+ const js=read("public/site-updates.js");
+ const key="miaowu_notice_dismissed_id_v1";
+ const id="d6e8f098-18fd-46e1-a1ab-45167df393e1";
+ const storage=new Map([[key,id]]); // previous demo dismissal from earlier preview
+ const latest={id,title:"预览示例：妙屋新鲜事上线啦",category:"feature",publishedAt:"2026-11-07 10:00:00"};
+ async function visit(search=""){
+  let url=new URL("https://preview.example/"+search);
+  const events={};
+  const nodes={
+   siteUpdateBanner:{hidden:true},
+   siteUpdateTitle:{textContent:""},
+   siteUpdateMeta:{textContent:""},
+   siteUpdateDetail:{href:""},
+   siteUpdateDismiss:{onclick:null}
+  };
+  const location={get href(){return url.href},get search(){return url.search}};
+  const history={state:null,replaceState(_state,_title,target){url=new URL(target,url)}};
+  const localStorage={
+   getItem:k=>storage.get(k)||null,
+   setItem:(k,v)=>storage.set(k,String(v)),
+   removeItem:k=>storage.delete(k)
+  };
+  const context={
+   document:{readyState:"complete",hidden:false,getElementById:id=>nodes[id]||null,
+    addEventListener:(name,fn)=>{events[name]=fn}},
+   window:{addEventListener:(name,fn)=>{events[name]=fn}},
+   fetch:async()=>({ok:true,json:async()=>({latest,previewOnly:true})}),
+   history,location,localStorage,URL,URLSearchParams,Date,Intl
+  };
+  runInNewContext(js,context,{filename:"site-updates.js"});
+  await new Promise(resolve=>setImmediate(resolve));
+  return {nodes,events,get search(){return url.search}};
+ }
+ const first=await visit("?previewAnnouncement=1");
+ assert.equal(first.nodes.siteUpdateBanner.hidden,false);
+ assert.equal(first.search,"","preview query must be consumed once");
+ assert.equal(storage.has(key),false,"preview reset clears only the old demo dismissal");
+ assert.match(first.nodes.siteUpdateDetail.href,/updates\\.html#/);
+ const back=await visit(); // history page's "返回首页" points to /
+ assert.equal(back.nodes.siteUpdateBanner.hidden,false,"detail/return should not hide notice");
+ back.events.pageshow(); // bfcache/history restoration
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(back.nodes.siteUpdateBanner.hidden,false);
+ back.nodes.siteUpdateDismiss.onclick();
+ assert.equal(storage.get(key),id);
+ assert.equal(back.nodes.siteUpdateBanner.hidden,true);
+ const refreshed=await visit();
+ assert.equal(refreshed.nodes.siteUpdateBanner.hidden,true,"only explicit close persists");
+});
+test("V1.1 text-only announcement is borderless and responsive at mobile, tablet and desktop widths",()=>{
+ const css=read("public/site-updates.css");
+ assert.match(css,/\\.mw-update-strip\\{[^}]*border:0;[^}]*border-radius:0;[^}]*background:transparent;[^}]*box-shadow:none/);
+ assert.match(css,/@media\\(max-width:860px\\)/);
+ assert.match(css,/@media\\(max-width:600px\\)/);
+ assert.match(css,/@media\\(max-width:360px\\)/);
+ assert.match(css,/\\.mw-update-message\\{[^}]*min-width:0/);
+ assert.match(css,/\\.mw-update-action\\{[^}]*min-height:32px/);
+ assert.match(css,/html\\[data-theme="dark"\\] \\.mw-update-strip/);
+ const index=read("public/index.html");
+ assert.match(index,/site-updates\\.css\\?v=20261107-preview3/);
+ assert.match(index,/site-updates\\.js\\?v=20261107-preview3/);
+});
