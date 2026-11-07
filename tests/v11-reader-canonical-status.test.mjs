@@ -15,6 +15,18 @@ function fixture({canonical=true}={}){
    "('wa','record','n.','记录；档案'),"+
    "('wb','record','n.','记录'),"+
    "('wc','record','v.','录制')");
+ db.exec("INSERT INTO categories(id,slug,title,is_visible) VALUES"+
+   "('c4','cet4','四级',1)");
+ db.exec("INSERT INTO books(id,category_id,title,status) VALUES"+
+   "('book-a','c4','Book A','published'),('book-b','c4','Book B','published')");
+ db.exec("INSERT INTO chapters(id,book_id,chapter_no,title,content_json,published_at) VALUES"+
+   "('chapter-a','book-a',1,'A','{}','2026-01-01 00:00:00'),"+
+   "('chapter-b','book-b',1,'B','{}','2026-01-01 00:00:00')");
+ db.exec("INSERT INTO chapter_words(chapter_id,word_id,context_anchor,context_sentence) VALUES"+
+   "('chapter-a','wa','p0:s0','A private record.'),"+
+   "('chapter-b','wb','p0:s0','Another private record.'),"+
+   "('chapter-a','wc','p0:s1','Record audio here.')");
+ db.exec("INSERT INTO entitlements(user_id,category_id) VALUES('u1','c4')");
  db.exec("INSERT INTO user_words(user_id,word_id,status,bookmarked,due_at) VALUES "+
    "('u1','wa','mastered',1,NULL),"+
    "('u1','wb','learning',1,'2026-01-01 00:00:00')");
