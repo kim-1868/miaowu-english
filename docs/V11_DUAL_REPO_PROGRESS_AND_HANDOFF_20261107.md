@@ -232,3 +232,7 @@
 
 公共项目更新台账：[docs/UPDATE_LOG.md](https://github.com/kim-1868/miaowu-english-public/blob/main/docs/UPDATE_LOG.md)。
 
+
+### PUBLIC-11 后续并行任务已排期（2026-11-07）
+
+已在公共仓库创建 [Issue #18](https://github.com/kim-1868/miaowu-english-public/issues/18)，专门分模块抽离当前私人 `public/app.js` 中的可公开 DOM/UI 与交互展示。**不会直接整体公开 app.js，更不会触碰账号权限、词卡持久化、内容或订单后端**。每步独立公共 PR、公开离线/合成浏览器测试、固定 SHA 只读差异核对，私人候选验收后才可能同步给预览站。此任务只是已安排，尚未宣称代码拆分完成。
