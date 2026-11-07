@@ -91,6 +91,10 @@ async function publicRoute(req,env,path){
   const row=await q(env.DB,"SELECT "+select+" FROM site_announcements "+
    "WHERE status='published' AND show_on_home=1 "+
    "ORDER BY published_at DESC,created_at DESC,id DESC LIMIT 1").first();
+  if(!row&&env.APP_ENV==="staging"&&env.PREVIEW_ANNOUNCEMENT_DEMO==="true"){
+    const count=await q(env.DB,"SELECT COUNT(*) n FROM site_announcements WHERE status='published'").first();
+    if(Number(count?.n||0)===0)return stagingOnlyDemo(env,path,req);
+  }
   return respond({latest:row?view(row):null,available:true});
  }
  if(path==="/api/updates"){
@@ -100,6 +104,9 @@ async function publicRoute(req,env,path){
   const page=Number(raw),size=15,offset=(page-1)*size;
   const totalRow=await q(env.DB,"SELECT COUNT(*) n FROM site_announcements WHERE status='published'").first();
   const total=Number(totalRow?.n||0);
+  if(total===0&&env.APP_ENV==="staging"&&env.PREVIEW_ANNOUNCEMENT_DEMO==="true"){
+    return stagingOnlyDemo(env,path,req);
+  }
   const result=await q(env.DB,"SELECT "+select+" FROM site_announcements WHERE status='published' "+
     "ORDER BY published_at DESC,created_at DESC,id DESC LIMIT ? OFFSET ?",size,offset).all();
   return respond({updates:(result.results||[]).map(view),total,page,hasMore:offset+size<total,available:true});
