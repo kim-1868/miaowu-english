@@ -1,0 +1,69 @@
+name: Private candidate integration and production build QA (manual; no deployment)
+
+# Public UI checks/builds occur in miaowu-english-public.
+# Only a fixed private candidate SHA triggers this complete sensitive integration QA.
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: 'Exact 40-character private candidate commit SHA'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: private-candidate-${{ inputs.candidate_sha }}
+  cancel-in-progress: true
+
+jobs:
+  private-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Validate immutable commit input before checkout
+        shell: bash
+        env:
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+        run: |
+          set -euo pipefail
+          [[ "$CANDIDATE_SHA" =~ ^[0-9a-fA-F]{40}$ ]] || { echo "::error::Full 40-char SHA required"; exit 1; }
+          echo "PRIVATE_CANDIDATE_SHA=$CANDIDATE_SHA"
+      - name: Checkout exact private candidate, never persist credentials
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.candidate_sha }}
+          persist-credentials: false
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm SHA and absence of Cloudflare credentials
+        shell: bash
+        env:
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          test -z "${CLOUDFLARE_API_TOKEN:-}"
+          test -z "${CLOUDFLARE_ACCOUNT_ID:-}"
+      - name: Validate private auth, learning, entitlement and API code
+        run: |
+          npm run check
+          npm test
+      - name: Validate production routing and compile static Pages assets
+        run: |
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm run assets:production:build
+          npm run pages:production:build
+      - name: Local dry compile Worker; never publish or access remote D1
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --ignore-scripts wrangler@^4
+          npx --no-install wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/private-candidate-dryrun
+          echo "PRIVATE_CANDIDATE_OFFLINE_CHECKS_DONE"
+          echo "NO_STAGING_OR_PRODUCTION_DEPLOYMENT"
+          echo "NO_REMOTE_D1_OR_PRODUCTION_SECRET_ACCESS"
+          echo "PRODUCTION_RELEASE_STILL_REQUIRES_OWNER_APPROVAL"
