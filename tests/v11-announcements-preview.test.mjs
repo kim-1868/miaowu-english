@@ -288,7 +288,7 @@ test("V1.1 notice stays visible after details return until the close button is c
  assert.equal(first.nodes.siteUpdateBanner.hidden,false);
  assert.equal(first.search,"","preview query must be consumed once");
  assert.equal(storage.has(key),false,"preview reset clears only the old demo dismissal");
- assert.match(first.nodes.siteUpdateDetail.href,/updates\\.html#/);
+ assert.match(first.nodes.siteUpdateDetail.href,/updates\.html#/);
  const back=await visit(); // history page's "返回首页" points to /
  assert.equal(back.nodes.siteUpdateBanner.hidden,false,"detail/return should not hide notice");
  back.events.pageshow(); // bfcache/history restoration
@@ -302,14 +302,14 @@ test("V1.1 notice stays visible after details return until the close button is c
 });
 test("V1.1 text-only announcement is borderless and responsive at mobile, tablet and desktop widths",()=>{
  const css=read("public/site-updates.css");
- assert.match(css,/\\.mw-update-strip\\{[^}]*border:0;[^}]*border-radius:0;[^}]*background:transparent;[^}]*box-shadow:none/);
- assert.match(css,/@media\\(max-width:860px\\)/);
- assert.match(css,/@media\\(max-width:600px\\)/);
- assert.match(css,/@media\\(max-width:360px\\)/);
- assert.match(css,/\\.mw-update-message\\{[^}]*min-width:0/);
- assert.match(css,/\\.mw-update-action\\{[^}]*min-height:32px/);
- assert.match(css,/html\\[data-theme="dark"\\] \\.mw-update-strip/);
+ assert.match(css,/\.mw-update-strip\{[^}]*border:0;[^}]*border-radius:0;[^}]*background:transparent;[^}]*box-shadow:none/);
+ assert.match(css,/@media\(max-width:860px\)/);
+ assert.match(css,/@media\(max-width:600px\)/);
+ assert.match(css,/@media\(max-width:360px\)/);
+ assert.match(css,/\.mw-update-message\{[^}]*min-width:0/);
+ assert.match(css,/\.mw-update-action\{[^}]*min-height:32px/);
+ assert.match(css,/html\[data-theme="dark"\] \.mw-update-strip/);
  const index=read("public/index.html");
- assert.match(index,/site-updates\\.css\\?v=20261107-preview3/);
- assert.match(index,/site-updates\\.js\\?v=20261107-preview3/);
+ assert.match(index,/site-updates\.css\?v=20261107-preview3/);
+ assert.match(index,/site-updates\.js\?v=20261107-preview3/);
 });
