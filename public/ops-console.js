@@ -103,15 +103,14 @@ async function verify(){
   try{await mountClaimAdmin();}catch(e){$("claimsStatus").textContent="对账功能暂不可用："+e.message;}
   if($("updatesAdminForm")){
     try{await mountUpdatesAdmin();}catch(e){
-      $("updatesAdminStatus").textContent=String(e.message).includes("ANNOUNCEMENTS_SCHEMA_REQUIRED")?
-        "预览演示模式：通告栏与历史页面可查看，云端保存需要测试 D1 权限，当前暂不开放发布按钮。":
-        "公告管理暂不可用："+e.message;
+      $("updatesAdminStatus").textContent="公告管理连接失败："+e.message+
+        "。请确认当前为受保护的预览站，并使用已授权的发布者密钥。";
     }
   }
 }
 async function mountUpdatesAdmin(){
   if(!updatesAdmin){
-    const mod=await import("/ops-updates.js?v=20261107-preview1");
+    const mod=await import("/ops-updates.js?v=20261107-ops2");
     updatesAdmin=mod.initUpdatesAdmin({api,connected});
   }
   await updatesAdmin.refresh();
