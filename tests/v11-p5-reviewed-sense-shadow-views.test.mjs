@@ -328,10 +328,10 @@ test("P5 writeback: Story Echo keeps original completed chapter ID and cannot su
     /REVIEWED_SHADOW_ECHO_CHAPTER_NOT_COMPLETED|WRITEBACK_ECHO_REQUIRES_COMPLETED_CHAPTER/);
   const id=newLocalReviewId();
   const saved=commitLocalReviewedAction(f.db,"u1",{wordId:"wa",mode:"echo",
-    chapterId:"cha",requestId:id,answer:"record",choiceId:"wb",now:NOW});
+    chapterId:"cha",requestId:id,echoGameType:"situation",answer:"record",choiceId:"wb",now:NOW});
   assert.equal(saved.correct,true);
-  const event=f.db.prepare("SELECT word_id,chapter_id FROM review_events WHERE id=?").get(id);
-  assert.deepEqual({...event},{word_id:"wa",chapter_id:"cha"});
+  const event=f.db.prepare("SELECT word_id,chapter_id,game_type FROM review_events WHERE id=?").get(id);
+  assert.deepEqual({...event},{word_id:"wa",chapter_id:"cha",game_type:"situation"});
   assert.equal(f.db.prepare("SELECT COUNT(*) n FROM review_events").get().n,1);
  }finally{f.db.close()}
 });
@@ -339,7 +339,7 @@ test("P5 writeback: invalid same-spelling different-POS Echo choice is marked in
  const f=fixture();try{
   f.learn("wa");f.learn("wb");f.learn("wv");f.stage();
   const outcome=commitLocalReviewedAction(f.db,"u1",{wordId:"wa",mode:"echo",
-   chapterId:"cha",requestId:newLocalReviewId(),answer:"record",choiceId:"wv",now:NOW});
+   chapterId:"cha",requestId:newLocalReviewId(),echoGameType:"situation",answer:"record",choiceId:"wv",now:NOW});
   assert.equal(outcome.correct,false);
   assert.equal(f.db.prepare("SELECT COUNT(*) n FROM user_study_schedules "+
    "WHERE user_id='u1' AND study_key='sense:record|v|录制'").get().n,0);
