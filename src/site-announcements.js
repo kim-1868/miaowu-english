@@ -47,9 +47,42 @@ const schemaReady=async db=>{
 };
 const select="id,title,summary,body,category,status,show_on_home,revision,"+
  "created_at,updated_at,published_at";
+// Exactly two clearly labeled demonstration entries for a protected staging
+// site without D1 query permission. Never used in production and never stored
+// as real published owner content.
+const PREVIEW_DEMO_UPDATES=Object.freeze([
+ {id:"d6e8f098-18fd-46e1-a1ab-45167df393e1",
+  title:"预览示例：妙屋新鲜事上线啦",
+  summary:"我们正在试用新的更新公告栏。点击详情可查看完整说明。",
+  body:"喵呜～这里是妙屋英语 V1.1 测试站的演示公告。\n你可以先体验首页公告关闭、历史记录查看和运营台管理布局。\n这条内容仅为预览示例，不代表正式网站已发布。",
+  category:"feature",showOnHome:true,publishedAt:"2026-11-07 10:00:00"},
+ {id:"831e827d-f941-43b0-b7e0-6ea84076db65",
+  title:"预览示例：历史更新可以随时查看",
+  summary:"即使关闭首页公告，也可以回到更新日志里查看。",
+  body:"这是测试站的第二条演示公告。正式启用后，所有已发布消息会按时间从新到旧排列，草稿和下架公告则不会公开。",
+  category:"other",showOnHome:false,publishedAt:"2026-11-06 10:00:00"}
+]);
+function stagingOnlyDemo(env,path,req){
+ if(env.APP_ENV!=="staging"||env.PREVIEW_ANNOUNCEMENT_DEMO!=="true")return null;
+ if(path==="/api/updates/latest")return respond({latest:PREVIEW_DEMO_UPDATES[0],available:false,previewOnly:true});
+ if(path==="/api/updates"){
+  const query=new URL(req.url).searchParams.get("page")||"1";
+  if(!/^[1-9][0-9]{0,4}$/.test(query))return err("INVALID_PAGE",400);
+  return respond({updates:query==="1"?PREVIEW_DEMO_UPDATES:[],total:2,
+   page:Number(query),hasMore:false,available:false,previewOnly:true});
+ }
+ const id=path.match(/^\/api\/updates\/([a-f0-9-]{36})$/i)?.[1];
+ if(id){
+  const item=PREVIEW_DEMO_UPDATES.find(x=>x.id===id);
+  return item?respond({update:item,previewOnly:true}):err("UPDATE_NOT_FOUND",404);
+ }
+ return null;
+}
 async function publicRoute(req,env,path){
  if(req.method!=="GET")return err("NOT_FOUND",404);
  if(!await schemaReady(env.DB)){
+  const demo=stagingOnlyDemo(env,path,req);
+  if(demo)return demo;
   if(path==="/api/updates/latest")return respond({latest:null,available:false});
   if(path==="/api/updates")return respond({updates:[],total:0,page:1,hasMore:false,available:false});
   return err("UPDATE_NOT_FOUND",404);
