@@ -86,13 +86,15 @@ const utcTime=value=>{
  const s=String(value);
  return Date.parse(s.includes("T")?s:s.replace(" ","T")+"Z");
 };
-export function projectStudySenseRows(rows,plans=[],scope="due",now=new Date()){
+// Fifth argument is used ONLY by isolated reviewed-sense shadow tests.
+// Production callers keep the existing default studyKey behavior.
+export function projectStudySenseRows(rows,plans=[],scope="due",now=new Date(),keyForRow=studyKey){
  if(!["due","learning","all","saved","bookmarked","mastered"].includes(scope))throw Error("INVALID_STUDY_SCOPE");
  const current=now instanceof Date?now.getTime():new Date(now).getTime();
  const schedule=new Map((plans||[]).map(s=>[s.study_key,s]));
  const groups=new Map();
  for(const row of rows||[]){
-  const key=studyKey(row);
+  const key=keyForRow(row);
   const g=groups.get(key);
   if(!g)groups.set(key,{...row,study_key:key,
    alias_word_ids:[row.word_id],_mastered:row.status==="mastered",
