@@ -19,8 +19,8 @@ concurrency:
 
 jobs:
   private-candidate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 35
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
     steps:
       - name: Validate immutable commit input before checkout
         shell: bash
@@ -48,10 +48,14 @@ jobs:
           test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
           test -z "${CLOUDFLARE_API_TOKEN:-}"
           test -z "${CLOUDFLARE_ACCOUNT_ID:-}"
-      - name: Validate private auth, learning, entitlement and API code
+      - name: Consolidated private auth, entitlement, D1 restore and learning regression
+        run: npm run release:v11:offline-check
+      - name: Browser layout and wordbook QA on supported Ubuntu 24.04
         run: |
-          npm run check
-          npm test
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+          node scripts/test-v11-responsive-browser.mjs
+          node scripts/test-v11-wordbook-example-browser.mjs
       - name: Validate production routing and compile static Pages assets
         run: |
           node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
