@@ -43,6 +43,7 @@ async function home(){
   currentLatest=latest;
   text($("siteUpdateTitle"),latest.title);
   text($("siteUpdateMeta"),safeDate(latest.publishedAt)+" · "+(KIND[latest.category]||"更新"));
+  $("siteUpdateMessage").onclick=()=>openAnnouncementDialog();
   $("siteUpdateDetail").onclick=()=>openAnnouncementDialog();
   $("siteUpdateDismiss").onclick=()=>{
    dismiss(latest.id);
