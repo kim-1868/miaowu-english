@@ -67,28 +67,53 @@ async function available(env,user,url){
   // Due eligibility comes from the SAME canonical sense projection as the
   // homepage and flashcards. Do not filter legacy user_words before checking
   // other aliases and the canonical study schedule.
-  let dueWordBatches=null;
+  let dueHeadwordBatches=null,dueKeys=null;
   if(scope==="due"){
     const due=await listUserStudySenses(env,user.id,"due");
-    const ids=[...new Set(due.flatMap(x=>x.alias_word_ids))];
-    if(!ids.length)return reply({scope,words:[],availableGames:[],distinctWords:0,manualOnly:false,
+    dueKeys=new Set(due.map(x=>x.study_key));
+    // A learned noun in book A may have another word_id in completed book B
+    // even though book B has never created its own user_words row. Match the
+    // headword in SQL, then enforce the FULL sense identity (including POS
+    // and teaching meaning) in JavaScript. Old-ID-only filtering loses B.
+    const headwords=[...new Set(due.map(x=>String(x.headword||"")
+      .trim().toLocaleLowerCase("en-US")).filter(Boolean))];
+    if(!headwords.length)return reply({scope,words:[],availableGames:[],distinctWords:0,manualOnly:false,
       note:"今日没有已到期且可复习的词义。"});
-    dueWordBatches=[];
-    for(let i=0;i<ids.length;i+=200)dueWordBatches.push(ids.slice(i,i+200));
+    dueHeadwordBatches=[];
+    for(let i=0;i<headwords.length;i+=200)
+      dueHeadwordBatches.push(headwords.slice(i,i+200));
   }
-  const batches=dueWordBatches||[null];
+  const batches=dueHeadwordBatches||[null];
   const allRows=[];
-  for(const ids of batches){
-    const restriction=ids?" AND cw.word_id IN ("+ids.map(()=>"?").join(",")+")":"";
-    const rows=await exec(env,"SELECT ch.id chapter_id,ch.chapter_no,ch.book_id,b.title book_title,"+
-      "cw.context_sentence,w.id word_id,w.headword,w.phonetic_uk,w.phonetic_us,"+
-      "w.meaning_zh,w.part_of_speech,w.example_en,w.example_zh"+
-      (scope==="due"?",p.updated_at AS __sort_at":"")+" "+scoped+restriction+
-      (scope==="chapter"?
-        " ORDER BY ch.chapter_no DESC,cw.context_anchor ASC LIMIT 600":
-        " ORDER BY p.updated_at DESC,ch.chapter_no DESC,cw.context_anchor ASC LIMIT 600"),
-      ...binds,...(ids||[])).all();
-    allRows.push(...(rows.results||[]));
+  for(const headwords of batches){
+    const restriction=headwords?" AND LOWER(TRIM(w.headword)) IN ("+
+      headwords.map(()=>"?").join(",")+")":"";
+    // A repeated word can occur more than 600 times. For due practice,
+    // paginate raw chapter occurrences until 60 distinct matching senses
+    // have been found, so a later completed story isn't silently starved.
+    const foundSenses=new Set();
+    for(let page=0;page<(scope==="due"?40:1);page++){
+      const order=scope==="chapter"?
+        " ORDER BY ch.chapter_no DESC,cw.context_anchor ASC,w.id ASC":
+        " ORDER BY p.updated_at DESC,ch.chapter_no DESC,cw.context_anchor ASC,ch.id ASC,w.id ASC";
+      const rows=await exec(env,"SELECT ch.id chapter_id,ch.chapter_no,ch.book_id,b.title book_title,"+
+        "cw.context_sentence,w.id word_id,w.headword,w.phonetic_uk,w.phonetic_us,"+
+        "w.meaning_zh,w.part_of_speech,w.example_en,w.example_zh"+
+        (scope==="due"?",p.updated_at AS __sort_at":"")+" "+scoped+restriction+
+        order+" LIMIT 600"+(scope==="due"?" OFFSET ?":""),
+        ...binds,...(headwords||[]),...(scope==="due"?[page*600]:[])).all();
+      const chunk=rows.results||[];
+      for(const word of chunk){
+        const key=scope==="due"?studyKey(word):null;
+        if(dueKeys&&!dueKeys.has(key))continue;
+        if(dueKeys){
+          if(foundSenses.has(key))continue;
+          foundSenses.add(key);
+        }
+        allRows.push(word);
+      }
+      if(scope!=="due"||chunk.length<600||foundSenses.size>=60)break;
+    }
   }
   if(scope==="due")allRows.sort((a,b)=>
     String(b.__sort_at||"").localeCompare(String(a.__sort_at||""))||b.chapter_no-a.chapter_no||
