@@ -80,7 +80,7 @@ function writeState(db,userId,key,next,bookmarked){
  * approval on an isolated SQLite fixture. No HTTP/Cloudflare APIs.
  */
 export function commitLocalReviewedAction(db,userId,{
- wordId,mode,requestId=null,answer=null,choiceId=null,judgment=null,
+ wordId,mode,requestId=null,chapterId=null,answer=null,choiceId=null,judgment=null,
  status=null,bookmarked=null,now=new Date(),failBeforeCommit=false
 }={}){
  if(!modes.has(mode))fail("WRITEBACK_INVALID_MODE");
@@ -90,6 +90,13 @@ export function commitLocalReviewedAction(db,userId,{
  if(mode!=="manual"&&(typeof requestId!=="string"||!uuid.test(requestId)))
   fail("WRITEBACK_REQUEST_ID_REQUIRED");
  const ctx=verify(db,userId,wordId,now);
+ if(mode==="echo"){
+  if(typeof chapterId!=="string"||!db.prepare("SELECT 1 FROM reading_progress p "+
+   "JOIN chapter_words cw ON cw.chapter_id=p.chapter_id "+
+   "WHERE p.user_id=? AND p.chapter_id=? AND p.completed_at IS NOT NULL "+
+   "AND cw.word_id=? LIMIT 1").get(userId,chapterId,wordId))
+   fail("WRITEBACK_ECHO_REQUIRES_COMPLETED_CHAPTER");
+ }
  if(mode!=="manual"){
   const prior=db.prepare("SELECT user_id,word_id,game_type,result "+
    "FROM review_events WHERE id=?").get(requestId);
@@ -125,7 +132,8 @@ export function commitLocalReviewedAction(db,userId,{
   if(mode!=="manual"){
    db.prepare("INSERT INTO review_events "+
     "(id,user_id,word_id,chapter_id,game_type,result) "+
-    "VALUES(?,?,?,NULL,?,?)").run(requestId,userId,wordId,"bookplate-"+mode,result);
+    "VALUES(?,?,?,?,?,?)").run(requestId,userId,wordId,mode==="echo"?chapterId:null,
+      "bookplate-"+mode,result);
   }
   for(const key of ctx.keys)writeState(db,userId,key,next,bookmarked);
   for(const id of ctx.aliases){
