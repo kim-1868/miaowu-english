@@ -84,3 +84,5 @@ jobs:
 # V1.1 preview promotion: wordbook example words are inline underlined text (PR #172); Chromium phone/desktop day/night verified. Staging/test D1 only.
 
 # V1.1 P5 staging-only regression: ops entitlement display/claims read-model fixed in PR #173; protected staging and test D1 only.
+
+# V1.1 P5 guarded staging preview: PR #181 canonical wordbook bookmark fix and 625/626 offline regression plus browser QA. Test D1 only; 014 reviewed mapping remains offline and disabled.
