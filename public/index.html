@@ -25,6 +25,60 @@
       <button class="global-theme-toggle" id="globalThemeToggle" type="button" title="切换全站日夜模式" aria-label="切换全站日夜模式"><span class="theme-indicator">☾</span><span class="theme-label">夜间</span></button><button class="account-button" id="topAccount">登录 / 激活</button>
     </header>
   </div>
+  <!-- V1.1 announcement preview: isolated UI, no production data or publishing APIs -->
+  <section id="v11Announcement" class="v11-announcement" aria-label="妙屋英语更新公告">
+    <div class="v11-announcement-inner">
+      <span class="v11-announcement-icon" aria-hidden="true">✦</span>
+      <span class="v11-announcement-text"><b>妙屋公告</b><span>阅读与词汇学习体验持续优化中，来看看最近更新了什么</span></span>
+      <button class="v11-announcement-history" id="v11AnnouncementHistory" type="button">查看更新</button>
+      <button class="v11-announcement-close" id="v11AnnouncementClose" type="button" aria-label="关闭本条公告">×</button>
+    </div>
+  </section>
+  <dialog id="v11AnnouncementDialog" class="v11-announcement-dialog" aria-labelledby="v11AnnouncementTitle">
+    <div class="v11-announcement-dialog-head"><h2 id="v11AnnouncementTitle">妙屋更新日志</h2><button id="v11AnnouncementDialogClose" type="button" aria-label="关闭更新日志">×</button></div>
+    <p class="v11-announcement-dialog-sub">每一点小小更新，都为了让故事更好读。</p>
+    <article class="v11-announcement-entry"><time datetime="2026-11-07">2026.11.07 · 预览公告</time><h3>更新公告栏位置调整</h3><p>公告栏移至首页导航栏下方。可以关闭公告，也可以随时查看历史更新。</p></article>
+    <p class="v11-announcement-dialog-foot">当前为 V1.1 预览演示内容，正式发布记录将以运营台发布为准。</p>
+  </dialog>
+  <style>
+    .v11-announcement{position:relative;z-index:3;background:#f7eee2;border-bottom:1px solid #eadccd;color:#74583f}
+    .v11-announcement[hidden]{display:none!important}
+    .v11-announcement-inner{max-width:1200px;margin:auto;min-height:40px;display:flex;align-items:center;gap:11px;padding:7px 20px;font-size:12px}
+    .v11-announcement-icon{color:#b08560;font-size:17px;line-height:1}
+    .v11-announcement-text{display:flex;gap:10px;align-items:center;flex:1;min-width:0}
+    .v11-announcement-text b{white-space:nowrap;color:#815c43}
+    .v11-announcement-text span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .v11-announcement-history,.v11-announcement-close{border:0;background:transparent;color:inherit;cursor:pointer;white-space:nowrap;font:inherit}
+    .v11-announcement-history{text-decoration:underline;text-underline-offset:3px}
+    .v11-announcement-close{font-size:21px;line-height:1;padding:0 4px}
+    .v11-announcement-dialog{border:1px solid #e8d9c9;border-radius:16px;padding:23px;width:min(440px,calc(100vw - 32px));color:#654735;background:#fffaf3;box-shadow:0 22px 75px #35271e44}
+    .v11-announcement-dialog::backdrop{background:#201b1b88}
+    .v11-announcement-dialog-head{display:flex;justify-content:space-between;align-items:center;gap:14px}
+    .v11-announcement-dialog-head h2{margin:0;font-size:22px}
+    .v11-announcement-dialog-head button{border:0;background:none;cursor:pointer;font-size:24px;color:inherit}
+    .v11-announcement-dialog-sub,.v11-announcement-dialog-foot{font-size:12px;color:#998372}
+    .v11-announcement-entry{padding:14px 0;border-top:1px solid #eaddd0;border-bottom:1px solid #eaddd0}
+    .v11-announcement-entry time{color:#a77c57;font-size:12px}
+    .v11-announcement-entry h3{font-size:15px;margin:9px 0}
+    .v11-announcement-entry p{font-size:13px;line-height:1.8;margin:0}
+    body.night .v11-announcement,body.dark .v11-announcement,[data-theme="dark"] .v11-announcement{background:#302a2b;color:#f0d8c5;border-color:#4c3e3e}
+    @media(max-width:600px){.v11-announcement-inner{padding:7px 12px;gap:7px;min-height:39px}.v11-announcement-text{gap:7px}.v11-announcement-text b{font-size:11px}.v11-announcement-text span{font-size:11px}.v11-announcement-history{font-size:11px}}
+  </style>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const bar = document.getElementById('v11Announcement');
+      const dialog = document.getElementById('v11AnnouncementDialog');
+      const closeKey = 'miaowu-announcement-dismissed-v11-demo-20261107';
+      function refresh(){ bar.hidden = localStorage.getItem(closeKey) === '1' || !document.getElementById('view-library').classList.contains('active'); }
+      document.getElementById('v11AnnouncementClose').addEventListener('click', () => { localStorage.setItem(closeKey,'1'); refresh(); });
+      document.getElementById('v11AnnouncementHistory').addEventListener('click', () => dialog.showModal());
+      document.getElementById('v11AnnouncementDialogClose').addEventListener('click', () => dialog.close());
+      document.querySelectorAll('[data-nav]').forEach(el => el.addEventListener('click', () => setTimeout(refresh,0)));
+      document.getElementById('goHome')?.addEventListener('click', () => setTimeout(refresh,0));
+      new MutationObserver(refresh).observe(document.getElementById('view-library'),{attributes:true,attributeFilter:['class']});
+      refresh();
+    });
+  </script>
   <main class="app-shell">
     <section id="view-library" class="view active">
       <div class="hero story-home-hero" id="miaowuHomeScene">
