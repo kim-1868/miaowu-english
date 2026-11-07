@@ -58,8 +58,9 @@ jobs:
           node scripts/check-v11-preview-config.mjs
           test "$(node -p 'JSON.parse(require("fs").readFileSync("wrangler.jsonc","utf8")).d1_databases[0].database_name')" = "miaowu-english-test"
           test "$(node -p 'JSON.parse(require("fs").readFileSync("wrangler.jsonc","utf8")).d1_databases[0].database_id')" = "88a817cb-23bb-4ae4-bcb8-92286c4165d4"
-          npx wrangler d1 execute miaowu-english-test --remote --config wrangler.jsonc --file=db/015_v11_site_announcements.sql
-          npx wrangler d1 execute miaowu-english-test --remote --config wrangler.jsonc --file=db/staging/015_v11_site_announcements_demo.sql
+          npx wrangler d1 execute miaowu-english-test --remote --config wrangler.jsonc --command 'SELECT 1 AS preview_permission_probe'
+          npx wrangler d1 execute miaowu-english-test --remote --config wrangler.jsonc --command "$(cat db/015_v11_site_announcements.sql)"
+          npx wrangler d1 execute miaowu-english-test --remote --config wrangler.jsonc --command "$(cat db/staging/015_v11_site_announcements_demo.sql)"
           echo "PASS: announcement schema and two demonstration posts on staging test D1 only"
       - name: Deploy only staging Worker (test D1; preserve existing secrets)
         env:
