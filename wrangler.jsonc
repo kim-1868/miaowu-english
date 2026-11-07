@@ -3,7 +3,8 @@
   "main": "src/worker.js",
   "compatibility_date": "2026-10-30",
   "vars": {
-    "APP_ENV": "staging"
+    "APP_ENV": "staging",
+    "PREVIEW_ANNOUNCEMENT_DEMO": "true"
   },
   "assets": {
     "directory": "./public",
