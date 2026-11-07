@@ -324,3 +324,18 @@ html[data-theme="dark"] .mw-ops-update-record{background:#3f313b;color:#f2e0da;b
 html[data-theme="dark"] .mw-ops-update-record small{color:#d0b7b8}
 html[data-theme="dark"] .mw-ops-update-record.selected{background:#5a4050;border-color:#c595a6}
 html[data-theme="dark"] .mw-ops-updates-form{background:#332a33;border-color:#735962}
+
+/* V1.1 preview-only: deliberate publisher initialization of notice storage. */
+.mw-ops-updates-setup[hidden]{display:none!important}
+.mw-ops-updates-setup{margin:12px 0;padding:13px 14px;border:1px solid #dec9c4;border-radius:10px;background:#fff7f1;color:#73544d;font-size:12px}
+.mw-ops-updates-setup p{margin:0 0 10px;line-height:1.65}
+.mw-ops-updates-setup button{min-height:36px;white-space:normal}
+.mw-ops-update-record[aria-pressed="true"]{box-shadow:0 0 0 1px #8d566c inset}
+@media(prefers-color-scheme:dark){
+ .mw-ops-updates-setup{background:#403039;color:#f3dbd7;border-color:#765b61}
+}
+@media(max-width:600px){
+ .mw-ops-updates-setup{padding:12px}
+ .mw-ops-update-panel .ops-record-section-content{padding:11px}
+ .mw-ops-updates-layout{gap:12px}
+}
