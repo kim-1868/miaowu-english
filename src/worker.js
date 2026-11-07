@@ -800,7 +800,7 @@ export default {
     const previewCookie = await stagingCookieAfterBasic(request, env);
     const path = new URL(request.url).pathname;
     if (!path.startsWith("/api/")) {
-      const opsAsset=["/ops.html","/ops-console.js","/ops-console.css"].includes(path);
+      const opsAsset=["/ops.html","/ops-console.js","/ops-console.css","/ops-updates.js"].includes(path);
       if(opsAsset&&env.OPS_CONSOLE_ENABLED!=="true")
         return attachPreviewCookie(new Response("Not found",{status:404}),previewCookie);
       const response = await env.ASSETS.fetch(request);
