@@ -288,7 +288,7 @@ test("V1.1 notice stays visible after details return until the close button is c
  assert.equal(first.nodes.siteUpdateBanner.hidden,false);
  assert.equal(first.search,"","preview query must be consumed once");
  assert.equal(storage.has(key),false,"preview reset clears only the old demo dismissal");
- assert.match(first.nodes.siteUpdateDetail.href,/updates\.html#/);
+ assert.equal(typeof first.nodes.siteUpdateDetail.onclick,"function","details is an in-page action");
  const back=await visit(); // history page's "返回首页" points to /
  assert.equal(back.nodes.siteUpdateBanner.hidden,false,"detail/return should not hide notice");
  back.events.pageshow(); // bfcache/history restoration
@@ -310,6 +310,97 @@ test("V1.1 text-only announcement is borderless and responsive at mobile, tablet
  assert.match(css,/\.mw-update-action\{[^}]*min-height:32px/);
  assert.match(css,/html\[data-theme="dark"\] \.mw-update-strip/);
  const index=read("public/index.html");
- assert.match(index,/site-updates\.css\?v=20261107-preview3/);
- assert.match(index,/site-updates\.js\?v=20261107-preview3/);
+ assert.match(index,/site-updates\.css\?v=20261107-preview4/);
+ assert.match(index,/site-updates\.js\?v=20261107-preview4/);
+});
+
+// Modal interactions: no route changes, cached newest text, compact expandable history.
+test("V1.1 modal instantly shows latest then five history headings, expands on demand and never dismisses banner",async()=>{
+ const {runInNewContext}=await import("node:vm");
+ const events={};
+ function el(id=""){
+  return {
+   id,hidden:false,textContent:"",className:"",children:[],attributes:{},listeners:{},open:false,
+   setAttribute(k,v){this.attributes[k]=v},
+   addEventListener(k,fn){this.listeners[k]=fn},
+   append(...items){this.children.push(...items)},
+   replaceChildren(...items){this.children=[...items]},
+   querySelectorAll(selector){const cls=selector.slice(1);return this.children.flatMap(row=>row.children.filter(x=>x.className===cls))},
+   showModal(){this.open=true},close(){this.open=false}
+  };
+ }
+ const ids=["siteUpdateBanner","siteUpdateTitle","siteUpdateMeta","siteUpdateDetail","siteUpdateDismiss",
+  "siteUpdateDialog","siteUpdateDialogClose","siteUpdateTabLatest","siteUpdateTabHistory",
+  "siteUpdatePanelLatest","siteUpdatePanelHistory","siteUpdateDialogDate","siteUpdateDialogHeadline",
+  "siteUpdateDialogBody","siteUpdateCompactList","siteUpdateHistoryInlineStatus","siteUpdateHistoryMore"];
+ const nodes=Object.fromEntries(ids.map(id=>[id,el(id)]));
+ nodes.siteUpdateBanner.hidden=true;nodes.siteUpdatePanelHistory.hidden=true;nodes.siteUpdateHistoryMore.hidden=true;
+ const rows=Array.from({length:12},(_,i)=>({
+  id:"id-"+i,title:"历史公告 "+i,body:"这是第 "+i+" 条详细内容",
+  publishedAt:"2026-11-07 10:00:00",category:"feature"
+ }));
+ const latest={...rows[0],title:"最新公告",body:"弹窗直接展示完整正文"};
+ const calls=[];
+ const context={
+  document:{readyState:"complete",hidden:false,getElementById:id=>nodes[id]||null,
+   createElement:()=>el(),
+   addEventListener:(name,fn)=>{events[name]=fn}},
+  window:{addEventListener:(name,fn)=>{events[name]=fn}},
+  fetch:async url=>{
+   calls.push(url);
+   return {ok:true,json:async()=>url.includes("latest")?{latest,previewOnly:true}:
+    {updates:rows,total:12,page:1,hasMore:false}};
+  },
+  localStorage:{getItem:()=>null,setItem:()=>{},removeItem:()=>{}},
+  history:{state:null,replaceState(){}},
+  location:{search:"",href:"https://staging.example/"},
+  URL,URLSearchParams,Date,Intl
+ };
+ runInNewContext(read("public/site-updates.js"),context);
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(calls.length,1,"initial page loads only latest notice");
+ nodes.siteUpdateDetail.onclick();
+ assert.equal(nodes.siteUpdateDialog.open,true);
+ assert.equal(nodes.siteUpdateDialogHeadline.textContent,"最新公告");
+ assert.equal(nodes.siteUpdateDialogBody.textContent,"弹窗直接展示完整正文");
+ assert.equal(calls.length,1,"opening dialog should be immediate without an additional fetch");
+ nodes.siteUpdateTabHistory.listeners.click();
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(calls.length,2,"history loads lazily on tab selection");
+ assert.equal(nodes.siteUpdateCompactList.children.length,5);
+ const first=nodes.siteUpdateCompactList.children[0];
+ assert.equal(first.children[1].hidden,true,"history body starts collapsed");
+ assert.equal(first.children[0].children[1].textContent,"历史公告 0");
+ first.children[0].listeners.click();
+ assert.equal(first.children[1].hidden,false,"tap title reveals original details");
+ nodes.siteUpdateHistoryMore.listeners.click();
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(nodes.siteUpdateCompactList.children.length,10,"load 5 at a time");
+ nodes.siteUpdateHistoryMore.listeners.click();
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(nodes.siteUpdateCompactList.children.length,12);
+ assert.equal(nodes.siteUpdateHistoryMore.hidden,true);
+ nodes.siteUpdateDialogClose.listeners.click();
+ assert.equal(nodes.siteUpdateDialog.open,false);
+ assert.equal(nodes.siteUpdateBanner.hidden,false,"closing modal preserves the home strip");
+ nodes.siteUpdateDetail.onclick();
+ assert.equal(nodes.siteUpdateDialog.open,true,"modal can reopen without navigation");
+ assert.equal(nodes.siteUpdatePanelLatest.hidden,false,"dialog reopens on latest tab");
+ assert.equal(nodes.siteUpdateTabLatest.attributes["aria-selected"],"true");
+ nodes.siteUpdateDialog.close();
+ nodes.siteUpdateDismiss.onclick();
+ assert.equal(nodes.siteUpdateBanner.hidden,true,"only strip close hides the announcement");
+});
+test("V1.1 modal is accessible, center-aligned, mobile-adaptive and never links from details to archive page",()=>{
+ const html=read("public/index.html"),css=read("public/site-updates.css");
+ assert.match(html,/id="siteUpdateDetail"[^>]*type="button"[^>]*aria-haspopup="dialog"/);
+ assert.match(html,/<dialog id="siteUpdateDialog"/);
+ assert.match(html,/id="siteUpdateTabLatest"[^>]*role="tab"/);
+ assert.match(html,/id="siteUpdateTabHistory"[^>]*role="tab"/);
+ assert.match(html,/id="siteUpdatePanelHistory"[^>]*hidden/);
+ assert.match(css,/\.mw-updates-dialog\{/);
+ assert.match(css,/max-height:min\(80vh,80dvh\)/);
+ assert.match(css,/@media\(max-width:600px\)/);
+ assert.match(css,/html\[data-theme="dark"\] \.mw-updates-dialog/);
+ assert.doesNotMatch(html,/id="siteUpdateDetail"[^>]*href=/);
 });
