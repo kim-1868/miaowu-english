@@ -1,0 +1,42 @@
+name: V1.1 01-04 prod Pages-to-Worker baseline identity READ-ONLY
+on:
+  push:
+    branches: [release/v11-0104-production-isolated-20261108]
+    paths: [.github/workflows/v11-0104-prod-baseline-identity.yml]
+permissions:
+  contents: read
+jobs:
+  check-live-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check exact live Pages proxy and actual production assets without changing them
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASELINE=47431dd1aa096ca6d250c6932e785c58a80a4dc2
+          ORIGIN=https://miaowu-english-pages.pages.dev
+          curl -fsSL --retry 2 --max-time 22 "$ORIGIN/__miaowu_prod_edge_probe" -o /tmp/pages-probe.json
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";
+          import fs from "node:fs";
+          const p=JSON.parse(fs.readFileSync("/tmp/pages-probe.json","utf8"));
+          assert.equal(p.ok,true);assert.equal(p.layer,"pages-production-entry");
+          assert.equal(p.productionBindingPresent,true);
+          console.log("PAGES_PROXY_PRODUCTION_BINDING_PRESENT");
+          NODE
+          for ASSET in app.js chapter-words.js ops-console.js; do
+            git show "$BASELINE:public/$ASSET" > "/tmp/original_$ASSET"
+            curl -fsSL --retry 2 --max-time 25 "$ORIGIN/$ASSET" -o "/tmp/live_$ASSET"
+            if ! cmp -s "/tmp/original_$ASSET" "/tmp/live_$ASSET"; then
+              echo "PRODUCTION_BASELINE_MISMATCH_$ASSET"; exit 1
+            fi
+            echo "LIVE_PRODUCTION_ASSET_MATCHES_V42_$ASSET"
+          done
+          curl -fsSL --retry 2 --max-time 22 "$ORIGIN/" -o /tmp/home-before.html
+          grep -Fq 'v31-word-only' /tmp/home-before.html
+          echo "LIVE_PRODUCTION_V42_CONFIRMED_NO_WRITES"

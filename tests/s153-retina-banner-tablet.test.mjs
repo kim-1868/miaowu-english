@@ -26,7 +26,7 @@ test("S153: the tablet artwork has genuine 1400px WebP and 2800px high-DPI deriv
     assert.ok(PRODUCTION_ASSET_ALLOWLIST.includes(file),file);
   }
   const result=buildProductionAssets();
-  assert.equal(result.assets.length,38);
+  assert.equal(result.assets.length,43);
 });
 
 test("S153: picture srcset chooses density appropriate assets and preserves old design interaction",()=>{
@@ -35,7 +35,7 @@ test("S153: picture srcset chooses density appropriate assets and preserves old 
   assert.match(html,/src="\/cat-reading-tablet-1x\.webp\?v=20261104-v26-standard"/);
   assert.match(html,/srcset="\/cat-reading-tablet-1x\.webp\?v=20261104-v26-standard 1x, \/cat-reading-tablet-2x\.webp\?v=20261104-v26-retina 2x"/);
   assert.match(html,/href="\/styles\.css\?v=20261104-v28-night-selection"/);
-  assert.match(html,/src="\/app\.js\?v=20261105-v30-flashcards"/);
+  assert.match(html,/src="\/app\.js\?v=20261108-0104-production-isolated"/);
   assert.match(css,/V26: tablet banner sharpness/);
   assert.match(css,/@media \(hover:none\), \(pointer:coarse\)/);
   assert.match(css,/will-change:auto!important/);

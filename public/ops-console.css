@@ -302,3 +302,43 @@ button.secondary{background:#5c4852;color:#f9e8eb}hr{border-color:#674d5a}.audit
  .ops-record[open]>.ops-record-summary{background:#4b3945}
  .ops-record-body{border-color:#6b5261}
 }
+
+/* V1.1 isolated notice editor: compact and folded unless explicitly opened. */
+.mw-ops-update-panel .ops-record-section-content{padding:14px}
+.mw-ops-updates-layout{display:grid;grid-template-columns:minmax(200px,.86fr) minmax(280px,1.5fr);gap:17px;margin-top:15px;align-items:start}
+.mw-ops-updates-list{max-height:410px;overflow-y:auto;display:grid;gap:6px;padding:2px}
+.mw-ops-update-record{display:flex;flex-direction:column;gap:5px;width:100%;text-align:left;border:1px solid #e7dad4;background:#fcf8f4;border-radius:9px;padding:10px;cursor:pointer;color:#654956}
+.mw-ops-update-record strong{font-size:12px;line-height:1.5}
+.mw-ops-update-record small{color:#94786f;font-size:10px;line-height:1.5}
+.mw-ops-update-record.selected{border-color:#8d566c;background:#f5e9e9}
+.mw-ops-update-record:focus-visible{outline:3px solid #bc9c8e;outline-offset:1px}
+.mw-ops-updates-form{border:1px solid #e9dcd5;border-radius:10px;background:#fffcf8;padding:13px;display:grid;gap:10px}
+.mw-ops-updates-form h3{margin:0 0 3px}
+.mw-ops-updates-form label{display:block;font-size:12px;color:#6f5853}
+.mw-ops-updates-form label input:not([type=checkbox]),.mw-ops-updates-form textarea,.mw-ops-updates-form select{display:block;width:100%;box-sizing:border-box;margin-top:4px}
+.mw-ops-updates-form .mw-ops-updates-checkbox{display:flex;align-items:center;gap:7px}
+.mw-ops-updates-checkbox input{margin:0}
+.mw-ops-updates-form .row{flex-wrap:wrap}
+@media(max-width:750px){.mw-ops-updates-layout{grid-template-columns:1fr}.mw-ops-updates-list{max-height:220px}}
+html[data-theme="dark"] .mw-ops-update-record{background:#3f313b;color:#f2e0da;border-color:#725a64}
+html[data-theme="dark"] .mw-ops-update-record small{color:#d0b7b8}
+html[data-theme="dark"] .mw-ops-update-record.selected{background:#5a4050;border-color:#c595a6}
+html[data-theme="dark"] .mw-ops-updates-form{background:#332a33;border-color:#735962}
+
+/* V1.1 preview-only: deliberate publisher initialization of notice storage. */
+.mw-ops-updates-setup[hidden]{display:none!important}
+.mw-ops-updates-setup{margin:12px 0;padding:13px 14px;border:1px solid #dec9c4;border-radius:10px;background:#fff7f1;color:#73544d;font-size:12px}
+.mw-ops-updates-setup p{margin:0 0 10px;line-height:1.65}
+.mw-ops-updates-setup button{min-height:36px;white-space:normal}
+.mw-ops-update-record[aria-pressed="true"]{box-shadow:0 0 0 1px #8d566c inset}
+@media(prefers-color-scheme:dark){
+ .mw-ops-updates-setup{background:#403039;color:#f3dbd7;border-color:#765b61}
+}
+@media(max-width:600px){
+ .mw-ops-updates-setup{padding:12px}
+ .mw-ops-update-panel .ops-record-section-content{padding:11px}
+ .mw-ops-updates-layout{gap:12px}
+}
+
+.mw-ops-update-preview-link{font-size:12px;color:#834861;align-self:center;min-height:32px;display:inline-flex;align-items:center;text-decoration:underline;text-underline-offset:3px}
+@media(prefers-color-scheme:dark){.mw-ops-update-preview-link{color:#e5bed2}}

@@ -1,0 +1,198 @@
+/* WordLetter V1.1 · Cross-device action controls.
+   This stylesheet intentionally loads LAST and only adjusts layout, not book art
+   or the approved three-column shelf / reading data. */
+#view-library .home-shelf-layout > .book-grid{
+  min-width:0;
+}
+#view-library .home-shelf-layout .cloud-book-item{
+  min-width:0;
+}
+#view-library .home-shelf-layout .cloud-book-item .book-info{
+  min-width:0;
+  overflow:visible;
+}
+#view-library .home-shelf-layout .cloud-book-item .book-actions{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  align-items:stretch;
+  justify-items:stretch;
+  gap:7px;
+  width:100%;
+  min-width:0;
+  padding-top:10px;
+}
+#view-library .home-shelf-layout .cloud-book-item .book-actions button{
+  box-sizing:border-box;
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  min-height:38px;
+  margin:0;
+  padding:7px 5px;
+  flex:none;
+  font-size:clamp(10px,.78vw,12px);
+  line-height:1.25;
+  white-space:nowrap;
+  word-break:keep-all;
+  overflow-wrap:normal;
+  text-wrap:nowrap;
+  letter-spacing:0;
+  gap:3px;
+}
+#view-library .home-shelf-layout .cloud-book-item .book-actions button.primary,
+#view-library .home-shelf-layout .cloud-book-item .book-actions button.cloud-bookmark-button{
+  flex:none;
+  width:100%;
+  min-width:0;
+}
+/* When each card is much wider (desktop/tablet 2 columns), the book cover and
+   buttons still sit within the same existing card; labels stay on one line. */
+@media(max-width:1300px){
+  #view-library .home-shelf-layout .cloud-book-item .book-actions button{
+    font-size:clamp(10px,1vw,12px);
+  }
+}
+@media(max-width:820px){
+  #view-library .home-shelf-layout .cloud-book-item .book-actions button{
+    font-size:clamp(10px,1.45vw,12px);
+  }
+}
+/* Two-column tablet cards are narrower than both mobile single-column
+   and desktop 3-column cards because of the sidebar and original cover ratio. */
+@media(min-width:601px) and (max-width:820px){
+  #view-library .home-shelf-layout .cloud-book-item{
+    grid-template-columns:minmax(0,43%) minmax(0,1fr);
+    gap:8px;
+    padding:8px;
+  }
+  #view-library .home-shelf-layout .cloud-book-item .book-actions button{
+    font-size:11px;
+    padding-inline:3px;
+  }
+}
+@media(max-width:600px){
+  #view-library .home-shelf-layout .cloud-book-item{
+    /* Give the text half enough space on a 320px viewport while preserving
+       the cover-first visual direction and the existing single card column. */
+    grid-template-columns:minmax(0,44%) minmax(0,1fr);
+    gap:10px;
+  }
+  #view-library .home-shelf-layout .cloud-book-item .book-actions{
+    gap:6px;
+    padding-top:8px;
+  }
+  #view-library .home-shelf-layout .cloud-book-item .book-actions button{
+    min-height:40px;
+    font-size:12px;
+    padding:6px 5px;
+  }
+  #view-library .home-shelf-layout .cloud-book-item .book-info .line1 h3{
+    font-size:clamp(15px,4.2vw,18px);
+  }
+}
+@media(max-width:370px){
+  #view-library .home-shelf-layout .cloud-book-item{
+    grid-template-columns:minmax(0,43%) minmax(0,1fr);
+    gap:8px;
+  }
+  #view-library .home-shelf-layout .cloud-book-item .book-actions button{
+    padding-inline:3px;
+    font-size:11px;
+  }
+}
+
+/* Personal bookshelf: controls stack cleanly when text width is constrained,
+   and no labels wrap even at the smallest supported mobile viewport. */
+.v11-personal-shelf,.v11-my-shelf-card,.v11-my-shelf-info{min-width:0}
+.v11-my-shelf-actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.v11-my-shelf-actions button{
+  min-width:0;
+  max-width:100%;
+  width:100%;
+  white-space:nowrap;
+  word-break:keep-all;
+  overflow-wrap:normal;
+  text-wrap:nowrap;
+  padding-inline:7px;
+  font-size:11px;
+  line-height:1.35;
+  box-sizing:border-box;
+}
+@media(max-width:700px){
+  .v11-my-shelf-actions{grid-template-columns:minmax(0,1fr);gap:6px}
+  .v11-my-shelf-actions button{min-height:40px;font-size:12px}
+}
+@media(max-width:360px){
+  .v11-my-shelf-actions button{font-size:11px;padding-inline:4px}
+  .v11-my-shelf-card{grid-template-columns:62px minmax(0,1fr);gap:9px}
+  .v11-my-shelf-cover{width:62px}
+}
+/* Navigation, learning, bookplate, checkout/account and quiz action labels.
+   The group may intentionally arrange itself into rows; the button text does not. */
+#view-reader .tool-row,
+#view-reader .read-top,
+#view-words .filter-row,
+#view-account .form-actions,
+#view-echo .quiz-foot,
+#view-library .shelf-page-controls{
+  min-width:0;
+}
+#view-reader .tool-row button,
+#view-reader .read-end button,
+#view-words .filter-chip,
+#view-words .card-tools button,
+#view-account .form-actions button,
+#view-echo .quiz-foot button,
+#view-library .shelf-page-button,
+.flash-footer button,
+.flash-votes button,
+.flash-finish-actions button{
+  white-space:nowrap;
+  word-break:keep-all;
+  overflow-wrap:normal;
+  text-wrap:nowrap;
+  box-sizing:border-box;
+}
+#view-words .wordbook-grid,
+#view-words .vocab-card,
+#view-words .vocab-section,
+#view-echo .quiz-card{
+  min-width:0;
+}
+#view-words .vocab-card .card-tools{
+  flex-wrap:wrap;
+}
+#view-words .vocab-card .card-tools button{
+  min-height:36px;
+}
+#view-reader .tool-row{
+  flex-wrap:wrap;
+  row-gap:6px;
+}
+#view-echo .quiz-foot,
+#view-account .form-actions{
+  flex-wrap:wrap;
+  gap:8px;
+}
+@media(max-width:380px){
+  #view-words .vocab-card .card-tools,
+  #view-echo .quiz-foot{
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    gap:7px;
+  }
+  #view-words .vocab-card .card-tools button,
+  #view-echo .quiz-foot button{
+    min-width:0;
+    width:100%;
+  }
+  .flash-finish-actions button,
+  .flash-footer button{min-width:0;max-width:100%}
+}
