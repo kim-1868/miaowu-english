@@ -29,3 +29,45 @@ html[data-theme="dark"] #view-reader .v11-font-slider,
 #readerLayout.night .v11-font-slider{background:var(--paper,#302931);border-color:var(--line,#61505b)}
 html[data-theme="dark"] #view-reader .v11-font-slider output,
 #readerLayout.night .v11-font-slider output{color:#f0c5d0}
+
+/* V1.1 01–04 review polish: chapter vocabulary fold control, matched to paper/nocturne.
+   Visual only: aria-expanded and the existing JS toggle remain the source of truth. */
+#view-reader .chapter-vocab-header .chapter-vocab-toggle{
+ appearance:none;display:inline-flex;align-items:center;justify-content:center;
+ gap:7px;flex:0 0 auto;min-width:65px;min-height:34px;padding:6px 11px;
+ border:1px solid var(--line,#e7ddd4);border-radius:999px;
+ background:var(--paper,#fffcf7);color:var(--wine,#672b41);
+ font-family:inherit;font-size:12px;font-weight:650;letter-spacing:.02em;
+ line-height:1;white-space:nowrap;box-shadow:none;text-shadow:none;
+ transition:background-color .18s ease,border-color .18s ease,color .18s ease;
+}
+#view-reader .chapter-vocab-header .chapter-vocab-toggle::after{
+ content:"";display:inline-block;width:6px;height:6px;
+ border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;
+ transform:translateY(-2px) rotate(45deg);transition:transform .18s ease;
+}
+#view-reader .chapter-vocab-header .chapter-vocab-toggle[aria-expanded="true"]::after{
+ transform:translateY(2px) rotate(225deg);
+}
+#view-reader .chapter-vocab-header .chapter-vocab-toggle:hover{
+ background:var(--pink,#f3e7e6);border-color:var(--gold,#b59467);
+}
+#view-reader .chapter-vocab-header .chapter-vocab-toggle:focus-visible{
+ outline:2px solid var(--wine,#672b41);outline-offset:3px;
+}
+html[data-theme="dark"] #view-reader .chapter-vocab-header .chapter-vocab-toggle,
+#readerLayout.night .chapter-vocab-header .chapter-vocab-toggle{
+ background:var(--pink,#47353f);border-color:var(--line,#594b56);
+ color:var(--wine,#e8bbc9);
+}
+html[data-theme="dark"] #view-reader .chapter-vocab-header .chapter-vocab-toggle:hover,
+#readerLayout.night .chapter-vocab-header .chapter-vocab-toggle:hover{
+ background:var(--cream,#3e333b);border-color:var(--gold,#e0bd91);
+}
+@media (max-width:700px){
+ #view-reader .chapter-vocab-header .chapter-vocab-toggle{min-height:38px}
+}
+@media (prefers-reduced-motion:reduce){
+ #view-reader .chapter-vocab-header .chapter-vocab-toggle,
+ #view-reader .chapter-vocab-header .chapter-vocab-toggle::after{transition:none}
+}
