@@ -9,7 +9,7 @@
     Object.keys(WORD_EXTRAS).forEach(k=>Object.assign(WORDS[k],WORD_EXTRAS[k]));
     const CHAPTERS=[{title:'一纸协议',parts:['这只是一个用于测试阅读功能的场景片段，并非正式小说正文。窗外的雨敲打玻璃，客厅里只亮着一盏灯。','她将那份 [[contract]]（合同）轻轻推到桌面中央。对面的男人看上去依旧 [[indifferent]]（冷淡的），仿佛这不过是一次寻常的会面。','“我只想 [[confirm]]（确认）一件事。”她望着他，“这真的是你的决定吗？”','他没有回答。她也没有 [[hesitate]]（犹豫），拿起笔，在最后一页留下自己的 [[signature]]（签名）。','离开前，她发现文件下压着一张旧照片。也许，那会是一份重要的 [[evidence]]（证据）。']},{title:'藏在照片里的名字',parts:['这一章同样是临时交互文案，仅用于体验付费章节解锁与词汇功能。','照片背面的名字让她重新思考自己的 [[identity]]（身份）。那是一段不曾向任何人提起的往事。','律师寄来的邮件提到了股份 [[transfer]]（转让）。事情比她想象的复杂。','她将信纸折好，决定先不 [[reveal]]（透露）真相。某个遥远的 [[promise]]（承诺），仍然留在她的记忆里。','门外的脚步声逐渐 [[approach]]（接近）。她突然明白，每个决定都可能带来新的 [[consequence]]（后果）。']}];
     const QUIZ=[{q:'她把哪一种文件推到桌面中央？',hint:'提示：一份正式的书面约定。',choices:['contract','evidence','identity','promise'],correct:'contract',detail:'contract = 合同；契约。想起桌上的那份协议。'},{q:'她在文件最后一页留下了什么？',hint:'提示：这是签署协议时的一个动作。',choices:['approach','signature','transfer','reveal'],correct:'signature',detail:'signature = 签名。把词义和“落笔签字”的画面连在一起。'},{q:'他看上去冷淡的，哪个英文词更贴近？',hint:'提示：描述人物的态度。',choices:['indifferent','hesitate','confirm','consequence'],correct:'indifferent',detail:'indifferent = 冷淡的；漠不关心的。再次想起故事人物的神情。'}];
-    const $=id=>document.getElementById(id);let view='library',category='cet4',chapter=0,gloss=true,night=(function(){try{return localStorage.getItem('miaowu_theme')==='dark'}catch(e){return false}})(),fontSize=(()=>{try{return Math.min(25,Math.max(15,Number(localStorage.getItem('miaowu_reader_font'))||18))}catch{return 18}})(),wordFilter='all',popWord=null,user=null,grants=new Set(),quizIndex=0,quizScore=0,quizAnswer=null,utterances=[],speakIndex=0,speaking=false,paused=false;
+    const $=id=>document.getElementById(id);let view='library',category='cet4',chapter=0,gloss=true,night=(function(){try{return localStorage.getItem('miaowu_theme')==='dark'}catch(e){return false}})(),fontSize=(()=>{try{return Math.min(24,Math.max(12,Number(localStorage.getItem('miaowu_reader_font'))||18))}catch{return 18}})(),wordFilter='all',popWord=null,user=null,grants=new Set(),quizIndex=0,quizScore=0,quizAnswer=null,utterances=[],speakIndex=0,speaking=false,paused=false;
     const stored=(key)=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch(e){return []}};const saved=new Set(stored('miaowu_demo_words').filter(w=>WORDS[w]));const mastered=new Set(stored('miaowu_demo_mastered').filter(w=>WORDS[w]));
     const safe=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     function applyTheme(){
@@ -149,6 +149,13 @@
         content.style.setProperty('line-height','2.15');
         content.style.setProperty('font-size',fontSize+'px');
       }
+      const heading=$('chapterTitle');
+      if(heading)heading.style.setProperty('font-size',Math.round(fontSize*1.75)+'px');
+      const slider=$('readerFontSlider'),label=$('readerFontValue');
+      if(slider)slider.value=String(fontSize);
+      if(label)label.textContent=fontSize+'px';
+      $('smallerFont').disabled=fontSize<=12;
+      $('biggerFont').disabled=fontSize>=24;
       $('readerLayout')?.removeAttribute('data-reader-tone');
       try{
         localStorage.setItem('miaowu_reader_font',String(fontSize));
@@ -472,6 +479,18 @@
       return [...new Set(Array.from($('storyText').querySelectorAll('[data-cloud-word]'))
         .map(el=>el.dataset.cloudWord).filter(Boolean))];
     }
+    // Standalone example-word pronunciation never opens a second study card.
+    function renderExampleWords(value){
+      return String(value||'').split(/([A-Za-z]+(?:['-][A-Za-z]+)*)/g).map(part=>
+        /^[A-Za-z]+(?:['-][A-Za-z]+)*$/.test(part)?
+        '<button type="button" class="v11-example-word" data-example-word="'+safe(part.toLowerCase())+'">'+safe(part)+'</button>':
+        safe(part)).join('');
+    }
+    function pronounceExampleWord(button){
+      const word=button?.dataset?.exampleWord;
+      if(!word||!/^[a-z](?:[a-z'-]{0,30}[a-z])?$/.test(word))return;
+      speakWord(word);
+    }
     function showCloudWord(wordId){
       if(!activeCloud?.chapterId)return;
       selectedStudyWordId=wordId;
@@ -495,10 +514,12 @@
         '<div class="meaning">'+safe(meaning)+'</div>'+
         (!w&&!loading?'<p class="study-loading" role="status">暂无这张词卡的完整资料，请换一个单词学习。</p>':
         loading?'<p class="study-loading" role="status">正在读取这张词卡的学习资料…</p>':
-          '<div class="word-extra"><strong>例句</strong><br>'+safe(w.example_en||'暂未提供')+
-          '<br><span class="study-translation">'+safe(w.example_zh||'')+'</span></div>'+
-          '<div class="word-extra"><strong>常用搭配</strong><br>'+
-          (pairs.length?pairs.map(x=>safe(x.en||'')+' · '+safe(x.zh||'')).join('<br>'):'暂无搭配')+'</div>')+
+          (w.example_en?'<div class="word-extra"><div class="v11-example-heading"><strong>例句</strong>'+
+          '<button id="wordExampleSpeak" type="button" aria-label="朗读完整例句">♫ 朗读例句</button></div>'+
+          '<p>'+renderExampleWords(w.example_en)+'</p>'+
+          (w.example_zh?'<span class="study-translation">'+safe(w.example_zh)+'</span>':'')+'</div>':'')+
+          (pairs.length?'<div class="word-extra"><strong>常用搭配</strong><br>'+
+          pairs.map(x=>safe(x.en)+' · '+safe(x.zh)).join('<br>')+'</div>':'') )+
         '<div class="study-switch"><button id="studyPrevious" type="button" '+(idx<=0?'disabled':'')+'>← 上一个词</button>'+
         '<button id="studyNext" type="button" '+(idx<0||idx===ids.length-1?'disabled':'')+'>下一个词 →</button></div>'+
         '<div class="word-actions"><button id="wordSpeak" type="button">♫ 听发音</button>'+
@@ -543,6 +564,8 @@
         el.classList.toggle('study-word-active',el.dataset.cloudWord===wordId);
       });
       $('wordClose').onclick=closeWord;
+      $('wordPop').querySelectorAll('[data-example-word]').forEach(btn=>{btn.onclick=()=>pronounceExampleWord(btn)});
+      if($('wordExampleSpeak'))$('wordExampleSpeak').onclick=()=>speakWord(w.example_en);
       $('wordSpeak').onclick=()=>speakWord(title);
       $('wordSmallSpeak').onclick=()=>speakWord(title);
       $('wordSave').onclick=()=>saveCloudWord(wordId,false);
@@ -1406,7 +1429,7 @@
       $('readerLayout').classList.remove('chapter-drawer-open','vocab-drawer-open');
       $('mobileChapterOpen').setAttribute('aria-expanded','false');
       $('mobileVocabOpen').setAttribute('aria-expanded','false');
-    };$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{echoMode='cloud';if(activeCloud?.chapterId)window.MiaowuCloudEcho?.useChapter(activeCloud.chapterId);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);applyReadingPrefs()};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);applyReadingPrefs()};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=()=>{rememberSpeechPosition(0);stopReading()};
+    };$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{echoMode='cloud';if(activeCloud?.chapterId)window.MiaowuCloudEcho?.useChapter(activeCloud.chapterId);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(12,fontSize-1);applyReadingPrefs()};$('biggerFont').onclick=()=>{fontSize=Math.min(24,fontSize+1);applyReadingPrefs()};$('readerFontSlider').addEventListener('input',e=>{fontSize=Math.max(12,Math.min(24,Math.round(Number(e.target.value)||18)));applyReadingPrefs()});function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=()=>{rememberSpeechPosition(0);stopReading()};
     $('playerPrevious').onclick=()=>{if(speaking)seekSpeech(speakIndex-2);else startReading()};
     $('playerNext').onclick=()=>{if(speaking)seekSpeech(speakIndex);else startReading()};
     $('playerSeek').addEventListener('input',e=>{
