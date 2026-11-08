@@ -22,6 +22,7 @@ export function initUpdatesAdmin({api,connected}){
   setupPanel.hidden=!stagingSite||!setupRequired||!connected();
   button("updatesSetup",stagingSite&&setupRequired);
   button("updatesRefresh",true);
+  button("updatesLocalPreview",connected());
   button("updatesNew",canEdit());
   button("updatesSave",canEdit());
   button("updatesPublish",canEdit()&&!dirty&&selected&&selected.status!=="published");
@@ -105,6 +106,21 @@ export function initUpdatesAdmin({api,connected}){
   await refresh();
   say("公告管理已启用。现在可以新建、保存和发布公告。");
  }));
+ const previewDialog=$("updatesLocalPreviewDialog");
+ $("updatesLocalPreview").addEventListener("click",()=>{
+  if(!connected())return;
+  const d=fields();
+  $("updatesLocalPreviewTitle").textContent=d.title||"（尚未填写公告标题）";
+  $("updatesLocalPreviewMeta").textContent=(labels[d.category]||"其他")+" · "+new Date().toLocaleDateString("zh-CN");
+  $("updatesLocalPreviewSummary").textContent=d.summary||"（暂无摘要）";
+  $("updatesLocalPreviewBody").textContent=d.body||"（尚未填写公告正文）";
+  $("updatesLocalPreviewNote").textContent=(selected?.status==="published"&&!dirty?
+    "这条公告目前已发布。":"预览的是当前表单内容，未保存部分只有运营者能看到。")+
+    (d.showOnHome?"发布后将在首页导航栏下方展示。":"发布后仅出现在历史公告。");
+  previewDialog.showModal();
+ });
+ $("updatesLocalPreviewClose").addEventListener("click",()=>previewDialog.close());
+ previewDialog.addEventListener("click",e=>{if(e.target===previewDialog)previewDialog.close()});
  $("updatesNew").addEventListener("click",()=>{
   if(!canEdit())return;
   if(dirty&&!window.confirm("当前修改尚未保存，确定新建一条公告？"))return;

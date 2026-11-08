@@ -5,6 +5,7 @@ const $=id=>document.getElementById(id);
 const KIND={feature:"功能更新",books:"新书上架",maintenance:"维护通知",other:"妙屋消息"};
 const storageKey="miaowu_notice_dismissed_id_v1";
 let currentLatest=null;
+let latestRequestId=0; // Prevent delayed older responses from replacing a newer notice.
 let historyRows=[],historyPage=1,historyHasMore=true,historyVisible=5,historyLoading=false,historyError=false;
 const HISTORY_STEP=5;
 const text=(el,value)=>{if(el)el.textContent=String(value??"");};
@@ -24,8 +25,10 @@ function dismiss(id){try{localStorage.setItem(storageKey,id)}catch{}}
 async function home(){
  const section=$("siteUpdateBanner");
  if(!section)return;
+ const requestId=++latestRequestId;
  try{
   const result=await get("/api/updates/latest");
+  if(requestId!==latestRequestId)return;
   const latest=result?.latest;
   // Preview-only reset is a ONE-TIME reviewer action. Leaving the history page
   // must never make the notice disappear, and clicking × must remain final.
@@ -51,7 +54,7 @@ async function home(){
    section.hidden=true;
   };
   section.hidden=false;
- }catch{section.hidden=true}
+ }catch{if(requestId===latestRequestId)section.hidden=true}
 }
 function setAnnouncementTab(tab){
  const latest=tab==="latest";
@@ -59,6 +62,8 @@ function setAnnouncementTab(tab){
  if(!latestTab||!historyTab)return;
  latestTab.setAttribute("aria-selected",String(latest));
  historyTab.setAttribute("aria-selected",String(!latest));
+ latestTab.tabIndex=latest?0:-1;
+ historyTab.tabIndex=latest?-1:0;
  $("siteUpdatePanelLatest").hidden=!latest;
  $("siteUpdatePanelHistory").hidden=latest;
  if(!latest)void ensureHistory();
@@ -122,7 +127,12 @@ async function ensureHistory(){
    const result=await get("/api/updates?page="+historyPage);
    const rows=Array.isArray(result.updates)?result.updates:[];
    const known=new Set(historyRows.map(x=>x.id));
-   historyRows.push(...rows.filter(x=>x&&x.id&&!known.has(x.id)));
+   for(const item of rows){
+    if(item&&item.id&&!known.has(item.id)){
+     historyRows.push(item);
+     known.add(item.id);
+    }
+   }
    historyHasMore=Boolean(result.hasMore)&&rows.length>0;
    historyPage++;
   }
@@ -135,6 +145,17 @@ function initAnnouncementDialog(){
  $("siteUpdateDialogClose").addEventListener("click",()=>dialog.close());
  $("siteUpdateTabLatest").addEventListener("click",()=>setAnnouncementTab("latest"));
  $("siteUpdateTabHistory").addEventListener("click",()=>setAnnouncementTab("history"));
+ for(const name of ["latest","history"]){
+  const tab=$(name==="latest"?"siteUpdateTabLatest":"siteUpdateTabHistory");
+  tab.addEventListener("keydown",event=>{
+   if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key))return;
+   event.preventDefault();
+   const target=event.key==="Home"?"latest":event.key==="End"?"history":
+    name==="latest"?"history":"latest";
+   setAnnouncementTab(target);
+   $(target==="latest"?"siteUpdateTabLatest":"siteUpdateTabHistory").focus();
+  });
+ }
  $("siteUpdateHistoryMore").addEventListener("click",()=>{
   if(historyError){historyError=false}
   else historyVisible+=HISTORY_STEP;
@@ -153,7 +174,7 @@ async function archive(){
   text(status,"正在读取妙屋更新记录…");
   try{
    const result=await get("/api/updates?page="+page);
-   const rows=result.updates||[];
+   const rows=Array.isArray(result.updates)?result.updates:[];
    if(page===1)root.replaceChildren();
    for(const row of rows){
     const card=document.createElement("article");card.className="mw-history-card";card.id=row.id;
@@ -168,12 +189,17 @@ async function archive(){
    }
    text(status,result.total?"共 "+result.total+" 条公开更新":"喵呜～暂时还没有公开的更新公告。");
    more.hidden=!result.hasMore;
+   more.textContent="加载更早的更新";
    if(page===1&&location.hash){
     const id=decodeURIComponent(location.hash.slice(1));
     if(/^[0-9a-f-]{36}$/i.test(id))document.getElementById(id)?.scrollIntoView({block:"start"});
    }
    if(result.hasMore)page++;
-  }catch{text(status,"更新日志暂时无法读取，请刷新重试。")}
+  }catch{
+   text(status,"更新日志暂时无法读取，请点击重试。");
+   more.textContent="重试加载";
+   more.hidden=false;
+  }
   finally{busy=false}
  }
  more.addEventListener("click",load);

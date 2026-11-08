@@ -36,7 +36,7 @@ async function listUsers(db,search,page){
  const rows=await stmt(db,
   "SELECT u.id,u.username,u.created_at, "+
   "(SELECT group_concat(c.title,' / ') FROM entitlements e "+
-  " JOIN categories c ON c.id=e.category_id WHERE e.user_id=u.id AND e.revoked_at IS NULL) AS packages, "+
+  " JOIN categories c ON c.id=e.category_id WHERE e.user_id=u.id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked')) AS packages, "+
   "(SELECT COUNT(*) FROM activation_codes a WHERE a.redeemed_by=u.id AND a.status='redeemed') AS redeemed_count, "+
   "(SELECT MAX(a.redeemed_at) FROM activation_codes a WHERE a.redeemed_by=u.id "+
   "AND a.status='redeemed') AS last_redeemed_at "+
@@ -56,7 +56,7 @@ async function listCodes(db,search,status,category,page){
  const rows=await stmt(db,
   "SELECT a.id,a.status,a.order_reference,a.created_at,a.redeemed_at, "+
   "u.username AS redeemed_username,c.slug AS category_slug,c.title AS category_title, "+
-  "CASE WHEN e.user_id IS NOT NULL AND e.revoked_at IS NULL THEN 1 ELSE 0 END AS entitlement_active "+
+  "CASE WHEN a.status<>'revoked' AND e.user_id IS NOT NULL AND e.revoked_at IS NULL THEN 1 ELSE 0 END AS entitlement_active "+
   joins+"LEFT JOIN entitlements e ON e.source_code_id=a.id AND e.user_id=a.redeemed_by "+
   "WHERE "+where+" ORDER BY a.created_at DESC,a.id DESC LIMIT ? OFFSET ?",
   ...binds,PAGE_SIZE,(page-1)*PAGE_SIZE).all();

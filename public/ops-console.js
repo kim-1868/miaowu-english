@@ -109,7 +109,7 @@ async function verify(){
 }
 async function mountUpdatesAdmin(){
   if(!updatesAdmin){
-    const mod=await import("/ops-updates.js?v=20261108-pub1");
+    const mod=await import("/ops-updates.js?v=20261108-wave1");
     updatesAdmin=mod.initUpdatesAdmin({api,connected});
   }
   await updatesAdmin.refresh();

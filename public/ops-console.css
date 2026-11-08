@@ -342,3 +342,20 @@ html[data-theme="dark"] .mw-ops-updates-form{background:#332a33;border-color:#73
 
 .mw-ops-update-preview-link{font-size:12px;color:#834861;align-self:center;min-height:32px;display:inline-flex;align-items:center;text-decoration:underline;text-underline-offset:3px}
 @media(prefers-color-scheme:dark){.mw-ops-update-preview-link{color:#e5bed2}}
+
+/* Wave 1 — operator-only unsaved announcement preview, no public navigation. */
+.mw-ops-notice-preview{width:min(650px,calc(100vw - 28px));max-height:84vh;overflow:auto;padding:0;border-radius:18px;border:1px solid #dec7bc;background:#fffaf4;color:#593748;box-shadow:0 24px 80px #25141a44}
+.mw-ops-notice-preview::backdrop{background:#1c1018a0}
+.mw-ops-notice-preview-head{display:flex;justify-content:space-between;align-items:center;padding:17px 22px;border-bottom:1px solid #eadbd7}
+.mw-ops-notice-preview-head button{border:1px solid #bfa2a5;border-radius:50%;background:transparent;color:inherit;min-height:36px;min-width:36px}
+.mw-ops-notice-preview-warning{padding:0 22px;font-size:12px;color:#987b84}
+.mw-ops-notice-preview-strip{margin:10px 20px;padding:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border:1px solid #e7d7d1;border-radius:10px;background:#f9f0ea}
+.mw-ops-notice-preview-strip strong{flex:1}
+.mw-ops-notice-preview-strip span:last-child{font-size:12px;color:#8b7776}
+.mw-ops-notice-preview-content{padding:4px 22px 15px;line-height:1.8}
+#updatesLocalPreviewSummary{font-weight:600;white-space:pre-wrap}
+#updatesLocalPreviewBody{white-space:pre-wrap;overflow-wrap:anywhere}
+#updatesLocalPreviewNote{padding:0 22px 18px}
+button.mw-ops-update-preview-link{background:transparent;border:1px solid #c9adaf;border-radius:20px;padding:7px 11px;color:#824b65;cursor:pointer}
+button.mw-ops-update-preview-link:disabled{opacity:.5;cursor:not-allowed}
+@media(prefers-color-scheme:dark){.mw-ops-notice-preview{background:#342a31;color:#f5dce6;border-color:#765663}.mw-ops-notice-preview-strip{background:#4b3843;border-color:#775662}.mw-ops-notice-preview-warning{color:#e0bccb}}

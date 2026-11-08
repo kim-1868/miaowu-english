@@ -196,3 +196,56 @@
   .flash-finish-actions button,
   .flash-footer button{min-width:0;max-width:100%}
 }
+
+/* PUBLIC-03: touch-friendly narrow-screen controls. Keep existing 3-column
+   desktop shelf and server-side learning/reading logic entirely unchanged. */
+#view-library .home-shelf-layout .cloud-book-item .book-info,
+#view-words .vocab-card .vocab-example,
+#view-reader .read-top > * {
+  min-width: 0;
+}
+#view-library .home-shelf-layout .cloud-book-item .book-info h3,
+#view-words .vocab-card .vocab-example,
+#wordPop .word-extra p {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  #view-library .home-shelf-layout .cloud-book-item .book-actions button,
+  #view-words .vocab-card .card-tools button,
+  .v11-my-shelf-actions button,
+  #view-reader .read-end button,
+  #view-echo .quiz-foot button,
+  #view-account .form-actions button,
+  .flash-finish-actions button {
+    min-height: 44px;
+  }
+  #view-words .vocab-card .card-tools,
+  #view-echo .quiz-foot,
+  #view-account .form-actions {
+    min-width: 0;
+  }
+}
+@media (max-width: 360px) {
+  /* Do not hide long translations, card titles or learning progress at 320px. */
+  #view-words .vocab-card,
+  .v11-my-shelf-card,
+  #view-library .home-shelf-layout .cloud-book-item {
+    max-width: 100%;
+  }
+  #view-reader .read-top,
+  #view-reader .tool-row {
+    min-width: 0;
+    flex-wrap: wrap;
+    row-gap: 7px;
+  }
+  #view-words .vocab-card .card-tools button,
+  .v11-my-shelf-actions button {
+    padding-inline: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #view-words .vocab-card,
+  #view-reader .tool-row button {
+    scroll-behavior: auto;
+  }
+}

@@ -3,8 +3,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>妙屋英语 · 运营出版台</title>
-<link rel="stylesheet" href="/ops-console.css?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;layout=20261106-v42&amp;updates=20261108-pub1">
-<script src="/ops-console.js?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;tags=20261106-v40&amp;layout=20261106-v42&amp;updates=20261108-pub1" defer></script>
+<link rel="stylesheet" href="/ops-console.css?v=20261108-wave1">
+<script src="/ops-console.js?v=20261108-wave1" defer></script>
 </head><body>
 <header><div class="brand">喵 · 妙屋英语 <span>THE STORY & WORD LIBRARY</span></div>
   <div class="strap">运营出版台 <span class="pill">受控操作</span></div></header>
@@ -302,7 +302,7 @@
         <div id="updatesAdminStatus" class="status" role="status" aria-live="polite">请先验证运营身份。</div>
         <div id="updatesSetupPanel" class="mw-ops-updates-setup" hidden><p>首次使用，需要由发布者为<strong>公告数据表</strong>创建独立的公告表，仅需操作一次。不会修改小说、账号、订单或正式数据库。</p><button id="updatesSetup" type="button" class="secondary">启用公告管理（仅测试站）</button></div>
         <div class="row"><button id="updatesNew" type="button" class="secondary" disabled>＋ 新建公告</button>
-        <button id="updatesRefresh" type="button" class="secondary" disabled>刷新公告列表</button><a class="mw-ops-update-preview-link" href="/" target="_blank" rel="noopener noreferrer">查看预览首页 ↗</a></div>
+        <button id="updatesRefresh" type="button" class="secondary" disabled>刷新公告列表</button><button id="updatesLocalPreview" type="button" class="mw-ops-update-preview-link" disabled>预览当前公告</button></div>
         <div class="mw-ops-updates-layout">
           <div id="updatesAdminList" class="mw-ops-updates-list" aria-label="公告历史列表">验证运营身份后显示公告。</div>
           <form id="updatesAdminForm" class="mw-ops-updates-form">
@@ -329,6 +329,15 @@
         </div>
       </div>
     </details>
+    <dialog id="updatesLocalPreviewDialog" class="mw-ops-notice-preview" aria-labelledby="updatesLocalPreviewHeading">
+      <div class="mw-ops-notice-preview-head"><strong id="updatesLocalPreviewHeading">公告预览 · 仅当前运营台可见</strong>
+        <button type="button" id="updatesLocalPreviewClose" aria-label="关闭公告预览">×</button></div>
+      <p class="mw-ops-notice-preview-warning">本预览不会发布公告，也不会跳转到正式网站。</p>
+      <div class="mw-ops-notice-preview-strip"><span aria-hidden="true">🐾</span>
+        <strong id="updatesLocalPreviewTitle"></strong><span id="updatesLocalPreviewMeta"></span></div>
+      <div class="mw-ops-notice-preview-content"><p id="updatesLocalPreviewSummary"></p><div id="updatesLocalPreviewBody"></div></div>
+      <p id="updatesLocalPreviewNote" class="hint"></p>
+    </dialog>
   </section>
   <section class="panel"><h2>⑧ 操作审计</h2><p class="hint">最近最多30条操作；审核和上架动作分别留痕，日志不会记录原始密钥或小说正文。</p>
     <div id="audit" class="audit"><p class="soft">请选择书目查看。</p></div></section>
