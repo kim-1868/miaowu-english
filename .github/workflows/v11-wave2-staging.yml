@@ -1,0 +1,87 @@
+name: V1.1 Wave2 bookshelf and onboarding STAGING preflight only
+on:
+  push:
+    branches: [release/v11-wave2-bookshelf-onboarding-20261108]
+    paths:
+      - .github/workflows/v11-wave2-staging.yml
+      - public/**
+      - src/**
+      - tests/**
+      - db/009_v11_onboarding.sql
+      - db/010_v11_my_bookshelf.sql
+      - db/012_v11_supplemental_dictionary.sql
+      - db/013_v11_supplemental_starter.sql
+      - scripts/build-production-assets.mjs
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-v11-wave2-staging
+  cancel-in-progress: false
+jobs:
+  staging-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 32
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Check exact test database and forbid production bindings
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";import fs from "node:fs";
+          const d=JSON.parse(fs.readFileSync("wrangler.jsonc","utf8"));
+          assert.equal(d.name,"miaowu-english-staging");
+          assert.equal(d.vars.APP_ENV,"staging");
+          assert.equal(d.d1_databases[0].database_name,"miaowu-english-test");
+          assert.equal(d.d1_databases[0].database_id,"88a817cb-23bb-4ae4-bcb8-92286c4165d4");
+          console.log("STAGING_ONLY_D1_TEST_DB__NO_PRODUCTION_D1");
+          NODE
+      - name: All existing regression tests and new isolated feature contracts
+        run: |
+          set -euo pipefail
+          node --check public/app.js
+          node --check public/onboarding.js
+          node --check src/onboarding.js
+          node --check src/my-bookshelf.js
+          node --check src/example-word-lookup.js
+          node --check src/internal-dictionary.js
+          node --check src/worker.js
+          npm run check
+          npm test
+      - name: Verify production bundle isolation without production deployment
+        run: |
+          set -euo pipefail
+          node scripts/build-production-assets.mjs --approved-announcements > /tmp/wave2-assets.json
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";
+          import {readFileSync} from "node:fs";
+          import {auditProductionAssets} from "./scripts/build-production-assets.mjs";
+          assert.equal(auditProductionAssets({withAnnouncements:true}).assets.length,50);
+          const html=readFileSync("dist-production/public/index.html","utf8");
+          assert.ok(html.includes('id="myBookshelf"'));
+          assert.ok(html.includes('id="mwWelcomeDialog"'));
+          assert.ok(html.includes('id="siteUpdateBanner"'));
+          assert.ok(html.includes("wave2-bookshelf"));
+          assert.ok(!html.includes("miaowu-english-test"));
+          console.log("WAVE2_50_APPROVED_ASSETS__ANNOUNCEMENT_0104_PRESERVED");
+          NODE
+      - name: Deploy only isolated staging Worker, without running SQL migrations
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npm install --no-save --ignore-scripts wrangler@^4
+          npx wrangler deploy --keep-vars --config wrangler.jsonc
+      - name: Verify protected staging still denies anonymous requests
+        run: |
+          set -euo pipefail
+          URL=https://miaowu-english-staging.kim10086a.workers.dev/
+          CODE=$(curl -sS -o /tmp/wave2-guest -w '%{http_code}' --max-time 22 "$URL")
+          test "$CODE" = 401
+          grep -Fq 'Staging preview: credentials required' /tmp/wave2-guest
+          echo "STAGING_0204_AND_WAVE2_UI_SUCCEEDED__PRODUCTION_D1_UNTOUCHED"
