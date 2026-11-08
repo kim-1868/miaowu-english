@@ -31,5 +31,5 @@ test('tablet and phone cover widths are responsive and production assets are cac
   assert.match(coverLayout,/@media\(max-width:370px\)/);
   assert.match(coverLayout,/grid-template-columns:minmax\(0,47%\) minmax\(0,1fr\)/);
   assert.match(html,/styles\.css\?v=20261104-v28-night-selection/);
-  assert.match(html,/app\.js\?v=20261108-0104-production-isolated/);
+  assert.match(html,/app\.js\?v=20261108-wave1-popover/);
 });

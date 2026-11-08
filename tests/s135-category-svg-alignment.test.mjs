@@ -32,7 +32,7 @@ test("S135: banner, live book data, and paid gating are unchanged",()=>{
  const app=read("app.js"),html=read("index.html");
  assert.ok(html.includes("cat-reading-hd.avif"));
  assert.ok(html.includes("href=\"/styles.css?v=20261104-v28-night-selection\""));
- assert.ok(html.includes("src=\"/app.js?v=20261108-0104-production-isolated\""));
+ assert.ok(html.includes("src=\"/app.js?v=20261108-wave1-popover\""));
  assert.ok(app.includes("data-category"));
  assert.ok(app.includes("has(c.id)?'✓ 已解锁'"));
  assert.ok(app.includes("renderHomeStudyStats()"));
