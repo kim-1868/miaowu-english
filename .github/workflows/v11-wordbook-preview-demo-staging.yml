@@ -1,3 +1,4 @@
+# Retry test assertions after verifying live pagination remains unchanged.
 # Final confirm full totals beyond 200 bookmarked words, then redeploy protected staging.
 # Recheck after adapting legacy render harness to paginated server results.
 name: V1.1 36-card wordbook pagination demo STAGING only
