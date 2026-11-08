@@ -1,0 +1,48 @@
+name: PUBLIC-11 shelf candidate tiny offline QA (no deployment)
+on:
+  push:
+    branches: [feature/public11-shelf-pagination-candidate-20261108]
+    paths:
+      - .github/workflows/public11-shelf-candidate-offline.yml
+      - public/app.js
+      - public/index.html
+      - public/shelf-pagination.js
+      - scripts/build-production-assets.mjs
+      - package.json
+      - tests/public11-shelf-candidate.test.mjs
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  shelf-only-offline:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/public11-shelf-pagination-candidate-20261108' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout exact draft candidate without persistent write credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Use Node.js 22 (no npm dependency install)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Ensure no Cloudflare credentials or database jobs are used
+        run: |
+          set -euo pipefail
+          test -z "${CLOUDFLARE_API_TOKEN:-}"
+          test -z "${CLOUDFLARE_ACCOUNT_ID:-}"
+          echo "PUBLIC11_CANDIDATE_OFFLINE_ONLY_NO_DEPLOYMENT_NO_D1"
+      - name: Check browser JS syntax and isolated shelf adapter regression
+        run: |
+          set -euo pipefail
+          node --check public/app.js
+          node --check public/shelf-pagination.js
+          node --test tests/public11-shelf-candidate.test.mjs tests/s154-public-shelf-pagination.test.mjs
+      - name: Dry-build production static allowlist locally without deployment
+        run: |
+          set -euo pipefail
+          node scripts/build-production-assets.mjs
+          test -f dist-production/public/shelf-pagination.js
+          test -f dist-production/public/app.js
+          echo "PUBLIC11_PRIVATE_CANDIDATE_STATIC_ASSETS_OK"

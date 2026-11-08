@@ -400,6 +400,25 @@
 
     function renderShelfPagination(slug,meta){
       const list=$('bookGrid');
+      // PUBLIC11_SHELF_PAGINATION_CANDIDATE: delegate only DOM rendering.
+      // The private app remains authoritative for categories, network, page state,
+      // scroll behavior and access rights. Legacy renderer below is the fallback
+      // if the public UI script is unavailable; never run both render paths.
+      if(window.MiaowuShelfPagination?.create){
+        window.MiaowuShelfPagination.create({document}).render({
+          container:list,meta,currentPage:shelfPage,pageSize:SHELF_PAGE_SIZE,
+          onPageChange:page=>{
+            if(page===shelfPage)return;
+            shelfPage=page;
+            void loadCloudBookCards(slug);
+            const heading=$('selectedCategoryTitle');
+            if(heading)heading.scrollIntoView({behavior:
+              window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth',
+              block:'start'});
+          }
+        });
+        return;
+      }
       const totalPages=Math.max(0,Math.floor(Number(meta?.totalPages)||0));
       const total=Math.max(0,Math.floor(Number(meta?.total)||0));
       if(totalPages<=1)return;
