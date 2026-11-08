@@ -92,6 +92,57 @@ async function wordList(env,userId){
     const {collocations_json,...fields}=w;return {...fields,collocations:pairs};
   })});
 }
+// Paginated full wordbook: scan just visible study identities, deduplicate before
+// slicing, then load detailed examples only for the requested twelve cards.
+// Unlike the legacy /api/me/words summary, there is no first-200 truncation.
+async function wordbookPage(req,env,userId){
+  const params=new URL(req.url).searchParams;
+  const scope=params.get("scope")||"all";
+  const raw=params.get("page")||"1";
+  if(!["all","learning","mastered"].includes(scope)||!/^[1-9][0-9]{0,4}$/.test(raw))
+    return err("INVALID_WORDBOOK_PAGE",400);
+  const pageSize=12,requestedPage=Number(raw),chunk=400;
+  const unique=[],keys=new Set();
+  let offset=0;
+  while(true){
+    const result=await sql(env,
+      "SELECT uw.word_id,uw.status,uw.last_seen_at,w.headword,w.part_of_speech,w.meaning_zh "+
+      "FROM user_words uw JOIN words w ON w.id=uw.word_id "+
+      "WHERE uw.user_id=? AND uw.bookmarked=1 AND "+flashVisible+" "+
+      "ORDER BY uw.last_seen_at DESC,uw.word_id DESC LIMIT ? OFFSET ?",
+      userId,chunk,offset).all();
+    const rows=result.results||[];
+    for(const row of rows){
+      const key=studyKey(row);
+      if(keys.has(key))continue;
+      keys.add(key);
+      if(scope==="all"||(scope==="mastered"?row.status==="mastered":row.status!=="mastered"))
+        unique.push(row.word_id);
+    }
+    if(rows.length<chunk)break;
+    offset+=rows.length;
+  }
+  const total=unique.length,totalPages=Math.max(1,Math.ceil(total/pageSize));
+  const page=Math.min(requestedPage,totalPages);
+  const ids=unique.slice((page-1)*pageSize,page*pageSize);
+  if(!ids.length)return json({scope,page,pageSize,total,totalPages,hasMore:false,words:[]});
+  const result=await sql(env,
+    "SELECT uw.word_id,uw.status,uw.bookmarked,w.headword,w.phonetic_uk,w.phonetic_us,"+
+    "w.part_of_speech,w.meaning_zh,w.example_en,w.example_zh,w.collocations_json "+
+    "FROM user_words uw JOIN words w ON w.id=uw.word_id "+
+    "WHERE uw.user_id=? AND uw.bookmarked=1 AND uw.word_id IN ("+
+    ids.map(()=>"?").join(",")+")",userId,...ids).all();
+  const byId=new Map((result.results||[]).map(row=>[row.word_id,row]));
+  return json({scope,page,pageSize,total,totalPages,hasMore:page<totalPages,
+    words:ids.map(id=>byId.get(id)).filter(Boolean).map(row=>{
+      let pairs=[];
+      try{const parsed=JSON.parse(row.collocations_json||"[]");
+        if(Array.isArray(parsed))pairs=parsed.slice(0,8);
+      }catch{}
+      const {collocations_json,...word}=row;
+      return {...word,collocations:pairs};
+    })});
+}
 async function setWord(req,env,userId,id){
   if(!ID.test(id))return err("WORD_NOT_AVAILABLE",404);
   const input=await readJson(req);if(input.error)return err(input.error,400);
@@ -248,6 +299,7 @@ export async function handleLearningState(req,env,path,user){
   if(path==="/api/me/flashcards/answer"&&req.method==="POST")return flashcardAnswer(req,env,user.id);
   if(path==="/api/me/progress"&&req.method==="GET")return progressList(env,user.id);
   if(path==="/api/me/words"&&req.method==="GET")return wordList(env,user.id);
+  if(path==="/api/me/wordbook"&&req.method==="GET")return wordbookPage(req,env,user.id);
   if(path==="/api/me/progress"&&req.method==="POST")return setProgress(req,env,user.id);
   const match=path.match(/^\/api\/me\/words\/([^/]+)$/);
   if(match&&req.method==="PUT")return setWord(req,env,user.id,match[1]);
