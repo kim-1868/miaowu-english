@@ -1,0 +1,59 @@
+name: V1.1 Wave2 real Chromium UX against isolated local preview+D1
+on:
+  push:
+    branches: [release/v11-wave2-bookshelf-onboarding-20261108]
+    paths: [.github/workflows/v11-wave2-chromium-acceptance.yml]
+permissions:
+  contents: read
+concurrency:
+  group: v11-wave2-local-chromium-qa
+  cancel-in-progress: false
+jobs:
+  actual-browser-interactions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install real Chromium driver and Wrangler locally
+        run: |
+          set -euo pipefail
+          npm install --no-save --ignore-scripts 'playwright-core@^1.55' 'wrangler@^4'
+          command -v google-chrome || command -v chromium
+          node --check tests/e2e/v11-wave2-browser.mjs
+      - name: Start a completely isolated local D1 with the same 107 dictionary words
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/wave2-local-e2e
+          for f in db/001_schema.sql db/002_s1.sql db/003_public_categories.sql db/009_v11_onboarding.sql db/010_v11_my_bookshelf.sql db/012_v11_supplemental_dictionary.sql db/013_v11_supplemental_starter.sql tests/fixtures/v11-wave2-browser-qa.sql; do
+            npx wrangler d1 execute miaowu-english-test --local --config wrangler.jsonc --persist-to /tmp/wave2-local-e2e --file "$f" >/tmp/wave2-local-migration.log
+          done
+          echo "ISOLATED_LOCAL_D1_SCHEMA_AND_107_CURATED_WORDS_READY__NO_REMOTE_WRITES"
+      - name: Launch real preview worker on localhost and run Chromium clicks
+        shell: bash
+        run: |
+          set -euo pipefail
+          export QA_ORIGIN=http://localhost:8787
+          export STAGING_PREVIEW_PASSWORD="$(openssl rand -hex 24)"
+          export ACTIVATION_PEPPER="$(openssl rand -hex 32)"
+          echo "::add-mask::$STAGING_PREVIEW_PASSWORD"
+          echo "::add-mask::$ACTIVATION_PEPPER"
+          umask 077
+          printf 'STAGING_PREVIEW_PASSWORD="%s"\nACTIVATION_PEPPER="%s"\n' "$STAGING_PREVIEW_PASSWORD" "$ACTIVATION_PEPPER" > .dev.vars
+          rm -f .env
+          npx wrangler dev --local --config wrangler.jsonc --persist-to /tmp/wave2-local-e2e --ip 127.0.0.1 --port 8787 >/tmp/wave2-wrangler-server.log 2>&1 &
+          WORKER_PID=$!
+          trap 'kill "$WORKER_PID" 2>/dev/null || true; rm -f .dev.vars' EXIT
+          for i in $(seq 1 40); do
+            code="$(curl -sS --max-time 2 -o /tmp/wave2-browser-guest -w '%{http_code}' "$QA_ORIGIN" 2>/dev/null || true)"
+            if [ "$code" = "401" ];then break;fi
+            sleep 2
+          done
+          test "$code" = 401 || { echo "ISOLATED_WRANGLER_DEV_NOT_READY"; tail -n 18 /tmp/wave2-wrangler-server.log; exit 1; }
+          AUTH_CODE="$(curl -sS --max-time 8 -u "reviewer:$STAGING_PREVIEW_PASSWORD" -o /tmp/wave2-browser-auth -w '%{http_code}' "$QA_ORIGIN/")"
+          test "$AUTH_CODE" = 200 || { echo "LOCAL_STAGING_AUTH_NOT_READY_HTTP_$AUTH_CODE"; exit 1; }
+          node tests/e2e/v11-wave2-browser.mjs
+          echo "WAVE2_ACTUAL_CHROMIUM_LOCAL_PREVIEW_INTERACTIONS_COMPLETED__REMOTE_STAGING_AND_PRODUCTION_UNTOUCHED"
