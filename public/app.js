@@ -1460,21 +1460,26 @@
       $('mobileChapterOpen').setAttribute('aria-expanded','false');
       $('mobileVocabOpen').setAttribute('aria-expanded','false');
     };$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{echoMode='cloud';if(activeCloud?.chapterId)window.MiaowuCloudEcho?.useChapter(activeCloud.chapterId);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(12,fontSize-1);applyReadingPrefs()};$('biggerFont').onclick=()=>{fontSize=Math.min(24,fontSize+1);applyReadingPrefs()};$('readerFontSlider').addEventListener('input',e=>{fontSize=Math.max(12,Math.min(24,Math.round(Number(e.target.value)||18)));applyReadingPrefs()});function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=()=>{rememberSpeechPosition(0);stopReading()};
-    $('playerPrevious').onclick=()=>{if(speaking)seekSpeech(speakIndex-2);else startReading()};
-    $('playerNext').onclick=()=>{if(speaking)seekSpeech(speakIndex);else startReading()};
+    $('playerPrevious').onclick=()=>{if(speaking)seekSpeech(speakIndex-2)};
+    $('playerNext').onclick=()=>{if(speaking)seekSpeech(speakIndex)};
     $('playerSeek').addEventListener('input',e=>{
       $('playerPosition').textContent=(Number(e.target.value)+1)+' / '+utterances.length+' 段';
     });
     $('playerSeek').addEventListener('change',e=>{
       if(speaking)seekSpeech(Number(e.target.value));
-      else startReading();
     });
     $('storyText').addEventListener('click',e=>{
       const word=e.target.closest('[data-cloud-word]');
       if(word){e.preventDefault();e.stopPropagation();showCloudWord(word.dataset.cloudWord,word);return;}
       if(e.target.closest('button,a,[role=button]'))return;
       const p=e.target.closest('[data-audio-paragraph]');
-      if(activeCloud?.chapterId&&p)startReading(Number(p.dataset.audioParagraph));
+      // Hovering or clicking ordinary text never starts narration.
+      // Only the explicit 朗读 control starts speech; while playing, a click may seek.
+      if(activeCloud?.chapterId&&p&&speaking&&!paused){
+        const target=Number(p.dataset.audioParagraph);
+        const segment=utterances.findIndex(t=>t.paragraph>=target);
+        if(segment>=0)seekSpeech(segment);
+      }
     });
 $('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
     // Cloud reading progress is saved automatically on scroll and chapter navigation.
