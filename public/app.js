@@ -982,7 +982,7 @@
     }
     function renderWords(){
       globalThis.MiaowuFlashcards?.render({
-        loggedIn:!!user,saved:cloudSaved.size,due:cloudFlashDue,
+        loggedIn:!!user,saved:wordbookData?.allTotal??cloudSaved.size,due:cloudFlashDue,
         sessionKey:user?.name||null
       });
       document.querySelectorAll('[data-word-filter]').forEach(x=>x.classList.toggle('active',x.dataset.wordFilter===wordFilter));
