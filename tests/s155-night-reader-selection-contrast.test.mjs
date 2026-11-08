@@ -28,7 +28,7 @@ test("S155: night-mode selected story text is readable on Safari, Firefox and Ch
   assert.match(css,/background:#855067!important;\s*color:#fffaf5!important/);
   assert.ok(contrast("#855067","#fffaf5")>=4.5,"selected text must meet WCAG AA normal text contrast");
   assert.ok(html.includes('href="/styles.css?v=20261104-v28-night-selection"'));
-  assert.ok(html.includes('src="/app.js?v=20261109-favorites-wordbook12-demo-demo"'));
+  assert.ok(html.includes('src="/app.js?v=20261109-favorites-wordbook12-demo"'));
 });
 
 test("S155: active word and speech highlight stay legible in night reading on every viewport",()=>{
