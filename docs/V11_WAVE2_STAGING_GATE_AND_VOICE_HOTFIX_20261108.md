@@ -20,3 +20,12 @@
 2. 预览站真实验收；保持已有公告发布闭环、朗读主动启动、手机端词卡/登录与复习旧逻辑不变。
 3. 生产 D1 独立备份/回滚准备，逐表增量迁移并验证（不执行 014 或 P4）。
 4. 第二批受控生产构建 50 资源，源代码/资源版本前置检查，低风险部署，回归与回滚手册。
+
+## 2026-11-08 21:18（UTC+8）：站长在测试库确认迁移成功
+
+- 站长提供 **Cloudflare D1 `miaowu-english-test` Console** 截图：三张数据表 `user_onboarding`、`user_bookmarks`、`supplemental_dictionary` 均已存在；`SELECT COUNT(*) AS word_count FROM supplemental_dictionary;` 返回 **107**。
+- 上方旧记录 `No SQL statements detected` 不代表最后未执行：随后 SQL 查询实证三张表和初始词汇完整导入。不可要求重复运行整份迁移。
+- 新增 `tests/v11-wave2-real-sqlite-integration.test.mjs`：使用 SQLite + 原有 `001_schema.sql` + 当前 009/010/012/013 增量 SQL，实测用户书架收藏、开始阅读、读完自动分类、旧账号无引导、新账号完成引导、107 个补充词条及授权检查。只在 CI 的内存数据库运行，不修改真实 D1。
+- 再次预览部署 + 全量测试 [Actions #42484481525](https://github.com/kim-1868/miaowu-english/actions/runs/42484481525) **success**：484 tests，483 pass、0 fail、1 skipped。测试阶段不执行 SQL、重新部署预览 Worker 后匿名 401 验收通过。
+- **后续任务**：预览站使用现有测试账号做「收藏/取消收藏→我的书房→阅读中/已读完→跨设备」手动验收；新测试账号验证注册确认密码、首次三步引导；旧测试账号应不出现首次引导。补充词典仅作为后端参照，前端仍按约定点读例句词，不弹二次词卡。
+- **重要**：生产 D1 `miaowu-english-prod` 尚未执行 009、010、012、013，第二批正式发布还不能直接开启。需要单独的生产 D1 备份与三张表迁移；不执行 P4 / 014。
