@@ -15,6 +15,7 @@ test("01-04 isolated release: notice is directly below the top bar and before ba
  assert.match(read("src/worker.js"),/handleSiteAnnouncements/);
  const backend=read("src/site-announcements.js");
  assert.match(backend,/OPS_ANNOUNCEMENTS_ENABLED==="true"/);
+ assert.match(backend,/V11_NOTICE_RELEASE_APPROVED==="true"/);
  const prod=JSON.parse(read("deploy/production.wrangler.jsonc"));
  assert.notEqual(prod.vars.OPS_ANNOUNCEMENTS_ENABLED,"true");
  assert.equal(prod.vars.APP_ENV,"production");
