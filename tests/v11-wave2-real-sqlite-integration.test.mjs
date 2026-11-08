@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {DatabaseSync} from "node:sqlite";
 import {readFileSync} from "node:fs";
 import {handleMyBookshelf} from "../src/my-bookshelf.js";
+import {handleLearningState} from "../src/reading-library.js";
 import {handleOnboarding,registrationOnboardingStatement} from "../src/onboarding.js";
 import {handleExampleWordLookup} from "../src/example-word-lookup.js";
 
@@ -58,8 +59,11 @@ test("Wave2 live-schema integration: bookmarks are user-specific, progress retai
   sqlite.prepare("UPDATE reading_progress SET completed_at=CURRENT_TIMESTAMP,progress=1 WHERE user_id=? AND chapter_id=?").run("u1","chapter-1");
   await handleMyBookshelf(request("/api/me/bookshelf/book-1","PUT",{bookmarked:false}),env,{id:"u1"});
   listing=await read(await handleMyBookshelf(request("/api/me/bookshelf"),env,{id:"u1"}));
-  assert.equal(listing.data.books[0].state,"finished");
-  assert.equal(listing.data.books[0].bookmarked,false);
+  assert.deepEqual(listing.data.books,[]);
+  assert.equal(listing.data.recent.length,1);
+  assert.equal(listing.data.recent[0].state,"finished");
+  assert.equal(listing.data.recent[0].bookmarked,false);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS n FROM reading_progress WHERE user_id='u1'").get().n,1);
   assert.equal(sqlite.prepare("SELECT COUNT(*) AS n FROM entitlements").get().n,0);
  }finally{sqlite.close()}
 });
@@ -102,5 +106,55 @@ test("Wave2 live-schema integration: 107 curated entries and example-only dictio
   sqlite.prepare("INSERT INTO entitlements(user_id,category_id,source_code_id) VALUES(?,?,NULL)").run("u1","cat1");
   const unlocked=await read(await handleExampleWordLookup(request("/api/lexicon/lookup?word=the&originWordId=word-1"),env,{id:"u1"}));
   assert.equal(unlocked.data.fallback.headword,"the");
+ }finally{sqlite.close()}
+});
+
+test("V1.1 wordbook: 30 unique visible study senses paginate 12 per page with stable total and no 200 cap",async()=>{
+ const {sqlite,env}=fixture();try{
+  for(let i=1;i<=30;i++){
+    const id="vocab-"+i;
+    sqlite.prepare("INSERT INTO words(id,headword,part_of_speech,meaning_zh,example_en) VALUES(?,?,?,?,?)").run(
+      id,"term"+String(i).padStart(3,"0"),"n.","含义"+i,"This is term "+i+".");
+    sqlite.prepare("INSERT INTO chapter_words(chapter_id,word_id,context_sentence,context_anchor) VALUES(?,?,?,?)").run(
+      "chapter-1",id,"Example "+i,"term-"+i);
+    sqlite.prepare("INSERT INTO user_words(user_id,word_id,status,bookmarked) VALUES(?,?,?,1)").run(
+      "u1",id,i%2===0?"mastered":"learning");
+  }
+  const readPage=async(scope,page,user={id:"u1"})=>read(await handleLearningState(
+    request("/api/me/wordbook?scope="+scope+"&page="+page),env,"/api/me/wordbook",user));
+  const all1=await readPage("all",1);
+  assert.equal(all1.status,200);
+  assert.equal(all1.data.total,30);
+  assert.equal(all1.data.allTotal,30);
+  assert.equal(all1.data.pageSize,12);
+  assert.equal(all1.data.totalPages,3);
+  assert.equal(all1.data.words.length,12);
+  const all3=await readPage("all",3);
+  assert.equal(all3.data.words.length,6);
+  assert.equal(new Set([...all1.data.words,...all3.data.words].map(x=>x.word_id)).size,18);
+  const learning=await readPage("learning",2);
+  assert.equal(learning.data.total,15);
+  assert.equal(learning.data.totalPages,2);
+  assert.equal(learning.data.words.length,3);
+  const mastered=await readPage("mastered",1);
+  assert.equal(mastered.data.total,15);
+  assert.ok(mastered.data.words.every(w=>w.status==="mastered"));
+  const clamped=await readPage("all",9999);
+  assert.equal(clamped.data.page,3);
+  assert.equal((await readPage("invalid",1)).status,400);
+  assert.equal((await readPage("all",1,null)).status,401);
+ }finally{sqlite.close()}
+});
+test("V1.1 bookshelf: reading without bookmarking remains in recent, not favorites",async()=>{
+ const {sqlite,env}=fixture();try{
+  sqlite.prepare("INSERT INTO reading_progress(user_id,chapter_id,progress) VALUES('u1','chapter-1',0.25)").run();
+  let list=await read(await handleMyBookshelf(request("/api/me/bookshelf"),env,{id:"u1"}));
+  assert.equal(list.data.books.length,0);
+  assert.equal(list.data.recent.length,1);
+  assert.equal(list.data.recent[0].state,"reading");
+  await handleMyBookshelf(request("/api/me/bookshelf/book-1","PUT",{bookmarked:true}),env,{id:"u1"});
+  list=await read(await handleMyBookshelf(request("/api/me/bookshelf"),env,{id:"u1"}));
+  assert.equal(list.data.books.length,1);
+  assert.equal(list.data.recent.length,0);
  }finally{sqlite.close()}
 });
