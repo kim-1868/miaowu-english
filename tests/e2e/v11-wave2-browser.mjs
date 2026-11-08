@@ -139,7 +139,10 @@ try{
   username,
   password:pass
  };
- const logout=await page.evaluate(async()=>fetch("/api/auth/logout",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"}));
+ const logout=await page.evaluate(async()=>{
+  const response=await fetch("/api/auth/logout",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});
+  return {status:response.status};
+ });
  assert.equal(logout.status,200);
  await page.reload({waitUntil:"domcontentloaded"});
  await page.locator("#topAccount").click();
