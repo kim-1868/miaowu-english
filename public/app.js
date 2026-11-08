@@ -131,7 +131,8 @@
     const SHELF_PAGE_SIZE=9;
     let activeCloud=null;
     let cloudBooks=[],cloudSaved=new Map(),cloudProgress=[],cloudSessionKey=null,cloudLearningSequence=0;
-    let personalBooks=[],personalBooksRequest=0,personalShelfFilter='reading',personalShelfPage=1;
+    let personalBooks=[],recentBooks=[],personalBooksRequest=0,personalShelfFilter='reading',personalShelfPage=1;
+    let wordbookPage=1,wordbookData=null,wordbookPending=false,wordbookRequest=0;
     const PERSONAL_SHELF_PAGE_SIZE=9;
     let initialSessionPromise=Promise.resolve(),heroResumeBusy=false;
     function updateHeroReadLabel(){
@@ -329,7 +330,7 @@
       const offset=(personalShelfPage-1)*PERSONAL_SHELF_PAGE_SIZE;
       const pageBooks=matches.slice(offset,offset+PERSONAL_SHELF_PAGE_SIZE);
       root.innerHTML='<div class="v11-my-shelf-header"><div><span class="eyebrow">MY STORY SHELF</span><h2>我的书架</h2>'+
-        '<p>喜欢的故事先收藏；开始阅读后，系统会根据云端进度自动整理。</p></div></div>'+
+        '<p>只有你主动收藏的小说会进入书架，阅读进度自动同步但不代替收藏。</p></div></div>'+
         '<div class="v11-my-shelf-tabs" role="group" aria-label="书架阅读状态">'+
         groups.map(g=>'<button type="button" data-personal-filter="'+g.state+'" class="'+
           (personalShelfFilter===g.state?'active':'')+'" aria-pressed="'+String(personalShelfFilter===g.state)+'">'+
@@ -362,7 +363,15 @@
               (n===personalShelfPage?' aria-current="page" disabled':'')+'>'+n+'</button>').join('')+
           '<button type="button" data-personal-page="next" aria-label="下一页"'+(personalShelfPage===totalPages?' disabled':'')+'>下一页</button>'+
           '</div></nav>':'')+
-        '<p class="v11-my-shelf-foot">移出书架不会删除阅读进度。付费章节仍需对应学习分类的阅读权限。</p>';
+        '<p class="v11-my-shelf-foot">移出书架不会删除阅读进度。付费章节仍需对应学习分类的阅读权限。</p>'+ 
+        '<section class="v11-recent-reading" aria-label="最近阅读"><h3>最近阅读 <small>未加入书架</small></h3>'+ 
+        '<p class="v11-recent-intro">试读不会自动收藏，喜欢的小说再加入书架即可。</p>'+ 
+        (recentBooks.length?'<div class="v11-recent-list">'+recentBooks.slice(0,6).map(book=>
+          '<article class="v11-recent-item"><div class="v11-recent-info"><strong>'+safe(book.title)+'</strong>'+ 
+          '<small>最近读到第 '+(Number(book.last_chapter_no)||1)+' 章 · '+safe(book.category_slug.toUpperCase())+'</small></div>'+ 
+          '<div class="v11-recent-actions"><button type="button" class="secondary-btn" data-recent-read="'+safe(book.book_id)+'">继续阅读</button>'+ 
+          '<button type="button" class="secondary-btn" data-recent-save="'+safe(book.book_id)+'">♡ 加入书架</button></div></article>').join('')+'</div>':
+          '<p class="v11-recent-empty">最近没有未收藏的阅读记录。</p>')+'</section>';
       root.querySelectorAll('[data-personal-filter]').forEach(btn=>btn.onclick=()=>{
         if(personalShelfFilter===btn.dataset.personalFilter)return;
         personalShelfFilter=btn.dataset.personalFilter;personalShelfPage=1;renderPersonalBookshelf();
@@ -380,6 +389,15 @@
         if(book)void openCloudBook({id:book.book_id,title:book.title},book.category_slug,
           {resumeChapterId:book.last_chapter_id||null});
       });
+      root.querySelectorAll('[data-recent-read]').forEach(btn=>btn.onclick=()=>{
+        const book=recentBooks.find(x=>x.book_id===btn.dataset.recentRead);
+        if(book)void openCloudBook({id:book.book_id,title:book.title},book.category_slug,
+          {resumeChapterId:book.last_chapter_id||null});
+      });
+      root.querySelectorAll('[data-recent-save]').forEach(btn=>btn.onclick=()=>{
+        const book=recentBooks.find(x=>x.book_id===btn.dataset.recentSave);
+        if(book)void setPersonalBookmark(book.book_id,true,btn);
+      });
       root.querySelectorAll('[data-my-shelf-save]').forEach(btn=>btn.onclick=()=>{
         const book=personalBooks.find(x=>x.book_id===btn.dataset.myShelfSave);
         if(book)void setPersonalBookmark(book.book_id,!book.bookmarked,btn);
@@ -387,11 +405,12 @@
     }
     async function loadPersonalBookshelf(){
       const sequence=++personalBooksRequest, name=user?.name;
-      if(!name){personalBooks=[];renderPersonalBookshelf();return}
+      if(!name){personalBooks=[];recentBooks=[];renderPersonalBookshelf();return}
       try{
         const response=await serverRequest('/api/me/bookshelf');
         if(sequence!==personalBooksRequest||user?.name!==name)return;
-        personalBooks=Array.isArray(response.books)?response.books:[];
+        personalBooks=Array.isArray(response.books)?response.books.filter(b=>b.bookmarked):[];
+        recentBooks=Array.isArray(response.recent)?response.recent:[];
         renderPersonalBookshelf();
         document.querySelectorAll('[data-cloud-bookmark]').forEach(btn=>{
           const saved=personalBooks.some(b=>b.book_id===btn.dataset.cloudBookmark&&b.bookmarked);
@@ -946,15 +965,29 @@
     }
     function toggleWord(w){if(saved.has(w)){saved.delete(w);toast('已从本机演示收藏移除，学习记录继续保留')}else{saved.add(w);toast('已收藏到本机演示藏书票（仅此浏览器）')}saveWords();if(popWord===w)openWord(w);$('savedCount').textContent=saved.size;if(view==='words')renderWords()}
     function saveWords(){try{localStorage.setItem('miaowu_demo_words',JSON.stringify([...saved]));localStorage.setItem('miaowu_demo_mastered',JSON.stringify([...mastered]))}catch(e){}}
+    async function loadWordbookPage(){
+      if(!user)return;
+      const serial=++wordbookRequest,account=user.name,scope=wordFilter;
+      wordbookPending=true;
+      try{
+        const page=await serverRequest('/api/me/wordbook?scope='+encodeURIComponent(scope)+'&page='+wordbookPage);
+        if(serial!==wordbookRequest||user?.name!==account||wordFilter!==scope)return;
+        wordbookData=page;wordbookPage=page.page;
+      }catch(error){
+        if(serial!==wordbookRequest||user?.name!==account)return;
+        wordbookData={scope,error:error.message||'词卡暂时无法加载',words:[],total:0,allTotal:cloudSaved.size,totalPages:1,page:wordbookPage};
+      }finally{
+        if(serial===wordbookRequest){wordbookPending=false;if(view==='words')renderWords();}
+      }
+    }
     function renderWords(){
       globalThis.MiaowuFlashcards?.render({
         loggedIn:!!user,saved:cloudSaved.size,due:cloudFlashDue,
         sessionKey:user?.name||null
       });
       document.querySelectorAll('[data-word-filter]').forEach(x=>x.classList.toggle('active',x.dataset.wordFilter===wordFilter));
-      const words=[...cloudSaved.values()].filter(w=>wordFilter==='all'||
-        (wordFilter==='mastered'?w.status==='mastered':w.status!=='mastered'));
-      const cloudTotal=user?cloudSaved.size:0;
+      const words=wordbookData?.scope===wordFilter?(wordbookData.words||[]):[];
+      const cloudTotal=user?(wordbookData?.allTotal??cloudSaved.size):0;
       $('bookplateCount').textContent=String(cloudTotal);
       if(!user){
         $('vocabGrid').innerHTML='<div class="empty" style="grid-column:1/-1">'+
@@ -962,6 +995,15 @@
           '<p>登录同一账号即可在不同设备读取已收藏的单词。</p>'+
           '<button class="primary" id="cloudWordsLogin">登录我的书房</button></div>';
         $('cloudWordsLogin').onclick=showLogin;return;
+      }
+      if(user&&(!wordbookData||wordbookData.scope!==wordFilter)){
+        $('vocabGrid').innerHTML='<p class="bookplate-page-status" role="status">正在整理你的云端藏书票……</p>';
+        if(!wordbookPending)void loadWordbookPage();return;
+      }
+      if(wordbookData?.error){
+        $('vocabGrid').innerHTML='<div class="bookplate-page-status" role="alert">词卡加载失败：'+safe(wordbookData.error)+
+          ' <button class="secondary-btn" id="wordbookRetry">重新加载</button></div>';
+        $('wordbookRetry').onclick=()=>{wordbookData=null;renderWords()};return;
       }
       if(!words.length){
         const hasSaved=cloudTotal>0;
@@ -994,22 +1036,38 @@
       const sources='<div class="bookplate-source-summary">已同步词卡 '+cloudTotal+
         ' 张<small>这些词卡关联你的账号，可在登录后跨设备查看。</small></div>';
       const cloudSection=cloudCards?'<div class="bookplate-source-heading">☁ 云端收藏 · 已同步到账号</div>'+cloudCards:'';
-      $('vocabGrid').innerHTML=sources+cloudSection;
+      const pages=Number(wordbookData?.totalPages)||1,page=Number(wordbookData?.page)||1;
+      const pageNumbers=[...new Set([1,pages,page-1,page,page+1].filter(n=>n>=1&&n<=pages))].sort((a,b)=>a-b);
+      const pagination=pages>1?'<nav class="bookplate-pagination" aria-label="记忆藏书票分页">'+
+        '<span class="bookplate-page-summary">共 '+wordbookData.total+' 张 · 每页 12 张 · 第 '+page+' / '+pages+' 页</span>'+ 
+        '<div class="bookplate-page-controls"><button type="button" data-wordbook-page="prev"'+(page===1?' disabled':'')+'>上一页</button>'+ 
+        pageNumbers.map((n,i)=>(i&&n-pageNumbers[i-1]>1?'<span aria-hidden="true">…</span>':'')+
+          '<button type="button" data-wordbook-page="'+n+'"'+(n===page?' aria-current="page" disabled':'')+'>'+n+'</button>').join('')+
+        '<button type="button" data-wordbook-page="next"'+(page===pages?' disabled':'')+'>下一页</button></div></nav>':'';
+      $('vocabGrid').innerHTML=sources+cloudSection+pagination;
+      $('vocabGrid').querySelectorAll('[data-wordbook-page]').forEach(btn=>btn.onclick=()=>{
+        const key=btn.dataset.wordbookPage;
+        const next=key==='prev'?page-1:key==='next'?page+1:Number(key);
+        if(!Number.isInteger(next)||next<1||next>pages||next===page)return;
+        wordbookPage=next;wordbookData=null;renderWords();
+        $('view-words').querySelector('.filter-row')?.scrollIntoView({behavior:
+          window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth',block:'start'});
+      });
       document.querySelectorAll('[data-cloud-voice],[data-cloud-say]').forEach(x=>{
-        x.onclick=()=>{const w=cloudSaved.get(x.dataset.cloudVoice||x.dataset.cloudSay);if(w)speakWord(w.headword)};
+        x.onclick=()=>{const w=words.find(w=>w.word_id===(x.dataset.cloudVoice||x.dataset.cloudSay));if(w)speakWord(w.headword)};
       });
       async function update(id,bookmarked,status){
         try{
           await serverRequest('/api/me/words/'+encodeURIComponent(id),'PUT',{bookmarked,status});
-          await refreshCloudLearning();renderWords();
+          await refreshCloudLearning();wordbookData=null;renderWords();
           toast('词卡状态已保存到云端');
         }catch(error){toast(error.message)}
       }
       document.querySelectorAll('[data-cloud-master]').forEach(x=>x.onclick=()=>{
-        const w=cloudSaved.get(x.dataset.cloudMaster);if(w)update(w.word_id,true,w.status==='mastered'?'learning':'mastered');
+        const w=words.find(w=>w.word_id===x.dataset.cloudMaster);if(w)update(w.word_id,true,w.status==='mastered'?'learning':'mastered');
       });
       document.querySelectorAll('[data-cloud-remove]').forEach(x=>x.onclick=()=>{
-        const w=cloudSaved.get(x.dataset.cloudRemove);if(w)update(w.word_id,false,w.status==='mastered'?'mastered':'learning');
+        const w=words.find(w=>w.word_id===x.dataset.cloudRemove);if(w)update(w.word_id,false,w.status==='mastered'?'mastered':'learning');
       });
     }
     function confirmEchoExit(destination='setup'){
@@ -1118,7 +1176,8 @@
         activeCloud=null;
         if(view==='reader'){navigate('library');$('storyText').textContent='';}
       }
-      cloudSaved=new Map();cloudProgress=[];personalBooks=[];++personalBooksRequest;glossaryCache.clear();cloudSessionKey=user?.name||null;
+      cloudSaved=new Map();cloudProgress=[];personalBooks=[];recentBooks=[];++personalBooksRequest;
+      wordbookData=null;wordbookPage=1;++wordbookRequest;wordbookPending=false;glossaryCache.clear();cloudSessionKey=user?.name||null;
       updateHeroReadLabel();
       renderLibrary();renderAccount();renderReminder();
       if(user)void loadPersonalBookshelf();else renderPersonalBookshelf();
@@ -1621,7 +1680,7 @@
         if(segment>=0)seekSpeech(segment);
       }
     });
-$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
+$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;wordbookPage=1;wordbookData=null;renderWords()});
     // Cloud reading progress is saved automatically on scroll and chapter navigation.
     window.MiaowuChapterWords?.configure({
       request:serverRequest,refresh:refreshCloudLearning,
