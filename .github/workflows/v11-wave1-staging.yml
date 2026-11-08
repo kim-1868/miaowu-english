@@ -1,0 +1,66 @@
+name: V1.1 Wave1 isolated UI changes STAGING + full regression
+on:
+  push:
+    branches: [release/v11-wave1-independent-20261108]
+    paths:
+      - .github/workflows/v11-wave1-staging.yml
+      - public/**
+      - src/**
+      - tests/**
+permissions:
+  contents: read
+concurrency:
+  group: v11-wave1-staging-test-20261108
+  cancel-in-progress: false
+jobs:
+  protected-test-worker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm staging assets target only isolated test D1
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";import fs from "node:fs";
+          const cfg=JSON.parse(fs.readFileSync("wrangler.jsonc","utf8"));
+          assert.equal(cfg.name,"miaowu-english-staging");
+          assert.equal(cfg.vars.APP_ENV,"staging");
+          assert.equal(cfg.d1_databases[0].database_name,"miaowu-english-test");
+          assert.equal(cfg.d1_databases[0].database_id,"88a817cb-23bb-4ae4-bcb8-92286c4165d4");
+          assert.equal(cfg.assets.directory,"./public");
+          console.log("WAVE1_TEST_D1_ONLY__NO_PRODUCTION_ACCESS");
+          NODE
+      - name: Syntax checks and full regression
+        run: |
+          set -euo pipefail
+          node --check public/ops-updates.js
+          node --check public/site-updates.js
+          node --check public/app.js
+          node --check src/ops-customers.js
+          node --check src/ops-claims.js
+          npm run check
+          npm test
+      - name: Deploy only to staging Worker (leave staging secrets intact)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npm install --no-save --ignore-scripts wrangler@^4
+          npx wrangler deploy --keep-vars --config wrangler.jsonc
+      - name: Verify staging remains private
+        run: |
+          set -euo pipefail
+          URL=https://miaowu-english-staging.kim10086a.workers.dev/
+          CODE=$(curl -sS -o /tmp/wave1-anon -w '%{http_code}' --max-time 22 "$URL")
+          test "$CODE" = 401
+          grep -Fq 'Staging preview: credentials required' /tmp/wave1-anon
+          echo "WAVE1_STAGING_SUCCESS__401_AUTH_GATE__PROD_NOT_CHANGED"
