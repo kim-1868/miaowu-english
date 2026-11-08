@@ -1,0 +1,166 @@
+name: V1.1 owner-approved Favorites + Wordbook12 production sync ONCE
+on:
+  push:
+    branches: [release/v11-favorites-wordbook-prod-approved-20261109]
+    paths: [.github/workflows/v11-favorites-wordbook-prod-approved.yml]
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  production:
+    if: github.repository == 'kim-1868/miaowu-english'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Exact owner-approved staging baseline and safe D1 bindings
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = 'refs/heads/release/v11-favorites-wordbook-prod-approved-20261109'
+          test "$(git rev-parse HEAD^)" = 'c5b33a38431fb1283c278937b877e1603ea6fc19'
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';import fs from 'node:fs';
+          const prod=JSON.parse(fs.readFileSync('deploy/production.wrangler.jsonc','utf8'));
+          assert.equal(prod.name,'miaowu-english-production');
+          assert.equal(prod.vars.APP_ENV,'production');
+          assert.equal(prod.d1_databases[0].database_name,'miaowu-english-prod');
+          assert.equal(prod.d1_databases[0].database_id,'649c71b3-340c-49bf-b806-3d39256851d3');
+          assert.equal(prod.workers_dev,false);assert.equal(prod.preview_urls,false);
+          const app=fs.readFileSync('public/app.js','utf8');
+          const css=fs.readFileSync('public/v11-bookshelf.css','utf8');
+          const html=fs.readFileSync('public/index.html','utf8');
+          for(const id of ['id="siteUpdateBanner"','id="myBookshelf"','id="mwWelcomeDialog"'])assert.ok(html.includes(id));
+          assert.match(app,/PERSONAL_SHELF_PAGE_SIZE=9/);
+          assert.match(app,/serverRequest\('\/api\/me\/wordbook\?scope='/);
+          assert.match(app,/bookplate-pagination/);
+          assert.match(app,/function positionStudyPopover/);
+          assert.match(app,/closeWord\(\);\s*stopReading\(\)/);
+          assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+          assert.match(css,/v11-my-shelf-pagination/);
+          assert.match(css,/v11-recent-reading/);
+          assert.match(fs.readFileSync('src/my-bookshelf.js','utf8'),/books:all\.filter\(b=>b\.bookmarked\)/);
+          assert.match(fs.readFileSync('src/my-bookshelf.js','utf8'),/recent:all\.filter\(b=>!b\.bookmarked/);
+          assert.match(fs.readFileSync('src/reading-library.js','utf8'),/const pageSize=12,requestedPage/);
+          assert.match(fs.readFileSync('src/worker.js','utf8'),/path === "\/api\/me\/wordbook"/);
+          assert.match(html,/favorites-wordbook12/);
+          assert.match(fs.readFileSync('public/ops-updates.js','utf8'),/updatesLocalPreviewDialog/);
+          console.log('STAGING_ACCEPTED_SHA_PRODUCTION_BINDING_GUARDED');
+          NODE
+      - name: Re-run regression, build 50 announcement-preserving assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+          node scripts/build-production-assets.mjs --approved-announcements
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';import fs from 'node:fs';
+          import {auditProductionAssets} from './scripts/build-production-assets.mjs';
+          assert.equal(auditProductionAssets({withAnnouncements:true}).assets.length,50);
+          const html=fs.readFileSync('dist-production/public/index.html','utf8');
+          for(const k of ['id="siteUpdateBanner"','id="myBookshelf"','id="mwWelcomeDialog"','favorites-wordbook12'])assert.ok(html.includes(k));
+          assert.match(fs.readFileSync('dist-production/public/app.js','utf8'),/PERSONAL_SHELF_PAGE_SIZE=9/);
+          assert.match(fs.readFileSync('dist-production/public/app.js','utf8'),/\/api\/me\/wordbook/);
+          assert.match(fs.readFileSync('dist-production/public/v11-wordbook.css','utf8'),/bookplate-pagination/);
+          console.log('FAVORITES_WORDBOOK_50_ASSETS_APPROVED');
+          NODE
+      - name: Install Wrangler and compile approved production Worker without writing D1
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --ignore-scripts 'wrangler@^4'
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const cfg=JSON.parse(fs.readFileSync('deploy/production.wrangler.jsonc','utf8'));
+          cfg.vars.OPS_ANNOUNCEMENTS_ENABLED='true';
+          cfg.vars.V11_NOTICE_RELEASE_APPROVED='true';
+          fs.writeFileSync('deploy/.wave2-approved-20261109.jsonc',JSON.stringify(cfg,null,2)+'\n');
+          NODE
+          node scripts/check-production-config.mjs deploy/.wave2-approved-20261109.jsonc
+          npx wrangler deploy --dry-run --config deploy/.wave2-approved-20261109.jsonc --outdir .wrangler/wave2-approved
+      - name: Verify live production unchanged since last voice-guard release
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npx wrangler deployments status --name miaowu-english-production --config deploy/.wave2-approved-20261109.jsonc > /tmp/wave2-version-before.txt
+          grep -Fq 'a396c796-c2e2-42bc-af76-236a04fd2c3e' /tmp/wave2-version-before.txt || { echo 'PRODUCTION_VERSION_CHANGED_STOP'; exit 1; }
+          ORIGIN='https://miaowu-english-pages.pages.dev'
+          BASE='3aa0ab89e6c9f75e6d223df9e71a99fbc2741e1e'
+          for file in app.js ops-console.js ops-updates.js site-updates.js v11-responsive.css; do
+            git show "$BASE:public/$file" > "/tmp/base-$file"
+            curl -fsSL --retry 2 --max-time 25 "$ORIGIN/$file?release_gate=20261109" -o "/tmp/live-$file"
+            cmp -s "/tmp/base-$file" "/tmp/live-$file" || { echo "LIVE_STATIC_FILE_CHANGED_STOP_$file"; exit 1; }
+          done
+          curl -fsSL --max-time 25 "$ORIGIN/__miaowu_prod_edge_probe" -o /tmp/edge-before.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';import assert from 'node:assert/strict';
+          const e=JSON.parse(fs.readFileSync('/tmp/edge-before.json','utf8'));
+          assert.equal(e.ok,true);assert.equal(e.productionBindingPresent,true);assert.equal(e.dataAccess,false);
+          NODE
+          test "$(curl -sS --max-time 20 -o /tmp/ops-before -w '%{http_code}' "$ORIGIN/api/ops/me")" = 401
+          echo 'LIVE_WORKER_AND_ASSETS_UNCHANGED_READY_FOR_WAVE2'
+      - name: Release approved Wave2 Worker and verify; rollback Worker on smoke failure
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          deployed=0
+          rollback(){
+            code=$?
+            if [ "$deployed" = 1 ];then
+              echo 'POST_DEPLOY_SMOKE_FAILURE_ATTEMPTING_WORKER_ROLLBACK'
+              npx wrangler rollback --name miaowu-english-production --config deploy/.wave2-approved-20261109.jsonc --message 'Wave2 20261109 failed smoke' || echo 'MANUAL_ROLLBACK_REQUIRED'
+            fi
+            exit "$code"
+          }
+          trap rollback ERR
+          npx wrangler deploy --keep-vars --config deploy/.wave2-approved-20261109.jsonc
+          deployed=1
+          ORIGIN='https://miaowu-english-pages.pages.dev'
+          ready=0
+          for i in $(seq 1 15);do
+            if curl -fsSL --max-time 20 "$ORIGIN/?wave2_20261109=$i" -o /tmp/w2-home &&
+               curl -fsSL --max-time 20 "$ORIGIN/app.js?wave2_20261109=$i" -o /tmp/w2-app &&
+               curl -fsSL --max-time 20 "$ORIGIN/v11-bookshelf.css?wave2_20261109=$i" -o /tmp/w2-css &&
+               grep -Fq 'PERSONAL_SHELF_PAGE_SIZE=9' /tmp/w2-app;then ready=1;break;fi
+            sleep 3
+          done
+          test "$ready" = 1
+          grep -Fq 'id="myBookshelf"' /tmp/w2-home
+          grep -Fq 'id="mwWelcomeDialog"' /tmp/w2-home
+          grep -Fq 'id="siteUpdateBanner"' /tmp/w2-home
+          grep -Fq 'grid-template-columns:repeat(3,minmax(0,1fr))' /tmp/w2-css
+          grep -Fq 'v11-my-shelf-pagination' /tmp/w2-css
+          grep -Fq 'v11-recent-reading' /tmp/w2-css
+          curl -fsSL --max-time 20 "$ORIGIN/v11-wordbook.css" -o /tmp/w2-wordbook-css
+          grep -Fq 'bookplate-pagination' /tmp/w2-wordbook-css
+          grep -Fq '/api/me/wordbook' /tmp/w2-app
+          test "$(curl -sS --max-time 20 -o /tmp/w2-book-anon -w '%{http_code}' "$ORIGIN/api/me/wordbook?scope=all&page=1")" = 401
+          grep -Fq 'function positionStudyPopover' /tmp/w2-app
+          curl -fsSL --max-time 20 "$ORIGIN/onboarding.js" -o /tmp/w2-onboarding
+          curl -fsSL --max-time 20 "$ORIGIN/ops" -o /tmp/w2-ops
+          grep -Fq 'updatesLocalPreviewDialog' /tmp/w2-ops
+          test "$(curl -sS --max-time 20 -o /tmp/ops-after -w '%{http_code}' "$ORIGIN/api/ops/me")" = 401
+          curl -fsSL --max-time 25 "$ORIGIN/api/updates/latest" -o /tmp/w2-notice
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';import assert from 'node:assert/strict';
+          const result=JSON.parse(fs.readFileSync('/tmp/w2-notice','utf8'));
+          assert.equal(result.available,true);
+          NODE
+          npx wrangler deployments status --name miaowu-english-production --config deploy/.wave2-approved-20261109.jsonc
+          echo 'FAVORITES_WORDBOOK12_PRODUCTION_RELEASE_SUCCESS__NO_D1_MIGRATIONS_EXECUTED'
+          trap - ERR
