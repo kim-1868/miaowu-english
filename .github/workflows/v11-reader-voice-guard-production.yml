@@ -1,0 +1,145 @@
+name: V1.1 Reader Voice Guard production hotfix (no D1 writes)
+on:
+  push:
+    branches: [release/v11-reader-voice-guard-20261108]
+    paths: [.github/workflows/v11-reader-voice-guard-production.yml]
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  production-wave1:
+    if: github.repository == 'kim-1868/miaowu-english'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm production origin and unchanged previous 01-04 release
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/release/v11-reader-voice-guard-20261108"
+          BASE=885c95f800e358dc86c958d04da57e49380d5f4f
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";import fs from "node:fs";
+          const cfg=JSON.parse(fs.readFileSync("deploy/production.wrangler.jsonc","utf8"));
+          assert.equal(cfg.name,"miaowu-english-production");
+          assert.equal(cfg.vars.APP_ENV,"production");
+          assert.equal(cfg.d1_databases[0].database_name,"miaowu-english-prod");
+          assert.equal(cfg.d1_databases[0].database_id,"649c71b3-340c-49bf-b806-3d39256851d3");
+          NODE
+          ORIGIN=https://miaowu-english-pages.pages.dev
+          for FILE in app.js ops-updates.js ops-console.js site-updates.js v11-responsive.css; do
+            git show "$BASE:public/$FILE" > "/tmp/wave1-old-$FILE"
+            curl -fsSL --retry 3 --max-time 24 "$ORIGIN/$FILE" -o "/tmp/wave1-live-$FILE"
+            cmp -s "/tmp/wave1-old-$FILE" "/tmp/wave1-live-$FILE" || { echo "LIVE_PRODUCTION_CHANGED_SINCE_0104_STOP_$FILE"; exit 1; }
+            echo "MATCH_0104_BASELINE_$FILE"
+          done
+          curl -fsSL --retry 2 --max-time 20 "$ORIGIN/__miaowu_prod_edge_probe" -o /tmp/wave1-origin.json
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";import fs from "node:fs";
+          const d=JSON.parse(fs.readFileSync("/tmp/wave1-origin.json","utf8"));
+          assert.equal(d.productionBindingPresent,true);assert.equal(d.ok,true);
+          NODE
+          test "$(curl -sS --max-time 20 -o /tmp/wave1-ops-me -w '%{http_code}' "$ORIGIN/api/ops/me")" = 401
+          test "$(curl -sS --max-time 20 -o /tmp/wave1-ops-updates -w '%{http_code}' "$ORIGIN/api/ops/updates")" = 401
+          curl -fsSL --retry 2 --max-time 20 "$ORIGIN/api/updates/latest" -o /tmp/wave1-old-notice.json
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";import fs from "node:fs";
+          assert.equal(JSON.parse(fs.readFileSync("/tmp/wave1-old-notice.json","utf8")).available,true);
+          NODE
+          echo "WAVE1_PRECHECK_EXISTING_0104_PRODUCTION_EXACT_MATCH"
+      - name: Re-run all regressions and build 47 approved production assets
+        run: |
+          set -euo pipefail
+          node --check public/ops-updates.js
+          node --check public/site-updates.js
+          node --check public/app.js
+          npm run check
+          npm test
+          node scripts/build-production-assets.mjs --approved-announcements >/tmp/wave1-bundle.json
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";import fs from "node:fs";
+          import {auditProductionAssets} from "./scripts/build-production-assets.mjs";
+          assert.equal(auditProductionAssets({withAnnouncements:true}).assets.length,47);
+          const root="dist-production/public/";
+          assert.match(fs.readFileSync(root+"index.html","utf8"),/wave1-popover/);
+          assert.match(fs.readFileSync(root+"ops.html","utf8"),/id="updatesLocalPreviewDialog"/);
+          assert.doesNotMatch(fs.readFileSync(root+"ops.html","utf8"),/href="\/"[^>]*>查看预览首页/);
+          assert.match(fs.readFileSync(root+"app.js","utf8"),/function positionStudyPopover/);
+          assert.match(fs.readFileSync(root+"app.js","utf8"),/if\(activeCloud\?\.chapterId&&p&&speaking&&!paused\)/);
+          assert.match(fs.readFileSync(root+"site-updates.js","utf8"),/latestRequestId/);
+          assert.doesNotMatch(fs.readFileSync(root+"chapter-words.js","utf8"),/自愿复习已学词/);
+          console.log("WAVE1_APPROVED_47_ASSET_BUNDLE_VALID");
+          NODE
+      - name: Compile isolated production Worker with current notice flags preserved
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";import assert from "node:assert/strict";
+          const config=JSON.parse(fs.readFileSync("deploy/production.wrangler.jsonc","utf8"));
+          assert.equal(config.d1_databases[0].database_name,"miaowu-english-prod");
+          config.vars.OPS_ANNOUNCEMENTS_ENABLED="true";
+          config.vars.V11_NOTICE_RELEASE_APPROVED="true";
+          fs.writeFileSync("deploy/.wave1-approved-prod.jsonc",JSON.stringify(config,null,2)+"\n");
+          NODE
+          node scripts/check-production-config.mjs deploy/.wave1-approved-prod.jsonc
+          npm install --no-save --ignore-scripts wrangler@^4
+          npx wrangler deploy --dry-run --config deploy/.wave1-approved-prod.jsonc --outdir .wrangler/wave1-protection
+      - name: Deploy isolated changes and automatically attempt rollback on smoke failure
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          deployed=0
+          rollback_on_failure(){
+            local rc=$?
+            if [ "$deployed" = 1 ]; then
+              echo "VOICE_GUARD_SMOKE_FAILED_ATTEMPT_ROLLBACK"
+              npx wrangler rollback --name miaowu-english-production --config deploy/.wave1-approved-prod.jsonc --message "Revert isolated Wave1 after failed smoke" || echo "MANUAL_WORKER_ROLLBACK_REQUIRED"
+            fi
+            exit "$rc"
+          }
+          trap rollback_on_failure ERR
+          npx wrangler deployments status --name miaowu-english-production --json --config deploy/production.wrangler.jsonc >/tmp/wave1-before.json
+          test -s /tmp/wave1-before.json
+          npx wrangler deploy --keep-vars --config deploy/.wave1-approved-prod.jsonc >/tmp/wave1-deploy.json
+          deployed=1
+          ORIGIN=https://miaowu-english-pages.pages.dev
+          LIVE=0
+          for i in $(seq 1 15); do
+            curl -fsSL --max-time 20 "$ORIGIN/app.js?wave1=$i" -o /tmp/wave1-app.js || true
+            if grep -Fq 'if(activeCloud?.chapterId&&p&&speaking&&!paused)' /tmp/wave1-app.js;then LIVE=1;break;fi
+            sleep 3
+          done
+          test "$LIVE" = 1
+          curl -fsSL --max-time 22 "$ORIGIN/ops" -o /tmp/wave1-ops.html
+          grep -Fq 'id="updatesLocalPreviewDialog"' /tmp/wave1-ops.html
+          grep -Fq '预览当前公告' /tmp/wave1-ops.html
+          ! grep -Fq '>查看预览首页' /tmp/wave1-ops.html
+          curl -fsSL --max-time 22 "$ORIGIN/site-updates.js" -o /tmp/wave1-site-updates.js
+          grep -Fq 'latestRequestId' /tmp/wave1-site-updates.js
+          curl -fsSL --max-time 22 "$ORIGIN/v11-responsive.css" -o /tmp/wave1-responsive.css
+          grep -Fq 'PUBLIC-03' /tmp/wave1-responsive.css
+          curl -fsSL --max-time 22 "$ORIGIN/chapter-words.js" -o /tmp/wave1-vocab.js
+          ! grep -Fq '自愿复习已学词' /tmp/wave1-vocab.js
+          test "$(curl -sS --max-time 20 -o /tmp/wave1-ops-anon -w '%{http_code}' "$ORIGIN/api/ops/updates")" = 401
+          curl -fsSL --max-time 22 "$ORIGIN/api/updates/latest" -o /tmp/wave1-notice.json
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";import fs from "node:fs";
+          assert.equal(JSON.parse(fs.readFileSync("/tmp/wave1-notice.json","utf8")).available,true);
+          NODE
+          echo "PRODUCTION_VOICE_GUARD_SUCCESS__NO_AUTOPLAY__ANNOUNCEMENT_AUTH_OK__D1_UNCHANGED"
+          trap - ERR
