@@ -85,7 +85,7 @@ test("V1.2.1 iOS study tray never shades the screen without a visible learning c
  assert.match(css,/#wordBackdrop\.on\{display:none!important;pointer-events:none!important\}/);
  assert.match(css,/#wordPop\.on\{/);
  assert.match(html,/styles\.css\?v=20261104-v28-night-selection/);
- assert.match(html,/app\.js\?v=20261108-wave2-bookshelf/);
+ assert.match(html,/app\.js\?v=20261109-favorites-wordbook12/);
 });
 
 test("V1.2.3 mobile vocabulary drawer targets the aside preceding the overlay",()=>{
