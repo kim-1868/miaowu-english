@@ -121,5 +121,6 @@ test("V35: reader new-word counter reflects learned senses instead of only bookm
  assert.match(app,/unseenSenses=new Set/);
  assert.match(app,/filter\(w=>!w\.study_seen\)/);
  assert.match(chapter,/words\.filter\(w=>!w\.study_seen\)/);
- assert.match(chapter,/自愿复习已学词/);
+  assert.doesNotMatch(chapter,/自愿复习已学词|startLearnedReview/);
+  assert.match(chapter,/学习本章新词/);
 });
