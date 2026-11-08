@@ -40,21 +40,8 @@ function preserveOriginalAnchors(before,after){
   }
  }
 }
-// Drafts that have never been published or studied may be fully rewritten.
-// Retain every previously referenced study word somewhere in the same book;
-// paragraph-local anchors are not meaningful for a genuinely new narrative.
-function preserveDraftReflowWords(originalChapters,newChapters){
- const before=new Set(),after=new Set();
- for(const chapter of originalChapters)
-  for(const paragraph of oldAnchors(chapter))
-   for(const id of paragraph)before.add(id);
- for(const chapter of newChapters)
-  for(const paragraph of chapter.paragraphs)
-   for(const segment of paragraph.segments)
-    if(segment.wordId)after.add(segment.wordId);
- for(const id of before)
-  if(!after.has(id))throw Error("ORIGINAL_STUDY_WORD_REMOVED");
-}
+// Never-published, never-studied drafts may be rewritten and their obsolete
+// chapter annotations removed without deleting any word record or user state.
 const checkChanged=()=>({
  sql:"INSERT INTO books(id,category_id,title) SELECT ?,?,? WHERE changes()<>1",
  params:[] // filled per target book
@@ -73,7 +60,9 @@ export function planDraftRevision({validated,originalBook,originalChapters,
  if(!Number.isSafeInteger(expectedVersion)||expectedVersion<0||
     !REQUEST_ID.test(requestId)||!ID.test(actorId))
   throw Error("INVALID_REVISION_VERSION_OR_REQUEST");
- if(allowSafeReflow)preserveDraftReflowWords(originalChapters,chapters);
+ // A genuinely never-published, never-studied draft has no reader anchors
+ // to preserve. Keep existing word records; only chapter references change.
+ // Previously published or studied content remains under strict old checks.
  const oldById=new Map(originalChapters.map(c=>[c.id,c]));
  const newById=new Map(chapters.map(c=>[c.id,c]));
  if(oldById.size!==chapters.length||newById.size!==chapters.length)throw Error("DUPLICATE_CHAPTER");
@@ -227,8 +216,7 @@ export async function handleOpsDraftRevision(req,env,path){
  catch(e){
   const known=new Set(["SHARED_WORD_CARD_CONFLICT","BOOK_NOT_SAME_DRAFT",
    "CHAPTERS_NOT_SAME_UNPUBLISHED_SET","CHAPTER_ID_OR_ORDER_CHANGED",
-   "PARAGRAPH_SHAPE_CHANGED","ORIGINAL_STUDY_ANCHOR_REMOVED",
-   "ORIGINAL_STUDY_WORD_REMOVED"]);
+   "PARAGRAPH_SHAPE_CHANGED","ORIGINAL_STUDY_ANCHOR_REMOVED"]);
   return reject(known.has(e.message)?e.message:"REVISED_PACKAGE_INCOMPATIBLE",409);
  }
  try{await env.DB.batch(plan.statements.map(x=>stmt(env.DB,x.sql,...x.params)))}
