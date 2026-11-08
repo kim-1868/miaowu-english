@@ -1,0 +1,47 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+test('favorites bookshelf separates explicit bookmark from automatic recent reading',()=>{
+ const server=read('src/my-bookshelf.js'),app=read('public/app.js');
+ assert.match(server,/books:all\.filter\(b=>b\.bookmarked\)/);
+ assert.match(server,/recent:all\.filter\(b=>!b\.bookmarked&&b\.started_chapters>0\)/);
+ assert.match(app,/v11-recent-reading/);
+ assert.match(app,/最近阅读/);
+ assert.match(app,/data-recent-read/);
+ assert.match(app,/data-recent-save/);
+ assert.match(app,/personalShelfFilter='reading',personalShelfPage=1/);
+ assert.match(app,/PERSONAL_SHELF_PAGE_SIZE=9/);
+ assert.match(app,/移出书架不会删除阅读进度/);
+});
+test('wordbook uses dedicated complete paginated user-scoped endpoint while preserving learning actions',()=>{
+ const server=read('src/reading-library.js'),worker=read('src/worker.js'),app=read('public/app.js');
+ assert.match(worker,/path === "\/api\/me\/wordbook"/);
+ assert.match(server,/if\(path==="\/api\/me\/wordbook"&&req\.method==="GET"\)return wordbookPage/);
+ assert.match(server,/const pageSize=12,requestedPage=/);
+ assert.match(server,/const unique=\[\],keys=new Set\(\)/);
+ assert.match(server,/if\(keys\.has\(key\)\)continue/);
+ assert.match(server,/const allTotal=keys\.size,total=unique\.length/);
+ assert.match(server,/uw\.user_id=\? AND uw\.bookmarked=1 AND /);
+ assert.match(server,/flashVisible/);
+ assert.match(app,/serverRequest\('\/api\/me\/wordbook\?scope='/);
+ assert.match(app,/data-wordbook-page="prev"/);
+ assert.match(app,/data-wordbook-page="next"/);
+ assert.match(app,/wordbookPage=1;wordbookData=null;renderWords\(\)/);
+ assert.match(app,/data-cloud-master/);
+ assert.match(app,/data-cloud-remove/);
+ assert.match(app,/data-cloud-voice/);
+ assert.match(app,/wordbookData=null;renderWords\(\)/);
+});
+test('responsive pagination styles and cache busting are included in approved production package',()=>{
+ const css=read('public/v11-wordbook.css'),shelf=read('public/v11-bookshelf.css'),html=read('public/index.html');
+ assert.match(css,/bookplate-pagination/);assert.match(css,/@media\(max-width:620px\)/);
+ assert.match(css,/aria-current=page/);
+ assert.match(shelf,/v11-recent-reading/);assert.match(shelf,/@media\(max-width:420px\)/);
+ assert.match(html,/app\.js\?v=20261109-favorites-wordbook12/);
+ assert.match(html,/v11-wordbook\.css\?v=20261109-wordbook12/);
+ assert.match(html,/v11-bookshelf\.css\?v=20261109-favorites/);
+ const onboard=read('src/onboarding.js');
+ assert.match(onboard,/eligible:!!entry/);
+ assert.match(onboard,/pending:!!entry&&!entry\.completed_at/);
+});
