@@ -1072,7 +1072,7 @@
           '<div class="big">♧</div><h3>'+(hasSaved?'这个筛选下暂无藏书票':'第一张藏书票，等你来收下')+'</h3>'+
           '<p>'+(hasSaved?'试试切换「全部收藏」，查看其它学习状态的词卡。':'打开已解锁的故事，点击英文词汇即可收藏到记忆藏书票。')+'</p>'+
           '<button class="primary" id="emptyRead">寻找故事 →</button></div>';
-        $('emptyRead').onclick=()=>navigate('library');wordbookPreviewEntry();return;
+        $('emptyRead').onclick=()=>navigate('library');if(typeof wordbookPreviewEntry==='function')wordbookPreviewEntry();return;
       }
       const cloudCards=user?words.map(w=>{
         const mastered=w.status==='mastered';
@@ -1106,7 +1106,7 @@
           '<button type="button" data-wordbook-page="'+n+'"'+(n===page?' aria-current="page" disabled':'')+'>'+n+'</button>').join('')+
         '<button type="button" data-wordbook-page="next"'+(page===pages?' disabled':'')+'>下一页</button></div></nav>':'';
       $('vocabGrid').innerHTML=sources+cloudSection+pagination;
-      wordbookPreviewEntry();
+      if(typeof wordbookPreviewEntry==='function')wordbookPreviewEntry();
       $('vocabGrid').querySelectorAll('[data-wordbook-page]').forEach(btn=>btn.onclick=()=>{
         const key=btn.dataset.wordbookPage;
         const next=key==='prev'?page-1:key==='next'?page+1:Number(key);
