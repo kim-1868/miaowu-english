@@ -1,3 +1,4 @@
+# Stage-only release after refreshing historical cache-bust assertions; never deploy production.
 name: V1.1 Bookshelf compact grid + paging STAGING only
 on:
   push:
