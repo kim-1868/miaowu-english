@@ -1,0 +1,53 @@
+name: V1.1 owner-approved 01-04 prod READ-ONLY credential and bookmark probe
+on:
+  push:
+    branches: [release/v11-0104-production-isolated-20261108]
+    paths: [.github/workflows/v11-0104-prod-readonly-probe.yml]
+permissions:
+  contents: read
+jobs:
+  prod-readonly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm production config never references test resources
+        run: |
+          set -euo pipefail
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          test "$(node -p 'JSON.parse(require("fs").readFileSync("deploy/production.wrangler.jsonc","utf8")).d1_databases[0].database_name')" = "miaowu-english-prod"
+      - name: Install Wrangler for metadata reads only
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Read current production Worker deployment metadata and D1 Time Travel bookmark only
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "BLOCKED_MISSING_CLOUDFLARE_SECRET"; exit 1
+          fi
+          # Never log secrets, user data, actual DB rows or the bookmark string.
+          set +e
+          npx wrangler deployments list --name miaowu-english-production --config deploy/production.wrangler.jsonc > /tmp/prod-deployments 2>&1
+          worker_result=$?
+          npx wrangler d1 time-travel info miaowu-english-prod --config deploy/production.wrangler.jsonc > /tmp/prod-bookmark 2>&1
+          bookmark_result=$?
+          set -e
+          if [ "$worker_result" -eq 0 ]; then
+            echo "PRODUCTION_WORKER_DEPLOYMENT_METADATA_ACCESS_OK"
+          else
+            echo "PRODUCTION_WORKER_DEPLOYMENT_METADATA_BLOCKED"; fi
+          if [ "$bookmark_result" -eq 0 ] && grep -qi bookmark /tmp/prod-bookmark; then
+            echo "PRODUCTION_D1_TIMETRAVEL_BOOKMARK_ACCESS_OK"
+          else
+            echo "PRODUCTION_D1_TIMETRAVEL_BOOKMARK_ACCESS_BLOCKED"; fi
+          echo "NO_EXPORT_NO_RESTORE_NO_WRITE_NO_PRODUCTION_DEPLOYMENT"
+          test "$worker_result" -eq 0
+          test "$bookmark_result" -eq 0
+          grep -qi bookmark /tmp/prod-bookmark
