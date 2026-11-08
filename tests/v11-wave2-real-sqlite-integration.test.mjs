@@ -158,3 +158,26 @@ test("V1.1 bookshelf: reading without bookmarking remains in recent, not favorit
   assert.equal(list.data.recent.length,0);
  }finally{sqlite.close()}
 });
+
+test("V1.1 wordbook: page 18 still contains entries beyond legacy first 200 and never crosses user boundaries",async()=>{
+ const {sqlite,env}=fixture();try{
+  const addWord=sqlite.prepare("INSERT INTO words(id,headword,part_of_speech,meaning_zh) VALUES(?,?,?,?)");
+  const addChapter=sqlite.prepare("INSERT INTO chapter_words(chapter_id,word_id,context_sentence,context_anchor) VALUES(?,?,?,?)");
+  const addSaved=sqlite.prepare("INSERT INTO user_words(user_id,word_id,status,bookmarked) VALUES(?,?,?,1)");
+  for(let i=1;i<=213;i++){
+    const id="word-extra-"+i;
+    addWord.run(id,"wordextra"+i,"n.","义项"+i);
+    addChapter.run("chapter-1",id,"Reading wordextra"+i,"extra-"+i);
+    addSaved.run("u1",id,"learning");
+  }
+  const make=async(user,page)=>read(await handleLearningState(
+    request("/api/me/wordbook?scope=all&page="+page),env,"/api/me/wordbook",{id:user}));
+  const last=await make("u1",18);
+  assert.equal(last.status,200);assert.equal(last.data.total,213);
+  assert.equal(last.data.allTotal,213);
+  assert.equal(last.data.totalPages,18);assert.equal(last.data.words.length,9);
+  assert.ok(last.data.words.every(w=>w.word_id.startsWith("word-extra-")));
+  const other=await make("u2",1);
+  assert.equal(other.data.total,0);assert.deepEqual(other.data.words,[]);
+ }finally{sqlite.close()}
+});
