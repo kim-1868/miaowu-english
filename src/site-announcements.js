@@ -241,7 +241,7 @@ export async function handleSiteAnnouncements(req,env,path){
  // Production may only expose notice reads/writes after independent schema,
  // review and an explicit per-Worker feature-flag decision. Staging is unchanged.
  const allowed=env.APP_ENV==="staging"||
-  (env.APP_ENV==="production"&&env.OPS_ANNOUNCEMENTS_ENABLED==="true");
+  (env.APP_ENV==="production"&&env.OPS_ANNOUNCEMENTS_ENABLED==="true"&&env.V11_NOTICE_RELEASE_APPROVED==="true");
  if(!allowed)return err("NOT_FOUND",404);
  if(!env.DB)return err("DATABASE_UNAVAILABLE",503);
  if(path.startsWith("/api/ops/updates"))return adminRoute(req,env,path);
