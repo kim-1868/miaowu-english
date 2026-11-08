@@ -92,17 +92,24 @@ test("S123 unpublished never-studied drafts may be fully reflowed without renumb
  }finally{db.close()}
 });
 
-test("S123 safe full-book reflow still rejects removal of a previously referenced study word",()=>{
+test("S123 safe full-book reflow may remove obsolete anchors while keeping the word row",()=>{
  const {db,options}=prepare();
  try{
   const rewritten=structuredClone(options);
-  rewritten.allowSafeReflow=true;
   const old=JSON.parse(options.originalChapters[0].content_json);
   const id=old.paragraphs.flatMap(p=>p.segments).find(s=>s.wordId)?.wordId;
   assert.ok(id);
   for(const chapter of rewritten.validated.chapters)
    for(const paragraph of chapter.paragraphs)
     paragraph.segments=paragraph.segments.filter(s=>s.wordId!==id);
-  assert.throws(()=>planDraftRevision(rewritten),/ORIGINAL_STUDY_WORD_REMOVED/);
+  // Without explicit safe-history approval, the original guard still rejects.
+  assert.throws(()=>planDraftRevision(rewritten),/ORIGINAL_STUDY_ANCHOR_REMOVED/);
+  rewritten.allowSafeReflow=true;
+  const revised=planDraftRevision(rewritten);
+  assert.ok(revised.statements.every(x=>!/DELETE\\s+FROM\\s+(?:words|user_words|reading_progress|review_events)/i.test(x.sql)));
+  batch(db,revised.statements);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM chapter_words WHERE word_id=?").get(id).n,0);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM words WHERE id=?").get(id).n,1);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM chapters WHERE published_at IS NOT NULL").get().n,0);
  }finally{db.close()}
 });
