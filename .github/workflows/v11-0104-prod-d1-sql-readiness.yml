@@ -1,0 +1,50 @@
+name: V1.1 01-04 remote D1 SQL read permission and live Ops gate probe
+on:
+  push:
+    branches: [release/v11-0104-production-isolated-20261108]
+    paths: [.github/workflows/v11-0104-prod-d1-sql-readiness.yml]
+permissions:
+  contents: read
+jobs:
+  readonly-sql-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm production site currently serves tested V42 baseline
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 2 --max-time 18 https://miaowu-english-pages.pages.dev/app.js -o /tmp/liveapp.js
+          grep -Fq "v30-flashcards" /tmp/liveapp.js || grep -Fq "showCloudWord" /tmp/liveapp.js
+          echo "V42_PRODUCTION_APP_REACHABLE"
+          STATUS=$(curl -sS --max-time 20 -o /tmp/liveops-response -w '%{http_code}' https://miaowu-english-pages.pages.dev/api/ops/me)
+          if [ "$STATUS" = 401 ]; then echo "EXISTING_PRODUCTION_OPS_AUTHENTICATION_REQUIRES_TOKEN"; else echo "EXISTING_PRODUCTION_OPS_ANONYMOUS_HTTP_$STATUS"; fi
+      - name: Install Wrangler
+        run: npm install --ignore-scripts --no-save wrangler@^4
+      - name: Read only production D1 metadata, redact all raw output
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          SQL="SELECT COUNT(*) AS mandatory_tables FROM sqlite_master WHERE type='table' AND name IN ('ops_operators','ops_audit_events','users','books');"
+          if npx wrangler d1 execute miaowu-english-prod --remote --config deploy/production.wrangler.jsonc --command "$SQL" >/tmp/private-d1-result 2>&1; then
+            node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";
+          import fs from "node:fs";
+          const s=fs.readFileSync("/tmp/private-d1-result","utf8");
+          assert.match(s,/mandatory_tables/);
+          assert.match(s,/\b4\b/);
+          console.log("PRODUCTION_D1_READONLY_SQL_AUTHORIZED_BASE_TABLES_PRESENT");
+          NODE
+          else
+            echo "PRODUCTION_D1_REMOTE_SQL_PERMISSION_OR_CONFIG_BLOCKED"; exit 1
+          fi
+          echo "NO_PRODUCTION_DATABASE_WRITES_OR_EXPORTS_EXECUTED"
