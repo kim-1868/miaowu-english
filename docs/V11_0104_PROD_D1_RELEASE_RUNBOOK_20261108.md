@@ -5,7 +5,7 @@
 - 用户授权正式站同步 01–04；独立 V42 生产候选为 Draft PR #192。
 - 离线验证 466 项 / 465 通过 / 0 失败 / 1 跳过，默认 43 资源，公告版 47 资源；正式 Worker 编译 dry-run 通过。
 - GitHub 已有 CF 凭证可以读取生产 Worker 元数据，但 D1 Time Travel CLI 读取失败；**未执行任何生产 D1 SQL、备份导出、Cloudflare 生产发布**。
-- 用户已通过 Cloudflare Dashboard 的 D1 Time Travel 页面生成恢复书签。**书签只由用户私下保存，不得回写到源码、issue、CI 输出；7 天有效窗口以用户的 Cloudflare 页面为准。**
+- 用户已通过 Cloudflare Dashboard 的 D1 Time Travel 页面生成恢复书签，但是否另行私下保存尚待确认。**书签应只由用户私下保存，不得回写到源码、issue、CI 输出；7 天有效窗口以用户的 Cloudflare 页面为准。**
 - 必须分别通过 ① D1 读写前置检查 ② 持久独立备份/恢复方案 ③ 增量 015 公告表创建 ④ 限定正式发布静态+Worker+公告开关 ⑤ 发布后游客/运营/学习全链路验证。任何一项不能完成则不声称全站上线。
 
 ## A. 站长在 Cloudflare Dashboard 对真实生产 D1 做只读核对（不修改任何数据）
@@ -57,4 +57,4 @@ SELECT name,type FROM sqlite_master
 - **绝不**记录 D1 Bookmark 原文、用户敏感数据、密钥或 Pepper。
 
 ## 发布状态
-**PRODUCTION_NOT_DEPLOYED / D1_SCHEMA_NOT_MIGRATED / USER_BOOKMARK_RECORDED_PRIVATELY.**
+**PRODUCTION_NOT_DEPLOYED / D1_SCHEMA_NOT_MIGRATED / USER_BOOKMARK_GENERATED__PRIVATE_STORAGE_UNCONFIRMED.**
