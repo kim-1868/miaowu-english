@@ -53,7 +53,7 @@ test("S152: opening a permitted chapter saves the first fraction to make it the 
 test("S152: homepage script is cache-busted without replacing approved visuals",()=>{
   assert.match(html,/id="heroRead"/);
   assert.match(html,/href="\/styles.css\?v=20261104-v28-night-selection"/);
-  assert.match(html,/src="\/app.js\?v=20261108-wave2-bookshelf-grid-pagination-20261109"/);
+  assert.match(html,/src="\/app.js\?v=20261109-favorites-wordbook12"/);
   assert.match(app,/function updateHeroReadLabel\(/);
   assert.match(app,/user&&cloudProgress\.length\?'继续上次阅读':'开始阅读'/);
 });
