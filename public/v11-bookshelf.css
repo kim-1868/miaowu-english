@@ -56,3 +56,19 @@ html[data-theme="dark"] .v11-personal-shelf,
 html[data-theme="dark"] .v11-my-shelf-card{background:var(--paper,#302a30)}
 html[data-theme="dark"] .v11-my-shelf-page-controls button{color:var(--wine,#f4d5df)}
 html[data-theme="dark"] .v11-my-shelf-page-controls button[aria-current="page"]{color:#fff}
+
+
+/* Favorites-only shelf: separate, compact unbookmarked reading history. */
+.v11-recent-reading{margin-top:22px;border-top:1px solid var(--line,#e7ddd4);padding-top:18px}
+.v11-recent-reading h3{font:normal 20px/1.4 'Songti SC',serif;color:var(--wine,#672b41);margin:0 0 6px}
+.v11-recent-reading h3 small{font:normal 11px/1.5 sans-serif;color:var(--muted,#847675);margin-left:7px}
+.v11-recent-intro,.v11-recent-empty{font-size:12px;color:var(--muted,#847675);margin:0 0 12px;line-height:1.7}
+.v11-recent-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.v11-recent-item{border:1px solid var(--line,#e7ddd4);border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;min-width:0}
+.v11-recent-info{display:grid;gap:4px;min-width:0}
+.v11-recent-info strong{font-size:14px;font-weight:600;color:var(--ink,#322a2b);overflow-wrap:anywhere}
+.v11-recent-info small{font-size:11px;color:var(--muted,#847675)}
+.v11-recent-actions{display:flex;gap:6px;flex-wrap:wrap;flex:none}
+.v11-recent-actions button{font-size:11px;min-height:38px;padding:6px 9px}
+@media(max-width:900px){.v11-recent-list{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:420px){.v11-recent-item{align-items:stretch;flex-direction:column}.v11-recent-actions{width:100%}.v11-recent-actions button{flex:1}}
