@@ -131,7 +131,8 @@
     const SHELF_PAGE_SIZE=9;
     let activeCloud=null;
     let cloudBooks=[],cloudSaved=new Map(),cloudProgress=[],cloudSessionKey=null,cloudLearningSequence=0;
-    let personalBooks=[],personalBooksRequest=0,personalShelfFilter='reading';
+    let personalBooks=[],personalBooksRequest=0,personalShelfFilter='reading',personalShelfPage=1;
+    const PERSONAL_SHELF_PAGE_SIZE=9;
     let initialSessionPromise=Promise.resolve(),heroResumeBusy=false;
     function updateHeroReadLabel(){
       const btn=$('heroRead');if(!btn)return;
@@ -323,13 +324,17 @@
       if(!user){root.replaceChildren();return}
       const groups=[{state:'want',label:'想读'},{state:'reading',label:'阅读中'},{state:'finished',label:'已读完'}];
       const matches=personalBooks.filter(b=>b.state===personalShelfFilter);
+      const totalPages=Math.max(1,Math.ceil(matches.length/PERSONAL_SHELF_PAGE_SIZE));
+      personalShelfPage=Math.max(1,Math.min(personalShelfPage,totalPages));
+      const offset=(personalShelfPage-1)*PERSONAL_SHELF_PAGE_SIZE;
+      const pageBooks=matches.slice(offset,offset+PERSONAL_SHELF_PAGE_SIZE);
       root.innerHTML='<div class="v11-my-shelf-header"><div><span class="eyebrow">MY STORY SHELF</span><h2>我的书架</h2>'+
         '<p>喜欢的故事先收藏；开始阅读后，系统会根据云端进度自动整理。</p></div></div>'+
         '<div class="v11-my-shelf-tabs" role="group" aria-label="书架阅读状态">'+
         groups.map(g=>'<button type="button" data-personal-filter="'+g.state+'" class="'+
           (personalShelfFilter===g.state?'active':'')+'" aria-pressed="'+String(personalShelfFilter===g.state)+'">'+
           g.label+' <span>'+personalBooks.filter(b=>b.state===g.state).length+'</span></button>').join('')+'</div>'+
-        '<div class="v11-my-shelf-list">'+(matches.length?matches.map(book=>{
+        '<div class="v11-my-shelf-list">'+(matches.length?pageBooks.map(book=>{
           const chapterCount=Math.max(0,Number(book.chapter_count)||0);
           const completed=Math.max(0,Number(book.completed_chapters)||0);
           const coverVersion=/^cover-d1-([a-f0-9]{24})$/.exec(book.cover_key||'');
@@ -339,16 +344,36 @@
             book.state==='finished'?'所有已发布章节均已完成':'最近读到第 '+(Number(book.last_chapter_no)||1)+' 章';
           return '<article class="v11-my-shelf-card" data-personal-book="'+safe(book.book_id)+'">'+
             '<div class="v11-my-shelf-cover">'+(cover?'<img src="'+safe(cover)+'" alt="《'+safe(book.title)+'》封面" loading="lazy">':'<span>✧</span>')+'</div>'+
-            '<div class="v11-my-shelf-info"><h3>'+safe(book.title)+'</h3><p>'+safe(note)+'</p>'+
+            '<div class="v11-my-shelf-info"><h3 title="'+safe(book.title)+'">'+safe(book.title)+'</h3><p>'+safe(note)+'</p>'+
             '<small>已完成 '+completed+' / '+chapterCount+' 章 · '+safe(book.category_slug.toUpperCase())+'</small>'+
             '<div class="v11-my-shelf-actions"><button class="primary" type="button" data-my-shelf-read="'+safe(book.book_id)+'">'+
             (book.state==='want'?'查看故事 →':'继续阅读 →')+'</button>'+
-            '<button class="secondary-btn" type="button" data-my-shelf-save="'+safe(book.book_id)+'">'+
+            '<button class="secondary-btn" type="button" data-my-shelf-save="'+safe(book.book_id)+'" aria-label="'+
+            (book.bookmarked?'移除《'+safe(book.title)+'》的收藏':'收藏《'+safe(book.title)+'》')+'">'+
             (book.bookmarked?'✓ 已收藏 · 移除':'♡ 加入书架')+'</button></div></div></article>';
         }).join(''):'<p class="v11-my-shelf-empty">这个分类暂时还没有故事，去首页挑一本喜欢的吧。</p>')+'</div>'+
+        (totalPages>1?'<nav class="v11-my-shelf-pagination" aria-label="我的书架分页">'+
+          '<span class="v11-my-shelf-page-summary">共 '+matches.length+' 本 · 第 '+personalShelfPage+' / '+totalPages+' 页</span>'+
+          '<div class="v11-my-shelf-page-controls">'+
+          '<button type="button" data-personal-page="prev" aria-label="上一页"'+(personalShelfPage===1?' disabled':'')+'>上一页</button>'+
+          Array.from({length:totalPages},(_,i)=>i+1).filter(n=>n===1||n===totalPages||Math.abs(n-personalShelfPage)<=1)
+            .map((n,i,arr)=>(i&&n-arr[i-1]>1?'<span aria-hidden="true" class="v11-my-shelf-page-ellipsis">…</span>':'')+
+              '<button type="button" data-personal-page="'+n+'" aria-label="第 '+n+' 页"'+
+              (n===personalShelfPage?' aria-current="page" disabled':'')+'>'+n+'</button>').join('')+
+          '<button type="button" data-personal-page="next" aria-label="下一页"'+(personalShelfPage===totalPages?' disabled':'')+'>下一页</button>'+
+          '</div></nav>':'')+
         '<p class="v11-my-shelf-foot">移出书架不会删除阅读进度。付费章节仍需对应学习分类的阅读权限。</p>';
       root.querySelectorAll('[data-personal-filter]').forEach(btn=>btn.onclick=()=>{
-        personalShelfFilter=btn.dataset.personalFilter;renderPersonalBookshelf();
+        if(personalShelfFilter===btn.dataset.personalFilter)return;
+        personalShelfFilter=btn.dataset.personalFilter;personalShelfPage=1;renderPersonalBookshelf();
+      });
+      root.querySelectorAll('[data-personal-page]').forEach(btn=>btn.onclick=()=>{
+        const target=btn.dataset.personalPage;
+        const page=target==='prev'?personalShelfPage-1:target==='next'?personalShelfPage+1:Number(target);
+        if(!Number.isInteger(page)||page<1||page>totalPages||page===personalShelfPage)return;
+        personalShelfPage=page;renderPersonalBookshelf();
+        const heading=root.querySelector('.v11-my-shelf-header');
+        heading?.scrollIntoView({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth',block:'start'});
       });
       root.querySelectorAll('[data-my-shelf-read]').forEach(btn=>btn.onclick=()=>{
         const book=personalBooks.find(x=>x.book_id===btn.dataset.myShelfRead);
