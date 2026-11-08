@@ -1,3 +1,4 @@
+# CI retry: remove duplicate cache suffix in legacy assertion strings.
 # Re-run after updating filter-reset test for independent demo cursor.
 # Retry test assertions after verifying live pagination remains unchanged.
 # Final confirm full totals beyond 200 bookmarked words, then redeploy protected staging.
