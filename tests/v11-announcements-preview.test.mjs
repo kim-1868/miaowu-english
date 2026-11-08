@@ -506,3 +506,35 @@ test("V1.1 operator console contains setup entry and derives optional summary fr
  assert.match(root,/ops-updates\.js\?v=20261107-ops2/);
  assert.match(html,/updates=20261107-ops2/);
 });
+
+
+test("V1.1 approved 01–04 candidate: production notices stay disabled by default and opt in only with isolated schema",async()=>{
+ const f=fixture({environment:"production"});try{
+  await f.ready();
+  assert.equal((await call(f.env,"/api/updates/latest")).status,404);
+  assert.equal((await call(f.env,"/api/ops/updates","GET",null,{authorized:true})).status,404);
+  f.env.OPS_ANNOUNCEMENTS_ENABLED="true";
+  // A live production operator cannot run the staging-only schema setup route.
+  assert.equal((await call(f.env,"/api/ops/updates/setup","POST",{}, {authorized:true})).status,404);
+  assert.equal((await call(f.env,"/api/updates/latest")).status,200);
+  assert.equal((await call(f.env,"/api/updates/latest")).data.latest,null);
+  const draft=await call(f.env,"/api/ops/updates","POST",form,{authorized:true});
+  assert.equal(draft.status,201);
+  assert.equal((await call(f.env,"/api/updates/latest")).data.latest,null,
+   "draft must remain invisible");
+  assert.equal((await call(f.env,"/api/updates")).data.total,0);
+  const publish=await call(f.env,"/api/ops/updates/"+draft.data.id+"/publish",
+   "POST",{revision:1},{authorized:true});
+  assert.equal(publish.status,200);
+  assert.equal((await call(f.env,"/api/updates/latest")).data.latest.id,draft.data.id);
+  assert.equal((await call(f.env,"/api/updates")).data.total,1);
+  const revoked=await call(f.env,"/api/ops/updates/"+draft.data.id+"/withdraw",
+   "POST",{revision:2},{authorized:true});
+  assert.equal(revoked.status,200);
+  assert.equal((await call(f.env,"/api/updates")).data.total,0);
+  f.env.OPS_ANNOUNCEMENTS_ENABLED="false";
+  assert.equal((await call(f.env,"/api/updates/latest")).status,404,
+   "disabling the flag hides announcement routes even with stored notices");
+  assert.equal((await call(f.env,"/api/ops/updates","GET",null,{authorized:true})).status,404);
+ }finally{f.db.close()}
+});

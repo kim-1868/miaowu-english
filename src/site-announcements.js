@@ -237,8 +237,12 @@ async function adminRoute(req,env,path){
  return respond({id,status:action==="publish"?"published":"withdrawn",revision:expectedRevision+1});
 }
 export async function handleSiteAnnouncements(req,env,path){
- // Preview ONLY. This feature must not be reachable on the public site yet.
- if(env.APP_ENV!=="staging")return err("NOT_FOUND",404);
+ // The owner-approved release candidate is fail-closed in production by default.
+ // Production may only expose notice reads/writes after independent schema,
+ // review and an explicit per-Worker feature-flag decision. Staging is unchanged.
+ const allowed=env.APP_ENV==="staging"||
+  (env.APP_ENV==="production"&&env.OPS_ANNOUNCEMENTS_ENABLED==="true");
+ if(!allowed)return err("NOT_FOUND",404);
  if(!env.DB)return err("DATABASE_UNAVAILABLE",503);
  if(path.startsWith("/api/ops/updates"))return adminRoute(req,env,path);
  try{return await publicRoute(req,env,path)}

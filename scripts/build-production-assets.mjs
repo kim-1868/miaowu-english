@@ -21,29 +21,38 @@ export const PRODUCTION_ASSET_ALLOWLIST=Object.freeze([
  "shelf-postgrad-watercolor.webp","shelf-ielts-watercolor.webp",
  "rejected-family-second-life.html","claim.html","claim.css","claim.js"
 ]);
+// Opt-in assets for the owner's 01–04 release candidate. The normal build
+// STILL strips announcements; this list is only included with explicit approval.
+export const APPROVED_ANNOUNCEMENT_ASSETS=Object.freeze([
+ "site-updates.css","site-updates.js","updates.html","ops-updates.js"
+]);
+export function plannedProductionAssets({includeAnnouncements=false}={}){
+ return includeAnnouncements
+  ? [...PRODUCTION_ASSET_ALLOWLIST,...APPROVED_ANNOUNCEMENT_ASSETS]
+  : [...PRODUCTION_ASSET_ALLOWLIST];
+}
 const forbidden=/^(?:account-test|reading-test|editor|design-reference)/i;
-export function auditProductionAssets(){
+export function auditProductionAssets({includeAnnouncements=false}={}){
  const files=readdirSync(out).sort();
- const allowed=[...PRODUCTION_ASSET_ALLOWLIST].sort();
+ const allowed=plannedProductionAssets({includeAnnouncements}).sort();
  if(JSON.stringify(files)!==JSON.stringify(allowed))
   throw Error("UNEXPECTED_OR_MISSING_PRODUCTION_ASSET");
  for(const file of files){
   if(forbidden.test(file))throw Error("QA_ASSET_IN_PRODUCTION_"+file);
  }
- for(const entry of ["index.html","live.html","ops.html","claim.html","rainy-night.html","rejected-family-second-life.html"]){
+ for(const entry of ["index.html","live.html","ops.html","claim.html","rainy-night.html","rejected-family-second-life.html",...(includeAnnouncements?["updates.html"]:[])]){
   const body=readFileSync(join(out,entry),"utf8");
   const refs=[...body.matchAll(/(?:src|href)=["'](\/[a-zA-Z][^"'?#]*)["']/g)]
     .map(x=>x[1].slice(1));
   for(const ref of refs){
-   if(!PRODUCTION_ASSET_ALLOWLIST.includes(ref))
+   if(!allowed.includes(ref))
     throw Error("UNBUNDLED_PRODUCTION_ASSET_REFERENCE_"+ref);
   }
  }
  return {status:"REVIEWED_STATIC_ASSETS_ONLY",assets:allowed};
 }
-// The news panel is approved for the PASSWORD-GATED staging preview only.
-// Do not include it or its public history route in the production bundle until
-// the owner separately accepts a production announcements release.
+// Default production output stays unchanged until a separate reviewed release.
+// This sanitizer is deliberately bypassed ONLY in the opt-in candidate build.
 function stripStagingUpdatesFromProduction(name,html){
   if(name==="index.html"){
     html=html.replace(/\s*<link[^>]*href="\/site-updates\.css[^"]*"[^>]*>/g,"")
@@ -58,22 +67,25 @@ function stripStagingUpdatesFromProduction(name,html){
     throw Error("PREVIEW_ANNOUNCEMENTS_LEAKED_INTO_PRODUCTION_"+name);
   return html;
 }
-export function buildProductionAssets(){
+export function buildProductionAssets({includeAnnouncements=false}={}){
  rmSync(out,{recursive:true,force:true});
  mkdirSync(out,{recursive:true});
- for(const name of PRODUCTION_ASSET_ALLOWLIST){
+ for(const name of plannedProductionAssets({includeAnnouncements})){
   if(name==="rejected-family-second-life.html"){
    writeFileSync(join(out,name),buildS86FreeChapter());
   }else if(name==="rainy-night.html"){
    writeFileSync(join(out,name),buildRainyNightPublicSample());
   }else if(name==="index.html"||name==="ops.html"){
-    writeFileSync(join(out,name),stripStagingUpdatesFromProduction(name,
-      readFileSync(join(source,name),"utf8")));
+    const html=readFileSync(join(source,name),"utf8");
+    writeFileSync(join(out,name),includeAnnouncements?html:
+      stripStagingUpdatesFromProduction(name,html));
   }else copyFileSync(join(source,name),join(out,name));
  }
- return auditProductionAssets();
+ return auditProductionAssets({includeAnnouncements});
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
- try{console.log(JSON.stringify(buildProductionAssets(),null,2))}
+ try{console.log(JSON.stringify(buildProductionAssets({
+  includeAnnouncements:process.argv.includes("--approved-announcements")
+ }),null,2))}
  catch(e){console.error("PRODUCTION_ASSET_CHECK_FAILED:",e.message);process.exitCode=1}
 }
