@@ -31,6 +31,6 @@ test("preview CSS works with phone and dark mode, real pages remain intact",()=>
  assert.match(css,/html\[data-theme="dark"\]/);
  assert.match(html,/app\.js\?v=20261109-favorites-wordbook12-demo/);
  assert.match(html,/v11-wordbook\.css\?v=20261109-wordbook12-demo/);
- assert.match(app,/wordbookPage=next;if\(!previewEnabled\)wordbookData=null;renderWords\(\)/)===false; // Existing server-side pager remains independent.
+ assert.match(app,/wordbookPage=next;wordbookData=null;renderWords\(\)/); // Real pagination remains independent.
  assert.match(app,/if\(!previewBookplateAllowed\(\)\|\|!user\)\{wordbookDemo=false;return;\}/);
 });
