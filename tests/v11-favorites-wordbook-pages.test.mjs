@@ -38,7 +38,7 @@ test('responsive pagination styles and cache busting are included in approved pr
  assert.match(css,/bookplate-pagination/);assert.match(css,/@media\(max-width:620px\)/);
  assert.match(css,/aria-current=page/);
  assert.match(shelf,/v11-recent-reading/);assert.match(shelf,/@media\(max-width:420px\)/);
- assert.match(html,/app\.js\?v=20261109-favorites-wordbook12/);
+ assert.match(html,/app\.js\?v=20261109-favorites-wordbook12-demo/);
  assert.match(html,/v11-wordbook\.css\?v=20261109-wordbook12/);
  assert.match(html,/v11-bookshelf\.css\?v=20261109-favorites/);
  const onboard=read('src/onboarding.js');
