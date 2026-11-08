@@ -40,12 +40,27 @@ function preserveOriginalAnchors(before,after){
   }
  }
 }
+// Drafts that have never been published or studied may be fully rewritten.
+// Retain every previously referenced study word somewhere in the same book;
+// paragraph-local anchors are not meaningful for a genuinely new narrative.
+function preserveDraftReflowWords(originalChapters,newChapters){
+ const before=new Set(),after=new Set();
+ for(const chapter of originalChapters)
+  for(const paragraph of oldAnchors(chapter))
+   for(const id of paragraph)before.add(id);
+ for(const chapter of newChapters)
+  for(const paragraph of chapter.paragraphs)
+   for(const segment of paragraph.segments)
+    if(segment.wordId)after.add(segment.wordId);
+ for(const id of before)
+  if(!after.has(id))throw Error("ORIGINAL_STUDY_WORD_REMOVED");
+}
 const checkChanged=()=>({
  sql:"INSERT INTO books(id,category_id,title) SELECT ?,?,? WHERE changes()<>1",
  params:[] // filled per target book
 });
 export function planDraftRevision({validated,originalBook,originalChapters,
- originalWords,externalWordIds=[],expectedVersion,requestId,actorId}){
+ originalWords,externalWordIds=[],expectedVersion,requestId,actorId,allowSafeReflow=false}){
  const {book,chapters,words,mentionCount}=validated;
  if(!originalBook||originalBook.status!=="draft"||originalBook.id!==book.id||
     originalBook.category_id!==book.category||originalBook.title!==book.title)
@@ -58,13 +73,14 @@ export function planDraftRevision({validated,originalBook,originalChapters,
  if(!Number.isSafeInteger(expectedVersion)||expectedVersion<0||
     !REQUEST_ID.test(requestId)||!ID.test(actorId))
   throw Error("INVALID_REVISION_VERSION_OR_REQUEST");
+ if(allowSafeReflow)preserveDraftReflowWords(originalChapters,chapters);
  const oldById=new Map(originalChapters.map(c=>[c.id,c]));
  const newById=new Map(chapters.map(c=>[c.id,c]));
  if(oldById.size!==chapters.length||newById.size!==chapters.length)throw Error("DUPLICATE_CHAPTER");
  for(const ch of chapters){
   const old=oldById.get(ch.id);
   if(!old||old.chapter_no!==ch.number)throw Error("CHAPTER_ID_OR_ORDER_CHANGED");
-  preserveOriginalAnchors(old,ch);
+  if(!allowSafeReflow)preserveOriginalAnchors(old,ch);
  }
  const prevWords=new Map(originalWords.map(w=>[w.id,w]));
  const globalOthers=new Set(externalWordIds);
@@ -171,6 +187,25 @@ export async function handleOpsDraftRevision(req,env,path){
  if(!version)return reject("BOOK_VERSION_REQUIRED",409);
  const originals=await stmt(env.DB,
   "SELECT id,chapter_no,title,content_json,is_preview,published_at FROM chapters WHERE book_id=? ORDER BY chapter_no",id).all();
+ // Only an unpublished, never-studied draft may reflow paragraph positions.
+ // Keep the original per-paragraph anchor rules whenever publication or
+ // study history exists. If the history check is unavailable, fail closed.
+ let allowSafeReflow=false;
+ try{
+  const risk=await stmt(env.DB,
+   "SELECT "+ 
+   "(SELECT COUNT(*) FROM reading_progress WHERE chapter_id IN "+
+   "(SELECT id FROM chapters WHERE book_id=?)) AS read_count,"+
+   "(SELECT COUNT(*) FROM review_events WHERE chapter_id IN "+
+   "(SELECT id FROM chapters WHERE book_id=?)) AS review_count,"+
+   "(SELECT COUNT(*) FROM ops_audit_events WHERE resource_type='book' "+
+   "AND resource_id=? AND event_type='book.publish') AS publish_count",
+   id,id,id).first();
+  allowSafeReflow=!!risk&&Number(risk.read_count)===0&&
+   Number(risk.review_count)===0&&Number(risk.publish_count)===0;
+ }catch{
+  return reject("DRAFT_REFLOW_HISTORY_CHECK_UNAVAILABLE",503);
+ }
  const wordIds=valid.words.map(w=>w.id);
  const originalWords=[];
  const externalIds=[];
@@ -188,7 +223,7 @@ export async function handleOpsDraftRevision(req,env,path){
  try{plan=planDraftRevision({validated:valid,originalBook:status,
   originalChapters:originals.results||[],originalWords,
   externalWordIds:externalIds,expectedVersion:version.version,
-  requestId:input.requestId,actorId:auth.operator.id})}
+  requestId:input.requestId,actorId:auth.operator.id,allowSafeReflow})}
  catch(e){return reject(e.message==="SHARED_WORD_CARD_CONFLICT"?"SHARED_WORD_CARD_CONFLICT":
    "REVISED_PACKAGE_INCOMPATIBLE",409)}
  try{await env.DB.batch(plan.statements.map(x=>stmt(env.DB,x.sql,...x.params)))}
