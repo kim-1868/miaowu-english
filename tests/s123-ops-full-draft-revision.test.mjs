@@ -102,6 +102,10 @@ test("S123 safe full-book reflow may remove obsolete anchors while keeping the w
   for(const chapter of rewritten.validated.chapters)
    for(const paragraph of chapter.paragraphs)
     paragraph.segments=paragraph.segments.filter(s=>s.wordId!==id);
+  // Real HTTP import revalidates the candidate and recomputes mentionCount;
+  // the synthetic test mutates validated data directly, so mirror that step.
+  rewritten.validated.mentionCount=rewritten.validated.chapters.reduce(
+   (sum,ch)=>sum+ch.paragraphs.reduce((n,p)=>n+p.segments.filter(s=>s.wordId).length,0),0);
   // Without explicit safe-history approval, the original guard still rejects.
   assert.throws(()=>planDraftRevision(rewritten),/ORIGINAL_STUDY_ANCHOR_REMOVED/);
   rewritten.allowSafeReflow=true;
