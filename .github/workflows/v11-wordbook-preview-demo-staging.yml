@@ -1,3 +1,4 @@
+# Re-run after updating filter-reset test for independent demo cursor.
 # Retry test assertions after verifying live pagination remains unchanged.
 # Final confirm full totals beyond 200 bookmarked words, then redeploy protected staging.
 # Recheck after adapting legacy render harness to paginated server results.
