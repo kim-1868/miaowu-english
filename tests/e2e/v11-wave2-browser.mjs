@@ -107,6 +107,7 @@ try{
  await page.locator("#topRead").click();
  await page.locator("#player.show").waitFor({state:"visible",timeout:8000});
  ok("EXPLICIT_READ_BUTTON_STARTS_PLAYER",true);
+ ok("READ_START_CLOSES_STUDY_CARD_TO_UNBLOCK_PLAYER",!(await page.locator("#wordPop").evaluate(el=>el.classList.contains("on"))));
  await page.locator("#playerStop").click();
  ok("STOP_NARRATION_DISMISSES_PLAYER",
   !(await page.locator("#player").evaluate(el=>el.classList.contains("show"))));
