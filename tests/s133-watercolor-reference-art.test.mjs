@@ -23,7 +23,7 @@ test("S133 watercolor assets are real standalone WebP resources shipped in produ
   assert.equal(bytes.toString("ascii",0,4),"RIFF");
   assert.equal(bytes.toString("ascii",8,12),"WEBP");
  }
- assert.equal(result.assets.length,43);
+ assert.equal(result.assets.length,46);
 });
 test("S133 homepage uses watermark-free image crops without fake account stats",()=>{
  const html=text("index.html");
