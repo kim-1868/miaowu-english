@@ -39,12 +39,14 @@ jobs:
           assert.match(code,/V11_NOTICE_RELEASE_APPROVED==="true"/);
           assert.match(code,/env\.APP_ENV!=="staging"/);
           NODE
+          echo "STATIC_RELEASE_CONFIG_AND_NOTICE_GUARDS_VERIFIED"
           ORIGIN=https://miaowu-english-pages.pages.dev
           for FILE in app.js chapter-words.js ops-console.js; do
             curl -fsSL --retry 3 --max-time 24 "$ORIGIN/$FILE" -o "/tmp/live-$FILE"
             if ! cmp -s "public/$FILE" "/tmp/live-$FILE"; then
               echo "LIVE_PRODUCTION_CHANGED_AFTER_0204__STOP_$FILE";exit 1
             fi
+            echo "LIVE_APP_STATIC_MATCH_$FILE"
           done
           curl -fsSL --retry 2 --max-time 20 "$ORIGIN/__miaowu_prod_edge_probe" -o /tmp/edge.json
           node --input-type=module <<'NODE'
@@ -54,11 +56,14 @@ jobs:
           NODE
           # Prevent enabling an unconfigured production operator interface.
           OPS_HTML_CODE=$(curl -sS --max-time 20 -o /tmp/ops-live.html -w '%{http_code}' "$ORIGIN/ops.html")
+          echo "CURRENT_PROD_OPS_PAGE_HTTP_$OPS_HTML_CODE"
           test "$OPS_HTML_CODE" = 200
           grep -Fq 'id="opsAuth' /tmp/ops-live.html || grep -Fq 'id="opsKey' /tmp/ops-live.html || grep -Fq 'ops-console.js' /tmp/ops-live.html
           OPS_AUTH_CODE=$(curl -sS --max-time 20 -o /tmp/ops-guest.json -w '%{http_code}' "$ORIGIN/api/ops/me")
+          echo "CURRENT_PROD_OPS_AUTH_HTTP_$OPS_AUTH_CODE"
           test "$OPS_AUTH_CODE" = 401
           NOTICE_BEFORE=$(curl -sS --max-time 20 -o /tmp/notices-before -w '%{http_code}' "$ORIGIN/api/updates/latest")
+          echo "CURRENT_PROD_NOTICE_HTTP_$NOTICE_BEFORE"
           test "$NOTICE_BEFORE" = 404
           echo "LIVE_0204_UNCHANGED__PAGES_SERVICE_BINDING__EXISTING_OPS_ENABLED__NOTICES_CLOSED"
       - name: Re-run all regression tests and review 47 announced production assets
