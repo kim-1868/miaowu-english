@@ -74,7 +74,7 @@ test('S8 original reader embeds chapter word sidebar and secure quick-review con
   assert.match(markup,/id="chapterVocabBody"/);
   assert.match(markup,/id="mobileVocabOpen"/);
   assert.match(markup,/id="chapterVocabToggle"/);
-  assert.match(markup,/src="\\/chapter-words\\.js(?:\\?[^"]*)?"/);
+  assert.match(markup,/src="\/chapter-words\.js(?:\?[^"]*)?"/);
   assert.match(js,/window\.MiaowuChapterWords\?\.openChapter\(id\)/);
   assert.match(js,/window\.MiaowuChapterWords\?\.setWords/);
   assert.match(chapterWords,/\/api\/me\/quick-review/);
