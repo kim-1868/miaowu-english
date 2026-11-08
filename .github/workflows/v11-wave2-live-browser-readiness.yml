@@ -1,0 +1,31 @@
+name: V1.1 Wave2 remote preview real-browser credential preflight
+on:
+  push:
+    branches: [release/v11-wave2-bookshelf-onboarding-20261108]
+    paths: [.github/workflows/v11-wave2-live-browser-readiness.yml]
+permissions:
+  contents: read
+jobs:
+  preview-readonly-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check that remote preview access exists without exposing credentials
+        shell: bash
+        env:
+          STAGING_PREVIEW_PASSWORD: ${{ secrets.STAGING_PREVIEW_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "$STAGING_PREVIEW_PASSWORD" ]; then
+            echo "LIVE_BROWSER_BLOCKED__STAGING_PREVIEW_PASSWORD_NOT_AVAILABLE_IN_GITHUB_ACTIONS"
+            exit 4
+          fi
+          CODE=$(curl -sS --retry 1 --max-time 25 -u "reviewer:$STAGING_PREVIEW_PASSWORD" -o /tmp/wave2-stage-home -w '%{http_code}' \
+            "https://miaowu-english-staging.kim10086a.workers.dev/")
+          if [ "$CODE" != 200 ]; then
+            echo "LIVE_BROWSER_BLOCKED__STAGING_PREVIEW_AUTH_FAILED_HTTP_$CODE"
+            exit 4
+          fi
+          grep -Fq 'id="myBookshelf"' /tmp/wave2-stage-home
+          grep -Fq 'id="mwWelcomeDialog"' /tmp/wave2-stage-home
+          echo "REMOTE_STAGING_AUTH_AND_REAL_UI_READY__NO_USER_DATA_TOUCHED"
