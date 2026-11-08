@@ -1,0 +1,74 @@
+name: V1.1 Wave2 TEST D1 backup and additive schema only
+on:
+  push:
+    branches: [release/v11-wave2-bookshelf-onboarding-20261108]
+    paths: [.github/workflows/v11-wave2-staging-d1.yml]
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-v11-wave2-staging-d1
+  cancel-in-progress: false
+jobs:
+  additive-test-d1-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Require isolated TEST binding and safe additive statements
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";import assert from "node:assert/strict";
+          const c=JSON.parse(fs.readFileSync("wrangler.jsonc","utf8"));
+          assert.equal(c.name,"miaowu-english-staging");
+          assert.equal(c.vars.APP_ENV,"staging");
+          assert.equal(c.d1_databases[0].database_name,"miaowu-english-test");
+          assert.equal(c.d1_databases[0].database_id,"88a817cb-23bb-4ae4-bcb8-92286c4165d4");
+          for(const f of ["009_v11_onboarding.sql","010_v11_my_bookshelf.sql","012_v11_supplemental_dictionary.sql"]){
+            const body=fs.readFileSync("db/"+f,"utf8");
+            assert.match(body,/CREATE TABLE IF NOT EXISTS/);
+            assert.doesNotMatch(body,/DROP\s+TABLE|UPDATE\s+(users|reading_progress|user_words|entitlements)|DELETE\s+FROM\s+(users|reading_progress|user_words|entitlements)/i);
+          }
+          const starter=fs.readFileSync("db/013_v11_supplemental_starter.sql","utf8");
+          assert.match(starter,/INSERT OR IGNORE INTO supplemental_dictionary/);
+          console.log("D1_TEST_ONLY_SAFE_ADDITIVE_SQL_CONFIRMED");
+          NODE
+      - name: Prepare Wrangler
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npm install --no-save --ignore-scripts wrangler@^4
+      - name: Export independent staging backup before any writes (fail closed)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          umask 077
+          npx wrangler d1 export miaowu-english-test --remote --config wrangler.jsonc --output /tmp/miaowu-wave2-staging-pre-schema.sql >/tmp/miaowu-wave2-export-status.log
+          test -s /tmp/miaowu-wave2-staging-pre-schema.sql
+          echo "D1_STAGING_PREMIGRATION_EXPORT_VERIFIED__NO_PRIVATE_BACKUP_EXPOSED_IN_LOGS"
+      - name: Apply only pre-reviewed new tables to the TEST database
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          for f in db/009_v11_onboarding.sql db/010_v11_my_bookshelf.sql db/012_v11_supplemental_dictionary.sql db/013_v11_supplemental_starter.sql; do
+            echo "TEST_D1_ADDITIVE_APPLY"
+            npx wrangler d1 execute miaowu-english-test --remote --config wrangler.jsonc --file "$f" >/tmp/miaowu-wave2-migration.log
+          done
+          npx wrangler d1 execute miaowu-english-test --remote --config wrangler.jsonc --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('user_onboarding','user_bookmarks','supplemental_dictionary') ORDER BY name" > /tmp/miaowu-wave2-test-tables.log
+          grep -Fq 'user_onboarding' /tmp/miaowu-wave2-test-tables.log
+          grep -Fq 'user_bookmarks' /tmp/miaowu-wave2-test-tables.log
+          grep -Fq 'supplemental_dictionary' /tmp/miaowu-wave2-test-tables.log
+          echo "WAVE2_TEST_D1_SCHEMA_READY__PRODUCTION_D1_NEVER_ACCESSED"
