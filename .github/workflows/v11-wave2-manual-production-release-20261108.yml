@@ -1,0 +1,158 @@
+name: V1.1 Wave2 controlled production release (MANUAL ONLY)
+on:
+  workflow_dispatch:
+    inputs:
+      release_confirmation:
+        description: 'Type DEPLOY_WAVE2_AFTER_STAGING_ACCEPTED (only after real staging account acceptance)'
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  guard-test-deploy:
+    if: github.repository == 'kim-1868/miaowu-english'
+    runs-on: ubuntu-latest
+    timeout-minutes: 38
+    steps:
+      - name: Require deliberate explicit confirmation
+        env:
+          RELEASE_CONFIRMATION: ${{ inputs.release_confirmation }}
+        run: |
+          test "$RELEASE_CONFIRMATION" = 'DEPLOY_WAVE2_AFTER_STAGING_ACCEPTED'
+      - uses: actions/checkout@v4
+        with:
+          ref: b859dd2cedb96f904e112192a486e240e4f32cb4
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Lock exact candidate and safe production D1 configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "b859dd2cedb96f904e112192a486e240e4f32cb4"
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          const cfg=JSON.parse(fs.readFileSync('deploy/production.wrangler.jsonc','utf8'));
+          assert.equal(cfg.name,'miaowu-english-production');
+          assert.equal(cfg.vars.APP_ENV,'production');
+          assert.equal(cfg.d1_databases[0].database_name,'miaowu-english-prod');
+          assert.equal(cfg.d1_databases[0].database_id,'649c71b3-340c-49bf-b806-3d39256851d3');
+          assert.equal(cfg.workers_dev,false);
+          assert.equal(cfg.preview_urls,false);
+          console.log('EXACT_CANDIDATE_SHA_AND_PRODUCTION_D1_BINDING_LOCKED');
+          NODE
+      - name: Recheck regression tests, preserve announcement and build exactly 50 assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+          node scripts/build-production-assets.mjs --approved-announcements
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';import fs from 'node:fs';
+          import {auditProductionAssets} from './scripts/build-production-assets.mjs';
+          assert.equal(auditProductionAssets({withAnnouncements:true}).assets.length,50);
+          const html=fs.readFileSync('dist-production/public/index.html','utf8');
+          for(const key of ['id="siteUpdateBanner"','id="myBookshelf"','id="mwWelcomeDialog"'])assert.ok(html.includes(key));
+          const app=fs.readFileSync('dist-production/public/app.js','utf8');
+          assert.match(app,/closeWord\(\);\s*stopReading\(\)/);
+          assert.match(app,/function positionStudyPopover/);
+          assert.match(fs.readFileSync('dist-production/public/ops-updates.js','utf8'),/updatesLocalPreviewDialog/);
+          console.log('ANNOUNCEMENTS_VOICE_GUARD_AND_WAVE2_50_ASSETS_PRESERVED');
+          NODE
+      - name: Install production dry-run compiler
+        run: npm install --no-save --ignore-scripts 'wrangler@^4'
+      - name: Prepare announcement-preserving production config and compile only
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const path='deploy/production.wrangler.jsonc';
+          const cfg=JSON.parse(fs.readFileSync(path,'utf8'));
+          cfg.vars.OPS_ANNOUNCEMENTS_ENABLED='true';
+          cfg.vars.V11_NOTICE_RELEASE_APPROVED='true';
+          fs.writeFileSync('deploy/.wave2-approved-prod.jsonc',JSON.stringify(cfg,null,2)+'\n');
+          NODE
+          node scripts/check-production-config.mjs deploy/.wave2-approved-prod.jsonc
+          npx wrangler deploy --dry-run --config deploy/.wave2-approved-prod.jsonc --outdir .wrangler/wave2-prod-before-release
+      - name: Check current live Worker version and exact previous source before any mutation
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npx wrangler deployments status --name miaowu-english-production --config deploy/.wave2-approved-prod.jsonc >/tmp/wave2-prod-before-deployment.txt
+          grep -Fq '4bfe4601-c206-48d3-891a-630501c093aa' /tmp/wave2-prod-before-deployment.txt || { echo 'LIVE_WORKER_VERSION_CHANGED_ABORT'; exit 1; }
+          ORIGIN='https://miaowu-english-pages.pages.dev'
+          BASE='3217c72ed38f3edf57807e6d24e5d3b0aeeba6aa'
+          for file in app.js ops-console.js ops-updates.js site-updates.js v11-responsive.css; do
+            git show "$BASE:public/$file" >"/tmp/wave2-known-$file"
+            curl -fsSL --retry 2 --max-time 25 "$ORIGIN/$file?wave2_baseline_check=$(git rev-parse --short HEAD)" -o "/tmp/wave2-live-$file"
+            cmp -s "/tmp/wave2-known-$file" "/tmp/wave2-live-$file" || { echo "LIVE_SOURCE_MISMATCH_ABORT_$file"; exit 1; }
+          done
+          test "$(curl -sS --max-time 20 -o /tmp/wave2-prod-ops-anon -w '%{http_code}' "$ORIGIN/api/ops/me")" = 401
+          curl -fsSL --max-time 20 "$ORIGIN/__miaowu_prod_edge_probe" -o /tmp/wave2-prod-edge.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';import assert from 'node:assert/strict';
+          const x=JSON.parse(fs.readFileSync('/tmp/wave2-prod-edge.json','utf8'));
+          assert.equal(x.productionBindingPresent,true);
+          assert.equal(x.ok,true);
+          NODE
+          echo 'PRODUCTION_VERSION_AND_LIVE_BASELINE_PINNED_SAFE_TO_DEPLOY'
+      - name: Deploy only isolated approved Wave2 Worker and smoke; auto rollback on smoke failure
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          deployed=0
+          rollback_on_failure(){
+            rc=$?
+            if [ "$deployed" = 1 ]; then
+              echo 'WAVE2_SMOKE_FAILED_ATTEMPT_WORKER_ROLLBACK'
+              npx wrangler rollback --name miaowu-english-production --config deploy/.wave2-approved-prod.jsonc --message 'Wave2 rollback after failed smoke' || echo 'MANUAL_WORKER_ROLLBACK_REQUIRED'
+            fi
+            exit "$rc"
+          }
+          trap rollback_on_failure ERR
+          npx wrangler deploy --keep-vars --config deploy/.wave2-approved-prod.jsonc
+          deployed=1
+          ORIGIN='https://miaowu-english-pages.pages.dev'
+          ok=0
+          for i in $(seq 1 15); do
+            if curl -fsSL --max-time 20 "$ORIGIN/onboarding.js?wave2=$i" -o /tmp/wave2-onboarding.js &&
+               curl -fsSL --max-time 20 "$ORIGIN/v11-bookshelf.css?wave2=$i" -o /tmp/wave2-bookshelf.css &&
+               grep -Fq 'mwWelcome' /tmp/wave2-onboarding.js;then ok=1;break;fi
+            sleep 3
+          done
+          test "$ok" = 1
+          curl -fsSL --max-time 20 "$ORIGIN/?wave2=smoke" -o /tmp/wave2-home.html
+          grep -Fq 'id="myBookshelf"' /tmp/wave2-home.html
+          grep -Fq 'id="mwWelcomeDialog"' /tmp/wave2-home.html
+          grep -Fq 'id="siteUpdateBanner"' /tmp/wave2-home.html
+          curl -fsSL --max-time 20 "$ORIGIN/ops" -o /tmp/wave2-ops.html
+          grep -Fq 'updatesLocalPreviewDialog' /tmp/wave2-ops.html
+          curl -fsSL --max-time 20 "$ORIGIN/app.js?wave2=smoke" -o /tmp/wave2-app.js
+          grep -Fq 'function positionStudyPopover' /tmp/wave2-app.js
+          grep -Fq 'closeWord();' /tmp/wave2-app.js
+          test "$(curl -sS --max-time 20 -o /tmp/wave2-ops-auth -w '%{http_code}' "$ORIGIN/api/ops/me")" = 401
+          curl -fsSL --max-time 20 "$ORIGIN/api/updates/latest" -o /tmp/wave2-updates.json
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';import fs from 'node:fs';
+          assert.equal(JSON.parse(fs.readFileSync('/tmp/wave2-updates.json','utf8')).available,true);
+          NODE
+          npx wrangler deployments status --name miaowu-english-production --config deploy/.wave2-approved-prod.jsonc
+          echo 'WAVE2_PRODUCTION_DEPLOYED_AND_PUBLIC_SMOKES_PASS__D1_ALREADY_MIGRATED__NO_SCHEMA_WRITES'
+          trap - ERR
