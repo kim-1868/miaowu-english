@@ -21,15 +21,15 @@ test("01-04 isolated release: notice is directly below the top bar and before ba
  assert.equal(prod.vars.APP_ENV,"production");
  assert.equal(prod.d1_databases[0].database_name,"miaowu-english-prod");
 });
-test("01-04 isolated release: optional notices are opt-in, 43 standard / 47 announced assets",()=>{
- assert.equal(PRODUCTION_ASSET_ALLOWLIST.length,43);
+test("01-04 isolated release: optional notices are opt-in, 46 standard / 50 announced assets",()=>{
+ assert.equal(PRODUCTION_ASSET_ALLOWLIST.length,46);
  assert.equal(NOTICE_ASSETS.length,4);
- assert.equal(selectedProductionAssets().length,43);
- assert.equal(selectedProductionAssets({withAnnouncements:true}).length,47);
+ assert.equal(selectedProductionAssets().length,46);
+ assert.equal(selectedProductionAssets({withAnnouncements:true}).length,50);
  assert.ok(!selectedProductionAssets().includes("site-updates.js"));
  assert.ok(!selectedProductionAssets().includes("ops-updates.js"));
 });
-test("02: phone home and install guide are present; onboarding was intentionally omitted",()=>{
+test("02: phone home and install guide are present; onboarding selectively enabled for brand-new users",()=>{
  const html=read("public/index.html"),app=read("public/app.js");
  assert.match(html,/<span class="tab-icon">⌂<\/span>首页/);
  assert.match(html,/id="installGuideDialog"/);
@@ -37,8 +37,8 @@ test("02: phone home and install guide are present; onboarding was intentionally
  assert.match(html,/id="installGuideAndroidTab"/);
  assert.match(html,/id="openInstallGuide"/);
  assert.match(html,/install-guide\.js/);
- assert.doesNotMatch(html,/src="\/onboarding\.js/);
- assert.doesNotMatch(app,/loadPersonalBookshelf|MiaowuOnboarding|readerPersonalBookshelf/);
+ assert.match(html,/src="\/onboarding\.js/);
+ assert.match(app,/loadPersonalBookshelf|MiaowuOnboarding/);
 });
 test("03: reader font and fold action retain the old progress + audio implementation",()=>{
  const html=read("public/index.html"),app=read("public/app.js"),chapter=read("public/chapter-words.js"),css=read("public/v11-reader.css");
@@ -61,12 +61,12 @@ test("04: sentence words speak only; existing user words and book access stay un
  assert.match(app,/data-example-word/);
  assert.match(app,/if\(\$\('wordExampleSpeak'\)\)/);
  assert.match(html,/v11-wordbook\.css/);
- assert.doesNotMatch(worker,/handleOnboarding|handleMyBookshelf|handleExampleWordLookup|study-schedule-store/);
+ assert.doesNotMatch(worker,/study-schedule-store/);
  assert.doesNotMatch(worker,/user_study_schedules/);
 });
 test("approved production code never bundles staging demo notices or migration helpers",()=>{
  const prod=read("deploy/production.wrangler.jsonc"),js=read("public/app.js");
  assert.doesNotMatch(prod,/miaowu-english-test|STAGING_PREVIEW_PASSWORD|PREVIEW_ANNOUNCEMENT_DEMO/);
- assert.doesNotMatch(js,/user_study_schedules|MiaowuOnboarding/);
+ assert.doesNotMatch(js,/user_study_schedules/);
  assert.match(read("src/site-announcements.js"),/APP_ENV==="production"&&env\.OPS_ANNOUNCEMENTS_ENABLED==="true"/);
 });

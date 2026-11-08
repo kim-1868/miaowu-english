@@ -10,7 +10,7 @@ const root=resolve(dirname(fileURLToPath(import.meta.url)),"..");
 const source=join(root,"public"),out=join(root,"dist-production","public");
 export const PRODUCTION_ASSET_ALLOWLIST=Object.freeze([
  "index.html","styles.css","flashcards.css","app.js","chapter-words.js","echo-cloud.js","flashcards.js",
- "install-guide.css","install-guide.js","v11-reader.css","v11-wordbook.css","v11-responsive.css",
+ "install-guide.css","install-guide.js","onboarding.css","onboarding.js","v11-bookshelf.css","v11-reader.css","v11-wordbook.css","v11-responsive.css",
  "live.html","live-reader.js","live-reader.css",
  "ops.html","ops-console.js","ops-customers.js","ops-claims.js","ops-console.css","novel-file-parser.js","rainy-night.html",
  "rainy-night-cover.webp","rainy-night-cover-v2.svg",
