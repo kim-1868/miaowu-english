@@ -491,6 +491,31 @@
       if(!word||!/^[a-z](?:[a-z'-]{0,30}[a-z])?$/.test(word))return;
       speakWord(word);
     }
+    // Reference senses are display-only. Learning actions always target the selected card.
+    const referenceSenses = {
+      list: [
+        { pos: 'n.', meaning: '清单', phonetic: '/lɪst/', match: /^(清单|名单|列表)$/ },
+        { pos: 'v.', meaning: '列出', phonetic: '/lɪst/', match: /^(列出|逐一列出|把…列成清单)$/ }
+      ],
+      notice: [
+        { pos: 'n.', meaning: '通知', phonetic: '/ˈnəʊtɪs/ · /ˈnoʊtɪs/', match: /^通知$/ },
+        { pos: 'v.', meaning: '注意到', phonetic: '/ˈnəʊtɪs/ · /ˈnoʊtɪs/', match: /^注意到$/ }
+      ],
+      record: [
+        { pos: 'n.', meaning: '记录', phonetic: '/ˈrekɔːd/ · /ˈrekərd/', match: /^记录$/ },
+        { pos: 'v.', meaning: '记录下来', phonetic: '/rɪˈkɔːd/ · /rɪˈkɔːrd/', match: /^(记录|记录下来)$/ }
+      ]
+    };
+    function renderReferenceSenses(card){
+      const headword=String(card?.headword||'').trim().toLowerCase();
+      if(!Object.hasOwn(referenceSenses,headword))return '';
+      const senses=referenceSenses[headword];
+      const current=senses.find(s=>s.pos===String(card.part_of_speech||'').trim()&&s.match.test(String(card.meaning_zh||'').trim()));
+      if(!current)return '';
+      return '<details class="word-extra"><summary>其他常见义项</summary><ul>'+
+        senses.filter(s=>s!==current).map(s=>'<li>'+safe(s.pos+' '+s.meaning+' · '+s.phonetic)+'</li>').join('')+
+        '</ul></details>';
+    }
     function showCloudWord(wordId){
       if(!activeCloud?.chapterId)return;
       selectedStudyWordId=wordId;
@@ -511,7 +536,7 @@
         '<h3>'+safe(title)+'</h3>'+
         '<div class="pron">'+safe(w?.phonetic_us||w?.phonetic_uk||'')+
         ' <button id="wordSmallSpeak" class="word-voice-inline" type="button" aria-label="播放发音">♫</button> · '+safe(w?.part_of_speech||'')+'</div>'+
-        '<div class="meaning">'+safe(meaning)+'</div>'+
+        '<div class="meaning"><span class="eyebrow">本句词义</span><br>'+safe(meaning)+'</div>'+
         (!w&&!loading?'<p class="study-loading" role="status">暂无这张词卡的完整资料，请换一个单词学习。</p>':
         loading?'<p class="study-loading" role="status">正在读取这张词卡的学习资料…</p>':
           (w.example_en?'<div class="word-extra"><div class="v11-example-heading"><strong>例句</strong>'+
@@ -520,6 +545,7 @@
           (w.example_zh?'<span class="study-translation">'+safe(w.example_zh)+'</span>':'')+'</div>':'')+
           (pairs.length?'<div class="word-extra"><strong>常用搭配</strong><br>'+
           pairs.map(x=>safe(x.en)+' · '+safe(x.zh)).join('<br>')+'</div>':'') )+
+        renderReferenceSenses(w)+
         '<div class="study-switch"><button id="studyPrevious" type="button" '+(idx<=0?'disabled':'')+'>← 上一个词</button>'+
         '<button id="studyNext" type="button" '+(idx<0||idx===ids.length-1?'disabled':'')+'>下一个词 →</button></div>'+
         '<div class="word-actions"><button id="wordSpeak" type="button">♫ 听发音</button>'+
