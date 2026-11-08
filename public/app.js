@@ -1494,6 +1494,8 @@
       if(activeCloud&&!activeCloud.chapterId){toast('请先打开一个可阅读的章节');return}
       const next=buildSpeechSegments();
       if(!next.length){toast('本章没有可朗读的内容');return}
+      // Starting chapter narration must not leave the anchored word card over player controls.
+      closeWord();
       stopReading();
       utterances=next;speaking=true;paused=false;
       let first=0;
