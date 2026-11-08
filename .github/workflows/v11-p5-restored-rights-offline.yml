@@ -1,0 +1,30 @@
+name: V1.1 P5 restored rights & order safety — offline only
+on:
+  push:
+    branches: [feature/v11-p5-restored-rights-audit-20261106]
+# PUBLIC-06: owning feature push retains specialized QA; generic PR triggers removed.
+# Manual private candidate gate in default main runs integrated release checks.
+permissions:
+  contents: read
+jobs:
+  private-backup-contract:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22 SQLite only
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Real local SQLite disk restore plus rights comparisons
+        run: npm run db:restore:rehearsal
+      - name: Targeted rights and restore tests (synthetic only)
+        run: node --experimental-sqlite --test tests/v11-p5-restored-rights-audit.test.mjs tests/v11-p5-backup-restore.test.mjs
+      - name: Website source/build check without Cloudflare
+        run: npm run check
+      - name: No real orders, backups, secrets or production deployment
+        run: echo "OFFLINE_ONLY_NO_LIVE_D1_DATA"

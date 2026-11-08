@@ -1,0 +1,38 @@
+name: V1.1 cleanup one-time staging migrator (NOT production)
+on:
+  push:
+    branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
+    paths: [.github/workflows/v11-cleanup-migrator-once.yml]
+permissions:
+  contents: read
+jobs:
+  delete-migrator-only:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-phase1-mobile-and-install-guide-20261106' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Delete only one temporary Worker via direct Cloudflare API
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          name="miaowu-v11-onboarding-migrator"
+          test "$name" != "miaowu-english-staging"
+          test "$name" != "miaowu-english-production"
+          base="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$name"
+          code="$(curl -sS --max-time 30 -o "$RUNNER_TEMP/mw-delete-result" -w '%{http_code}' -X DELETE -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$base?force=true")"
+          echo "DIRECT_DELETE_HTTP_$code"
+          if [ "$code" != "200" ] && [ "$code" != "204" ] && [ "$code" != "404" ]; then
+            node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const s=readFileSync(process.env.RUNNER_TEMP+'/mw-delete-result','utf8');
+          try{const j=JSON.parse(s);console.log('CLOUDFLARE_ERROR_CODES '+(j.errors||[]).map(e=>e.code).join(','))}catch{console.log('CLOUDFLARE_DELETE_RESPONSE_UNREADABLE')}
+          NODE
+            exit 1
+          fi
+          status="$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$base")"
+          echo "MIGRATOR_GET_AFTER_DELETE_HTTP_$status"
+          test "$status" = "404" || { echo "MIGRATOR_REMOVAL_NOT_CONFIRMED"; exit 1; }

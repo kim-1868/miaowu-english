@@ -77,9 +77,12 @@ test("V35: same meaning in A and B shares one remembered state; different POS re
     assert.equal(list.status,200);
     assert.equal(list.data.words.length,1,"only one bookmarked card across books");
     assert.equal(list.data.words[0].status,"mastered");
-    const flash=await f.call("/api/me/flashcards?scope=all");
+    // V1.1: mastered cards are excluded from new-word learning; no opt-in re-study button.
+    const flash=await f.call("/api/me/flashcards?scope=mastered");
     assert.equal(flash.status,200);
-    assert.equal(flash.data.total,1,"one flashcard across A and B");
+    assert.equal(flash.data.total,1,"one opt-in mastered flashcard across A and B");
+    assert.equal((await f.call("/api/me/flashcards?scope=all")).data.total,0,
+      "mastered sense is not in ordinary learning pool");
     const due=await f.call("/api/me/flashcards?scope=due");
     assert.equal(due.data.total,0,"no multiple due tasks after mastered");
     const another=await f.call("/api/me/words/record-c","PUT",{bookmarked:true,status:"learning"});
@@ -121,5 +124,6 @@ test("V35: reader new-word counter reflects learned senses instead of only bookm
  assert.match(app,/unseenSenses=new Set/);
  assert.match(app,/filter\(w=>!w\.study_seen\)/);
  assert.match(chapter,/words\.filter\(w=>!w\.study_seen\)/);
- assert.match(chapter,/自愿复习已学词/);
+  assert.doesNotMatch(chapter,/自愿复习已学词|startLearnedReview/);
+  assert.match(chapter,/学习本章新词/);
 });

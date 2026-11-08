@@ -1,0 +1,113 @@
+name: V1.1 apply 009 using TEST staging binding, then restore
+on:
+  push:
+    branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
+    paths: [.github/workflows/v11-staging-bound-009-once.yml]
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-v11-staging-preview
+  cancel-in-progress: false
+jobs:
+  staging-009:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-phase1-mobile-and-install-guide-20261106' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Hard audit all staging DB targets, app environment, and entrypoints
+        run: |
+          set -euo pipefail
+          node scripts/check-v11-preview-config.mjs
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const c=JSON.parse(readFileSync('v11-onboarding-staging-wrapper.wrangler.jsonc','utf8'));
+          const real=JSON.parse(readFileSync('wrangler.jsonc','utf8'));
+          if(c.name!=='miaowu-english-staging'||real.name!==c.name||
+             c.main!=='scripts/v11-onboarding-staging-wrapper.mjs'||
+             c.vars?.APP_ENV!=='staging'||real.vars?.APP_ENV!=='staging'||
+             c.d1_databases?.length!==1||real.d1_databases?.length!==1||
+             c.d1_databases[0].database_id!=='88a817cb-23bb-4ae4-bcb8-92286c4165d4'||
+             c.d1_databases[0].database_id!==real.d1_databases[0].database_id||
+             c.d1_databases[0].database_name!=='miaowu-english-test'||
+             c.assets?.run_worker_first!==true||c.assets?.binding!=='ASSETS'||
+             c.assets?.directory!=='./public')throw Error('STAGING_ONLY_TARGET_INVALID');
+          const sql=readFileSync('db/009_v11_onboarding.sql','utf8');
+          if(!sql.includes('CREATE TABLE IF NOT EXISTS user_onboarding')||
+             /(?:ALTER|DROP|DELETE|UPDATE|INSERT)\s+(?:TABLE|FROM|INTO|users|activation_codes)/i.test(sql))
+            throw Error('UNEXPECTED_NONADDITIVE_SQL');
+          console.log('STAGING_TARGET_AND_ADDITIVE_009_SQL_OK');
+          NODE
+      - name: All regressions must pass before any temporary staging update
+        run: |
+          npm run check
+          npm test
+      - name: Install Wrangler
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Generate short-lived secret and expiry (never print, never commit)
+        run: |
+          node --input-type=module <<'NODE'
+          import {randomBytes} from 'node:crypto';
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const key=randomBytes(48).toString('hex');
+          const p='v11-onboarding-staging-wrapper.wrangler.jsonc';
+          const c=JSON.parse(readFileSync(p,'utf8'));
+          c.vars.MIGRATION_EXPIRES_AT=String(Date.now()+12*60*1000);
+          writeFileSync(p,JSON.stringify(c));
+          writeFileSync(process.env.RUNNER_TEMP+'/mw-v11-stage-secret.json',JSON.stringify({MIGRATION_SECRET:key}),{mode:0o600});
+          writeFileSync(process.env.RUNNER_TEMP+'/mw-v11-stage-secret',key,{mode:0o600});
+          NODE
+      - name: Deploy temporary password-gated staging wrapper, NEVER production
+        id: temporary
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          node scripts/check-v11-preview-config.mjs
+          npx wrangler deploy --config v11-onboarding-staging-wrapper.wrangler.jsonc --secrets-file "$RUNNER_TEMP/mw-v11-stage-secret.json" --keep-vars > "$RUNNER_TEMP/v11-stage-temp-deploy.log" 2>&1 || {
+            grep -E 'ERROR|Error|forbidden|permission|unauthorized' "$RUNNER_TEMP/v11-stage-temp-deploy.log" | head -n 8 || true
+            exit 1
+          }
+          echo "TEMP_STAGING_WRAPPER_DEPLOYED"
+      - name: Invoke protected 009 migration through isolated test DB binding
+        run: |
+          set -euo pipefail
+          url="https://miaowu-english-staging.kim10086a.workers.dev"
+          anonymous="$(curl -sS --max-time 25 -o "$RUNNER_TEMP/stage-anon" -w '%{http_code}' -X POST "$url/__v11_onboarding_migrate")"
+          test "$anonymous" = "403" || { echo "STAGING_MIGRATION_WRAPPER_NOT_READY_HTTP_$anonymous"; exit 1; }
+          key="$(cat "$RUNNER_TEMP/mw-v11-stage-secret")"
+          status="$(curl -sS --max-time 30 -o "$RUNNER_TEMP/stage-migration-result" -w '%{http_code}' -X POST -H "X-Migration-Authorization: $key" "$url/__v11_onboarding_migrate")"
+          test "$status" = "200" || { echo "STAGING_009_NOT_APPLIED_HTTP_$status"; exit 1; }
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const value=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/stage-migration-result','utf8'));
+          if(value.ok!==true||value.schemaVerified!==true||value.table!=='user_onboarding'||
+             value.noUserDataTouched!==true)throw Error('STAGING_009_VERIFICATION_FAILED');
+          console.log('STAGING_009_APPLIED_AND_SCHEMA_VERIFIED');
+          console.log('ALREADY_PRESENT='+Boolean(value.alreadyPresent));
+          NODE
+      - name: ALWAYS restore the normal password-protected staging Worker, no migrations
+        if: always()
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -f "$RUNNER_TEMP/v11-stage-temp-deploy.log" ]; then
+            node scripts/check-v11-preview-config.mjs
+            npx wrangler deploy --config wrangler.jsonc --keep-vars > "$RUNNER_TEMP/v11-stage-restored.log" 2>&1 || {
+              grep -E 'ERROR|Error|forbidden|permission|unauthorized' "$RUNNER_TEMP/v11-stage-restored.log" | head -n 8 || true
+              exit 1
+            }
+            echo "NORMAL_STAGING_WORKER_RESTORED"
+            status="$(curl -sS --max-time 25 -o "$RUNNER_TEMP/stage-after" -w '%{http_code}' "https://miaowu-english-staging.kim10086a.workers.dev/")"
+            test "$status" = "401" || { echo "STAGING_PASSWORD_GATE_NOT_VERIFIED_HTTP_$status"; exit 1; }
+            echo "STAGING_PASSWORD_GATE_RESTORED"
+          fi
+          rm -f "$RUNNER_TEMP/mw-v11-stage-secret" "$RUNNER_TEMP/mw-v11-stage-secret.json"

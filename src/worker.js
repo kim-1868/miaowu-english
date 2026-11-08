@@ -5,6 +5,7 @@ import { handleEditor } from "./editorial-admin.js";
 import { handleOps } from "./ops-access.js";
 import { handleOpsPublication } from "./ops-publication.js";
 import { handleOpsConsole } from "./ops-console.js";
+import {handleSiteAnnouncements} from "./site-announcements.js";
 import { handleOpsSales } from "./ops-sales.js";
 import { handleOpsCustomers } from "./ops-customers.js";
 import {handleOpsVoucher} from "./ops-vouchers.js";
@@ -16,6 +17,9 @@ import { handleOpsLiveEdit } from "./ops-live-edit.js";
 import { handleBookCover } from "./book-covers.js";
 import { handleBookCoverTags } from "./book-cover-tags.js";
 import { handleLearningState } from "./reading-library.js";
+import {handleMyBookshelf} from "./my-bookshelf.js";
+import {handleExampleWordLookup} from "./example-word-lookup.js";
+import {onboardingSchemaReady,registrationOnboardingStatement,handleOnboarding} from "./onboarding.js";
 import { annotateStudyWords } from "./study-identity.js";
 import {handleEcho} from "./echo-cloud.js";
 import {
@@ -96,6 +100,7 @@ async function register(req, env) {
   const { hash, salt } = await atStage("register.password_hash", () => newPasswordHash(body.password, env));
   const session = await atStage("register.session_token", () => sessionData(userId));
   const recovery=null; // Manual account recovery only: do not issue end-user recovery codes.
+  const onboardingReady=await onboardingSchemaReady(env); // Legacy schema still registers; staging migration enables onboarding.
   try {
     // D1.batch is transactional: an invalid or used code causes the NOT NULL
     // entitlement insert to fail, rolling back user and session creation.
@@ -112,7 +117,8 @@ async function register(req, env) {
       dbStmt(db, `INSERT INTO sessions(id_hash,user_id,expires_at) VALUES(?,?,?)`,
         session.idHash, userId, session.expires),
       ...(recovery?[dbStmt(db,`INSERT INTO account_recovery(user_id,code_hash)
-        VALUES(?,?)`,userId,recovery.codeHash)]:[])
+        VALUES(?,?)`,userId,recovery.codeHash)]:[]),
+      ...(onboardingReady?[registrationOnboardingStatement(env,userId)]:[])
     ]);
   } catch {
     await atStage("register.failed_attempt", () => countFailure(db, key));
@@ -642,6 +648,8 @@ async function api(req, env) {
   if (path.startsWith("/api/ops/")) {
     if (["POST","PUT","PATCH","DELETE"].includes(req.method) && !checkOrigin(req)) return reject("INVALID_ORIGIN",403);
     if(path==="/api/ops/me")return handleOps(req,env,path);
+    if(path==="/api/ops/updates"||path.startsWith("/api/ops/updates/"))
+      return handleSiteAnnouncements(req,env,path);
     if(/^\/api\/ops\/books\/[a-zA-Z0-9_-]{1,80}\/cover$/.test(path))
       return handleBookCover(req,env,path);
     if(/^\/api\/ops\/books\/[a-zA-Z0-9_-]{1,80}\/tags$/.test(path))
@@ -659,6 +667,8 @@ async function api(req, env) {
       return handleOpsConsole(req,env,path);
     return handleOpsPublication(req,env,path);
   }
+  if(path==="/api/updates"||path==="/api/updates/latest"||/^\/api\/updates\/[a-f0-9-]{36}$/i.test(path))
+    return handleSiteAnnouncements(req,env,path);
   if(path.startsWith("/api/claim/"))return handlePublicClaim(req,env,path);
   if (!env.DB || !env.ACTIVATION_PEPPER || env.ACTIVATION_PEPPER.length < 32) {
     return reject("SERVICE_NOT_CONFIGURED", 503);
@@ -685,6 +695,9 @@ async function api(req, env) {
     return issueStagingVoucher(req, env);
   }
   const user = await atStage("api.session_lookup", () => currentUser(req, env.DB));
+  if(path==="/api/me/onboarding")return handleOnboarding(req,env,user);
+  if(path==="/api/lexicon/lookup")return handleExampleWordLookup(req,env,user);
+  if(path==="/api/me/bookshelf"||path.startsWith("/api/me/bookshelf/"))return handleMyBookshelf(req,env,user);
   if(path==="/api/me/echo/available" || path==="/api/me/echo/answer" || path==="/api/me/echo/stats"){
     return handleEcho(req,env,path,user);
   }
@@ -787,7 +800,7 @@ export default {
     const previewCookie = await stagingCookieAfterBasic(request, env);
     const path = new URL(request.url).pathname;
     if (!path.startsWith("/api/")) {
-      const opsAsset=["/ops.html","/ops-console.js","/ops-console.css"].includes(path);
+      const opsAsset=["/ops.html","/ops-console.js","/ops-console.css","/ops-updates.js"].includes(path);
       if(opsAsset&&env.OPS_CONSOLE_ENABLED!=="true")
         return attachPreviewCookie(new Response("Not found",{status:404}),previewCookie);
       const response = await env.ASSETS.fetch(request);

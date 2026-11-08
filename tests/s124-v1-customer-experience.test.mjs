@@ -66,9 +66,9 @@ test("V1.2 removes the reading line-height selector and keeps single global them
 });
 test("V1.2 mobile study tray opens immediately and supports switching and learning",()=>{
  assert.match(js,/function chapterStudyWordIds\(\)/);
- assert.match(js,/function showCloudWord\(wordId\)/);
- assert.match(js,/function showCloudWord\(wordId\)[\s\S]*?studyPrevious[\s\S]*?studyNext/);
- assert.match(js,/showCloudWord\(word\.dataset\.cloudWord\)/);
+ assert.match(js,/function showCloudWord\(wordId,anchorEl=null\)/);
+ assert.match(js,/function showCloudWord\(wordId,anchorEl=null\)[\s\S]*?studyPrevious[\s\S]*?studyNext/);
+ assert.match(js,/showCloudWord\(word\.dataset\.cloudWord,word\)/);
  assert.match(js,/studyRequestSequence/);
  assert.match(js,/saveCloudWord\(wordId,false\)/);
  assert.match(js,/saveCloudWord\(wordId,true\)/);
@@ -79,7 +79,7 @@ test("V1.2 mobile study tray opens immediately and supports switching and learni
 
 test("V1.2.1 iOS study tray never shades the screen without a visible learning card",()=>{
  assert.match(js,/const mobileStudyTray=window\.matchMedia/);
- assert.match(js,/backdrop\.classList\.toggle\('on',!mobileStudyTray\)/);
+ assert.match(js,/backdrop\.classList\.remove\('on'\)/);
  assert.match(js,/backdrop\.style\.setProperty\('display','none','important'\)/);
  assert.match(js,/tray\.style\.setProperty\('z-index','2147483000','important'\)/);
  assert.match(css,/#wordBackdrop\.on\{display:none!important;pointer-events:none!important\}/);

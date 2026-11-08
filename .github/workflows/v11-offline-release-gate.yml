@@ -1,0 +1,59 @@
+name: V1.1 release readiness OFFLINE only (no production access)
+# P5 dictionary 012–013 now included in offline rehearsal; staging remains isolated.
+on:
+  push:
+    branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
+    paths: [.github/workflows/v11-offline-release-gate.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-v11-offline-release-check
+  cancel-in-progress: false
+jobs:
+  offline-release-verification:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-phase1-mobile-and-install-guide-20261106' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact reviewed V1.1 commit
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node.js 22, isolated local SQLite
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Refuse secrets and production deployment credentials
+        run: |
+          set -euo pipefail
+          test -z "${CLOUDFLARE_API_TOKEN:-}"
+          test -z "${CLOUDFLARE_ACCOUNT_ID:-}"
+          echo "OFFLINE_ONLY_NO_CLOUDFLARE_ACCESS"
+      - name: Validate isolation, production routing configuration and no auto migrations
+        run: |
+          set -euo pipefail
+          node scripts/check-v11-preview-config.mjs
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          test "$(node -p 'JSON.parse(require("fs").readFileSync("package.json","utf8")).scripts["db:migrate:remote"]')" = 'node scripts/refuse-unbaselined-remote-migration.mjs'
+      - name: Rehearse 009/010/011 twice against synthetic legacy account and order data
+        run: npm run db:dry-run-v11
+      - name: Read-only release-package learning metadata audit
+        run: npm run content:check-release-packages
+      - name: Full customer, ops, purchase-entitlement, reader and learning regressions
+        run: |
+          npm run check
+          npm test
+      - name: Dry-compile production Worker with NO deployment
+        run: |
+          set -euo pipefail
+          npm install --no-save --ignore-scripts wrangler@^4
+          npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/v11-release-gate
+      - name: Dry-compile Pages frontend
+        run: npm run pages:production:build
+      - name: Gate conclusion (not production approval)
+        run: |
+          echo "V11_OFFLINE_RELEASE_GATE_PASSED"
+          echo "NO_PRODUCTION_D1_BACKUP_OR_READ_QUERY_PERFORMED"
+          echo "NO_STAGING_OR_PRODUCTION_DEPLOYMENT_PERFORMED"
+          echo "PRODUCTION_RELEASE_REQUIRES_SEPARATE_OWNER_APPROVAL"

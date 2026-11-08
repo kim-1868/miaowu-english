@@ -1,0 +1,34 @@
+name: V1.1 P5 restored corpus coverage - offline private-data safe
+on:
+  push:
+    branches: [feature/v11-p5-restored-library-qa-20261107]
+# PUBLIC-06: run on owning feature branch; general V1.1 PR updates use public UI CI.
+# Reviewed private candidates use default-branch manual integration gate instead.
+permissions:
+  contents: read
+jobs:
+  corpus-rehearsal:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout without stored credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Use local Node SQLite
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify owner-controlled restored corpus audits use only fictional rows
+        run: node --experimental-sqlite --test tests/v11-p5-restored-library-audit.test.mjs
+      - name: Full site validation with no deployment
+        run: |
+          npm run check
+          npm test
+      - name: Document privacy boundary
+        run: |
+          echo "NO_REMOTE_D1_ACCESS"
+          echo "NO_REAL_CUSTOMER_OR_MANUSCRIPT_UPLOADED"
+          echo "PRIVATE_AUDIT_OUTPUT_ONLY_OUTSIDE_GIT_WORKTREE"
+          echo "NO_RELEASE_APPROVAL"

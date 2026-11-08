@@ -1,0 +1,33 @@
+name: V1.1 P5 reader canonical study state - offline regression
+on:
+  push:
+    branches: [fix/v11-p5-reader-canonical-status-20261107]
+# PUBLIC-06: owning feature push retains specialized QA; generic PR triggers removed.
+# Manual private candidate gate in default main runs integrated release checks.
+permissions:
+  contents: read
+jobs:
+  reader-sense-consistency:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Canonical reader status and legacy compatibility tests
+        run: node --experimental-sqlite --test tests/v11-reader-canonical-status.test.mjs tests/v11-legacy-mastery-alias.test.mjs tests/v35-cross-novel-one-card.test.mjs tests/v11-unified-due-views.test.mjs
+      - name: Full regression and syntax check
+        run: |
+          npm run check
+          npm test
+      - name: Confirm no real database or deployment
+        run: |
+          echo "NO_PRODUCTION_D1_ACCESS"
+          echo "NO_WORKER_OR_PAGES_DEPLOYMENT"
+          echo "NOTICE_SPEC_ONLY_NO_ANNOUNCEMENT_CODE"

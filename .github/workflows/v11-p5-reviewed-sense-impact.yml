@@ -1,0 +1,34 @@
+name: V1.1 P5 reviewed-sense learning impact — offline only
+on:
+  push:
+    branches: [feature/v11-p5-reviewed-sense-impact-20261107]
+# PUBLIC-06: run on owning feature branch; general V1.1 PR updates use public UI CI.
+# Reviewed private candidates use default-branch manual integration gate instead.
+permissions:
+  contents: read
+jobs:
+  simulate-learning-history:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Use Node 22 and local SQLite only
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Strict approved-sense impact tests, no D1 access
+        run: node --experimental-sqlite --test tests/v11-p5-reviewed-sense-impact.test.mjs
+      - name: Website full regression and asset syntax/build validation
+        run: |
+          npm run check
+          npm test
+      - name: Make safety boundary explicit
+        run: |
+          echo "APPROVED_SENSE_IMPACT_OFFLINE_ONLY"
+          echo "NO_REAL_DB_USER_DATA"
+          echo "NO_CLOUDFLARE_REMOTE_D1"
+          echo "NO_PRODUCTION_DEPLOYMENT_OR_WORD_ID_MERGE"

@@ -1,0 +1,17 @@
+{
+  "name": "miaowu-v11-onboarding-migrator",
+  "main": "scripts/v11-onboarding-migrator.mjs",
+  "compatibility_date": "2026-10-30",
+  "workers_dev": true,
+  "preview_urls": false,
+  "vars": {
+    "APP_ENV": "staging"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "miaowu-english-test",
+      "database_id": "88a817cb-23bb-4ae4-bcb8-92286c4165d4"
+    }
+  ]
+}

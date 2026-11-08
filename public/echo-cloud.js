@@ -3,6 +3,8 @@
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const kinds=[["fill","▤ 剧情填词"],["situation","✧ 情境选择"],["spell","✎ 单词找回"]];
+const readable=(text,answered)=>answered&&window.MiaowuExampleLookup?.renderWords?
+  window.MiaowuExampleLookup.renderWords(text):esc(text);
 const st={scope:"recent",selected:new Set(kinds.map(x=>x[0])),book:"all",from:1,to:300,chapter:"",
  phase:"setup",questions:[],idx:0,answer:null,hint:false,correct:0,posting:false};
 let adapter=null;
@@ -80,30 +82,43 @@ function draw(){
  '<button class="primary" id="cloudAgain">重新选择玩法</button></div>';
  $("cloudAgain").onclick=()=>{st.phase="setup";setup()};return}
  const q=st.questions[st.idx],w=q.word,answered=!!st.answer;
- const question=esc(blank(w));
+ const question=readable(blank(w),answered);
  let options;
  if(q.kind==="spell"){
  options='<h3 class="spelling-prompt">'+question+'</h3><p class="echo-tip">中文提示：'+esc(w.meaning_zh)+
  ' · '+w.headword.length+' 个字母</p>'+
  '<input id="cloudSpelling" class="answer-input" autocapitalize="none" autocomplete="off" spellcheck="false" '+
- (answered?"disabled":"")+' placeholder="输入英文单词">'+
+ (answered?"disabled":"")+' value="'+(answered?esc(st.answer.submittedAnswer||""):"")+
+ '" placeholder="输入英文单词">'+
  '<div class="hero-actions"><button class="primary" id="cloudSpellSubmit" '+(answered?"disabled":"")+'>提交拼写</button>'+
  '<button class="secondary-btn" id="cloudSpellHint" '+(answered?"disabled":"")+'>首字母提示</button></div>';
  }else{
  options='<h3>'+(q.kind==="situation"?"根据人物情境与中文提示选择对应单词：":"从原句中选择正确单词：")+
  '</h3><p class="spelling-prompt">'+question+'</p><div class="answer-grid">'+
- q.options.map(x=>'<div class="answer-choice '+(answered?"answered ":"")+
- (answered&&x.word_id===w.word_id?"correct":"")+'">'+
- '<button class="answer-pick" data-choice="'+esc(x.headword)+'" '+(answered?"disabled":"")+'>'+
- esc(x.headword)+'</button>'+(answered?'<div class="answer-extra"><span>'+esc(x.meaning_zh)+
- '</span><button class="answer-speak" data-speak="'+esc(x.headword)+'">♫</button></div>':"")+
- '</div>').join("")+'</div>';
+ q.options.map(x=>{
+   const isCorrect=x.word_id===w.word_id;
+   const selected=st.answer?.submittedChoiceId===x.word_id;
+   const wrong=answered&&selected&&!st.answer.correct;
+   return '<div class="answer-choice '+(answered?"answered ":"")+
+     (answered&&isCorrect?"correct ":"")+(wrong?"v11-choice-wrong":"")+'">'+
+     (answered?'<div class="answer-pick v11-choice-result">'+readable(x.headword,true)+
+       (isCorrect?'<span class="v11-choice-label v11-label-correct">正确答案</span>':
+         wrong?'<span class="v11-choice-label v11-label-wrong">你的选择</span>':'')+'</div>':
+       '<button class="answer-pick" data-choice="'+esc(x.headword)+
+         '" data-choice-id="'+esc(x.word_id)+'">'+esc(x.headword)+'</button>')+
+     (answered?'<div class="answer-extra"><span>'+esc(x.meaning_zh)+
+       '</span><button class="answer-speak" data-speak="'+esc(x.headword)+'">♫</button></div>':'')+
+     '</div>';
+ }).join("")+'</div>';
  }
  const feedback=answered?'<div class="quiz-response"><strong>'+
  (st.answer.correct?"答对了，喵呜！":"再看一眼，就能把它记得更牢。")+'</strong>'+
- '<div class="quiz-correct-answer">'+esc(st.answer.expected)+' <span>'+esc(st.answer.phonetic)+
- ' · '+esc(st.answer.meaning)+'</span><button id="cloudCorrectSpeak" class="answer-speak">♫</button></div>'+
- '<div class="story-reveal"><strong>故事原句</strong><br>'+esc(st.answer.context)+'</div>'+
+ (q.kind==="spell"?'<div class="v11-spelling-submitted '+(st.answer.correct?"correct":"incorrect")+'">'+
+ '<strong>你的填写：</strong>'+esc(st.answer.submittedAnswer||"")+'</div>':'')+
+ '<div class="quiz-correct-answer"><strong>正确答案：</strong>'+readable(st.answer.expected,true)+
+ ' <span>'+esc(st.answer.phonetic)+' · '+esc(st.answer.meaning)+
+ '</span><button id="cloudCorrectSpeak" class="answer-speak">♫</button></div>'+
+ '<div class="story-reveal"><strong>故事原句</strong><br>'+readable(st.answer.context,true)+'</div>'+
  '<p class="score-status">复习已保存 · '+(st.answer.nextReviewDays===null?"已掌握":
  "约 "+st.answer.nextReviewDays+" 天后复习")+'</p></div>':"";
  $("quizContainer").innerHTML='<div class="quiz-card"><div class="quiz-kicker"><span>STORY ECHO · '+
@@ -114,7 +129,7 @@ function draw(){
  '<button class="primary" id="cloudEchoNext" '+(!answered?"disabled":"")+'>'+
  (st.idx===st.questions.length-1?"查看结果":"下一题 →")+'</button></div></div>';
  $("cloudEchoQuit").onclick=()=>leave("setup");
- document.querySelectorAll("[data-choice]").forEach(x=>x.onclick=()=>answer(x.dataset.choice));
+ document.querySelectorAll("[data-choice]").forEach(x=>x.onclick=()=>answer(x.dataset.choice,x.dataset.choiceId));
  document.querySelectorAll("[data-speak]").forEach(x=>x.onclick=()=>adapter.speak(x.dataset.speak));
  if($("cloudCorrectSpeak"))$("cloudCorrectSpeak").onclick=()=>adapter.speak(st.answer.expected);
  if($("cloudSpellSubmit")){
@@ -124,13 +139,24 @@ function draw(){
  }
  $("cloudEchoNext").onclick=()=>{st.idx++;st.answer=null;st.hint=false;draw()};
 }
-async function answer(value){
+async function answer(value,choiceId=null){
  if(st.answer||st.posting)return;
  st.posting=true;const q=st.questions[st.idx],w=q.word;
  try{
- const r=await adapter.request("/api/me/echo/answer","POST",{
- wordId:w.word_id,chapterId:w.chapter_id,gameType:q.kind,answer:value,hinted:st.hint});
- st.answer=r;if(r.correct)st.correct++;adapter.refresh();draw();
+ // A lost HTTP acknowledgement must not create another review event.
+ // Keep the same payload and idempotency key until the answer is confirmed.
+ if(!q.submitPayload){
+   const body={wordId:w.word_id,chapterId:w.chapter_id,gameType:q.kind,
+     answer:value,hinted:st.hint,requestId:crypto.randomUUID()};
+   if(choiceId)body.choiceId=choiceId;
+   q.submitPayload=body;
+ }
+ const body=q.submitPayload;
+ const r=await adapter.request("/api/me/echo/answer","POST",body);
+ if(st.phase!=="playing"||st.questions[st.idx]!==q)return;
+ st.answer={...r,submittedAnswer:body.answer,submittedChoiceId:body.choiceId||null};
+ if(r.correct)st.correct++;
+ adapter.refresh();draw();
  }catch(e){adapter.toast(e.message)}finally{st.posting=false}
 }
 function leave(destination){

@@ -2237,3 +2237,19 @@ html[data-theme="dark"] #view-reader .story-text p[data-audio-paragraph].reading
     -webkit-tap-highlight-color:rgba(189,125,157,.36);
   }
 }
+
+/* V1.1 P4 answer transparency: mark the learner's wrong choice and the right sense. */
+.answer-choice.v11-choice-wrong{background:#fae7e7;border-color:#c87a86}
+.answer-pick.v11-choice-result{display:flex;gap:10px;flex-wrap:wrap;align-items:center;cursor:default}
+.v11-choice-label{border-radius:99px;padding:3px 8px;font:600 11px/1.5 system-ui,sans-serif}
+.v11-label-correct{background:#d4ecdc;color:#236540}
+.v11-label-wrong{background:#f4cbd0;color:#8d2e42}
+.v11-spelling-submitted{padding:8px 10px;margin-top:10px;border-radius:9px;font-size:13px}
+.v11-spelling-submitted.correct{background:#e4f2e8;color:#245e3e}
+.v11-spelling-submitted.incorrect{background:#fae1e5;color:#9c3449}
+.v11-spelling-submitted strong{margin-right:8px;font-size:12px}
+html[data-theme="dark"] .answer-choice.v11-choice-wrong{background:#553541;border-color:#bd8192}
+html[data-theme="dark"] .v11-label-correct{background:#2e5945;color:#d8f1e1}
+html[data-theme="dark"] .v11-label-wrong{background:#70404e;color:#ffdae2}
+html[data-theme="dark"] .v11-spelling-submitted.correct{background:#2e5945;color:#d8f1e1}
+html[data-theme="dark"] .v11-spelling-submitted.incorrect{background:#70404e;color:#ffdae2}

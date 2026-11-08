@@ -7,6 +7,13 @@
   <title>妙屋英语 · THE STORY & WORD LIBRARY｜故事阅读与词汇记忆</title>
   <link rel="stylesheet" href="/styles.css?v=20261104-v28-night-selection" />
   <link rel="stylesheet" href="/flashcards.css?v=20261105-v31-word-only" />
+  <link rel="stylesheet" href="/install-guide.css?v=20261106-v11-p1" />
+  <link rel="stylesheet" href="/onboarding.css?v=20261106-v11-p1" />
+  <link rel="stylesheet" href="/v11-reader.css?v=20261106-p2&amp;fold=20261108-v1" />
+  <link rel="stylesheet" href="/v11-bookshelf.css?v=20261106-p2" />
+  <link rel="stylesheet" href="/v11-wordbook.css?v=20261106-p5-inline-example" />
+  <link rel="stylesheet" href="/v11-responsive.css?v=20261106-p5" />
+  <link rel="stylesheet" href="/site-updates.css?v=20261107-preview6" />
 </head>
 <body>
   <div class="app-shell">
@@ -20,12 +27,20 @@
 <path d="M12 57Q24 53 36 59q12-6 24-2" stroke="#B28B73" stroke-width="2" stroke-linecap="round"/>
 <path d="M58 10l1.6 4.4L64 16l-4.4 1.6L58 22l-1.6-4.4L52 16l4.4-1.6Z" fill="#B89162"/>
 </svg></span><span><span class="brand-name">妙屋英语</span><span class="brand-sub">THE STORY & WORD LIBRARY</span></span></a>
-      <nav class="nav" aria-label="主导航"><button data-nav="library" class="on">探索故事</button><button data-nav="words">记忆藏书票</button><button data-nav="echo">剧情回声</button><button data-nav="account">我的书房</button></nav>
+      <nav class="nav" aria-label="主导航"><button data-nav="library" class="on">探索故事</button><button data-nav="words">记忆生词本</button><button data-nav="echo">剧情回声</button><button data-nav="account">我的书房</button></nav>
       <button class="global-theme-toggle" id="globalThemeToggle" type="button" title="切换全站日夜模式" aria-label="切换全站日夜模式"><span class="theme-indicator">☾</span><span class="theme-label">夜间</span></button><button class="account-button" id="topAccount">登录 / 激活</button>
     </header>
   </div>
   <main class="app-shell">
     <section id="view-library" class="view active">
+      <section id="siteUpdateBanner" class="mw-update-strip" aria-label="妙屋新鲜事" hidden>
+        <div class="mw-update-inner">
+          <span class="mw-update-paw" aria-hidden="true">🐾</span>
+          <div id="siteUpdateMessage" class="mw-update-message"><button id="siteUpdateTitle" class="mw-update-title-trigger" type="button" aria-haspopup="dialog" aria-controls="siteUpdateDialog" title="查看公告详情"></button><button id="siteUpdateMeta" class="mw-update-meta" type="button" aria-haspopup="dialog" aria-controls="siteUpdateDialog" title="查看公告详情"></button></div>
+          <button id="siteUpdateDetail" class="mw-update-action" type="button" aria-haspopup="dialog" aria-controls="siteUpdateDialog">详情 ›</button>
+          <button id="siteUpdateDismiss" class="mw-update-dismiss" type="button" aria-label="关闭当前公告" title="关闭这条公告">×</button>
+        </div>
+      </section>
       <div class="hero story-home-hero" id="miaowuHomeScene">
         <div class="hero-copy">
           <span class="eyebrow">MIAOWU · YOUR COZY WORD LIBRARY</span>
@@ -42,6 +57,7 @@
           <span class="home-scene-lamp" aria-hidden="true"></span>
         </div>
       </div>
+
       <aside class="home-reminder-strip" aria-label="词汇复习提醒">
         <div id="reviewReminder" class="review-reminder" aria-live="polite"></div>
       </aside>
@@ -73,28 +89,87 @@
       <div class="feature-row"><div class="feature"><b>01</b><div><h4>听得见的故事</h4><p>正文朗读与英文点词发音，让阅读与听觉相互补充。</p></div></div><div class="feature"><b>02</b><div><h4>收藏情节里的单词</h4><p>收藏音标、例句、常用搭配，也收藏它出现的故事。</p></div></div><div class="feature"><b>03</b><div><h4>剧情回声</h4><p>选择剧情填词、情境选择或拼写找回，用自己的方式复习。</p></div></div></div></section>
     </section>
     <section id="view-reader" class="view"><div class="reader-layout" id="readerLayout"><aside class="sidebar"><div class="side-panel"><button id="mobileChapterClose" type="button" class="mobile-chapter-close" aria-label="关闭目录">×</button><h3>故事目录</h3><div id="chapterList"></div><div class="side-caption" style="margin-top:12px">点击任意已解锁章节继续阅读。</div></div></aside>
-    <article class="reading-panel"><div class="read-top"><button class="ghost-btn" id="readerBack" style="padding:0">← 返回书架</button><span class="crumb" id="readerCrumb">故事书架 / 阅读</span><div class="tool-row"><button class="icon-btn mobile-chapter-open" id="mobileChapterOpen" title="章节目录" aria-label="打开章节目录" aria-expanded="false" aria-controls="chapterList">☷ 目录</button><button class="icon-btn mobile-vocab-open" id="mobileVocabOpen" title="本章词汇" aria-label="展开本章词汇" aria-expanded="false" aria-controls="chapterVocabPanel">▤ 词汇</button><button class="icon-btn" id="topRead" title="朗读本章" aria-label="朗读本章">♫ 朗读</button><button class="icon-btn" id="smallerFont" title="缩小字号" aria-label="缩小字号">A−</button><button class="icon-btn" id="biggerFont" title="放大字号" aria-label="放大字号">A+</button><button class="icon-btn" id="toggleGloss" title="隐藏或显示释义" aria-label="切换释义显示">译</button><button class="icon-btn" id="toggleNight" title="夜间模式" aria-label="切换夜间模式">☾</button></div></div><div class="read-body"><div class="chapter-no" id="chapterNo">CHAPTER 01</div><h2 id="chapterTitle">一纸协议</h2><div class="read-decoration">✦</div><div class="story-text" id="storyText"></div><div class="read-end"><span class="eyebrow">THE END OF THIS CHAPTER</span><p>停在这里，故事暂告一段落。<br>你想立刻追下一章，还是留下来记住几个词？</p><div class="hero-actions" style="justify-content:center"><button class="secondary-btn" id="doEcho">剧情回声 ↗</button><button class="secondary-btn" id="nextChapter">下一章 →</button></div></div></div></article>
+    <article class="reading-panel"><div class="read-top"><button class="ghost-btn" id="readerBack" style="padding:0">← 返回书架</button><span class="crumb" id="readerCrumb">故事书架 / 阅读</span><div class="tool-row"><button class="icon-btn mobile-chapter-open" id="mobileChapterOpen" title="章节目录" aria-label="打开章节目录" aria-expanded="false" aria-controls="chapterList">☷ 目录</button><button class="icon-btn mobile-vocab-open" id="mobileVocabOpen" title="本章词汇" aria-label="展开本章词汇" aria-expanded="false" aria-controls="chapterVocabPanel">▤ 词汇</button><button class="icon-btn" id="topRead" title="朗读本章" aria-label="朗读本章">♫ 朗读</button><button class="icon-btn" id="smallerFont" title="缩小字号" aria-label="缩小字号">A−</button><button class="icon-btn" id="biggerFont" title="放大字号" aria-label="放大字号">A+</button><button class="icon-btn" id="toggleGloss" title="隐藏或显示释义" aria-label="切换释义显示">译</button><button class="icon-btn" id="toggleNight" title="夜间模式" aria-label="切换夜间模式">☾</button></div></div><div class="v11-font-slider" aria-label="阅读字号设置"><label for="readerFontSlider">阅读字号</label><input id="readerFontSlider" type="range" min="12" max="24" step="1" value="18" aria-label="阅读正文字号，12到24像素"><output id="readerFontValue" for="readerFontSlider">18px</output></div><div class="read-body"><div class="chapter-no" id="chapterNo">CHAPTER 01</div><h2 id="chapterTitle">一纸协议</h2><div class="read-decoration">✦</div><div class="story-text" id="storyText"></div><div class="read-end"><span class="eyebrow">THE END OF THIS CHAPTER</span><p>停在这里，故事暂告一段落。<br>你想立刻追下一章，还是留下来记住几个词？</p><div class="hero-actions" style="justify-content:center"><button class="secondary-btn" id="doEcho">剧情回声 ↗</button><button class="secondary-btn" id="nextChapter">下一章 →</button></div></div></div></article>
     <aside class="sidebar"><div class="side-panel chapter-vocab-panel" id="chapterVocabPanel"><button class="mobile-vocab-close" id="mobileVocabClose" aria-label="收起本章词汇">×</button>
     <div class="chapter-vocab-header"><h3 id="chapterVocabTitle">本章词汇</h3><span class="side-caption" id="chapterVocabCount">0 词</span><button id="chapterVocabToggle" class="chapter-vocab-toggle" type="button" aria-expanded="true" aria-controls="chapterVocabBody">收起</button></div>
     <div id="chapterVocabBody"><p class="side-caption">打开章节后查看全部目标词。</p></div>
     </div><div class="side-panel"><h3>我的阅读进度</h3><span class="side-caption" id="readingStatus">阅读进度</span><div class="book-progress"><span id="progressBar"></span></div><div class="metric"><span>已收藏词汇</span><strong id="savedCount">0</strong></div><div class="metric"><span>最近阅读</span><strong id="readingChapter">第01章</strong></div><div class="metric"><span>待学习词汇</span><strong id="readerUnseen">—</strong></div><div class="metric"><span>今日待复习</span><strong id="readerDue">0</strong></div></div><div class="side-panel"><h3>阅读设置</h3><p class="side-caption">点击英文弹出词卡。需要回忆时，隐藏释义再读一次。</p><button class="secondary-btn" id="sideToggleGloss" style="width:100%;margin-top:9px">切换释义显示</button><button class="secondary-btn" id="sideRead" style="width:100%;margin-top:9px">▶ 开始朗读</button></div><div class="mini-note">章节朗读使用设备内置语音，支持跳转段落；语音音色由设备提供。</div></aside><div id="readerDrawerOverlay" class="reader-drawer-overlay"></div></div></section>
-    <section id="view-words" class="view app-section"><div class="page-intro"><div><span class="eyebrow">YOUR WORD COLLECTION</span><h1>我的记忆藏书票</h1><p>单词不是孤立的条目。每一个单词，都有它被你遇见时的故事。</p></div><button class="secondary-btn" id="wordbookRead">返回故事 →</button></div><section id="flashcardTrainer" class="flashcard-trainer" aria-label="记忆藏书票快速学习"></section><div class="filter-row"><button class="filter-chip active" data-word-filter="all">全部收藏</button><button class="filter-chip" data-word-filter="learning">待复习</button><button class="filter-chip" data-word-filter="mastered">已记住</button></div><div class="wordbook-layout"><div class="wordbook-grid" id="vocabGrid"></div><aside><div class="side-panel"><span class="eyebrow">YOUR BOOKPLATE</span><div class="stamp">KEEP<br><small>THE WORDS</small><br>✦</div><h3 style="text-align:center">把好故事，留在心里</h3><p class="side-caption" style="text-align:center">收藏单词，再从原剧情中把它想起来。复习只是轻轻翻开另一页。</p><div class="metric"><span>我的藏书票</span><strong id="bookplateCount">0</strong></div></div></aside></div></section>
+    <section id="view-words" class="view app-section"><div class="page-intro"><div><span class="eyebrow">YOUR WORD COLLECTION</span><h1>我的记忆生词本</h1><p>单词不是孤立的条目。每一个单词，都有它被你遇见时的故事。</p></div><button class="secondary-btn" id="wordbookRead">返回故事 →</button></div><section id="flashcardTrainer" class="flashcard-trainer" aria-label="记忆生词本快速学习"></section><div class="filter-row"><button class="filter-chip active" data-word-filter="all">全部收藏</button><button class="filter-chip" data-word-filter="learning">待复习</button><button class="filter-chip" data-word-filter="mastered">已记住</button></div><div class="wordbook-layout"><div class="wordbook-grid" id="vocabGrid"></div><aside><div class="side-panel"><span class="eyebrow">YOUR BOOKPLATE</span><div class="stamp">KEEP<br><small>THE WORDS</small><br>✦</div><h3 style="text-align:center">把好故事，留在心里</h3><p class="side-caption" style="text-align:center">收藏单词，再从原剧情中把它想起来。复习只是轻轻翻开另一页。</p><div class="metric"><span>我的生词本</span><strong id="bookplateCount">0</strong></div></div></aside></div></section>
     <section id="view-echo" class="view app-section"><div class="echo-wrap"><div class="echo-banner"><span class="eyebrow" style="color:#e9c2a5">STORY ECHO · THE MEMORY GAME</span><h2>剧情回声</h2><p>闭上书页，故事还在。选择剧情填词、情境选择或单词找回，复习你真正读过的章节。</p></div><div id="echoModeSwitch"></div><div id="quizContainer"></div></div></section>
-    <section id="view-account" class="view app-section"><div class="page-intro"><div><span class="eyebrow">MY PRIVATE LIBRARY</span><h1>我的书房</h1><p>这里收藏你拥有的故事，也记录它们陪你记住的词。</p></div></div><div id="accountPanel"></div></section>
-    <div class="foot-note">MIAOWU · THE STORY & WORD LIBRARY <span style="color:#b79383">✦</span> DESIGNED FOR STORIES & WORDS<br><span style="font:11px sans-serif;color:#ac9b93;letter-spacing:0">在故事里相遇，让词汇慢慢留下来。</span></div>
+    <section id="view-account" class="view app-section"><div class="page-intro"><div><span class="eyebrow">MY PRIVATE LIBRARY</span><h1>我的书房</h1><p>这里收藏你拥有的故事，也记录它们陪你记住的词。</p></div></div><div id="accountPanel"></div>
+      <section id="myBookshelf" class="v11-personal-shelf" aria-label="我的书架" hidden></section>
+      <section class="install-guide-entry" aria-labelledby="installGuideEntryTitle">
+        <div><h2 id="installGuideEntryTitle">添加到手机桌面</h2><p>下次打开妙屋更方便，不用再找网址啦。</p></div>
+        <button type="button" id="openInstallGuide">查看教程 →</button>
+      </section></section>
+    <div class="foot-note">MIAOWU · THE STORY & WORD LIBRARY <span style="color:#b79383">✦</span> DESIGNED FOR STORIES & WORDS<br><span style="font:11px sans-serif;color:#ac9b93;letter-spacing:0">在故事里相遇，让词汇慢慢留下来。</span><br><a class="mw-update-footer" href="/updates.html">妙屋更新日志 · 历史公告</a></div>
   </main>
-  <nav class="bottom-tabs" aria-label="手机导航"><button data-nav="library" class="active"><span class="tab-icon">⌂</span>书架</button><button data-nav="words"><span class="tab-icon">▤</span>藏书票</button><button data-nav="echo"><span class="tab-icon">✧</span>剧情回声</button><button data-nav="account"><span class="tab-icon">♙</span>我的</button></nav>
+  <nav class="bottom-tabs" aria-label="手机导航"><button data-nav="library" class="active"><span class="tab-icon">⌂</span>首页</button><button data-nav="words"><span class="tab-icon">▤</span>生词本</button><button data-nav="echo"><span class="tab-icon">✧</span>剧情回声</button><button data-nav="account"><span class="tab-icon">♙</span>我的</button></nav>
   <div class="player" id="player" aria-label="章节朗读控制">
 <div class="player-label"><strong>故事正在朗读</strong><small id="playerState">朗读准备就绪</small></div>
 <div class="player-transport"><button id="playerPrevious" aria-label="后退一段" title="后退一段">↶</button><button id="playerPause" class="primary-icon" aria-label="暂停/继续">Ⅱ</button><button id="playerNext" aria-label="前进一段" title="前进一段">↷</button><button id="playerStop" aria-label="停止朗读" title="停止朗读">■</button></div>
 <div class="player-seek"><input type="range" id="playerSeek" min="0" max="100" value="0" step="1" aria-label="朗读进度，拖动跳转"/><span id="playerPosition">0 / 0 段</span></div>
 </div>
   <div class="popover-backdrop" id="wordBackdrop"></div><div class="word-pop" id="wordPop" role="dialog" aria-label="单词学习面板" aria-live="polite"></div>
+
   <div class="modal-overlay" id="modalOverlay"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button class="modal-close" id="modalClose" aria-label="关闭">×</button><div id="modalContent"></div></div></div>
+  <dialog id="mwWelcomeDialog" class="mw-welcome-dialog" aria-labelledby="mwWelcomeTitle" aria-describedby="mwWelcomeBody">
+    <span class="mw-welcome-step" id="mwWelcomePosition">1 / 3</span>
+    <div class="mw-welcome-mark" id="mwWelcomeMark" aria-hidden="true">🐈</div>
+    <h2 id="mwWelcomeTitle">欢迎来到妙屋英语！</h2>
+    <p id="mwWelcomeBody">在中文故事里轻松学习英语单词。</p>
+    <div class="mw-welcome-controls">
+      <button type="button" id="mwWelcomeSkip">跳过</button>
+      <button type="button" id="mwWelcomeBack">上一步</button>
+      <button class="mw-primary" type="button" id="mwWelcomeNext">下一步</button>
+    </div>
+    <div class="mw-onboard-after"><button type="button" id="mwWelcomeInstall" hidden>添加到手机桌面 · 查看教程</button></div>
+    <p class="mw-welcome-error" id="mwWelcomeError" role="alert" hidden>暂时无法保存引导进度，请检查网络后重试。</p>
+  </dialog>
+  <div id="mwWordHint" class="mw-word-hint" role="status" data-open="false"><span>点击英文单词可以查看词义、听发音，还能加入生词本。</span><button type="button">知道啦</button></div>
+  <dialog id="siteUpdateDialog" class="mw-updates-dialog" aria-labelledby="siteUpdateDialogTitle">
+    <div class="mw-updates-dialog-heading">
+      <div><span class="mw-updates-eyebrow">WORDLETTER · WHAT'S NEW</span><h2 id="siteUpdateDialogTitle">妙屋新鲜事</h2></div>
+      <button id="siteUpdateDialogClose" class="mw-updates-dialog-close" type="button" aria-label="关闭公告详情">×</button>
+    </div>
+    <div class="mw-updates-tabs" role="tablist" aria-label="选择公告类型">
+      <button id="siteUpdateTabLatest" type="button" role="tab" aria-selected="true" aria-controls="siteUpdatePanelLatest">最新公告</button>
+      <button id="siteUpdateTabHistory" type="button" role="tab" aria-selected="false" aria-controls="siteUpdatePanelHistory">历史更新</button>
+    </div>
+    <section id="siteUpdatePanelLatest" class="mw-updates-panel" role="tabpanel" aria-labelledby="siteUpdateTabLatest">
+      <p id="siteUpdateDialogDate" class="mw-updates-date"></p>
+      <h3 id="siteUpdateDialogHeadline" class="mw-updates-headline"></h3>
+      <p id="siteUpdateDialogBody" class="mw-updates-body"></p>
+    </section>
+    <section id="siteUpdatePanelHistory" class="mw-updates-panel" role="tabpanel" aria-labelledby="siteUpdateTabHistory" hidden>
+      <div id="siteUpdateCompactList" class="mw-updates-list" aria-label="历史更新列表"></div>
+      <p id="siteUpdateHistoryInlineStatus" class="mw-updates-status" role="status" aria-live="polite"></p>
+      <button id="siteUpdateHistoryMore" class="mw-updates-more" type="button" hidden>查看更多</button>
+    </section>
+  </dialog>
+  <dialog id="installGuideDialog" class="install-guide-dialog" aria-labelledby="installGuideTitle">
+    <button type="button" class="install-guide-close" id="installGuideClose" aria-label="关闭添加到桌面教程">×</button>
+    <h2 id="installGuideTitle">把妙屋添加到手机桌面</h2>
+    <p class="install-guide-subtitle">下次点开就能继续读故事、复习单词。</p>
+    <div class="install-guide-tabs" role="tablist" aria-label="设备类型">
+      <button type="button" role="tab" id="installGuideIphoneTab" aria-selected="true" aria-controls="installGuideIphone" tabindex="0">iPhone</button>
+      <button type="button" role="tab" id="installGuideAndroidTab" aria-selected="false" aria-controls="installGuideAndroid" tabindex="-1">Android</button>
+    </div>
+    <div id="installGuideIphone" class="install-guide-panel" role="tabpanel" aria-labelledby="installGuideIphoneTab">
+      <ol><li>使用 Safari 打开妙屋英语。</li><li>点击共享（或页面菜单 → 共享），选择「添加到主屏幕」。</li><li>点击「添加」，就完成啦！</li></ol>
+    </div>
+    <div id="installGuideAndroid" class="install-guide-panel" role="tabpanel" aria-labelledby="installGuideAndroidTab" hidden>
+      <ol><li>使用 Chrome 打开妙屋英语。</li><li>点击浏览器菜单，选择「添加到主屏幕」或「安装应用」。</li><li>确认添加即可。</li></ol>
+    </div>
+    <p class="install-guide-note">建议先使用手机自带浏览器打开网站，再按照以上步骤操作。</p>
+  </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="/chapter-words.js"></script>
+  <script src="/chapter-words.js?v=20261108-v11-no-voluntary-review-r3"></script>
   <script src="/echo-cloud.js?v=20261103-v12-review-cover"></script>
   <script src="/flashcards.js?v=20261105-v31-word-only"></script>
   <script src="/app.js?v=20261105-v30-flashcards"></script>
+  <script src="/install-guide.js?v=20261106-v11-p1"></script>
+  <script src="/onboarding.js?v=20261106-v11-p1"></script>
+  <script src="/site-updates.js?v=20261107-preview6"></script>
 </body>
 </html>

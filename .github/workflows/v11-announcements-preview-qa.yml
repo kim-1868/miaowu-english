@@ -1,0 +1,32 @@
+name: V1.1 preview-only site announcements QA
+on:
+  push:
+    branches: [feature/v11-updates-notice-mvp-20261107]
+# PUBLIC-06: run on owning feature branch; general V1.1 PR updates use public UI CI.
+# Reviewed private candidates use default-branch manual integration gate instead.
+permissions:
+  contents: read
+jobs:
+  test-announcements:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test publisher-only lifecycle and read-only public archive using synthetic SQLite
+        run: node --experimental-sqlite --test tests/v11-announcements-preview.test.mjs
+      - name: Full site regression and strict build verification, without deployment
+        run: |
+          npm run check
+          npm test
+      - name: Verify staging-only bindings
+        run: node scripts/check-v11-preview-config.mjs
+      - name: Confirm no remote D1 changes in this job
+        run: |
+          echo "NO_PRODUCTION_D1_OR_DEPLOYMENT"
+          echo "ANNOUNCEMENTS_PREVIEW_ONLY"

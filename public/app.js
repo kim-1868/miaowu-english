@@ -9,7 +9,7 @@
     Object.keys(WORD_EXTRAS).forEach(k=>Object.assign(WORDS[k],WORD_EXTRAS[k]));
     const CHAPTERS=[{title:'一纸协议',parts:['这只是一个用于测试阅读功能的场景片段，并非正式小说正文。窗外的雨敲打玻璃，客厅里只亮着一盏灯。','她将那份 [[contract]]（合同）轻轻推到桌面中央。对面的男人看上去依旧 [[indifferent]]（冷淡的），仿佛这不过是一次寻常的会面。','“我只想 [[confirm]]（确认）一件事。”她望着他，“这真的是你的决定吗？”','他没有回答。她也没有 [[hesitate]]（犹豫），拿起笔，在最后一页留下自己的 [[signature]]（签名）。','离开前，她发现文件下压着一张旧照片。也许，那会是一份重要的 [[evidence]]（证据）。']},{title:'藏在照片里的名字',parts:['这一章同样是临时交互文案，仅用于体验付费章节解锁与词汇功能。','照片背面的名字让她重新思考自己的 [[identity]]（身份）。那是一段不曾向任何人提起的往事。','律师寄来的邮件提到了股份 [[transfer]]（转让）。事情比她想象的复杂。','她将信纸折好，决定先不 [[reveal]]（透露）真相。某个遥远的 [[promise]]（承诺），仍然留在她的记忆里。','门外的脚步声逐渐 [[approach]]（接近）。她突然明白，每个决定都可能带来新的 [[consequence]]（后果）。']}];
     const QUIZ=[{q:'她把哪一种文件推到桌面中央？',hint:'提示：一份正式的书面约定。',choices:['contract','evidence','identity','promise'],correct:'contract',detail:'contract = 合同；契约。想起桌上的那份协议。'},{q:'她在文件最后一页留下了什么？',hint:'提示：这是签署协议时的一个动作。',choices:['approach','signature','transfer','reveal'],correct:'signature',detail:'signature = 签名。把词义和“落笔签字”的画面连在一起。'},{q:'他看上去冷淡的，哪个英文词更贴近？',hint:'提示：描述人物的态度。',choices:['indifferent','hesitate','confirm','consequence'],correct:'indifferent',detail:'indifferent = 冷淡的；漠不关心的。再次想起故事人物的神情。'}];
-    const $=id=>document.getElementById(id);let view='library',category='cet4',chapter=0,gloss=true,night=(function(){try{return localStorage.getItem('miaowu_theme')==='dark'}catch(e){return false}})(),fontSize=(()=>{try{return Math.min(25,Math.max(15,Number(localStorage.getItem('miaowu_reader_font'))||18))}catch{return 18}})(),wordFilter='all',popWord=null,user=null,grants=new Set(),quizIndex=0,quizScore=0,quizAnswer=null,utterances=[],speakIndex=0,speaking=false,paused=false;
+    const $=id=>document.getElementById(id);let view='library',category='cet4',chapter=0,gloss=true,night=(function(){try{return localStorage.getItem('miaowu_theme')==='dark'}catch(e){return false}})(),fontSize=(()=>{try{return Math.min(24,Math.max(12,Number(localStorage.getItem('miaowu_reader_font'))||18))}catch{return 18}})(),wordFilter='all',popWord=null,user=null,grants=new Set(),quizIndex=0,quizScore=0,quizAnswer=null,utterances=[],speakIndex=0,speaking=false,paused=false;
     const stored=(key)=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch(e){return []}};const saved=new Set(stored('miaowu_demo_words').filter(w=>WORDS[w]));const mastered=new Set(stored('miaowu_demo_mastered').filter(w=>WORDS[w]));
     const safe=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     function applyTheme(){
@@ -44,7 +44,7 @@
         seen?'喵呜，你已收藏 '+seen+' 张词卡':'喵呜，读一段故事，收藏第一张词卡';
       const hint=!user?'登录后，阅读进度与词卡会自动同步到你的账号。':
         due?'这些词已经到复习时间。去剧情回声找回故事里的单词吧。':
-        '打开记忆藏书票，继续复习你在小说中遇见的单词。';
+        '打开记忆生词本，继续复习你在小说中遇见的单词。';
       area.innerHTML='<div class="reminder-cat reminder-paw" aria-hidden="true">'+
         '<svg class="solid-cat-paw" viewBox="0 0 80 80" width="58" height="58" fill="currentColor" xmlns="http://www.w3.org/2000/svg">'+
         '<ellipse cx="15.5" cy="29" rx="7.7" ry="10.2" transform="rotate(-24 15.5 29)"/>'+
@@ -55,7 +55,7 @@
         '</svg></div>'+
         '<div class="reminder-content"><strong>'+safe(title)+'</strong><small>'+safe(hint)+'</small></div>'+
         '<button class="primary reminder-btn" id="reviewReminderBtn">'+
-        (user?'查看记忆藏书票 →':'登录后同步 →')+'</button>';
+        (user?'查看记忆生词本 →':'登录后同步 →')+'</button>';
       $('reviewReminderBtn').onclick=()=>user?(due?navigate('echo'):navigate('words')):showLogin();
       renderHomeStudyStats();
     }
@@ -122,7 +122,7 @@
     function asMeaning(c){return WORDS[c]?`${safe(c)}：${safe(WORDS[c].meaning)}`:safe(c)}
     function reportExamResult(q,ans,hint=false){if(quizAnswer!==null)return;quizAnswer=ans;const ok=ans.toLowerCase().trim()===q.word; if(ok)quizScore++;recordAnswer(q.word,ok,hint);renderQuiz()}
 
-    function navigate(to){if(view==='echo'&&echoMode==='cloud'&&window.MiaowuCloudEcho?.running()){window.MiaowuCloudEcho.leave(to);return}if(view==='echo'&&echoMode==='demo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='reader'&&to!=='reader'){closeWord();clearTimeout(readingSaveTimer);void saveReadingProgress({quiet:true});stopReading();}view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words')renderWords();if(to==='echo')renderQuiz();if(to==='account')renderAccount();$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
+    function navigate(to){if(view==='echo'&&echoMode==='cloud'&&window.MiaowuCloudEcho?.running()){window.MiaowuCloudEcho.leave(to);return}if(view==='echo'&&echoMode==='demo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='reader'&&to!=='reader'){closeWord();clearTimeout(readingSaveTimer);void saveReadingProgress({quiet:true});stopReading();}view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words')renderWords();if(to==='echo')renderQuiz();if(to==='account'){renderAccount();if(user)void loadPersonalBookshelf()}$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
 
     // D1 is the primary reader source. Legacy chapter sample stays unreachable from default book cards.
     // No paid chapter bodies are bundled into app.js or held in a client-side book constant.
@@ -131,6 +131,7 @@
     const SHELF_PAGE_SIZE=9;
     let activeCloud=null;
     let cloudBooks=[],cloudSaved=new Map(),cloudProgress=[],cloudSessionKey=null,cloudLearningSequence=0;
+    let personalBooks=[],personalBooksRequest=0,personalShelfFilter='reading';
     let initialSessionPromise=Promise.resolve(),heroResumeBusy=false;
     function updateHeroReadLabel(){
       const btn=$('heroRead');if(!btn)return;
@@ -149,6 +150,13 @@
         content.style.setProperty('line-height','2.15');
         content.style.setProperty('font-size',fontSize+'px');
       }
+      const heading=$('chapterTitle');
+      if(heading)heading.style.setProperty('font-size',Math.round(fontSize*1.75)+'px');
+      const slider=$('readerFontSlider'),label=$('readerFontValue');
+      if(slider)slider.value=String(fontSize);
+      if(label)label.textContent=fontSize+'px';
+      $('smallerFont').disabled=fontSize<=12;
+      $('biggerFont').disabled=fontSize>=24;
       $('readerLayout')?.removeAttribute('data-reader-tone');
       try{
         localStorage.setItem('miaowu_reader_font',String(fontSize));
@@ -185,6 +193,7 @@
           progress:amount,completed_at:complete?new Date().toISOString():null,
           updated_at:new Date().toISOString()});
         updateHeroReadLabel();
+        if(started||complete)void loadPersonalBookshelf();
         // Never display "synced" before the server confirms the write.
         if(activeCloud?.chapterId===id)showCloudProgress(id);
         updateCloudShelfProgress();
@@ -308,6 +317,87 @@
         if(line)line.style.width=(total?Math.min(100,Math.round(completed/total*100)):0)+'%';
       });
     }
+
+    function renderPersonalBookshelf(){
+      const root=$('myBookshelf');
+      if(!root)return;
+      root.hidden=!user;
+      if(!user){root.replaceChildren();return}
+      const groups=[{state:'want',label:'想读'},{state:'reading',label:'阅读中'},{state:'finished',label:'已读完'}];
+      const matches=personalBooks.filter(b=>b.state===personalShelfFilter);
+      root.innerHTML='<div class="v11-my-shelf-header"><div><span class="eyebrow">MY STORY SHELF</span><h2>我的书架</h2>'+
+        '<p>喜欢的故事先收藏；开始阅读后，系统会根据云端进度自动整理。</p></div></div>'+
+        '<div class="v11-my-shelf-tabs" role="group" aria-label="书架阅读状态">'+
+        groups.map(g=>'<button type="button" data-personal-filter="'+g.state+'" class="'+
+          (personalShelfFilter===g.state?'active':'')+'" aria-pressed="'+String(personalShelfFilter===g.state)+'">'+
+          g.label+' <span>'+personalBooks.filter(b=>b.state===g.state).length+'</span></button>').join('')+'</div>'+
+        '<div class="v11-my-shelf-list">'+(matches.length?matches.map(book=>{
+          const chapterCount=Math.max(0,Number(book.chapter_count)||0);
+          const completed=Math.max(0,Number(book.completed_chapters)||0);
+          const coverVersion=/^cover-d1-([a-f0-9]{24})$/.exec(book.cover_key||'');
+          const cover=coverVersion?'/api/covers/'+encodeURIComponent(book.book_id)+'?v='+coverVersion[1]:
+            book.book_id==='rainy-night-archives-cet4-v1'?'/rainy-night-cover-v2.svg':'';
+          const note=book.state==='want'?'加入书架，还没有开始读':
+            book.state==='finished'?'所有已发布章节均已完成':'最近读到第 '+(Number(book.last_chapter_no)||1)+' 章';
+          return '<article class="v11-my-shelf-card" data-personal-book="'+safe(book.book_id)+'">'+
+            '<div class="v11-my-shelf-cover">'+(cover?'<img src="'+safe(cover)+'" alt="《'+safe(book.title)+'》封面" loading="lazy">':'<span>✧</span>')+'</div>'+
+            '<div class="v11-my-shelf-info"><h3>'+safe(book.title)+'</h3><p>'+safe(note)+'</p>'+
+            '<small>已完成 '+completed+' / '+chapterCount+' 章 · '+safe(book.category_slug.toUpperCase())+'</small>'+
+            '<div class="v11-my-shelf-actions"><button class="primary" type="button" data-my-shelf-read="'+safe(book.book_id)+'">'+
+            (book.state==='want'?'查看故事 →':'继续阅读 →')+'</button>'+
+            '<button class="secondary-btn" type="button" data-my-shelf-save="'+safe(book.book_id)+'">'+
+            (book.bookmarked?'✓ 已收藏 · 移除':'♡ 加入书架')+'</button></div></div></article>';
+        }).join(''):'<p class="v11-my-shelf-empty">这个分类暂时还没有故事，去首页挑一本喜欢的吧。</p>')+'</div>'+
+        '<p class="v11-my-shelf-foot">移出生词本不会删除阅读进度。付费章节仍需对应学习分类的阅读权限。</p>';
+      root.querySelectorAll('[data-personal-filter]').forEach(btn=>btn.onclick=()=>{
+        personalShelfFilter=btn.dataset.personalFilter;renderPersonalBookshelf();
+      });
+      root.querySelectorAll('[data-my-shelf-read]').forEach(btn=>btn.onclick=()=>{
+        const book=personalBooks.find(x=>x.book_id===btn.dataset.myShelfRead);
+        if(book)void openCloudBook({id:book.book_id,title:book.title},book.category_slug,
+          {resumeChapterId:book.last_chapter_id||null});
+      });
+      root.querySelectorAll('[data-my-shelf-save]').forEach(btn=>btn.onclick=()=>{
+        const book=personalBooks.find(x=>x.book_id===btn.dataset.myShelfSave);
+        if(book)void setPersonalBookmark(book.book_id,!book.bookmarked,btn);
+      });
+    }
+    async function loadPersonalBookshelf(){
+      const sequence=++personalBooksRequest, name=user?.name;
+      if(!name){personalBooks=[];renderPersonalBookshelf();return}
+      try{
+        const response=await serverRequest('/api/me/bookshelf');
+        if(sequence!==personalBooksRequest||user?.name!==name)return;
+        personalBooks=Array.isArray(response.books)?response.books:[];
+        renderPersonalBookshelf();
+        document.querySelectorAll('[data-cloud-bookmark]').forEach(btn=>{
+          const saved=personalBooks.some(b=>b.book_id===btn.dataset.cloudBookmark&&b.bookmarked);
+          btn.textContent=saved?'✓ 已收藏':'♡ 收藏小说';
+          btn.setAttribute('aria-pressed',String(saved));
+        });
+      }catch(error){
+        if(sequence!==personalBooksRequest||user?.name!==name)return;
+        const root=$('myBookshelf');if(root){
+          root.hidden=false;
+          root.innerHTML='<h2>我的书架</h2><p>书架暂时无法同步，请刷新或稍后重试。</p>'+
+            '<button class="secondary-btn" id="retryMyShelf">重新加载</button>';
+          $('retryMyShelf').onclick=loadPersonalBookshelf;
+        }
+      }
+    }
+    async function setPersonalBookmark(id,bookmarked,button){
+      if(!user){showLogin();return}
+      if(button)button.disabled=true;
+      try{
+        await serverRequest('/api/me/bookshelf/'+encodeURIComponent(id),'PUT',{bookmarked});
+        if(bookmarked&&window.MiaowuOnboarding?.bookmarkTapped())
+          toast('已加入我的书架，可以在「我的书房」找到这本书。');
+        else toast(bookmarked?'已加入我的书架':'已取消收藏，阅读历史仍会保留');
+        await loadPersonalBookshelf();
+      }catch(error){toast('书架收藏失败：'+(error.message||'请重试'))}
+      finally{if(button&&button.isConnected)button.disabled=false}
+    }
+
     function renderShelfPagination(slug,meta){
       const list=$('bookGrid');
       const totalPages=Math.max(0,Math.floor(Number(meta?.totalPages)||0));
@@ -405,8 +495,17 @@
             '<div class="shelf-progress" data-live-progress="'+safe(book.id)+'">'+
             '<div class="progress-text"><span>正在读取阅读记录</span><span>—</span></div>'+
             '<div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>'+
-            '<div class="book-actions"><button class="primary" type="button">'+action+'</button></div></div>';
+            '<div class="book-actions"><button class="primary" type="button">'+action+'</button>'+
+            '<button class="secondary-btn cloud-bookmark-button" type="button" data-cloud-bookmark="'+safe(book.id)+'" aria-pressed="'+
+            String(personalBooks.some(b=>b.book_id===book.id&&b.bookmarked))+'">'+
+            (personalBooks.some(b=>b.book_id===book.id&&b.bookmarked)?'✓ 已收藏':'♡ 收藏小说')+
+            '</button></div></div>';
           item.querySelector('.book-actions button').onclick=()=>openCloudBook(book,slug);
+          item.querySelector('[data-cloud-bookmark]').onclick=e=>{
+            const btn=e.currentTarget;
+            const wasSaved=personalBooks.some(b=>b.book_id===book.id&&b.bookmarked);
+            void setPersonalBookmark(book.id,!wasSaved,btn);
+          };
           list.append(item);
         });
         // Only published D1 books appear on the customer shelf.
@@ -446,6 +545,21 @@
         });
       }catch(error){toast(error.message||'章节目录加载失败');}
     }
+
+    function renderExampleWords(value,originWordId=null){
+      return String(value||'').split(/([A-Za-z]+(?:['-][A-Za-z]+)*)/g).map(part=>
+        /^[A-Za-z]+(?:['-][A-Za-z]+)*$/.test(part)?
+        '<button type="button" class="v11-example-word" data-example-word="'+safe(part.toLowerCase())+'"'+(originWordId?' data-example-origin="'+safe(originWordId)+'"':'')+'>'+safe(part)+'</button>':
+        safe(part)).join('');
+    }
+    // V1.1: tapping an example word is audio-only. It never replaces the
+    // active novel study card or opens a nested dictionary/learning card.
+    function pronounceExampleWord(button){
+      const word=button?.dataset?.exampleWord;
+      if(!word||!/^[a-z](?:[a-z'-]{0,30}[a-z])?$/.test(word))return;
+      speakWord(word);
+    }
+
     function renderD1Paragraph(paragraph,index){
       if(typeof paragraph==='string')return '<p data-audio-paragraph="'+index+'">'+safe(paragraph)+'</p>';
       const segments=Array.isArray(paragraph?.segments)?paragraph.segments:[];
@@ -466,22 +580,27 @@
     }
     // The bottom study tray is stable across re-rendered chapters. It is not a
     // blocking mobile modal: readers can tap another highlighted word in place.
-    let selectedStudyWordId=null,studyRequestSequence=0;
+    let selectedStudyWordId=null,studyRequestSequence=0,studyAnchorEl=null;
     const studyMissingWordIds=new Set();
     function chapterStudyWordIds(){
       return [...new Set(Array.from($('storyText').querySelectorAll('[data-cloud-word]'))
         .map(el=>el.dataset.cloudWord).filter(Boolean))];
     }
-    function showCloudWord(wordId){
+    function showCloudWord(wordId,anchorEl=null){
       if(!activeCloud?.chapterId)return;
+      if(anchorEl?.isConnected)studyAnchorEl=anchorEl;
+      else if(!studyAnchorEl?.isConnected||studyAnchorEl.dataset.cloudWord!==wordId)
+        studyAnchorEl=Array.from($('storyText').querySelectorAll('[data-cloud-word]'))
+          .find(el=>el.dataset.cloudWord===wordId)||null;
       selectedStudyWordId=wordId;
       const ids=chapterStudyWordIds();
       const idx=ids.indexOf(wordId);
-      const clicked=Array.from($('storyText').querySelectorAll('[data-cloud-word]'))
-        .find(el=>el.dataset.cloudWord===wordId);
+      const clicked=studyAnchorEl?.isConnected&&studyAnchorEl.dataset.cloudWord===wordId?
+        studyAnchorEl:Array.from($('storyText').querySelectorAll('[data-cloud-word]'))
+          .find(el=>el.dataset.cloudWord===wordId);
       const w=activeCloud.words?.get(wordId);
       const current=cloudSaved.get(wordId)||(w?.study_seen?{status:w.study_status,bookmarked:!!w.study_bookmarked}:null);
-      const pairs=Array.isArray(w?.collocations)?w.collocations:[];
+      const pairs=Array.isArray(w?.collocations)?w.collocations.filter(p=>p&&typeof p.en==='string'&&p.en.trim()&&typeof p.zh==='string'&&p.zh.trim()).slice(0,3):[];
       const title=w?.headword||clicked?.textContent||'单词学习';
       const meaning=w?.meaning_zh||clicked?.nextElementSibling?.textContent?.replace(/[（）]/g,'')||'词义加载中…';
       const missingKey=activeCloud.chapterId+'::'+wordId;
@@ -490,19 +609,22 @@
         '<div class="study-navigation"><span class="eyebrow">MIAOWU · LEARN A WORD</span>'+
         '<span class="study-position">'+(idx>=0?idx+1:1)+' / '+Math.max(1,ids.length)+'</span></div>'+
         '<h3>'+safe(title)+'</h3>'+
-        '<div class="pron">'+safe(w?.phonetic_us||w?.phonetic_uk||'')+
-        ' <button id="wordSmallSpeak" class="word-voice-inline" type="button" aria-label="播放发音">♫</button> · '+safe(w?.part_of_speech||'')+'</div>'+
+        '<div class="pron v11-word-pron"><span class="v11-pron-ipa">'+safe(w?.phonetic_us||w?.phonetic_uk||'')+'</span>'+
+        ' <button id="wordSmallSpeak" class="word-voice-inline" type="button" aria-label="播放单词发音">♫</button>'+
+        '<span class="v11-pron-part">'+safe(w?.part_of_speech||'')+'</span></div>'+
         '<div class="meaning">'+safe(meaning)+'</div>'+
         (!w&&!loading?'<p class="study-loading" role="status">暂无这张词卡的完整资料，请换一个单词学习。</p>':
         loading?'<p class="study-loading" role="status">正在读取这张词卡的学习资料…</p>':
-          '<div class="word-extra"><strong>例句</strong><br>'+safe(w.example_en||'暂未提供')+
-          '<br><span class="study-translation">'+safe(w.example_zh||'')+'</span></div>'+
-          '<div class="word-extra"><strong>常用搭配</strong><br>'+
-          (pairs.length?pairs.map(x=>safe(x.en||'')+' · '+safe(x.zh||'')).join('<br>'):'暂无搭配')+'</div>')+
+          (w.example_en?'<div class="word-extra"><div class="v11-example-heading"><strong>例句</strong>'+
+            '<button id="wordExampleSpeak" type="button" aria-label="朗读完整例句">♫ 朗读例句</button></div>'+
+            '<p>'+renderExampleWords(w.example_en,w.word_id)+'</p>'+
+            (w.example_zh?'<span class="study-translation">'+safe(w.example_zh)+'</span>':'')+'</div>':'')+
+          (pairs.length?'<div class="word-extra"><strong>常用搭配</strong><br>'+
+            pairs.map(x=>safe(x.en)+' · '+safe(x.zh)).join('<br>')+'</div>':'') )+
         '<div class="study-switch"><button id="studyPrevious" type="button" '+(idx<=0?'disabled':'')+'>← 上一个词</button>'+
         '<button id="studyNext" type="button" '+(idx<0||idx===ids.length-1?'disabled':'')+'>下一个词 →</button></div>'+
         '<div class="word-actions"><button id="wordSpeak" type="button">♫ 听发音</button>'+
-        '<button id="wordSave" type="button" '+(loading?'disabled':'')+'>'+(current?.bookmarked?'✓ 已收藏 · 移除':'♡ 收藏藏书票')+'</button>'+
+        '<button id="wordSave" type="button" '+(loading?'disabled':'')+'>'+(current?.bookmarked?'✓ 已加入 · 移出生词本':'♡ 添加生词本')+'</button>'+
         '<button id="cloudMaster" type="button" '+(loading?'disabled':'')+'>'+
         (current?.status==='mastered'?'↻ 继续学习':'✓ 标记已掌握')+'</button></div>';
       const mobileStudyTray=window.matchMedia('(max-width:700px)').matches;
@@ -511,7 +633,7 @@
       tray.classList.add('on');
       // Do not create a blocking full-screen overlay on iOS. On older cached
       // stylesheets the backdrop used to dim the page without a visible card.
-      backdrop.classList.toggle('on',!mobileStudyTray);
+      backdrop.classList.remove('on'); // Desktop uses a nonmodal anchored card; mobile uses the bottom tray.
       if(mobileStudyTray){
         backdrop.style.setProperty('display','none','important');
         backdrop.style.setProperty('pointer-events','none','important');
@@ -538,6 +660,7 @@
         ['position','display','visibility','z-index','top','bottom','left','right',
           'width','max-width','max-height','overflow-y','background','color',
           'border-radius','box-shadow','padding'].forEach(prop=>tray.style.removeProperty(prop));
+        positionStudyPopover();
       }
       $('storyText').querySelectorAll('[data-cloud-word]').forEach(el=>{
         el.classList.toggle('study-word-active',el.dataset.cloudWord===wordId);
@@ -545,6 +668,7 @@
       $('wordClose').onclick=closeWord;
       $('wordSpeak').onclick=()=>speakWord(title);
       $('wordSmallSpeak').onclick=()=>speakWord(title);
+      if($('wordExampleSpeak'))$('wordExampleSpeak').onclick=()=>speakWord(w.example_en);
       $('wordSave').onclick=()=>saveCloudWord(wordId,false);
       $('cloudMaster').onclick=()=>saveCloudWord(wordId,true);
       $('studyPrevious').onclick=()=>{if(idx>0)showCloudWord(ids[idx-1]);};
@@ -576,6 +700,30 @@
         ++studyRequestSequence;
       }
     }
+    function positionStudyPopover(){
+      const tray=$('wordPop');
+      if(!tray?.classList.contains('on')||window.matchMedia('(max-width:700px)').matches)return;
+      const anchor=studyAnchorEl?.isConnected?studyAnchorEl:null;
+      if(!anchor)return;
+      const bounds=anchor.getBoundingClientRect();
+      const margin=12, width=Math.min(370,window.innerWidth-margin*2);
+      const cardHeight=Math.min(tray.scrollHeight||520,window.innerHeight*.72);
+      const left=Math.max(margin,Math.min(window.innerWidth-width-margin,bounds.left));
+      const placeBelow=window.innerHeight-bounds.bottom>Math.min(280,cardHeight);
+      const top=placeBelow?Math.min(window.innerHeight-cardHeight-margin,bounds.bottom+9):
+        Math.max(margin,bounds.top-cardHeight-9);
+      tray.style.setProperty('position','fixed','important');
+      tray.style.setProperty('left',Math.round(left)+'px','important');
+      tray.style.setProperty('top',Math.round(top)+'px','important');
+      tray.style.setProperty('right','auto','important');
+      tray.style.setProperty('bottom','auto','important');
+      tray.style.setProperty('width',Math.round(width)+'px','important');
+      tray.style.setProperty('max-height','72vh','important');
+      tray.style.setProperty('overflow-y','auto','important');
+      tray.style.setProperty('z-index','2147483000','important');
+    }
+    window.addEventListener('resize',positionStudyPopover,{passive:true});
+    window.addEventListener('scroll',positionStudyPopover,{passive:true});
     async function saveCloudWord(id,markMastered){
       if(!user){closeWord();showLogin();return}
       const w=activeCloud?.words?.get(id);
@@ -589,7 +737,7 @@
         w.study_seen=true;w.study_status=status;w.study_bookmarked=bookmarked;
         if(bookmarked)cloudSaved.set(id,{...w,word_id:id,status,bookmarked:1});
         else cloudSaved.delete(id);
-        toast(bookmarked?'已同步到云端记忆藏书票':'已从云端藏书票移除');
+        toast(bookmarked?'已同步到云端记忆生词本':'已从云端生词本移除');
         showCloudWord(id);
         refreshCloudLearning();
       }catch(error){toast(error.message);if(action)action.disabled=false}
@@ -762,9 +910,9 @@
     }
     function splitPart(txt){const rg=/\[\[([a-z]+)\]\]（([^）]+)）/g;let last=0,html='',m;while((m=rg.exec(txt))){html+=safe(txt.slice(last,m.index));html+=`<button class="word" data-word="${m[1]}">${m[1]}</button><span class="gloss">（${safe(m[2])}）</span>`;last=rg.lastIndex}return html+safe(txt.slice(last))}
     function openChapter(num){resetDemoReadingUI();if(num>0&&!has('cet4')){showRegister({intent:'locked'});return}if(num<0||num>=CHAPTERS.length)return;chapter=num;VISITED.add(num);CHAPTER_WORDS[num].forEach(touchWord);saveReview();navigate('reader');$('chapterNo').textContent=`CHAPTER ${String(num+1).padStart(2,'0')} · ${num===0?'FREE PREVIEW':'MEMBER PREVIEW'}`;$('chapterTitle').textContent=CHAPTERS[num].title;$('storyText').innerHTML=CHAPTERS[num].parts.map(p=>`<p>${splitPart(p)}</p>`).join('');$('storyText').style.fontSize=fontSize+'px';$('readerCrumb').textContent='四级故事馆 / '+(num===0?'免费试读':'已购演示');$('chapterList').innerHTML=CHAPTERS.map((ch,i)=>`<button class="chapter-btn ${i===num?'current':''}" data-chapter="${i}">${String(i+1).padStart(2,'0')} · ${ch.title} ${i===1&&!has('cet4')?'🔒':''}</button>`).join('')+'<button class="chapter-btn" disabled>后续章节 · 内容筹备中</button>';document.querySelectorAll('[data-chapter]').forEach(b=>b.onclick=()=>openChapter(Number(b.dataset.chapter)));document.querySelectorAll('.word').forEach(b=>b.onclick=()=>openWord(b.dataset.word));$('readingStatus').textContent=has('cet4')?'四级已解锁 · 演示内容':'免费试读 · 章节02需激活';$('progressBar').style.width=(VISITED.size/CHAPTERS.length*100)+'%';$('readingChapter').textContent=`第${String(num+1).padStart(2,'0')}章`;$('savedCount').textContent=saved.size;$('nextChapter').textContent=num===0?'下一章 →':'返回书架 →';$('readerLayout').classList.toggle('night',night);$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);$('toggleNight').classList.toggle('pressed',night);$('toggleNight').textContent=night?'☀ 日间':'☾ 夜间';$('nextChapter').onclick=()=>num===0?openChapter(1):navigate('library');let side=$('readingStatus').closest('.side-panel');let extra=side.querySelector('#readerLearningStats');if(!extra){extra=document.createElement('div');extra.id='readerLearningStats';side.appendChild(extra)}extra.innerHTML=`<div class="metric"><span>待学习词汇（演示）</span><strong>${Object.keys(WORDS).length-touchedWords().length}</strong></div><div class="metric"><span>今天待复习</span><strong>${dueList().length}</strong></div>`;try{localStorage.setItem('miaowu_demo_lastchapter',String(num))}catch(e){} }
-    function openWord(w){if(!WORDS[w])return;popWord=w;touchWord(w);const info=WORDS[w];$('wordPop').innerHTML=`<button class="modal-close" id="wordClose" aria-label="关闭">×</button><div class="eyebrow">MIAOWU · WORD IN STORY</div><h3>${safe(w)}</h3><div class="pron">${safe(info.phonetic)} · ${safe(info.part)}</div><div class="meaning">${safe(info.meaning)}</div><div class="context">故事原句：<br>${safe(info.context)}</div><div class="word-extra"><strong>额外例句</strong><br>${safe(info.example)}<br><span style="color:var(--muted)">${safe(info.translation)}</span></div><div class="word-extra"><strong>常用搭配</strong><br>${info.collocations.map(x=>safe(x[0])+' · '+safe(x[1])).join('<br>')}</div><div class="word-actions"><button id="wordSpeak">♫ 听发音</button><button id="wordSave">${saved.has(w)?'✓ 已收藏':'♡ 收藏藏书票'}</button></div>`;$('wordPop').classList.add('on');$('wordBackdrop').classList.add('on');$('wordClose').onclick=closeWord;$('wordSpeak').onclick=()=>speakWord(w);$('wordSave').onclick=()=>toggleWord(w)}
+    function openWord(w){if(!WORDS[w])return;popWord=w;touchWord(w);const info=WORDS[w];$('wordPop').innerHTML=`<button class="modal-close" id="wordClose" aria-label="关闭">×</button><div class="eyebrow">MIAOWU · WORD IN STORY</div><h3>${safe(w)}</h3><div class="pron">${safe(info.phonetic)} · ${safe(info.part)}</div><div class="meaning">${safe(info.meaning)}</div><div class="context">故事原句：<br>${safe(info.context)}</div><div class="word-extra"><strong>额外例句</strong><br>${safe(info.example)}<br><span style="color:var(--muted)">${safe(info.translation)}</span></div><div class="word-extra"><strong>常用搭配</strong><br>${info.collocations.map(x=>safe(x[0])+' · '+safe(x[1])).join('<br>')}</div><div class="word-actions"><button id="wordSpeak">♫ 听发音</button><button id="wordSave">${saved.has(w)?'✓ 已收藏':'♡ 添加生词本'}</button></div>`;$('wordPop').classList.add('on');$('wordBackdrop').classList.add('on');$('wordClose').onclick=closeWord;$('wordSpeak').onclick=()=>speakWord(w);$('wordSave').onclick=()=>toggleWord(w)}
     function closeWord(){
-      ++studyRequestSequence;selectedStudyWordId=null;
+      ++studyRequestSequence;selectedStudyWordId=null;studyAnchorEl=null;
       const tray=$('wordPop'),backdrop=$('wordBackdrop');
       tray.classList.remove('on');backdrop.classList.remove('on');
       backdrop.style.removeProperty('display');
@@ -776,7 +924,7 @@
       $('storyText').querySelectorAll('[data-cloud-word]').forEach(el=>el.classList.remove('study-word-active'));
       popWord=null;
     }
-    function toggleWord(w){if(saved.has(w)){saved.delete(w);toast('已从本机演示收藏移除，学习记录继续保留')}else{saved.add(w);toast('已收藏到本机演示藏书票（仅此浏览器）')}saveWords();if(popWord===w)openWord(w);$('savedCount').textContent=saved.size;if(view==='words')renderWords()}
+    function toggleWord(w){if(saved.has(w)){saved.delete(w);toast('已从本机演示收藏移除，学习记录继续保留')}else{saved.add(w);toast('已收藏到本机演示生词本（仅此浏览器）')}saveWords();if(popWord===w)openWord(w);$('savedCount').textContent=saved.size;if(view==='words')renderWords()}
     function saveWords(){try{localStorage.setItem('miaowu_demo_words',JSON.stringify([...saved]));localStorage.setItem('miaowu_demo_mastered',JSON.stringify([...mastered]))}catch(e){}}
     function renderWords(){
       globalThis.MiaowuFlashcards?.render({
@@ -790,7 +938,7 @@
       $('bookplateCount').textContent=String(cloudTotal);
       if(!user){
         $('vocabGrid').innerHTML='<div class="empty" style="grid-column:1/-1">'+
-          '<div class="big">♧</div><h3>登录后，打开你的云端藏书票</h3>'+
+          '<div class="big">♧</div><h3>登录后，打开你的云端生词本</h3>'+
           '<p>登录同一账号即可在不同设备读取已收藏的单词。</p>'+
           '<button class="primary" id="cloudWordsLogin">登录我的书房</button></div>';
         $('cloudWordsLogin').onclick=showLogin;return;
@@ -798,14 +946,14 @@
       if(!words.length){
         const hasSaved=cloudTotal>0;
         $('vocabGrid').innerHTML='<div class="empty" style="grid-column:1/-1">'+
-          '<div class="big">♧</div><h3>'+(hasSaved?'这个筛选下暂无藏书票':'第一张藏书票，等你来收下')+'</h3>'+
-          '<p>'+(hasSaved?'试试切换「全部收藏」，查看其它学习状态的词卡。':'打开已解锁的故事，点击英文词汇即可收藏到记忆藏书票。')+'</p>'+
+          '<div class="big">♧</div><h3>'+(hasSaved?'这个筛选下暂无生词本':'第一张生词本，等你来收下')+'</h3>'+
+          '<p>'+(hasSaved?'试试切换「全部收藏」，查看其它学习状态的词卡。':'打开已解锁的故事，点击英文词汇即可收藏到记忆生词本。')+'</p>'+
           '<button class="primary" id="emptyRead">寻找故事 →</button></div>';
         $('emptyRead').onclick=()=>navigate('library');return;
       }
       const cloudCards=user?words.map(w=>{
         const mastered=w.status==='mastered';
-        const pairs=Array.isArray(w.collocations)?w.collocations:[];
+        const pairs=Array.isArray(w.collocations)?w.collocations.filter(p=>p&&typeof p.en==='string'&&p.en.trim()&&typeof p.zh==='string'&&p.zh.trim()).slice(0,3):[];
         return '<div class="vocab-card status-'+(mastered?'mastered':'learning')+'">'+
           '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px">'+
           '<span class="eyebrow">MIAOWU · BOOKPLATE</span>'+
@@ -814,19 +962,25 @@
           safe(w.phonetic_us||w.phonetic_uk||'')+
           ' <button data-cloud-voice="'+safe(w.word_id)+'" aria-label="播放发音">♫</button></p>'+
           '<p>'+safe(w.part_of_speech||'')+' '+safe(w.meaning_zh||'')+'</p>'+
-          '<div class="vocab-section"><b>例句 / EXAMPLE</b><div class="vocab-example">'+
-          safe(w.example_en||'待补充')+'</div><p class="vocab-translation">'+safe(w.example_zh||'')+'</p></div>'+
-          '<div class="vocab-section"><b>常用搭配 / COLLOCATIONS</b>'+
-          pairs.map(p=>'<div class="vocab-collocation"><span>'+safe(p.en||'')+'</span><span>'+
-            safe(p.zh||'')+'</span></div>').join('')+'</div>'+
+          (w.example_en?'<div class="vocab-section"><b>例句 / EXAMPLE</b>'+
+          '<button class="v11-example-audio" type="button" data-example-audio="'+safe(w.word_id)+'">♫ 朗读例句</button>'+
+          '<div class="vocab-example">'+renderExampleWords(w.example_en,w.word_id)+'</div>'+
+          (w.example_zh?'<p class="vocab-translation">'+safe(w.example_zh)+'</p>':'')+'</div>':'')+
+          (pairs.length?'<div class="vocab-section"><b>常用搭配 / COLLOCATIONS</b>'+
+          pairs.map(p=>'<div class="vocab-collocation"><span>'+safe(p.en)+'</span><span>'+
+            safe(p.zh)+'</span></div>').join('')+'</div>':'')+
           '<div class="card-tools"><button data-cloud-say="'+safe(w.word_id)+'">♫ 发音</button>'+
           '<button data-cloud-master="'+safe(w.word_id)+'">'+(mastered?'↻ 改为学习中':'✓ 标记已掌握')+'</button>'+
-          '<button data-cloud-remove="'+safe(w.word_id)+'">移除收藏</button></div></div>';
+          '<button data-cloud-remove="'+safe(w.word_id)+'">移出生词本</button></div></div>';
       }).join(''):'';
       const sources='<div class="bookplate-source-summary">已同步词卡 '+cloudTotal+
         ' 张<small>这些词卡关联你的账号，可在登录后跨设备查看。</small></div>';
       const cloudSection=cloudCards?'<div class="bookplate-source-heading">☁ 云端收藏 · 已同步到账号</div>'+cloudCards:'';
       $('vocabGrid').innerHTML=sources+cloudSection;
+      document.querySelectorAll('[data-example-audio]').forEach(x=>x.onclick=()=>{
+        const w=cloudSaved.get(x.dataset.exampleAudio);
+        if(w?.example_en)speakWord(w.example_en);
+      });
       document.querySelectorAll('[data-cloud-voice],[data-cloud-say]').forEach(x=>{
         x.onclick=()=>{const w=cloudSaved.get(x.dataset.cloudVoice||x.dataset.cloudSay);if(w)speakWord(w.headword)};
       });
@@ -950,13 +1104,15 @@
         activeCloud=null;
         if(view==='reader'){navigate('library');$('storyText').textContent='';}
       }
-      cloudSaved=new Map();cloudProgress=[];glossaryCache.clear();cloudSessionKey=user?.name||null;
+      cloudSaved=new Map();cloudProgress=[];personalBooks=[];++personalBooksRequest;glossaryCache.clear();cloudSessionKey=user?.name||null;
       updateHeroReadLabel();
       renderLibrary();renderAccount();renderReminder();
+      if(user)void loadPersonalBookshelf();else renderPersonalBookshelf();
       refreshCloudLearning();
       if(view==='echo')renderQuiz();
       $('topAccount').textContent=user?'你好，'+user.name:'登录 / 激活';
       if(move)navigate('account');
+      window.MiaowuOnboarding?.sync(!!user,grants.size>0);
     }
     async function loadServerSession(){
       try { applyServerAccount(await serverRequest('/api/auth/me')); }
@@ -1002,10 +1158,10 @@
         '<span style="font-size:12px;color:var(--muted)">妙屋英语 · 我的云端学习记录</span></div></div>'+
         '<div class="account-stats">'+stats.map(x=>'<div class="account-stat"><strong>'+x.n+'</strong><small>'+
         x.t+'</small></div>').join('')+'</div>'+
-        '<div class="account-reminder"><div><strong>♧ 记忆藏书票</strong>'+
+        '<div class="account-reminder"><div><strong>♧ 记忆生词本</strong>'+
         '<div class="echo-tip">到期词卡 '+due+' 张 · 已收藏 '+cloudSaved.size+
         ' 张 · 剧情回声学习记录同步到账户</div></div>'+
-        '<button class="primary" id="accountStartReview">查看藏书票 →</button></div>'+
+        '<button class="primary" id="accountStartReview">查看生词本 →</button></div>'+
         '<div class="account-content"><div class="account-block"><h3>已解锁学习分类</h3>'+
         (ent.map(c=>'<span class="account-tag">✓ '+safe(c.name)+'</span>').join('')||
           '<p>暂无已解锁分类</p>')+
@@ -1046,12 +1202,14 @@
       showModal([
         '<span class="eyebrow">OPEN YOUR LIBRARY</span>',
         '<h2 id="modalTitle">注册并激活</h2>',
-        '<p>设置用户名和登录密码，并输入获得的一次性分类激活码。你的阅读记录与藏书票会关联到这个账号。</p>',
+        '<p>设置用户名和登录密码，并输入获得的一次性分类激活码。你的阅读记录与生词本会关联到这个账号。</p>',
         '<form id="registerForm">',
           '<div class="form-field"><label for="rName">自定义用户名</label>',
           '<input id="rName" autocomplete="username" minlength="3" maxlength="24" placeholder="3–24位字母、数字或下划线等" required></div>',
           '<div class="form-field"><label for="rPass">登录密码</label>',
-          '<input id="rPass" type="password" autocomplete="new-password" minlength="10" maxlength="128" placeholder="至少10位，请勿使用常用密码" required></div>',
+          '<div class="mw-password-control"><input id="rPass" type="password" autocomplete="new-password" minlength="10" maxlength="128" placeholder="至少10位，请勿使用常用密码" required><button type="button" data-password-toggle="rPass" aria-label="显示登录密码">显示</button></div></div>',
+          '<div class="form-field"><label for="rPassConfirm">确认登录密码</label>',
+          '<div class="mw-password-control"><input id="rPassConfirm" type="password" autocomplete="new-password" minlength="10" maxlength="128" placeholder="再次输入登录密码" required><button type="button" data-password-toggle="rPassConfirm" aria-label="显示确认密码">显示</button></div><small id="registerMatchMessage" class="mw-password-feedback" role="status" aria-live="polite"></small></div>',
           '<div class="form-field"><label for="rCode">一次性分类激活码</label>',
           '<input id="rCode" autocomplete="off" placeholder="输入获得的分类激活码" required></div>',
           '<p class="helper">激活码由网站运营方通过指定渠道提供，当前不支持站内直接付款。分类权益及售后请以实际商品说明为准。</p>',
@@ -1061,9 +1219,28 @@
         '<div style="margin-top:15px"><button class="tiny-action" id="switchLogin">已有账号？去登录</button></div>'
       ].join(''));
       $('switchLogin').onclick=showLogin;
+      const password=$('rPass'),confirmPassword=$('rPassConfirm'),matchMessage=$('registerMatchMessage');
+      const updatePasswordMatch=()=>{
+        matchMessage.textContent=confirmPassword.value&&password.value!==confirmPassword.value?'两次输入的密码不一致，请检查。':'';
+      };
+      password.addEventListener('input',updatePasswordMatch);
+      confirmPassword.addEventListener('input',updatePasswordMatch);
+      document.querySelectorAll('[data-password-toggle]').forEach(button=>button.onclick=()=>{
+        const input=$(button.dataset.passwordToggle);
+        const visible=input.type==='password';
+        input.type=visible?'text':'password';
+        button.textContent=visible?'隐藏':'显示';
+        button.setAttribute('aria-label',(visible?'隐藏':'显示')+(input.id==='rPass'?'登录密码':'确认密码'));
+      });
       $('registerForm').onsubmit=e=>{
         e.preventDefault();
         const form=e.currentTarget;
+        updatePasswordMatch();
+        if(password.value!==confirmPassword.value){
+          formError('两次输入的密码不一致，请重新确认。');
+          confirmPassword.focus();
+          return;
+        }
         const btn=form.querySelector('button[type=submit]');
         btn.dataset.original=btn.textContent;
         submitServerForm(form,
@@ -1072,7 +1249,7 @@
             activationCode:$('rCode').value.trim()
           }),
           result=>{
-            $('rPass').value='';
+            $('rPass').value='';$('rPassConfirm').value='';
             closeModal();
             applyServerAccount(result,true);
             toast('书房创建成功，分类已开通');
@@ -1247,7 +1424,7 @@
       };
     }
     function formError(s){$('formMessage').innerHTML=`<div class="form-message">${safe(s)}</div>`}
-    function explain(){showModal(`<span class="eyebrow">HOW IT WORKS</span><h2 id="modalTitle">一部小说，一段词汇记忆</h2><p>这是一款将阅读、听书、词汇收藏与情节回忆组合在一起的互动阅读器。</p><div class="onboarding" style="padding:15px;margin:12px 0"><h3>01 · 先读故事</h3><p>打开已解锁的章节，点击酒红色英文词查义、听发音。</p><h3>02 · 收下藏书票</h3><p>收藏之后，你可以在「记忆藏书票」里复习。</p><h3>03 · 听见剧情回声</h3><p>可选不同玩法、章节范围，通过选择与拼写练习回忆词汇。</p><h3>04 · 解锁完整书架</h3><p>注册账号后使用一次性分类激活码解锁更多作品，实际开放内容以书架为准。</p></div><button class="primary" id="explainRead" style="width:100%">去书架看看 →</button>`);$('explainRead').onclick=()=>{closeModal();openFirstCloudBook()}}
+    function explain(){showModal(`<span class="eyebrow">HOW IT WORKS</span><h2 id="modalTitle">一部小说，一段词汇记忆</h2><p>这是一款将阅读、听书、词汇收藏与情节回忆组合在一起的互动阅读器。</p><div class="onboarding" style="padding:15px;margin:12px 0"><h3>01 · 先读故事</h3><p>打开已解锁的章节，点击酒红色英文词查义、听发音。</p><h3>02 · 收下生词本</h3><p>收藏之后，你可以在「记忆生词本」里复习。</p><h3>03 · 听见剧情回声</h3><p>可选不同玩法、章节范围，通过选择与拼写练习回忆词汇。</p><h3>04 · 解锁完整书架</h3><p>注册账号后使用一次性分类激活码解锁更多作品，实际开放内容以书架为准。</p></div><button class="primary" id="explainRead" style="width:100%">去书架看看 →</button>`);$('explainRead').onclick=()=>{closeModal();openFirstCloudBook()}}
     // Device TTS remains unchanged. The player now supports paragraph/segment
     // navigation without pretending that speechSynthesis has audio timestamps.
     let speechGeneration=0;
@@ -1273,11 +1450,22 @@
     }
     function speakWord(w){
       if(!('speechSynthesis' in window)){toast('此浏览器暂不支持语音朗读');return}
-      stopReading();
+      // The browser has a single SpeechSynthesis queue. Word audio can
+      // interrupt a paused chapter, but closing the card NEVER auto-resumes it.
+      if(speaking){
+        chapterSpeechNeedsRestart=true;
+        speechGeneration++; // invalidate the canceled chapter utterance callbacks
+        window.speechSynthesis.cancel();
+        paused=true;
+        $('playerPause').textContent='▶';
+        $('playerState').textContent='已暂停 · 点击继续朗读';
+      }else window.speechSynthesis.cancel();
       const u=new SpeechSynthesisUtterance(w);u.lang='en-US';u.rate=.82;
       window.speechSynthesis.speak(u);
     }
+    let chapterSpeechNeedsRestart=false;
     function stopReading(){
+      chapterSpeechNeedsRestart=false;
       speechGeneration++;
       if('speechSynthesis' in window)window.speechSynthesis.cancel();
       speaking=false;paused=false;utterances=[];
@@ -1317,7 +1505,7 @@
       if(!utterances.length)return;
       speechGeneration++;
       window.speechSynthesis.cancel();
-      speaking=true;paused=false;
+      speaking=true;paused=false;chapterSpeechNeedsRestart=false;
       speakIndex=Math.max(0,Math.min(utterances.length-1,Math.floor(index)));
       $('player').classList.add('show');
       $('playerPause').textContent='Ⅱ';
@@ -1329,7 +1517,7 @@
       const next=buildSpeechSegments();
       if(!next.length){toast('本章没有可朗读的内容');return}
       stopReading();
-      utterances=next;speaking=true;paused=false;
+      utterances=next;speaking=true;paused=false;chapterSpeechNeedsRestart=false;
       let first=0;
       if(Number.isInteger(fromParagraph)){
         const target=utterances.findIndex(t=>t.paragraph>=fromParagraph);
@@ -1406,7 +1594,7 @@
       $('readerLayout').classList.remove('chapter-drawer-open','vocab-drawer-open');
       $('mobileChapterOpen').setAttribute('aria-expanded','false');
       $('mobileVocabOpen').setAttribute('aria-expanded','false');
-    };$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{echoMode='cloud';if(activeCloud?.chapterId)window.MiaowuCloudEcho?.useChapter(activeCloud.chapterId);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(15,fontSize-1);applyReadingPrefs()};$('biggerFont').onclick=()=>{fontSize=Math.min(25,fontSize+1);applyReadingPrefs()};function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=()=>{rememberSpeechPosition(0);stopReading()};
+    };$('openActivation').onclick=()=>user?showRedeem():showRegister();$('topAccount').onclick=()=>user?navigate('account'):showLogin();$('wordbookRead').onclick=()=>navigate('library');$('doEcho').onclick=()=>{echoMode='cloud';if(activeCloud?.chapterId)window.MiaowuCloudEcho?.useChapter(activeCloud.chapterId);navigate('echo')};$('smallerFont').onclick=()=>{fontSize=Math.max(12,fontSize-1);applyReadingPrefs()};$('biggerFont').onclick=()=>{fontSize=Math.min(24,fontSize+1);applyReadingPrefs()};$('readerFontSlider').addEventListener('input',e=>{fontSize=Math.max(12,Math.min(24,Math.round(Number(e.target.value)||18)));applyReadingPrefs()});function changeGloss(){gloss=!gloss;$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);toast(gloss?'已显示释义':'已隐藏释义，可以尝试回忆')}$('toggleGloss').onclick=changeGloss;$('sideToggleGloss').onclick=changeGloss;$('toggleNight').onclick=flipTheme;$('globalThemeToggle').onclick=flipTheme;$('sideRead').onclick=startReading;$('topRead').onclick=startReading;$('playerPause').onclick=()=>{if(!speaking)return;if(paused){if(chapterSpeechNeedsRestart)seekSpeech(Math.max(0,speakIndex-1));else{window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读'}}else{window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停'}};$('playerStop').onclick=()=>{rememberSpeechPosition(0);stopReading()};
     $('playerPrevious').onclick=()=>{if(speaking)seekSpeech(speakIndex-2);else startReading()};
     $('playerNext').onclick=()=>{if(speaking)seekSpeech(speakIndex);else startReading()};
     $('playerSeek').addEventListener('input',e=>{
@@ -1414,14 +1602,42 @@
     });
     $('playerSeek').addEventListener('change',e=>{
       if(speaking)seekSpeech(Number(e.target.value));
-      else startReading();
+      // Never start chapter audio from a slider unless user pressed 朗读 first.
+    });
+    document.addEventListener('click',e=>{
+      const word=e.target.closest?.('[data-example-word]');
+      if(word){e.preventDefault();e.stopPropagation();pronounceExampleWord(word);return}
     });
     $('storyText').addEventListener('click',e=>{
       const word=e.target.closest('[data-cloud-word]');
-      if(word){e.preventDefault();e.stopPropagation();showCloudWord(word.dataset.cloudWord);return;}
+      if(word){
+        e.preventDefault();e.stopPropagation();
+        if(speaking&&!paused){
+          window.speechSynthesis.pause();
+          paused=true;
+          $('playerPause').textContent='▶';
+          $('playerState').textContent='已暂停 · 点击继续朗读';
+        }
+        showCloudWord(word.dataset.cloudWord,word);
+        window.MiaowuOnboarding?.wordTapped();
+        return;
+      }
       if(e.target.closest('button,a,[role=button]'))return;
       const p=e.target.closest('[data-audio-paragraph]');
-      if(activeCloud?.chapterId&&p)startReading(Number(p.dataset.audioParagraph));
+      if(!activeCloud?.chapterId||!p||!speaking)return;
+      const paragraph=Number(p.dataset.audioParagraph);
+      const current=utterances[Math.max(0,speakIndex-1)]?.paragraph;
+      if(paragraph===current){
+        if(paused){
+          if(chapterSpeechNeedsRestart)seekSpeech(Math.max(0,speakIndex-1));
+          else {window.speechSynthesis.resume();paused=false;$('playerPause').textContent='Ⅱ';$('playerState').textContent='继续朗读';}
+        }else{
+          window.speechSynthesis.pause();paused=true;$('playerPause').textContent='▶';$('playerState').textContent='已暂停';
+        }
+      }else{
+        const segment=utterances.findIndex(x=>x.paragraph>=paragraph);
+        if(segment>=0)seekSpeech(segment);
+      }
     });
 $('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
     // Cloud reading progress is saved automatically on scroll and chapter navigation.
@@ -1439,6 +1655,9 @@ $('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalO
       saved:()=>cloudSaved.size,due:()=>cloudFlashDue,
       login:showLogin
     });
+    window.MiaowuExampleLookup=Object.freeze({renderWords:renderExampleWords});
+    window.MiaowuOnboardingNavigate=navigate;
+    window.MiaowuOnboardingRedeem=showRedeem;
     applyTheme();applyReadingPrefs();renderLibrary();renderReminder();renderWords();renderQuiz();renderAccount();initialSessionPromise=loadServerSession();refreshCloudCategories();
   })();
   

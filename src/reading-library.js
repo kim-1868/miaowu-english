@@ -1,4 +1,5 @@
-import {studyKey,relatedAccessibleWordIds,uniqueStudyRows} from './study-identity.js';
+import {studyKey,relatedAccessibleWordIds,uniqueStudyRows,countUserDueSenses,listUserStudySenses} from './study-identity.js';
+import {studyScheduleReady,applySenseReview,setSenseManualState} from './study-schedule-store.js';
 // S4: Real reader learning state in Cloudflare D1.
 // Never allow paid reading state changes without valid category entitlements.
 const HEADERS={"content-type":"application/json; charset=utf-8","cache-control":"private, no-store",
@@ -61,36 +62,45 @@ async function setProgress(req,env,userId){
   return json({saved:true,chapterId,progress:rounded});
 }
 async function wordList(env,userId){
-  const result=await sql(env,"SELECT uw.word_id,uw.status,uw.bookmarked,uw.last_seen_at,uw.due_at,"+
-    "w.headword,w.phonetic_uk,w.phonetic_us,w.part_of_speech,w.meaning_zh,"+
-    "w.example_en,w.example_zh,w.collocations_json, "+
-    "(SELECT cw2.context_sentence FROM chapter_words cw2 "+
-    "JOIN chapters ch2 ON ch2.id=cw2.chapter_id JOIN books b2 ON b2.id=ch2.book_id "+
-    "JOIN categories c2 ON c2.id=b2.category_id "+
-    "WHERE cw2.word_id=uw.word_id AND b2.status='published' AND c2.is_visible=1 "+
-    "AND ch2.published_at IS NOT NULL AND ch2.published_at<=CURRENT_TIMESTAMP "+
-    "AND (ch2.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e2 "+
-    "WHERE e2.user_id=uw.user_id AND e2.category_id=b2.category_id AND e2.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e2.source_code_id AND v.status='revoked'))) "+
-    "ORDER BY ch2.chapter_no ASC LIMIT 1) AS context_sentence "+
-    "FROM user_words uw "+
-    "JOIN words w ON w.id=uw.word_id WHERE uw.user_id=? AND uw.bookmarked=1 "+
-    "AND EXISTS(SELECT 1 FROM chapter_words cw JOIN chapters ch ON ch.id=cw.chapter_id "+
-    "JOIN books b ON b.id=ch.book_id JOIN categories c ON c.id=b.category_id "+
-    "WHERE cw.word_id=uw.word_id AND b.status='published' AND c.is_visible=1 "+
-    "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
-    "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e WHERE e.user_id=uw.user_id "+
-    "AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked')))) "+
-    "ORDER BY uw.last_seen_at DESC LIMIT 4000",userId).all();
-  // The old list is capped for display, but the fast-learning due counter
-  // must count the user's entire entitled collection, not only 200 rows.
-  const dueRows=await sql(env,"SELECT uw.word_id,w.headword,w.part_of_speech,w.meaning_zh "+
-    "FROM user_words uw JOIN words w ON w.id=uw.word_id "+
-    "WHERE uw.user_id=? AND uw.bookmarked=1 AND "+flashVisible+" "+flashScope("due"),userId).all();
-  return json({flashDue:uniqueStudyRows(dueRows.results||[]).length,
-    words:uniqueStudyRows(result.results||[]).slice(0,200).map(w=>{
-    let pairs=[];try{const parsed=JSON.parse(w.collocations_json||"[]");if(Array.isArray(parsed))pairs=parsed.slice(0,8)}catch{}
-    const {collocations_json,...fields}=w;return {...fields,collocations:pairs};
-  })});
+  // Canonical bookmarks own the truth. Never pre-filter by legacy
+  // uw.bookmarked=1: a newly bookmarked study schedule can be active even if
+  // an old alias did not receive the legacy projection yet.
+  const [allDue,bookmarkedSenses]=await Promise.all([
+    countUserDueSenses(env,userId),
+    listUserStudySenses(env,userId,"bookmarked",{detail:true})
+  ]);
+  const selected=bookmarkedSenses.slice(0,200);
+  const contexts=new Map();
+  const wordIds=[...new Set(selected.map(w=>w.word_id))];
+  // Fetch only authorized published context sentences, in bounded batches,
+  // rather than doing a D1 round trip for every word card.
+  for(let i=0;i<wordIds.length;i+=100){
+    const batch=wordIds.slice(i,i+100);
+    const result=await sql(env,"SELECT cw.word_id,cw.context_sentence FROM chapter_words cw "+
+      "JOIN chapters ch ON ch.id=cw.chapter_id "+
+      "JOIN books b ON b.id=ch.book_id "+
+      "JOIN categories c ON c.id=b.category_id "+
+      "WHERE cw.word_id IN ("+batch.map(()=>"?").join(",")+") "+
+      "AND b.status='published' AND c.is_visible=1 "+
+      "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
+      "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
+      "WHERE e.user_id=? AND e.category_id=b.category_id AND e.revoked_at IS NULL "+
+      "AND NOT EXISTS(SELECT 1 FROM activation_codes v "+
+      "WHERE v.id=e.source_code_id AND v.status='revoked'))) "+
+      "ORDER BY ch.chapter_no ASC,cw.context_anchor ASC",...batch,userId).all();
+    for(const row of result.results||[]){
+      if(!contexts.has(row.word_id))contexts.set(row.word_id,row.context_sentence);
+    }
+  }
+  const words=selected.map(w=>{
+    let collocations=[];
+    try{const parsed=JSON.parse(w.collocations_json||"[]");
+      if(Array.isArray(parsed))collocations=parsed.slice(0,8);
+    }catch{}
+    const {collocations_json,alias_word_ids,...fields}=w;
+    return {...fields,context_sentence:contexts.get(w.word_id)||null,collocations};
+  });
+  return json({flashDue:allDue,words});
 }
 async function setWord(req,env,userId,id){
   if(!ID.test(id))return err("WORD_NOT_AVAILABLE",404);
@@ -99,6 +109,11 @@ async function setWord(req,env,userId,id){
   if(typeof bookmarked!=="boolean"||!["learning","mastered"].includes(status))
     return err("INVALID_WORD_STATE",400);
   if(!(await canStudyWord(env,id,userId)))return err("WORD_NOT_AVAILABLE",403);
+  // Additive 011 migration gates the new canonical schedule. Older schemas
+  // continue to use the unchanged legacy projection during safe deployment.
+  if(await studyScheduleReady(env))return json(await setSenseManualState(env,{
+    userId,wordId:id,status,bookmarked
+  }));
   // One explicit learning decision applies to every accessible copy of the same sense.
   // Keep legacy word IDs untouched for chapters and historical review events.
   const related=await relatedAccessibleWordIds(env,id,userId);
@@ -125,6 +140,12 @@ async function quickReview(req,env,userId){
     "WHERE e.user_id=? AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked')))",
     wordId,chapterId,userId).first();
   if(!match)return err("WORD_NOT_AVAILABLE",403);
+  if(await studyScheduleReady(env)){
+    const saved=await applySenseReview(env,{userId,wordId,chapterId,
+      gameType:"chapter-quick-review",result:remembered?"correct":"incorrect",
+      correct:remembered,eventId:crypto.randomUUID(),addBookmarkOnWrong:true});
+    return json({...saved,remembered});
+  }
   // An answer of "remembered" does not imply permanently mastered.
   // The prior bookmark status is preserved; "forgot" adds a bookmark.
   const due=remembered?"+3 days":"+1 day";
@@ -156,38 +177,28 @@ const flashVisible=
   "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
   "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
   "WHERE e.user_id=uw.user_id AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked'))))";
-const flashScope=(scope)=>scope==="due"?
-  "AND uw.status!='mastered' AND uw.due_at IS NOT NULL AND uw.due_at<=CURRENT_TIMESTAMP":
-  scope==="learning"?"AND uw.status!='mastered'":"";
 async function flashcardPool(req,env,userId){
   const params=new URL(req.url).searchParams;
   const scope=params.get("scope")||"due";
   const pageString=params.get("page")||"1";
   const sizeString=params.get("size")||"10";
-  if(!["due","learning","all"].includes(scope)||!/^[1-9][0-9]{0,3}$/.test(pageString)||
+  if(!["due","learning","all","saved","mastered"].includes(scope)||!/^[1-9][0-9]{0,3}$/.test(pageString)||
      !["10","20"].includes(sizeString))
     return err("INVALID_FLASHCARD_SCOPE",400);
   const page=Number(pageString),limit=Number(sizeString),offset=(page-1)*limit;
-  const from="FROM user_words uw JOIN words w ON w.id=uw.word_id "+
-    "WHERE uw.user_id=? AND uw.bookmarked=1 AND "+flashVisible+" "+flashScope(scope);
-  // Deduplicate BEFORE pagination, otherwise ten aliases could consume ten card slots.
-  const result=await sql(env,
-    "SELECT uw.word_id,uw.status,uw.due_at,w.headword,w.meaning_zh,w.phonetic_uk,"+
-    "w.phonetic_us,w.part_of_speech,w.example_en,w.example_zh,w.collocations_json "+
-    from+" ORDER BY "+
-    (scope==="due"?"uw.due_at ASC,uw.word_id ASC":
-      "w.headword COLLATE NOCASE ASC,uw.word_id ASC")+
-    " LIMIT 8000",userId).all();
-  const unique=uniqueStudyRows(result.results||[]);
-  const pageRows=unique.slice(offset,offset+limit);
-  return json({scope,page,pageSize:limit,total:unique.length,
-    hasMore:offset+limit<unique.length,
+  // Filter only AFTER grouping all visible aliases by study_key.
+  // Otherwise one old "learning/due" row can leak into ordinary flashcards
+  // even if another alias or the canonical schedule is already mastered.
+  const visible=await listUserStudySenses(env,userId,scope,{detail:true});
+  const pageRows=visible.slice(offset,offset+limit);
+  return json({scope,page,pageSize:limit,total:visible.length,
+    hasMore:offset+limit<visible.length,
     words:pageRows.map(w=>{
       let collocations=[];try{
         const p=JSON.parse(w.collocations_json||"[]");
         if(Array.isArray(p))collocations=p.slice(0,5);
       }catch{}
-      const {collocations_json,...rest}=w;
+      const {collocations_json,alias_word_ids,...rest}=w;
       return {...rest,collocations};
     })});
 }
@@ -201,21 +212,32 @@ async function flashcardAnswer(req,env,userId){
      (mode==="spell"&&(typeof answer!=="string"||answer.length>100||!answer.trim())))
     return err("INVALID_FLASHCARD_ANSWER",400);
   const existing=await sql(env,"SELECT user_id,word_id,game_type,result FROM review_events WHERE id=?",requestId).first();
-  if(existing){
-    if(existing.user_id!==userId||existing.word_id!==wordId||
-       existing.game_type!=="bookplate-"+mode)return err("FLASHCARD_REQUEST_REUSED",409);
-    return json({saved:true,alreadyApplied:true,correct:existing.result==="correct",
-      result:existing.result});
-  }
-  const word=await sql(env,"SELECT w.headword,w.meaning_zh,uw.status FROM user_words uw "+
+  if(existing&&(existing.user_id!==userId||existing.word_id!==wordId||
+       existing.game_type!=="bookplate-"+mode))return err("FLASHCARD_REQUEST_REUSED",409);
+  const word=await sql(env,"SELECT w.headword,w.meaning_zh,uw.status,uw.due_at FROM user_words uw "+
     "JOIN words w ON w.id=uw.word_id WHERE uw.user_id=? AND uw.word_id=? "+
-    "AND uw.bookmarked=1 AND "+flashVisible,userId,wordId).first();
+    "AND "+flashVisible,userId,wordId).first();
   if(!word)return err("FLASHCARD_WORD_UNAVAILABLE",403);
+  if(existing){
+    // Response replay after lost network acknowledgement: never count a second
+    // event, and return a complete result so the user can continue normally.
+    const dueMs=word.due_at?Date.parse(word.due_at.replace(" ","T")+"Z"):NaN;
+    const days=word.status==="mastered"?null:
+      Number.isFinite(dueMs)?Math.max(0,Math.ceil((dueMs-Date.now())/86400000)):null;
+    return json({saved:true,alreadyApplied:true,correct:existing.result==="correct",
+      result:existing.result,expected:word.headword,meaning:word.meaning_zh||"",
+      status:word.status,nextReviewDays:days});
+  }
   // Flip cards are honest self-ratings; spelling is ALWAYS evaluated here.
   const correct=mode==="flip"?judgment==="known":
     answer.trim().normalize("NFKC").toLocaleLowerCase("en-US")===
     word.headword.trim().normalize("NFKC").toLocaleLowerCase("en-US");
   const result=correct?"correct":mode==="flip"&&judgment==="unsure"?"hinted":"incorrect";
+  if(await studyScheduleReady(env)){
+    const saved=await applySenseReview(env,{userId,wordId,gameType:"bookplate-"+mode,
+      result,correct,eventId:requestId});
+    return json({...saved,expected:word.headword,meaning:word.meaning_zh||""});
+  }
   const history=await sql(env,"SELECT result FROM review_events WHERE user_id=? AND word_id=? "+
     "AND game_type IN ('bookplate-flip','bookplate-spell') "+
     "ORDER BY rowid DESC LIMIT 3",userId,wordId).all();

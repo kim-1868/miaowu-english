@@ -1,0 +1,33 @@
+name: V1.1 P4 unified due read model — offline regression
+on:
+  push:
+    branches: [feature/v11-p4-unified-due-views-20261106]
+  pull_request:
+    branches: [fix/v11-study-alias-legacy-mastery-20261106]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-v11-regression:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out exact feature branch with no persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Use Node 22 and built-in SQLite
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax, safety and production asset dry build (offline)
+        run: npm run check
+      - name: Full existing unit and contract regression (offline; no remote DB)
+        run: npm test
+      - name: Verify this workflow has no deploy or secret access
+        run: |
+          echo "OFFLINE_TESTS_ONLY"
+          echo "NO_CLOUDFLARE_SECRETS"
+          echo "NO_D1_MIGRATION"
+          echo "NO_PRODUCTION_DEPLOYMENT"

@@ -1,0 +1,31 @@
+name: V1.1 P5 reviewed-sense atomic writeback (offline only)
+on:
+  push:
+    branches: [feature/v11-p5-safe-writeback-qa-20261107]
+# PUBLIC-06: run on owning feature branch; general V1.1 PR updates use public UI CI.
+# Reviewed private candidates use default-branch manual integration gate instead.
+permissions:
+  contents: read
+jobs:
+  isolated-writeback:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Writeback and five-view end-to-end synthetic SQLite regression
+        run: node --experimental-sqlite --test tests/v11-p5-reviewed-sense-shadow-views.test.mjs
+      - name: Full website test and production bundle syntax without deployment
+        run: |
+          npm run check
+          npm test
+      - name: Safety contract
+        run: |
+          echo "LOCAL_SQLITE_ONLY_NO_REMOTE_D1"
+          echo "NO_PUBLIC_SITE_DEPLOYMENT"
+          echo "NO_ACTUAL_USER_DATA_OR_REAL_BOOK_CORPUS"

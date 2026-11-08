@@ -1,4 +1,5 @@
-import {relatedAccessibleWordIds,uniqueStudyRows} from './study-identity.js';
+import {studyKey,relatedAccessibleWordIds,uniqueStudyRows,countUserDueSenses,listUserStudySenses} from './study-identity.js';
+import {studyScheduleReady,applySenseReview} from './study-schedule-store.js';
 // S6: real Story Echo. Return questions only from accessible, completed D1 chapters.
 // Server scores submitted answers and updates spaced-repeat review events and due dates.
 const H={"content-type":"application/json; charset=utf-8","cache-control":"private, no-store",
@@ -62,44 +63,76 @@ async function available(env,user,url){
     if(bookId){scoped+=" AND b.id=?";binds.push(bookId)}
     scoped+=" AND ch.chapter_no BETWEEN ? AND ?";
     binds.push(from,to);
-  }else if(scope==="due"){
-    scoped+=" AND EXISTS(SELECT 1 FROM user_words uw "+
-      "WHERE uw.user_id=p.user_id AND uw.word_id=cw.word_id "+
-      "AND uw.status!='mastered' AND uw.due_at IS NOT NULL "+
-      "AND uw.due_at<=CURRENT_TIMESTAMP)";
   }
-  const rows=await exec(env,"SELECT ch.id chapter_id,ch.chapter_no,ch.book_id,b.title book_title,"+
-    "cw.context_sentence,w.id word_id,w.headword,w.phonetic_uk,w.phonetic_us,"+
-    "w.meaning_zh,w.part_of_speech,w.example_en,w.example_zh "+scoped+
-    (scope==="chapter"?
-      " ORDER BY ch.chapter_no DESC,cw.context_anchor ASC LIMIT 600":
-      " ORDER BY p.updated_at DESC,ch.chapter_no DESC,cw.context_anchor ASC LIMIT 600"),
-    ...binds).all();
-  let data=rows.results||[];
+  // Due eligibility comes from the SAME canonical sense projection as the
+  // homepage and flashcards. Do not filter legacy user_words before checking
+  // other aliases and the canonical study schedule.
+  let dueHeadwordBatches=null,dueKeys=null;
+  if(scope==="due"){
+    const due=await listUserStudySenses(env,user.id,"due");
+    dueKeys=new Set(due.map(x=>x.study_key));
+    // A learned noun in book A may have another word_id in completed book B
+    // even though book B has never created its own user_words row. Match the
+    // headword in SQL, then enforce the FULL sense identity (including POS
+    // and teaching meaning) in JavaScript. Old-ID-only filtering loses B.
+    const headwords=[...new Set(due.map(x=>String(x.headword||"")
+      .trim().toLocaleLowerCase("en-US")).filter(Boolean))];
+    if(!headwords.length)return reply({scope,words:[],availableGames:[],distinctWords:0,manualOnly:false,
+      note:"今日没有已到期且可复习的词义。"});
+    dueHeadwordBatches=[];
+    for(let i=0;i<headwords.length;i+=200)
+      dueHeadwordBatches.push(headwords.slice(i,i+200));
+  }
+  const batches=dueHeadwordBatches||[null];
+  const allRows=[];
+  for(const headwords of batches){
+    const restriction=headwords?" AND LOWER(TRIM(w.headword)) IN ("+
+      headwords.map(()=>"?").join(",")+")":"";
+    // A repeated word can occur more than 600 times. For due practice,
+    // paginate raw chapter occurrences until 60 distinct matching senses
+    // have been found, so a later completed story isn't silently starved.
+    const foundSenses=new Set();
+    for(let page=0;page<(scope==="due"?40:1);page++){
+      const order=scope==="chapter"?
+        " ORDER BY ch.chapter_no DESC,cw.context_anchor ASC,w.id ASC":
+        " ORDER BY p.updated_at DESC,ch.chapter_no DESC,cw.context_anchor ASC,ch.id ASC,w.id ASC";
+      const rows=await exec(env,"SELECT ch.id chapter_id,ch.chapter_no,ch.book_id,b.title book_title,"+
+        "cw.context_sentence,w.id word_id,w.headword,w.phonetic_uk,w.phonetic_us,"+
+        "w.meaning_zh,w.part_of_speech,w.example_en,w.example_zh"+
+        (scope==="due"?",p.updated_at AS __sort_at":"")+" "+scoped+restriction+
+        order+" LIMIT 600"+(scope==="due"?" OFFSET ?":""),
+        ...binds,...(headwords||[]),...(scope==="due"?[page*600]:[])).all();
+      const chunk=rows.results||[];
+      for(const word of chunk){
+        const key=scope==="due"?studyKey(word):null;
+        if(dueKeys&&!dueKeys.has(key))continue;
+        if(dueKeys){
+          if(foundSenses.has(key))continue;
+          foundSenses.add(key);
+        }
+        allRows.push(word);
+      }
+      if(scope!=="due"||chunk.length<600||foundSenses.size>=60)break;
+    }
+  }
+  if(scope==="due")allRows.sort((a,b)=>
+    String(b.__sort_at||"").localeCompare(String(a.__sort_at||""))||b.chapter_no-a.chapter_no||
+    a.word_id.localeCompare(b.word_id));
+  let data=allRows;
   if(scope==="recent"){
     const ids=[...new Set(data.map(x=>x.chapter_id))].slice(0,3);
     data=data.filter(x=>ids.includes(x.chapter_id));
   }
-  data=uniqueStudyRows(data).slice(0,60);
+  data=uniqueStudyRows(data).slice(0,60).map(({__sort_at,...word})=>word);
   return reply({scope,words:data,availableGames:data.length>=4?
     ["fill","situation","spell"]:data.length?["spell"]:[],
     distinctWords:data.length,manualOnly:false,
     note:scope==="chapter"?"当前已打开章节的目标词可立即练习，无需完成阅读或先收藏。":"仅展示已读完且有权读取的章节目标词。"});
 }
 async function stats(env,user){
-  const count=await exec(env,"SELECT uw.word_id,w.headword,w.part_of_speech,w.meaning_zh FROM user_words uw JOIN words w ON w.id=uw.word_id WHERE uw.user_id=? "+
-    "AND uw.status!='mastered' AND uw.due_at IS NOT NULL "+
-    "AND uw.due_at<=CURRENT_TIMESTAMP AND EXISTS("+
-    "SELECT 1 FROM reading_progress p JOIN chapters ch ON ch.id=p.chapter_id "+
-    "JOIN books b ON b.id=ch.book_id JOIN categories c ON c.id=b.category_id "+
-    "JOIN chapter_words cw ON cw.chapter_id=ch.id "+
-    "WHERE p.user_id=uw.user_id AND p.completed_at IS NOT NULL AND cw.word_id=uw.word_id "+
-    "AND b.status='published' AND c.is_visible=1 "+
-    "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
-    "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
-    "WHERE e.user_id=p.user_id AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked'))))",
-    user.id).all();
-  return reply({due:uniqueStudyRows(count.results||[]).length});
+  // Same eligible unique senses as /api/me/words.flashDue.
+  const due=await countUserDueSenses(env,user.id);
+  return reply({due});
 }
 async function answer(req,env,user){
   if(!/^application\/json(?:;|$)/i.test(req.headers.get("content-type")||""))
@@ -110,18 +143,76 @@ async function answer(req,env,user){
   let data;try{data=JSON.parse(raw)}catch{return fail("INVALID_JSON")}
   if(!data||!validId(data.wordId)||!validId(data.chapterId)||!MODES.has(data.gameType)||
     typeof data.answer!=="string"||data.answer.length>90||!data.answer.trim()||
-    typeof data.hinted!=="boolean")return fail("INVALID_ANSWER");
-  const q=await exec(env,"SELECT w.id,w.headword,w.meaning_zh,w.phonetic_uk,w.phonetic_us,"+
+    typeof data.hinted!=="boolean"||
+    (data.choiceId!==undefined&&(!validId(data.choiceId)||data.gameType==="spell"))||
+    (data.requestId!==undefined&&
+      (typeof data.requestId!=="string"||
+       !/^[0-9a-f]{8}-[0-9a-f-]{27,44}$/i.test(data.requestId))))
+    return fail("INVALID_ANSWER");
+  const q=await exec(env,"SELECT w.id,w.headword,w.part_of_speech,w.meaning_zh,w.phonetic_uk,w.phonetic_us,"+
     "cw.context_sentence,ch.id chapter_id "+chapterCore()+
     " AND w.id=? LIMIT 1",data.chapterId,user.id,data.wordId).first();
   if(!q)return fail("REVIEW_WORD_UNAVAILABLE",403);
-  const last=await exec(env,"SELECT created_at FROM review_events "+
-    "WHERE user_id=? AND word_id=? AND created_at>datetime('now','-5 seconds') "+
-    "ORDER BY created_at DESC LIMIT 1",user.id,q.id).first();
-  if(last)return fail("REVIEW_TOO_FAST",429);
-  const right=data.answer.trim().toLocaleLowerCase("en-US")===
+  if(data.requestId){
+    const prior=await exec(env,
+      "SELECT user_id,word_id,chapter_id,game_type,result FROM review_events WHERE id=?",
+      data.requestId).first();
+    if(prior){
+      if(prior.user_id!==user.id||prior.word_id!==q.id||
+         prior.chapter_id!==data.chapterId||prior.game_type!==data.gameType)
+        return fail("REVIEW_REQUEST_REUSED",409);
+      const current=await exec(env,
+        "SELECT status,due_at FROM user_words WHERE user_id=? AND word_id=?",
+        user.id,q.id).first();
+      const dueMs=current?.due_at?Date.parse(current.due_at.replace(" ","T")+"Z"):NaN;
+      const days=current?.status==="mastered"?null:Number.isFinite(dueMs)?
+        Math.max(0,Math.ceil((dueMs-Date.now())/86400000)):null;
+      return reply({saved:true,alreadyApplied:true,
+        correct:prior.result==="correct"||prior.result==="hinted",
+        result:prior.result,expected:q.headword,meaning:q.meaning_zh,
+        phonetic:q.phonetic_uk||q.phonetic_us||"",
+        context:q.context_sentence,status:current?.status||"learning",
+        nextReviewDays:days});
+    }
+  }
+  // Keep the legacy 5-second guard only before the additive 011 migration.
+  // Canonical replay safety comes from its explicit schedule and same-day cap;
+  // a user may switch from flipping to story practice immediately.
+  if(!await studyScheduleReady(env)){
+    const last=await exec(env,"SELECT created_at FROM review_events "+
+      "WHERE user_id=? AND word_id=? AND created_at>datetime('now','-5 seconds') "+
+      "ORDER BY created_at DESC LIMIT 1",user.id,q.id).first();
+    if(last)return fail("REVIEW_TOO_FAST",429);
+  }
+  let right=data.answer.trim().toLocaleLowerCase("en-US")===
     q.headword.trim().toLocaleLowerCase("en-US");
+  if(data.choiceId&&data.gameType!=="spell"){
+    // Multiple senses can share the same English spelling: a wrong POS/sense
+    // must not score as correct merely because its headword is identical.
+    // Verify the chosen ID belongs to a currently accessible published chapter.
+    const choice=await exec(env,"SELECT w.id,w.headword,w.part_of_speech,w.meaning_zh "+
+      "FROM words w WHERE w.id=? AND EXISTS(SELECT 1 FROM chapter_words cw "+
+      "JOIN chapters ch ON ch.id=cw.chapter_id "+
+      "JOIN books b ON b.id=ch.book_id JOIN categories c ON c.id=b.category_id "+
+      "WHERE cw.word_id=w.id AND b.status='published' AND c.is_visible=1 "+
+      "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
+      "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
+      "WHERE e.user_id=? AND e.category_id=b.category_id AND e.revoked_at IS NULL "+
+      "AND NOT EXISTS(SELECT 1 FROM activation_codes v "+
+      "WHERE v.id=e.source_code_id AND v.status='revoked'))))",data.choiceId,user.id).first();
+    if(!choice)return fail("REVIEW_OPTION_UNAVAILABLE",403);
+    if(choice.headword.trim().toLocaleLowerCase("en-US")!==data.answer.trim().toLocaleLowerCase("en-US"))
+      return fail("REVIEW_OPTION_MISMATCH",400);
+    right=studyKey(choice)===studyKey(q);
+  }
   const result=right?(data.hinted?"hinted":"correct"):"incorrect";
+  if(await studyScheduleReady(env)){
+    const saved=await applySenseReview(env,{userId:user.id,wordId:q.id,
+      chapterId:data.chapterId,gameType:data.gameType,result,
+      correct:right&&!data.hinted,eventId:data.requestId||crypto.randomUUID()});
+    return reply({...saved,correct:right,expected:q.headword,meaning:q.meaning_zh,
+      phonetic:q.phonetic_uk||q.phonetic_us||"",context:q.context_sentence});
+  }
   const related=await relatedAccessibleWordIds(env,q.id,user.id);
   const recent=await exec(env,"SELECT result FROM review_events "+
     "WHERE user_id=? AND word_id IN ("+related.map(()=>"?").join(",")+
@@ -131,7 +222,7 @@ async function answer(req,env,user){
   const days=status==="mastered"?null:right&&!data.hinted?Math.min(14,streak*3):1;
   await env.DB.batch([
     exec(env,"INSERT INTO review_events(id,user_id,word_id,chapter_id,game_type,result) "+
-      "VALUES(?,?,?,?,?,?)",crypto.randomUUID(),user.id,q.id,data.chapterId,data.gameType,result),
+      "VALUES(?,?,?,?,?,?)",data.requestId||crypto.randomUUID(),user.id,q.id,data.chapterId,data.gameType,result),
     ...related.map(alias=>exec(env,
       "INSERT INTO user_words(user_id,word_id,status,bookmarked,last_seen_at,due_at) "+
       "VALUES(?,?,?,0,CURRENT_TIMESTAMP,"+

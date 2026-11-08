@@ -14,11 +14,9 @@ function render(){
   if(!words.length){area.innerHTML='<p class="side-caption">本章没有可展示的目标词，或词汇正在加载。</p>';return}
   if(mode==="list"){
     const newWords=words.filter(w=>!w.study_seen);
-    const learnedWords=words.filter(w=>!!w.study_seen);
     area.innerHTML='<div class="chapter-vocab-actions">'+
       (newWords.length?'<button class="primary" id="startQuickReview">学习本章新词（'+newWords.length+'） →</button>':
       '<span class="side-caption">本章没有需要重复学习的词卡 ✓</span>')+
-      (learnedWords.length?'<button type="button" id="startLearnedReview">自愿复习已学词（'+learnedWords.length+'）</button>':'')+
       '</div>'+
     '<div class="chapter-vocab-list">'+words.slice(0,visibleCount).map((w,i)=>
       '<div class="chapter-vocab-item"><button type="button" class="chapter-vocab-select" data-vocab-index="'+i+'">'+
@@ -28,8 +26,6 @@ function render(){
     (visibleCount<words.length?'<button type="button" id="chapterLoadMore" class="chapter-load-more">查看更多词汇（'+visibleCount+' / '+words.length+'）</button>':'');
     const next=$("startQuickReview");
     if(next)next.onclick=()=>{reviewWords=newWords;cursor=0;mode="quick";render()};
-    const voluntarily=$("startLearnedReview");
-    if(voluntarily)voluntarily.onclick=()=>{reviewWords=learnedWords;cursor=0;mode="quick";render()};
     area.querySelectorAll("[data-vocab-index]").forEach(b=>b.onclick=()=>{
       const word=words[+b.dataset.vocabIndex];api.showWord(word.word_id);
     });
@@ -66,7 +62,7 @@ async function vote(remembered){
     w.study_seen=true;w.study_status="learning";
     api.refresh();
     if(cursor<reviewWords.length-1)cursor++;render();
-    api.toast(remembered?"已记录「记得」":"已加入记忆藏书票 · 待复习");
+    api.toast(remembered?"已记录「记得」":"已加入记忆生词本 · 待复习");
   }catch(error){api.toast(error.message);render()}
 }
 $("chapterVocabToggle").onclick=()=>{

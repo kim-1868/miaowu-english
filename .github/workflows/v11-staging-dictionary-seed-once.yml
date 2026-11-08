@@ -1,0 +1,133 @@
+name: V1.1 seed internal dictionary to TEST D1 then restore staging
+# P4: additive canonical sense dictionary, guarded test D1 ONLY; no existing user rows touched.
+on:
+  push:
+    branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
+    paths: [.github/workflows/v11-staging-dictionary-seed-once.yml]
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-v11-staging-preview
+  cancel-in-progress: false
+jobs:
+  staging-dictionary:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-phase1-mobile-and-install-guide-20261106' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Hard audit all staging DB targets, app environment, and entrypoints
+        run: |
+          set -euo pipefail
+          node scripts/check-v11-preview-config.mjs
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const c=JSON.parse(readFileSync('v11-dictionary-staging-wrapper.wrangler.jsonc','utf8'));
+          const real=JSON.parse(readFileSync('wrangler.jsonc','utf8'));
+          if(c.name!=='miaowu-english-staging'||real.name!==c.name||
+             c.main!=='scripts/v11-dictionary-staging-wrapper.mjs'||
+             c.vars?.APP_ENV!=='staging'||real.vars?.APP_ENV!=='staging'||
+             c.d1_databases?.length!==1||real.d1_databases?.length!==1||
+             c.d1_databases[0].database_id!=='88a817cb-23bb-4ae4-bcb8-92286c4165d4'||
+             c.d1_databases[0].database_id!==real.d1_databases[0].database_id||
+             c.d1_databases[0].database_name!=='miaowu-english-test'||
+             c.assets?.run_worker_first!==true||c.assets?.binding!=='ASSETS'||
+             c.assets?.directory!=='./public')throw Error('STAGING_ONLY_TARGET_INVALID');
+          const schema=readFileSync('db/012_v11_supplemental_dictionary.sql','utf8');
+          const seed=readFileSync('db/013_v11_supplemental_starter.sql','utf8');
+          if(!schema.includes('CREATE TABLE IF NOT EXISTS supplemental_dictionary')||
+             !seed.includes('INSERT OR IGNORE INTO supplemental_dictionary')||
+             /\\b(?:UPDATE|DELETE FROM|DROP TABLE|ALTER TABLE)\\b/i.test(schema+"\n"+seed))
+             throw Error('NOT_ADDITIVE_DICTIONARY_SEED');
+          console.log('STAGING_ONLY_DICTIONARY_SCHEMA_AND_SEED_AUDITED');
+          NODE
+      - name: All regressions must pass before any temporary staging update
+        run: |
+          npm run check
+          npm test
+      - name: Install Wrangler
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Generate short-lived secret and expiry (never print, never commit)
+        run: |
+          node --input-type=module <<'NODE'
+          import {randomBytes} from 'node:crypto';
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const key=randomBytes(48).toString('hex');
+          const p='v11-dictionary-staging-wrapper.wrangler.jsonc';
+          const c=JSON.parse(readFileSync(p,'utf8'));
+          c.vars.MIGRATION_EXPIRES_AT=String(Date.now()+12*60*1000);
+          writeFileSync(p,JSON.stringify(c));
+          writeFileSync(process.env.RUNNER_TEMP+'/mw-v11-stage-secret.json',JSON.stringify({MIGRATION_SECRET:key}),{mode:0o600});
+          writeFileSync(process.env.RUNNER_TEMP+'/mw-v11-stage-secret',key,{mode:0o600});
+          NODE
+      - name: Parse curated starter entries without network
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const raw=readFileSync('db/013_v11_supplemental_starter.sql','utf8');
+          const entries=[...raw.matchAll(/\('((?:''|[^'])*)','((?:''|[^'])*)','((?:''|[^'])*)','curated-starter','2026-11-06'\)/g)]
+            .map(m=>m.slice(1,4).map(v=>v.replaceAll("''","'")));
+          if(entries.length<100||entries.length>180)throw Error('INVALID_DICTIONARY_SEED_COUNT');
+          writeFileSync(process.env.RUNNER_TEMP+'/v11-dict-entries.json',JSON.stringify({entries}),{mode:0o600});
+          console.log('DICTIONARY_SEED_ROWS='+entries.length);
+          NODE
+      - name: Deploy temporary password-gated staging wrapper, NEVER production
+        id: temporary
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          node scripts/check-v11-preview-config.mjs
+          npx wrangler deploy --config v11-dictionary-staging-wrapper.wrangler.jsonc --secrets-file "$RUNNER_TEMP/mw-v11-stage-secret.json" --keep-vars > "$RUNNER_TEMP/v11-stage-temp-deploy.log" 2>&1 || {
+            grep -E 'ERROR|Error|forbidden|permission|unauthorized' "$RUNNER_TEMP/v11-stage-temp-deploy.log" | head -n 8 || true
+            exit 1
+          }
+          echo "TEMP_STAGING_WRAPPER_DEPLOYED"
+      - name: Seed scoped dictionary without modifying study cards
+        run: |
+          set -euo pipefail
+          url="https://miaowu-english-staging.kim10086a.workers.dev"
+          anon="$(curl -sS --max-time 25 -o /dev/null -w '%{http_code}' -X POST "$url/__v11_internal_dictionary_seed")"
+          test "$anon" = "403" || { echo "SEED_ENDPOINT_UNEXPECTED_HTTP_$anon"; exit 1; }
+          key="$(cat "$RUNNER_TEMP/mw-v11-stage-secret")"
+          status="$(curl -sS --max-time 30 -o "$RUNNER_TEMP/seed-response" -w '%{http_code}' -X POST -H "X-Migration-Authorization: $key" -H "Content-Type: application/json" --data-binary "@$RUNNER_TEMP/v11-dict-entries.json" "$url/__v11_internal_dictionary_seed")"
+          if [ "$status" != "200" ]; then
+            echo "DICTIONARY_SEED_FAILED_HTTP_$status"
+            node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          try{console.log('ERROR_CODE',JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/seed-response','utf8')).error)}catch{}
+          NODE
+            exit 1
+          fi
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const x=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/seed-response','utf8'));
+          if(x.ok!==true||x.schemaVerified!==true||x.table!=='supplemental_dictionary'||
+             x.seeded<100||x.noUserDataTouched!==true)throw Error('SEED_SCHEMA_FAILED');
+          console.log('STAGING_DICTIONARY_SEEDED='+x.seeded);
+          NODE
+      - name: ALWAYS restore the normal password-protected staging Worker, no migrations
+        if: always()
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -f "$RUNNER_TEMP/v11-stage-temp-deploy.log" ]; then
+            node scripts/check-v11-preview-config.mjs
+            npx wrangler deploy --config wrangler.jsonc --keep-vars > "$RUNNER_TEMP/v11-stage-restored.log" 2>&1 || {
+              grep -E 'ERROR|Error|forbidden|permission|unauthorized' "$RUNNER_TEMP/v11-stage-restored.log" | head -n 8 || true
+              exit 1
+            }
+            echo "NORMAL_STAGING_WORKER_RESTORED"
+            status="$(curl -sS --max-time 25 -o "$RUNNER_TEMP/stage-after" -w '%{http_code}' "https://miaowu-english-staging.kim10086a.workers.dev/")"
+            test "$status" = "401" || { echo "STAGING_PASSWORD_GATE_NOT_VERIFIED_HTTP_$status"; exit 1; }
+            echo "STAGING_PASSWORD_GATE_RESTORED"
+          fi
+          rm -f "$RUNNER_TEMP/mw-v11-stage-secret" "$RUNNER_TEMP/mw-v11-stage-secret.json"

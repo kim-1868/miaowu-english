@@ -1,0 +1,106 @@
+name: V1.1 staging preview deployment (not production)
+# P1-02 staging promotion: test D1 009 schema verified in Actions run 42095001248.
+# P3 reviewed staging: vocabulary naming, IPA, example audio and entitlement-scoped inline lookups; no new D1 migration.
+# V1.1 wording approval: correct the vocabulary-card heading; staging only.
+# P4 feedback/hardening: passed 503 regression tests; preview only, no database migration.
+on:
+  push:
+    branches: [feature/v11-phase1-mobile-and-install-guide-20261106]
+    paths: [wrangler.jsonc, public/index.html, public/site-updates.css, public/site-updates.js, public/ops.html, public/ops-console.js, public/ops-console.css, public/ops-updates.js, src/site-announcements.js]
+  workflow_dispatch:
+# Test-only edits should be validated in private candidate QA, not redeploy the
+# password-gated staging Worker. All actual Worker/UI source paths still trigger it.
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-v11-staging-preview
+  cancel-in-progress: false
+jobs:
+  staging-only:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-phase1-mobile-and-install-guide-20261106' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify PREVIEW-only target before cloud actions
+        run: |
+          set -euo pipefail
+          node scripts/check-v11-preview-config.mjs
+          test "$(node -p 'JSON.parse(require("fs").readFileSync("wrangler.jsonc","utf8")).name')" = "miaowu-english-staging"
+          test "$(node -p 'JSON.parse(require("fs").readFileSync("wrangler.jsonc","utf8")).vars.APP_ENV')" = "staging"
+          test "$(node -p 'JSON.parse(require("fs").readFileSync("wrangler.jsonc","utf8")).d1_databases[0].database_name')" = "miaowu-english-test"
+      - name: Full automated regression before staging deployment
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+      - name: Install Wrangler and verify staging compilation
+        run: |
+          set -euo pipefail
+          npm install --no-save --ignore-scripts wrangler@^4
+          npx wrangler deploy --dry-run --config wrangler.jsonc --outdir .wrangler/v11-preview-dryrun
+      - name: Require configured Cloudflare credentials
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          test "$HAS_TOKEN" = true || { echo 'Missing Cloudflare token. No deployment.'; exit 1; }
+          test "$HAS_ACCOUNT" = true || { echo 'Missing Cloudflare account. No deployment.'; exit 1; }
+      - name: Verify staging-only preview notice demo does NOT write D1
+        run: |
+          set -euo pipefail
+          node scripts/check-v11-preview-config.mjs
+          test "$(node -p 'JSON.parse(require("fs").readFileSync("wrangler.jsonc","utf8")).vars.PREVIEW_ANNOUNCEMENT_DEMO')" = "true"
+          test "$(node -p 'JSON.parse(require("fs").readFileSync("wrangler.jsonc","utf8")).d1_databases[0].database_name')" = "miaowu-english-test"
+          echo "STAGING_STATIC_DEMO_ONLY: existing Cloudflare token cannot access test D1 SQL API"
+          echo "NO_D1_MIGRATION_OR_SEED_EXECUTED"
+      - name: Deploy only staging Worker (test D1; preserve existing secrets)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          node scripts/check-v11-preview-config.mjs
+          npx wrangler deploy --config wrangler.jsonc --keep-vars 2>&1 | tee /tmp/v11-preview-deploy.log
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const log=readFileSync('/tmp/v11-preview-deploy.log','utf8');
+          const urls=[...log.matchAll(/https:\/\/[a-z0-9.-]+\.workers\.dev(?:\/[^\s]*)?/gi)].map(x=>x[0].replace(/[),;]+$/,''));
+          const url=urls.find(x=>x.includes('miaowu-english-staging'));
+          if(!url){console.error('Staging URL not available in deployment output');process.exit(1)}
+          writeFileSync('/tmp/v11-preview-url',url);
+          console.log('STAGING URL: '+url);
+          NODE
+      - name: Verify anonymous requests are rejected by preview password gate
+        run: |
+          set -euo pipefail
+          url="$(cat /tmp/v11-preview-url)"
+          code="$(curl --silent --show-error --max-time 25 --output /tmp/preview-anonymous --write-out '%{http_code}' "$url/")"
+          test "$code" = "401" || { echo "Preview must refuse anonymous requests: got $code"; exit 1; }
+          grep -Fq 'Staging preview: credentials required.' /tmp/preview-anonymous
+          echo "PASS protected preview: $url"
+
+# P5 preview correction: example-word buttons now speak only and preserve the originating study card.
+
+# P5 UI sizing: Chromium verified 17 viewports (320–1920px); book CTAs now single-line stacked.
+
+# V1.1 staging read-model integration review: #170 + #171, commit d3b705e15fc28dd4e3414a3b50250819ced4eea9; staging/test D1 only.
+
+# V1.1 preview promotion: wordbook example words are inline underlined text (PR #172); Chromium phone/desktop day/night verified. Staging/test D1 only.
+
+# V1.1 P5 staging-only regression: ops entitlement display/claims read-model fixed in PR #173; protected staging and test D1 only.
+
+# V1.1 P5 guarded staging preview: PR #181 canonical wordbook bookmark fix and 625/626 offline regression plus browser QA. Test D1 only; 014 reviewed mapping remains offline and disabled.
+
+# V1.1 P5 staging promotion: PR #183 canonical chapter-reader mastery/bookmark alignment. Announcements stay requirements-only; reviewed 014 remains disabled. Password-gated preview with test D1 only.
+
+# V1.1 P5 staging promotion: PR #184 reader alias entitlement isolation. Offline 30/30 focus, 649/650 full regression and all PR checks passed. Keep reviewed 014 disabled; test D1/password preview only.
+
+# V1.1 P5 staging promotion: PR #185 fixes Echo due cross-book canonical sense pool and >600 repeated occurrences. Password-protected test-D1 only; no reviewed 014 activation, no production release.
+
+# V1.1 announcement preview follow-up: sync final publisher read-only demo state and 11 SQLite QA cases; D1 SQL token lacks /query and /import permissions. NO remote D1 writes. #186.

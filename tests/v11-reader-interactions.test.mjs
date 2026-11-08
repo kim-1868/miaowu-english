@@ -1,0 +1,43 @@
+import {test} from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {Script} from "node:vm";
+const read=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
+const js=read("public/app.js");
+const html=read("public/index.html");
+const css=read("public/v11-reader.css");
+test("V1.1 P2: adjustable reader font 12–24px with matching chapter title",()=>{
+ assert.match(html,/id="readerFontSlider"[^>]*min="12" max="24" step="1"/);
+ assert.match(html,/id="readerFontValue"/);
+ assert.match(js,/Math\.min\(24,Math\.max\(12,Number\(localStorage\.getItem\('miaowu_reader_font'\)\)\|\|18\)\)/);
+ assert.match(js,/Math\.round\(fontSize\*1\.75\)/);
+ assert.match(js,/localStorage\.setItem\('miaowu_reader_font'/);
+ assert.match(js,/\$\('readerFontSlider'\)\.addEventListener\('input'/);
+ assert.match(js,/fontSize=Math\.max\(12,fontSize-1\)/);
+ assert.match(js,/fontSize=Math\.min\(24,fontSize\+1\)/);
+ assert.match(css,/prefers-reduced-motion|v11-font-slider/);
+});
+test("V1.1 P2: paragraph clicks do not auto-start the narrator",()=>{
+ assert.match(js,/if\(!activeCloud\?\.chapterId\|\|!p\|\|!speaking\)return/);
+ assert.match(js,/if\(paragraph===current\)/);
+ assert.match(js,/window\.speechSynthesis\.pause\(\)/);
+ assert.match(js,/window\.speechSynthesis\.resume\(\)/);
+ assert.match(js,/if\(segment>=0\)seekSpeech\(segment\)/);
+ assert.match(js,/if\(speaking\)seekSpeech\(Number\(e\.target\.value\)\)/);
+ assert.doesNotMatch(js,/if\(activeCloud\?\.chapterId&&p\)startReading\(Number\(p\.dataset\.audioParagraph\)\)/);
+});
+test("V1.1 P2: word tap pauses narration and desktop wordcard anchors to exact word",()=>{
+ assert.match(js,/showCloudWord\(word\.dataset\.cloudWord,word\)/);
+ assert.match(js,/studyAnchorEl=anchorEl/);
+ assert.match(js,/function positionStudyPopover\(\)/);
+ assert.match(js,/getBoundingClientRect\(\)/);
+ assert.match(js,/tray\.style\.setProperty\('left',Math\.round\(left\)/);
+ assert.match(js,/tray\.style\.setProperty\('top',Math\.round\(top\)/);
+ assert.match(js,/backdrop\.classList\.remove\('on'\)/);
+ assert.match(js,/chapterSpeechNeedsRestart=true/);
+ assert.match(js,/speechGeneration\+\+; \/\/ invalidate the canceled chapter utterance callbacks/);
+ assert.match(js,/function closeWord\(\)/);
+ assert.doesNotMatch(js,/function closeWord\(\)[\s\S]{0,150}startReading\(/);
+ assert.match(css,/@media \(min-width:701px\)/);
+ assert.doesNotThrow(()=>new Script(js,{filename:"app.js"}));
+});

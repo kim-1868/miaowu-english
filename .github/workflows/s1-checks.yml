@@ -1,10 +1,17 @@
 name: S1 checks
+# PUBLIC-06: public UI is checked and bundled in miaowu-english-public.
+# Do not run a full private test suite for every UI/announcement commit.
+# Use PRIVATE default-branch manual candidate QA before staging/release.
 on:
-  pull_request:
+  workflow_dispatch:
   push:
     branches:
       - dev/s1-auth-and-entitlements
       - dev/foundation-s0
+concurrency:
+  group: s1-checks-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest

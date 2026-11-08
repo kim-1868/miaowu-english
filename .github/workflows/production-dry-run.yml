@@ -1,15 +1,9 @@
 name: Production dry-run (no Cloudflare deployment)
 
+# PUBLIC-06: UI-only PR updates are validated on public standard runners.
+# Manual immutable-SHA private integration gate in default branch performs both
+# npm regression and this production build dry-run for reviewed candidates.
 on:
-  pull_request:
-    paths:
-      - 'deploy/**'
-      - 'src/**'
-      - 'public/**'
-      - 'scripts/build-production-assets.mjs'
-      - 'scripts/check-production-config.mjs'
-      - 'pages-production/**'
-      - '.github/workflows/production-dry-run.yml'
   push:
     branches:
       - dev/s17-integrated-v1-release-candidate
@@ -17,6 +11,10 @@ on:
 
 permissions:
   contents: read
+
+concurrency:
+  group: production-dryrun-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   production-bundle:
