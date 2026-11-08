@@ -122,10 +122,10 @@ async function wordbookPage(req,env,userId){
     if(rows.length<chunk)break;
     offset+=rows.length;
   }
-  const total=unique.length,totalPages=Math.max(1,Math.ceil(total/pageSize));
+  const allTotal=keys.size,total=unique.length,totalPages=Math.max(1,Math.ceil(total/pageSize));
   const page=Math.min(requestedPage,totalPages);
   const ids=unique.slice((page-1)*pageSize,page*pageSize);
-  if(!ids.length)return json({scope,page,pageSize,total,totalPages,hasMore:false,words:[]});
+  if(!ids.length)return json({scope,page,pageSize,total,allTotal,totalPages,hasMore:false,words:[]});
   const result=await sql(env,
     "SELECT uw.word_id,uw.status,uw.bookmarked,w.headword,w.phonetic_uk,w.phonetic_us,"+
     "w.part_of_speech,w.meaning_zh,w.example_en,w.example_zh,w.collocations_json "+
@@ -133,7 +133,7 @@ async function wordbookPage(req,env,userId){
     "WHERE uw.user_id=? AND uw.bookmarked=1 AND uw.word_id IN ("+
     ids.map(()=>"?").join(",")+")",userId,...ids).all();
   const byId=new Map((result.results||[]).map(row=>[row.word_id,row]));
-  return json({scope,page,pageSize,total,totalPages,hasMore:page<totalPages,
+  return json({scope,page,pageSize,total,allTotal,totalPages,hasMore:page<totalPages,
     words:ids.map(id=>byId.get(id)).filter(Boolean).map(row=>{
       let pairs=[];
       try{const parsed=JSON.parse(row.collocations_json||"[]");
