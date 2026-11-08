@@ -1,0 +1,86 @@
+name: V1.1 01-04 isolated V42 release OFFLINE validation (no deployment)
+on:
+  push:
+    branches: [release/v11-0104-production-isolated-20261108]
+    paths:
+      - .github/workflows/v11-0104-isolated-offline.yml
+      - public/**
+      - src/**
+      - scripts/build-production-assets.mjs
+      - tests/**
+      - db/015_v11_site_announcements.sql
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-v11-0104-isolated-offline
+  cancel-in-progress: false
+jobs:
+  source-only-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prohibit Cloudflare deploy and verify isolated candidate branch
+        run: |
+          set -euo pipefail
+          test "$(git branch --show-current)" = "release/v11-0104-production-isolated-20261108" || test "$GITHUB_REF" = "refs/heads/release/v11-0104-production-isolated-20261108"
+          echo "NO_PRODUCTION_D1_NO_CLOUDFLARE_DEPLOY"
+      - name: Check syntax and all existing V42 unit regressions
+        run: |
+          set -euo pipefail
+          node --check public/app.js
+          node --check public/chapter-words.js
+          node --check public/site-updates.js
+          node --check public/ops-updates.js
+          node --check src/site-announcements.js
+          node --check src/worker.js
+          npm run check
+          npm test
+      - name: Inspect opt-in announcement bundle without publishing
+        run: |
+          set -euo pipefail
+          node scripts/build-production-assets.mjs --approved-announcements > /tmp/approved-bundle.json
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";
+          import {readFileSync} from "node:fs";
+          import {auditProductionAssets} from "./scripts/build-production-assets.mjs";
+          const report=auditProductionAssets({withAnnouncements:true});
+          assert.equal(report.assets.length,47);
+          const home=readFileSync("dist-production/public/index.html","utf8");
+          const admin=readFileSync("dist-production/public/ops.html","utf8");
+          assert.ok(home.indexOf("</header>")<home.indexOf('id="siteUpdateBanner"'));
+          assert.ok(home.indexOf('id="siteUpdateBanner"')<home.indexOf('id="miaowuHomeScene"'));
+          assert.ok(home.includes("/site-updates.js"));
+          assert.ok(admin.includes('id="updatesAdminForm"'));
+          assert.ok(readFileSync("dist-production/public/updates.html","utf8").includes("siteUpdateHistory"));
+          console.log("ANNOUNCEMENTS_OPT_IN_BUNDLE_47_OK");
+          NODE
+          node scripts/build-production-assets.mjs > /tmp/default-bundle.json
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";
+          import {readFileSync} from "node:fs";
+          import {auditProductionAssets} from "./scripts/build-production-assets.mjs";
+          const report=auditProductionAssets();
+          assert.equal(report.assets.length,43);
+          const home=readFileSync("dist-production/public/index.html","utf8");
+          assert.ok(!home.includes("siteUpdateBanner"));
+          assert.ok(!home.includes("siteUpdateDialog"));
+          console.log("DEFAULT_ANNOUNCEMENTS_OFF_43_OK");
+          NODE
+      - name: Compile production Worker with no deployment, D1 operations or secrets
+        run: |
+          set -euo pipefail
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npm install --ignore-scripts --no-save wrangler@^4
+          npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/release-0104-verify
+      - name: Gate is not actual release permission
+        run: |
+          echo "SOURCE_ONLY_PREFLIGHT_PASSED"
+          echo "NO_PRODUCTION_DEPLOYMENT"
+          echo "NOTICE_PROD_D1_015_BACKUP_AND_RECOVERY_STILL_REQUIRED"
+          echo "PROD_VERSION_VERIFICATION_AND_APPROVAL_PENDING"
