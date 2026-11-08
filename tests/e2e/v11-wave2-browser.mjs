@@ -26,7 +26,7 @@ await page.addInitScript(()=>{
 });
 try{
  const response=await page.goto(url+"/",{waitUntil:"domcontentloaded",timeout:30000});
- ok("STAGING_PROTECTED_BROWSER_AUTH",response.status===200);
+ ok("STAGING_PROTECTED_BROWSER_AUTH",response.status()===200);
  await page.locator("#view-library").waitFor({state:"attached"});
  ok("REAL_INDEX_WITH_V11_UI",await page.locator("#myBookshelf").count()===1&&await page.locator("#mwWelcomeDialog").count()===1);
  const voucher=await page.evaluate(async()=>{
