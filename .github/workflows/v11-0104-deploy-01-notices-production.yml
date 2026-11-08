@@ -55,7 +55,7 @@ jobs:
           assert.equal(d.ok,true);assert.equal(d.productionBindingPresent,true);
           NODE
           # Prevent enabling an unconfigured production operator interface.
-          OPS_HTML_CODE=$(curl -sS --max-time 20 -o /tmp/ops-live.html -w '%{http_code}' "$ORIGIN/ops.html")
+          OPS_HTML_CODE=$(curl -sSL --max-redirs 3 --max-time 20 -o /tmp/ops-live.html -w '%{http_code}' "$ORIGIN/ops.html")
           echo "CURRENT_PROD_OPS_PAGE_HTTP_$OPS_HTML_CODE"
           test "$OPS_HTML_CODE" = 200
           grep -Fq 'id="opsAuth' /tmp/ops-live.html || grep -Fq 'id="opsKey' /tmp/ops-live.html || grep -Fq 'ops-console.js' /tmp/ops-live.html
