@@ -1,0 +1,43 @@
+name: CET4 three-book D1 read-only revision diagnosis
+on:
+  push:
+    branches: [fix/v11-draft-full-rewrite-safe-20261109]
+    paths: ['.github/workflows/cet4-rewrite-readonly-check.yml']
+permissions:
+  contents: read
+jobs:
+  diagnose-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate ONLY production target read-only query
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          echo "READ_ONLY_CET4_DIAGNOSTIC_NO_DB_WRITE"
+      - name: Install Wrangler without lifecycle scripts
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Read exact three book IDs and status (NO USER DATA)
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          CONFIG=deploy/production.wrangler.jsonc
+          DB=miaowu-english-prod
+          IDS="'wlbook-e2422966f723b08cc0','wlbook-cet4-campus-letter-20261108','wlbook-cet4-rejected-request-20261108'"
+          echo "START: book status and counted chapters/learning anchors; NO USER DATA"
+          npx wrangler d1 execute "$DB" --config "$CONFIG" --remote --command "SELECT b.id,b.title,b.status,(SELECT COUNT(*) FROM chapters c WHERE c.book_id=b.id) AS chapters,(SELECT COUNT(DISTINCT cw.word_id) FROM chapter_words cw JOIN chapters c ON c.id=cw.chapter_id WHERE c.book_id=b.id) AS distinct_study_words FROM books b WHERE b.id IN ($IDS) ORDER BY b.id"
+          echo "START: paragraph shape / historical publication flags (NO TEXT)"
+          npx wrangler d1 execute "$DB" --config "$CONFIG" --remote --command "SELECT c.book_id,c.chapter_no,c.id,json_array_length(json_extract(c.content_json,'$.paragraphs')) AS paragraph_count,CASE WHEN c.published_at IS NULL THEN 0 ELSE 1 END AS published_chapter FROM chapters c WHERE c.book_id IN ($IDS) ORDER BY c.book_id,c.chapter_no"
+          echo "START: counts of reader and revision history (NO IDENTITIES)"
+          npx wrangler d1 execute "$DB" --config "$CONFIG" --remote --command "SELECT b.id,(SELECT COUNT(*) FROM reading_progress r JOIN chapters c ON c.id=r.chapter_id WHERE c.book_id=b.id) AS reading_progress_count,(SELECT COUNT(*) FROM review_events e JOIN chapters c ON c.id=e.chapter_id WHERE c.book_id=b.id) AS review_count,(SELECT COUNT(*) FROM ops_audit_events a WHERE a.resource_type='book' AND a.resource_id=b.id AND a.event_type='book.publish') AS publication_event_count FROM books b WHERE b.id IN ($IDS) ORDER BY b.id"
+          echo "READ_ONLY_CET4_DIAGNOSTIC_FINISHED_NO_WRITES"
