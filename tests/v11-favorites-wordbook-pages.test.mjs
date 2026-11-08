@@ -27,7 +27,7 @@ test('wordbook uses dedicated complete paginated user-scoped endpoint while pres
  assert.match(app,/serverRequest\('\/api\/me\/wordbook\?scope='/);
  assert.match(app,/data-wordbook-page="prev"/);
  assert.match(app,/data-wordbook-page="next"/);
- assert.match(app,/wordbookPage=1;wordbookData=null;renderWords\(\)/);
+ assert.match(app,/wordbookPage=1;wordbookDemoPage=1;wordbookData=null;renderWords\(\)/);
  assert.match(app,/data-cloud-master/);
  assert.match(app,/data-cloud-remove/);
  assert.match(app,/data-cloud-voice/);
