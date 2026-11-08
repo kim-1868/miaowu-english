@@ -224,8 +224,13 @@ export async function handleOpsDraftRevision(req,env,path){
   originalChapters:originals.results||[],originalWords,
   externalWordIds:externalIds,expectedVersion:version.version,
   requestId:input.requestId,actorId:auth.operator.id,allowSafeReflow})}
- catch(e){return reject(e.message==="SHARED_WORD_CARD_CONFLICT"?"SHARED_WORD_CARD_CONFLICT":
-   "REVISED_PACKAGE_INCOMPATIBLE",409)}
+ catch(e){
+  const known=new Set(["SHARED_WORD_CARD_CONFLICT","BOOK_NOT_SAME_DRAFT",
+   "CHAPTERS_NOT_SAME_UNPUBLISHED_SET","CHAPTER_ID_OR_ORDER_CHANGED",
+   "PARAGRAPH_SHAPE_CHANGED","ORIGINAL_STUDY_ANCHOR_REMOVED",
+   "ORIGINAL_STUDY_WORD_REMOVED"]);
+  return reject(known.has(e.message)?e.message:"REVISED_PACKAGE_INCOMPATIBLE",409);
+ }
  try{await env.DB.batch(plan.statements.map(x=>stmt(env.DB,x.sql,...x.params)))}
  catch{console.error("OPS_DRAFT_REVISION_FAILED");return reject("DRAFT_REVISION_CONFLICT",409)}
  return respond({updated:true,...plan.summary,
