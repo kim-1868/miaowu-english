@@ -1,0 +1,182 @@
+name: V1.1 owner-approved production 01 site notices deployment (no D1 SQL)
+on:
+  push:
+    branches: [release/v11-0104-production-isolated-20261108]
+    paths: [.github/workflows/v11-0104-deploy-01-notices-production.yml]
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  production-announcements:
+    if: github.repository == 'kim-1868/miaowu-english'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate exact current production 02-04 identity, existing Ops and D1 binding
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/release/v11-0104-production-isolated-20261108"
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";import fs from "node:fs";
+          const cfg=JSON.parse(fs.readFileSync("deploy/production.wrangler.jsonc","utf8"));
+          assert.equal(cfg.name,"miaowu-english-production");
+          assert.equal(cfg.d1_databases[0].database_name,"miaowu-english-prod");
+          assert.equal(cfg.d1_databases[0].database_id,"649c71b3-340c-49bf-b806-3d39256851d3");
+          assert.equal(cfg.vars.APP_ENV,"production");
+          assert.notEqual(cfg.vars.OPS_ANNOUNCEMENTS_ENABLED,"true");
+          const code=fs.readFileSync("src/site-announcements.js","utf8");
+          assert.match(code,/V11_NOTICE_RELEASE_APPROVED==="true"/);
+          assert.match(code,/env\.APP_ENV!=="staging"/);
+          NODE
+          ORIGIN=https://miaowu-english-pages.pages.dev
+          for FILE in app.js chapter-words.js ops-console.js; do
+            curl -fsSL --retry 3 --max-time 24 "$ORIGIN/$FILE" -o "/tmp/live-$FILE"
+            if ! cmp -s "public/$FILE" "/tmp/live-$FILE"; then
+              echo "LIVE_PRODUCTION_CHANGED_AFTER_0204__STOP_$FILE";exit 1
+            fi
+          done
+          curl -fsSL --retry 2 --max-time 20 "$ORIGIN/__miaowu_prod_edge_probe" -o /tmp/edge.json
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";import fs from "node:fs";
+          const d=JSON.parse(fs.readFileSync("/tmp/edge.json","utf8"));
+          assert.equal(d.ok,true);assert.equal(d.productionBindingPresent,true);
+          NODE
+          # Prevent enabling an unconfigured production operator interface.
+          OPS_HTML_CODE=$(curl -sS --max-time 20 -o /tmp/ops-live.html -w '%{http_code}' "$ORIGIN/ops.html")
+          test "$OPS_HTML_CODE" = 200
+          grep -Fq 'id="opsAuth' /tmp/ops-live.html || grep -Fq 'id="opsKey' /tmp/ops-live.html || grep -Fq 'ops-console.js' /tmp/ops-live.html
+          OPS_AUTH_CODE=$(curl -sS --max-time 20 -o /tmp/ops-guest.json -w '%{http_code}' "$ORIGIN/api/ops/me")
+          test "$OPS_AUTH_CODE" = 401
+          NOTICE_BEFORE=$(curl -sS --max-time 20 -o /tmp/notices-before -w '%{http_code}' "$ORIGIN/api/updates/latest")
+          test "$NOTICE_BEFORE" = 404
+          echo "LIVE_0204_UNCHANGED__PAGES_SERVICE_BINDING__EXISTING_OPS_ENABLED__NOTICES_CLOSED"
+      - name: Re-run all regression tests and review 47 announced production assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+          node scripts/build-production-assets.mjs --approved-announcements >/tmp/v11-notices-47-assets.json
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";import fs from "node:fs";
+          import {auditProductionAssets} from "./scripts/build-production-assets.mjs";
+          const report=auditProductionAssets({withAnnouncements:true});
+          assert.equal(report.assets.length,47);
+          for(const path of ["index.html","ops.html","updates.html"]){
+            const html=fs.readFileSync("dist-production/public/"+path,"utf8");
+            assert.ok(!html.includes("miaowu-english-test")&&!html.includes("STAGING_PREVIEW_PASSWORD"));
+          }
+          const home=fs.readFileSync("dist-production/public/index.html","utf8");
+          const admin=fs.readFileSync("dist-production/public/ops.html","utf8");
+          assert.ok(home.indexOf("</header>")<home.indexOf('id="siteUpdateBanner"'));
+          assert.ok(home.indexOf('id="siteUpdateBanner"')<home.indexOf('id="miaowuHomeScene"'));
+          assert.ok(home.includes('id="siteUpdateDialog"'));
+          assert.ok(home.includes('id="installGuideDialog"'));
+          assert.ok(home.includes("/v11-reader.css")&&home.includes("/v11-wordbook.css"));
+          assert.ok(admin.includes('id="updatesAdminForm"'));
+          assert.ok(fs.readFileSync("dist-production/public/updates.html","utf8").includes("siteUpdateHistory"));
+          assert.ok(!fs.readFileSync("dist-production/public/chapter-words.js","utf8").includes("自愿复习已学词"));
+          console.log("OWNER_APPROVED_0104_47_ASSET_BUNDLE_VALID__NO_STAGING_D1");
+          NODE
+      - name: Prepare production-only ephemeral config and Wrangler dry run
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";import fs from "node:fs";
+          const p="deploy/production.wrangler.jsonc";
+          const d=JSON.parse(fs.readFileSync(p,"utf8"));
+          assert.equal(d.vars.APP_ENV,"production");
+          assert.equal(d.d1_databases[0].database_id,"649c71b3-340c-49bf-b806-3d39256851d3");
+          // Explicit owner's release approval for 01. No production secrets are written.
+          d.vars.OPS_ANNOUNCEMENTS_ENABLED="true";
+          d.vars.V11_NOTICE_RELEASE_APPROVED="true";
+          fs.writeFileSync("deploy/.v11-notices-live.wrangler.jsonc",JSON.stringify(d,null,2)+"\n");
+          NODE
+          node scripts/check-production-config.mjs deploy/.v11-notices-live.wrangler.jsonc
+          npm install --no-save --ignore-scripts wrangler@^4
+          npx wrangler deploy --dry-run --config deploy/.v11-notices-live.wrangler.jsonc --outdir .wrangler/v11-01-notices-reviewed
+          echo "TEMPORARY_RELEASE_CONFIG_BOTH_NOTICE_FLAGS_ENABLED__NO_DATABASE_SQL"
+      - name: Deploy approved notice code with previous Worker rollback on smoke failure
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          deployed=0
+          rollback_on_failure(){
+            local rc=$?
+            if [ "$deployed" = 1 ]; then
+              echo "NOTICE_SMOKE_FAILED_ATTEMPTING_WORKER_ROLLBACK_NO_D1_CHANGE"
+              npx wrangler rollback --name miaowu-english-production --config deploy/.v11-notices-live.wrangler.jsonc --message "Undo V1.1 announcement release after failed production smoke" || echo "MANUAL_ROLLBACK_REQUIRED"
+            fi
+            exit "$rc"
+          }
+          trap rollback_on_failure ERR
+          npx wrangler deployments status --name miaowu-english-production --json --config deploy/production.wrangler.jsonc >/tmp/worker-before-announcements.json
+          test -s /tmp/worker-before-announcements.json
+          echo "START_01_PRODUCTION_DEPLOY__ONLY_WORKER_AND_STATIC_ASSETS__NO_D1_SQL"
+          npx wrangler deploy --keep-vars --config deploy/.v11-notices-live.wrangler.jsonc >/tmp/v11-notice-deploy.txt
+          deployed=1
+          ORIGIN=https://miaowu-english-pages.pages.dev
+          LIVE=0
+          for i in $(seq 1 15); do
+            curl -fsSL --max-time 20 "$ORIGIN/?notices_release=$i" -o /tmp/home-after-notices.html || true
+            if grep -Fq 'id="siteUpdateBanner"' /tmp/home-after-notices.html &&
+               grep -Fq 'id="siteUpdateDialog"' /tmp/home-after-notices.html;then LIVE=1;break;fi
+            sleep 3
+          done
+          test "$LIVE" = 1
+          test "$(grep -Foc 'id="siteUpdateBanner"' /tmp/home-after-notices.html)" = 1
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";import fs from "node:fs";
+          const home=fs.readFileSync("/tmp/home-after-notices.html","utf8");
+          assert.ok(home.indexOf("</header>")<home.indexOf('id="siteUpdateBanner"'));
+          assert.ok(home.indexOf('id="siteUpdateBanner"')<home.indexOf('id="miaowuHomeScene"'));
+          assert.ok(home.includes('id="installGuideDialog"')&&home.includes("/v11-wordbook.css"));
+          NODE
+          curl -fsSL --retry 3 --max-time 20 "$ORIGIN/site-updates.js" -o /tmp/announcements-js-after
+          grep -Fq 'api/updates/latest' /tmp/announcements-js-after
+          curl -fsSL --retry 3 --max-time 20 "$ORIGIN/ops-updates.js" -o /tmp/ops-announcements-js-after
+          grep -Fq '/api/ops/updates' /tmp/ops-announcements-js-after
+          curl -fsSL --retry 3 --max-time 20 "$ORIGIN/updates.html" -o /tmp/history-after
+          grep -Fq 'siteUpdateHistory' /tmp/history-after
+          curl -fsSL --retry 3 --max-time 20 "$ORIGIN/ops.html" -o /tmp/ops-after
+          grep -Fq 'id="updatesAdminForm"' /tmp/ops-after
+          curl -fsSL --retry 3 --max-time 20 "$ORIGIN/api/updates/latest" -o /tmp/announcement-latest.json
+          curl -fsSL --retry 3 --max-time 20 "$ORIGIN/api/updates?page=1" -o /tmp/announcement-history.json
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";import fs from "node:fs";
+          const latest=JSON.parse(fs.readFileSync("/tmp/announcement-latest.json","utf8"));
+          assert.equal(latest.available,true,"D1 site_announcements columns must be present");
+          assert.ok("latest" in latest);
+          const history=JSON.parse(fs.readFileSync("/tmp/announcement-history.json","utf8"));
+          assert.equal(history.available,true);
+          assert.ok(Array.isArray(history.updates));
+          console.log("PRODUCTION_D1_NOTICE_SCHEMA_READ_SUCCEEDED__NO_MIGRATION_PERFORMED");
+          NODE
+          OPS_CODE=$(curl -sS --max-time 20 -o /tmp/ops-announcements-guest.json -w '%{http_code}' "$ORIGIN/api/ops/updates")
+          test "$OPS_CODE" = 401
+          EXISTING_OPS_CODE=$(curl -sS --max-time 20 -o /tmp/ops-guest-after.json -w '%{http_code}' "$ORIGIN/api/ops/me")
+          test "$EXISTING_OPS_CODE" = 401
+          curl -fsSL --retry 2 --max-time 20 "$ORIGIN/chapter-words.js" -o /tmp/chapter-after-notices.js
+          ! grep -Fq '自愿复习已学词' /tmp/chapter-after-notices.js
+          grep -Fq '学习本章新词' /tmp/chapter-after-notices.js
+          curl -fsSL --retry 2 --max-time 20 "$ORIGIN/app.js" -o /tmp/app-after-notices.js
+          grep -Fq 'readerFontSlider' /tmp/app-after-notices.js
+          echo "PRODUCTION_0104_LIVE__NOTICE_API_ENABLED__D1_SCHEMA_READ_OK__OPS_401__ORIGINAL_STUDY_UI_OK"
+          trap - ERR
