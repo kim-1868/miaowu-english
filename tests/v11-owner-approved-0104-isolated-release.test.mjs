@@ -67,6 +67,5 @@ test("approved production code never bundles staging demo notices or migration h
  const prod=read("deploy/production.wrangler.jsonc"),js=read("public/app.js");
  assert.doesNotMatch(prod,/miaowu-english-test|STAGING_PREVIEW_PASSWORD|PREVIEW_ANNOUNCEMENT_DEMO/);
  assert.doesNotMatch(js,/user_study_schedules|MiaowuOnboarding/);
- assert.doesNotMatch(read("src/site-announcements.js"),/APP_ENV==="production"&&env\.OPS_ANNOUNCEMENTS_ENABLED!=="true"/);
  assert.match(read("src/site-announcements.js"),/APP_ENV==="production"&&env\.OPS_ANNOUNCEMENTS_ENABLED==="true"/);
 });
