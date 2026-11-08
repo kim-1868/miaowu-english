@@ -1,0 +1,127 @@
+name: V1.1 approved 02-04 production Worker UI-only migration
+on:
+  push:
+    branches: [release/v11-0104-production-isolated-20261108]
+    paths: [.github/workflows/v11-0104-deploy-0204-production.yml]
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  production-ui-only:
+    if: github.repository == 'kim-1868/miaowu-english'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm isolated branch, old V42 production asset identity and safe bindings
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/release/v11-0104-production-isolated-20261108"
+          BASE=47431dd1aa096ca6d250c6932e785c58a80a4dc2
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";import assert from "node:assert/strict";
+          const prod=JSON.parse(fs.readFileSync("deploy/production.wrangler.jsonc","utf8"));
+          assert.equal(prod.name,"miaowu-english-production");
+          assert.equal(prod.d1_databases[0].database_name,"miaowu-english-prod");
+          assert.equal(prod.d1_databases[0].database_id,"649c71b3-340c-49bf-b806-3d39256851d3");
+          assert.notEqual(prod.vars.OPS_ANNOUNCEMENTS_ENABLED,"true");
+          assert.notEqual(prod.vars.V11_NOTICE_RELEASE_APPROVED,"true");
+          const code=fs.readFileSync("src/site-announcements.js","utf8");
+          assert.match(code,/V11_NOTICE_RELEASE_APPROVED==="true"/);
+          NODE
+          git show "$BASE:public/app.js" >/tmp/v42-app.js
+          git show "$BASE:public/chapter-words.js" >/tmp/v42-chapter-words.js
+          git show "$BASE:public/ops-console.js" >/tmp/v42-ops-console.js
+          for file in app.js chapter-words.js ops-console.js; do
+            curl -fsSL --retry 3 --max-time 25 "https://miaowu-english-pages.pages.dev/$file" -o "/tmp/live-$file"
+            if ! cmp -s "/tmp/v42-$file" "/tmp/live-$file"; then
+              echo "PRODUCTION_CHANGED_SINCE_V42_BLOCK_DEPLOYMENT_$file"; exit 1
+            fi
+          done
+          curl -fsSL --retry 2 --max-time 25 https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe -o /tmp/probe.json
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";import fs from "node:fs";
+          const x=JSON.parse(fs.readFileSync("/tmp/probe.json","utf8"));
+          assert.equal(x.productionBindingPresent,true);
+          NODE
+          echo "LIVE_V42_BASELINE_VERIFIED_PAGES_SERVICE_BINDING_OK"
+      - name: Re-run all tests against pinned isolated UI code
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+          node scripts/build-production-assets.mjs >/tmp/prod-default-assets.json
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";import assert from "node:assert/strict";
+          const home=fs.readFileSync("dist-production/public/index.html","utf8");
+          const ops=fs.readFileSync("dist-production/public/ops.html","utf8");
+          const chapter=fs.readFileSync("dist-production/public/chapter-words.js","utf8");
+          assert.ok(home.includes('id="installGuideDialog"'));
+          assert.ok(home.includes('/v11-reader.css'));
+          assert.ok(home.includes('/v11-wordbook.css'));
+          assert.ok(!home.includes("siteUpdateBanner"));
+          assert.ok(!ops.includes("updatesAdminForm"));
+          assert.ok(!chapter.includes("自愿复习已学词"));
+          console.log("UI_0204_READY__ANNOUNCEMENTS_OFF_NO_D1_MIGRATION");
+          NODE
+      - name: Prepare Wrangler and dry-run production Worker (no D1)
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --ignore-scripts wrangler@^4
+          npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/v11-0204-dryrun
+      - name: Deploy 02-04 with existing D1 binding unchanged, smoke test, auto rollback on errors
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          echo "DEPLOYING_ONLY_SELECTED_0204__ANNOUNCEMENTS_DISABLED__PROD_D1_UNCHANGED"
+          deployed=0
+          rollback_on_failure(){
+            local code=$?
+            if [ "$deployed" = 1 ]; then
+              echo "SMOKE_FAILED__ATTEMPTING_IMMEDIATE_WORKER_ROLLBACK"
+              npx wrangler rollback --name miaowu-english-production --config deploy/production.wrangler.jsonc --message "V1.1 02-04 automated rollback after failed smoke test" || echo "ROLLBACK_REQUIRES_MANUAL_REVIEW"
+            fi
+            exit "$code"
+          }
+          trap rollback_on_failure ERR
+          npx wrangler deployments status --name miaowu-english-production --json --config deploy/production.wrangler.jsonc >/tmp/worker-before.json
+          test -s /tmp/worker-before.json
+          npx wrangler deploy --keep-vars --config deploy/production.wrangler.jsonc >/tmp/deploy-0204.log
+          deployed=1
+          for i in $(seq 1 14); do
+            if curl -fsSL --max-time 20 "https://miaowu-english-pages.pages.dev/?v11_ui_release=$i" -o /tmp/home-after.html &&
+               grep -Fq 'id="installGuideDialog"' /tmp/home-after.html &&
+               grep -Fq '/v11-reader.css' /tmp/home-after.html; then break; fi
+            sleep 3
+          done
+          grep -Fq 'id="installGuideDialog"' /tmp/home-after.html
+          grep -Fq '/v11-wordbook.css' /tmp/home-after.html
+          ! grep -Fq 'siteUpdateBanner' /tmp/home-after.html
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/chapter-words.js -o /tmp/chapter-after.js
+          ! grep -Fq '自愿复习已学词' /tmp/chapter-after.js
+          grep -Fq '学习本章新词' /tmp/chapter-after.js
+          curl -fsSL --retry 3 --max-time 25 https://miaowu-english-pages.pages.dev/app.js -o /tmp/app-after.js
+          grep -Fq 'readerFontSlider' /tmp/app-after.js
+          ops_status=$(curl -sS --max-time 22 -o /tmp/ops-after.json -w '%{http_code}' https://miaowu-english-pages.pages.dev/api/ops/me)
+          test "$ops_status" = 401
+          notice_status=$(curl -sS --max-time 22 -o /tmp/notice-after.json -w '%{http_code}' https://miaowu-english-pages.pages.dev/api/updates/latest)
+          test "$notice_status" = 404
+          echo "PRODUCTION_0204_DEPLOYED__PAGES_BOUND__OPS_PROTECTED__NOTICES_OFF__D1_UNCHANGED"
+          trap - ERR
