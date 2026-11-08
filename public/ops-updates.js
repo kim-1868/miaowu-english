@@ -1,4 +1,4 @@
-// V1.1 staging-only announcement manager. Publisher token stays in parent page memory.
+// V1.1 guarded announcement manager. Publisher token stays in parent page memory.
 export function initUpdatesAdmin({api,connected}){
  const $=id=>document.getElementById(id);
  const list=$("updatesAdminList"),form=$("updatesAdminForm"),message=$("updatesAdminStatus");
@@ -18,8 +18,9 @@ export function initUpdatesAdmin({api,connected}){
    showOnHome:$("updatesOnHome").checked};
  }
  function sync(){
-  setupPanel.hidden=!setupRequired||!connected();
-  button("updatesSetup",setupRequired);
+  const stagingSite=location.hostname.startsWith("miaowu-english-staging.");
+  setupPanel.hidden=!stagingSite||!setupRequired||!connected();
+  button("updatesSetup",stagingSite&&setupRequired);
   button("updatesRefresh",true);
   button("updatesNew",canEdit());
   button("updatesSave",canEdit());
@@ -40,7 +41,7 @@ export function initUpdatesAdmin({api,connected}){
   list.replaceChildren();
   if(setupRequired){
    const p=document.createElement("p");p.className="hint";
-   p.textContent="请先点击「启用公告管理」初始化测试公告表。";
+   p.textContent="独立公告表尚未准备好。正式站须先经备份与管理员审核完成迁移。";
    list.append(p);return;
   }
   if(!records.length){
@@ -75,7 +76,7 @@ export function initUpdatesAdmin({api,connected}){
   const keep=preferred||selected?.id;
   const found=keep?records.find(x=>x.id===keep):null;
   select(found||null);
-  say(setupRequired?"测试公告表尚未初始化。请点击「启用公告管理」，仅操作测试数据库。":
+  say(setupRequired?"公告数据表尚未准备。请核对公告功能配置与已审核的数据迁移。":
    "已加载 "+records.length+" 条公告（包含草稿、已发布及下架记录）。");
  }
  async function run(job){
@@ -98,7 +99,7 @@ export function initUpdatesAdmin({api,connected}){
  }
  setupButton.addEventListener("click",()=>void run(async()=>{
   if(!setupRequired)return;
-  if(!window.confirm("仅在当前受密码保护的 V1.1 测试数据库创建独立公告表，不涉及正式网站或用户学习数据。确认启用？"))return;
+  if(!window.confirm("只允许在受保护的预览环境初始化独立公告表；正式站必须先完成备份和受控迁移。确认继续？"))return;
   const result=await api("/api/ops/updates/setup","POST",{});
   if(result.ready!==true)throw Error("公告表初始化结果异常，请刷新重试。");
   await refresh();
@@ -124,7 +125,7 @@ export function initUpdatesAdmin({api,connected}){
  $("updatesPublish").addEventListener("click",()=>void run(async()=>{
   if(!selected||selected.status==="published")return;
   if(dirty){say("当前有未保存的修改，请先点击「保存草稿 / 修改」。");return}
-  if(!window.confirm("确认发布这条公告？发布后将对预览网站读者公开。"))return;
+  if(!window.confirm("确认发布这条公告？发布后将对网站所有访客公开。"))return;
   const id=selected.id;
   await api("/api/ops/updates/"+encodeURIComponent(id)+"/publish","POST",{revision:selected.revision});
   await refresh(id);
