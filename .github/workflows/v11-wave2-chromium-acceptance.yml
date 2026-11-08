@@ -2,7 +2,9 @@ name: V1.1 Wave2 real Chromium UX against isolated local preview+D1
 on:
   push:
     branches: [release/v11-wave2-bookshelf-onboarding-20261108]
-    paths: [.github/workflows/v11-wave2-chromium-acceptance.yml]
+    paths:
+      - .github/workflows/v11-wave2-chromium-acceptance.yml
+      - tests/e2e/v11-wave2-browser.mjs
 permissions:
   contents: read
 concurrency:
