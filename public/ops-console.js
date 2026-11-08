@@ -5,7 +5,7 @@
 const $=id=>document.getElementById(id);
 let key="",chosen=null,readiness=null,identity=null,busy=false;
 let liveEditorState=null,liveRevision=null,liveHistory=[];
-let customerAdmin=null,claimAdmin=null;
+let customerAdmin=null,claimAdmin=null,updatesAdmin=null;
 const byId=(tag,text,className)=>{
   const el=document.createElement(tag);
   if(text!==undefined)el.textContent=String(text);
@@ -37,7 +37,7 @@ async function api(path,method="GET",body){
     if(result.status===401){
       key="";identity=null;catalogBooks=[];catalogPage=1;chosen=null;
       $("operatorIdentity").textContent="身份已失效";
-      clearActions();renderBookDirectory();customerAdmin?.reset();claimAdmin?.reset();
+      clearActions();renderBookDirectory();customerAdmin?.reset();claimAdmin?.reset();updatesAdmin?.reset();
     }
     throw Error("操作被拒绝："+(typeof data.error==="string"?data.error:"UNKNOWN")+
       "（HTTP "+result.status+"）。");
@@ -101,6 +101,18 @@ async function verify(){
   try{await loadSaleCategories();}catch(e){saleStatus('发码功能暂不可用：'+e.message);}
   try{await mountCustomerAdmin();}catch(e){$("customerResult").textContent="查询暂不可用："+e.message;}
   try{await mountClaimAdmin();}catch(e){$("claimsStatus").textContent="对账功能暂不可用："+e.message;}
+  if($("updatesAdminForm")){
+    try{await mountUpdatesAdmin();}catch(e){
+      $("updatesAdminStatus").textContent="公告管理未启用或无法连接："+e.message+"。请先确认独立公告表与正式站启用开关。";
+    }
+  }
+}
+async function mountUpdatesAdmin(){
+  if(!updatesAdmin){
+    const mod=await import("/ops-updates.js?v=20261108-pub1");
+    updatesAdmin=mod.initUpdatesAdmin({api,connected});
+  }
+  await updatesAdmin.refresh();
 }
 async function mountClaimAdmin(){
   if(!claimAdmin){
@@ -1626,7 +1638,7 @@ $("bookPageNext").addEventListener("click",()=>{
 button("connect",verify);button("refresh",()=>loadBooks());
 button("publish",doPublish);button("withdraw",doWithdraw);
 button("disconnect",async()=>{
-  key="";identity=null;chosen=null;clearActions();clearSaleReceipt();customerAdmin?.reset();claimAdmin?.reset();
+  key="";identity=null;chosen=null;clearActions();clearSaleReceipt();customerAdmin?.reset();claimAdmin?.reset();updatesAdmin?.reset();
   catalogBooks=[];catalogPage=1;
   $("bookSearch").value="";$("bookStatus").value="";updateBookCategoryOptions();
   renderBookDirectory();
@@ -1636,6 +1648,6 @@ button("disconnect",async()=>{
   $("audit").replaceChildren(byId("p","请先验证身份。","soft"));
   $("selected").textContent="请选择一本书";status("本页内存中的运营密钥已清除。");
 });
-window.addEventListener("pagehide",()=>{key="";identity=null;clearSaleReceipt();customerAdmin?.reset();claimAdmin?.reset();});
+window.addEventListener("pagehide",()=>{key="";identity=null;clearSaleReceipt();customerAdmin?.reset();claimAdmin?.reset();updatesAdmin?.reset();});
 syncButtons();
 })();
