@@ -1,0 +1,90 @@
+name: V1.1 owner-approved 01-04 candidate OFFLINE gate
+# One private isolated check is necessary for the non-public auth/ops boundary.
+# No deployment, Cloudflare credentials or remote D1 calls in this workflow.
+on:
+  push:
+    branches: [release/v11-approved-01-04-candidate-20261108]
+    paths:
+      - .github/workflows/v11-approved-0104-candidate-offline.yml
+      - src/site-announcements.js
+      - scripts/build-production-assets.mjs
+      - tests/v11-announcements-preview.test.mjs
+      - tests/v11-approved-0104-release-candidate.test.mjs
+      - docs/V11_APPROVED_0104_CANDIDATE_20261108.md
+permissions:
+  contents: read
+concurrency:
+  group: v11-owner-approved-0104-offline
+  cancel-in-progress: false
+jobs:
+  offline-release-scope:
+    if: ${{ github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/release/v11-approved-01-04-candidate-20261108' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Guard private tests against Cloudflare credentials and non-candidate branch
+        run: |
+          set -euo pipefail
+          test -z "${CLOUDFLARE_API_TOKEN:-}"
+          test -z "${CLOUDFLARE_ACCOUNT_ID:-}"
+          test "${GITHUB_REF}" = "refs/heads/release/v11-approved-01-04-candidate-20261108"
+          echo "NO_CLOUDFLARE_SECRETS_NO_REMOTE_D1_NO_DEPLOY"
+          echo "INTEGRATION_CANDIDATE_IS_NOT_A_PRODUCTION_RELEASE"
+      - name: Source and fixture-based regression for selected owner scope
+        run: |
+          set -euo pipefail
+          node --check src/site-announcements.js
+          node --check public/site-updates.js
+          node --check public/ops-updates.js
+          node --check scripts/build-production-assets.mjs
+          npm run check
+          npm test
+      - name: Confirm testing and production routing remain isolated
+        run: |
+          set -euo pipefail
+          node scripts/check-v11-preview-config.mjs
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          node --experimental-sqlite scripts/rehearse-v11-migrations.mjs
+      - name: Review optional announcement assets in an offline-only production bundle
+        run: |
+          set -euo pipefail
+          node scripts/build-production-assets.mjs --approved-announcements > /tmp/approved-announcements-bundle.json
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          import {auditProductionAssets} from './scripts/build-production-assets.mjs';
+          const report=auditProductionAssets({includeAnnouncements:true});
+          assert.equal(report.assets.length,50);
+          const html=readFileSync('dist-production/public/index.html','utf8');
+          const ops=readFileSync('dist-production/public/ops.html','utf8');
+          assert.ok(html.indexOf('</header>')<html.indexOf('id="siteUpdateBanner"'));
+          assert.ok(html.indexOf('id="siteUpdateBanner"')<html.indexOf('id="miaowuHomeScene"'));
+          assert.ok(html.includes('/site-updates.js'));
+          assert.ok(ops.includes('id="updatesAdminForm"'));
+          assert.ok(readFileSync('dist-production/public/updates.html','utf8').includes('siteUpdateHistory'));
+          const config=JSON.parse(readFileSync('deploy/production.wrangler.jsonc','utf8'));
+          assert.notEqual(config.vars.OPS_ANNOUNCEMENTS_ENABLED,'true');
+          console.log('REVIEWED_OPT_IN_BUNDLE_50_ASSETS_PROD_FLAG_DEFAULT_OFF');
+          NODE
+          # Restore default production bundle so QA artifacts never look published.
+          node scripts/build-production-assets.mjs > /tmp/default-production-bundle.json
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {auditProductionAssets} from './scripts/build-production-assets.mjs';
+          const report=auditProductionAssets();
+          assert.equal(report.assets.length,46);
+          console.log('DEFAULT_PRODUCTION_46_ASSETS_NO_NOTICE');
+          NODE
+      - name: Conclude as blocked for production (human approval still required)
+        run: |
+          echo "OFFLINE_QA_COMPLETE_WHEN_ALL_STEPS_PASS"
+          echo "STILL_BLOCKED: release scope must be isolated from unapproved V1.1 changes"
+          echo "STILL_BLOCKED: preview 401 and real reader/ops/mobile acceptance"
+          echo "STILL_BLOCKED: real production backup and schema-015 release review"
+          echo "NO_PRODUCTION_OR_STAGING_DEPLOYMENT_PERFORMED"
