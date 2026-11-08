@@ -132,7 +132,7 @@
     let activeCloud=null;
     let cloudBooks=[],cloudSaved=new Map(),cloudProgress=[],cloudSessionKey=null,cloudLearningSequence=0;
     let personalBooks=[],recentBooks=[],personalBooksRequest=0,personalShelfFilter='reading',personalShelfPage=1;
-    let wordbookPage=1,wordbookData=null,wordbookPending=false,wordbookRequest=0;
+    let wordbookPage=1,wordbookData=null,wordbookPending=false,wordbookRequest=0,wordbookDemoPage=1,wordbookDemo=false;
     const PERSONAL_SHELF_PAGE_SIZE=9;
     let initialSessionPromise=Promise.resolve(),heroResumeBusy=false;
     function updateHeroReadLabel(){
@@ -980,12 +980,73 @@
         if(serial===wordbookRequest){wordbookPending=false;if(view==='words')renderWords();}
       }
     }
+    // Strictly UI-only staging fixture. It never calls write APIs or modifies cloudSaved.
+    const sampleBookplateWords=[
+      'approach','benefit','confirm','deliver','evidence','focus','gather','improve',
+      'journey','knowledge','language','memory','notice','observe','patient','quality',
+      'record','result','support','transfer','unique','variety','wonder','achieve',
+      'balance','chapter','discover','effort','familiar','growth','habit','imagine',
+      'meaning','progress','review','story'
+    ];
+    const previewBookplateAllowed=()=>typeof location!=='undefined'&&
+      location.hostname==='miaowu-english-staging.kim10086a.workers.dev';
+    function wordbookPreviewEntry(){
+      if(!previewBookplateAllowed()||!user)return;
+      const grid=$('vocabGrid');
+      grid.insertAdjacentHTML('afterbegin','<div class="bookplate-preview-entry">'+
+        '<strong>预览站分页体验</strong><span>真实词卡不足一页？</span>'+ 
+        '<button type="button" id="bookplateDemoStart">体验36张示例词卡（共3页）</button>'+ 
+        '<small>只展示排版；不会更改词卡、学习记录或数据库。</small></div>');
+      $('bookplateDemoStart').onclick=()=>{wordbookDemo=true;wordbookDemoPage=1;renderWords()};
+    }
+    function renderWordbookPreview(){
+      if(!previewBookplateAllowed()||!user){wordbookDemo=false;return;}
+      const list=sampleBookplateWords.map((headword,i)=>({headword,index:i+1,
+        status:i%3===0?'mastered':'learning'})).filter(w=>wordFilter==='all'||
+        (wordFilter==='mastered'?w.status==='mastered':w.status==='learning'));
+      const totalPages=Math.max(1,Math.ceil(list.length/12));
+      wordbookDemoPage=Math.min(Math.max(wordbookDemoPage,1),totalPages);
+      const page=wordbookDemoPage;
+      const current=list.slice((page-1)*12,page*12);
+      $('vocabGrid').innerHTML='<div class="bookplate-preview-entry is-active" role="status">'+
+        '<strong>当前是36张示例词卡的分页演示</strong>'+ 
+        '<span>不属于你的账号，不保存也不计入学习数据。</span>'+ 
+        '<button type="button" id="bookplateDemoExit">退出演示，返回我的词卡</button></div>'+ 
+        '<div class="bookplate-source-summary">示例词卡 · '+list.length+' 张'+ 
+        '<small>仅检查不同屏幕上的卡片布局和翻页交互，以下词卡不可操作。</small></div>'+ 
+        current.map(w=>'<article class="vocab-card bookplate-preview-card">'+
+          '<div class="eyebrow">MIAOWU · SAMPLE ONLY</div><h3>'+safe(w.headword)+'</h3>'+ 
+          '<p class="word-status">'+(w.status==='mastered'?'演示 · 已掌握':'演示 · 学习中')+'</p>'+ 
+          '<div class="vocab-section"><b>例句 / EXAMPLE</b>'+ 
+          '<p>Sample layout for '+safe(w.headword)+'.</p>'+ 
+          '<small>词义、例句及学习按钮仅作排版示意。</small></div>'+ 
+          '<div class="card-tools"><span class="bookplate-demo-label">不可保存 · 不影响真实学习</span></div></article>').join('')+
+        (totalPages>1?'<nav class="bookplate-pagination" aria-label="记忆藏书票演示分页">'+
+          '<span class="bookplate-page-summary">共 '+list.length+' 张 · 每页12张 · 第 '+page+' / '+totalPages+' 页</span>'+ 
+          '<div class="bookplate-page-controls">'+
+          '<button data-bookplate-demo="prev" type="button"'+(page===1?' disabled':'')+'>上一页</button>'+ 
+          Array.from({length:totalPages},(_,i)=>'<button type="button" data-bookplate-demo="'+(i+1)+'"'+
+            (page===i+1?' aria-current="page" disabled':'')+'>'+(i+1)+'</button>').join('')+ 
+          '<button data-bookplate-demo="next" type="button"'+(page===totalPages?' disabled':'')+'>下一页</button>'+ 
+          '</div></nav>':'');
+      $('bookplateDemoExit').onclick=()=>{wordbookDemo=false;wordbookDemoPage=1;renderWords()};
+      $('vocabGrid').querySelectorAll('[data-bookplate-demo]').forEach(btn=>btn.onclick=()=>{
+        const id=btn.dataset.bookplateDemo;
+        const next=id==='prev'?page-1:id==='next'?page+1:Number(id);
+        if(!Number.isInteger(next)||next<1||next>totalPages||next===page)return;
+        wordbookDemoPage=next;renderWordbookPreview();
+        $('view-words').querySelector('.filter-row')?.scrollIntoView({behavior:'auto',block:'start'});
+      });
+    }
     function renderWords(){
       globalThis.MiaowuFlashcards?.render({
         loggedIn:!!user,saved:wordbookData?.allTotal??cloudSaved.size,due:cloudFlashDue,
         sessionKey:user?.name||null
       });
       document.querySelectorAll('[data-word-filter]').forEach(x=>x.classList.toggle('active',x.dataset.wordFilter===wordFilter));
+      if(typeof wordbookDemo!=='undefined'&&wordbookDemo&&previewBookplateAllowed()&&user){
+        renderWordbookPreview();return;
+      }
       const words=wordbookData?.scope===wordFilter?(wordbookData.words||[]):[];
       const cloudTotal=user?(wordbookData?.allTotal??cloudSaved.size):0;
       $('bookplateCount').textContent=String(cloudTotal);
@@ -1011,7 +1072,7 @@
           '<div class="big">♧</div><h3>'+(hasSaved?'这个筛选下暂无藏书票':'第一张藏书票，等你来收下')+'</h3>'+
           '<p>'+(hasSaved?'试试切换「全部收藏」，查看其它学习状态的词卡。':'打开已解锁的故事，点击英文词汇即可收藏到记忆藏书票。')+'</p>'+
           '<button class="primary" id="emptyRead">寻找故事 →</button></div>';
-        $('emptyRead').onclick=()=>navigate('library');return;
+        $('emptyRead').onclick=()=>navigate('library');wordbookPreviewEntry();return;
       }
       const cloudCards=user?words.map(w=>{
         const mastered=w.status==='mastered';
@@ -1045,6 +1106,7 @@
           '<button type="button" data-wordbook-page="'+n+'"'+(n===page?' aria-current="page" disabled':'')+'>'+n+'</button>').join('')+
         '<button type="button" data-wordbook-page="next"'+(page===pages?' disabled':'')+'>下一页</button></div></nav>':'';
       $('vocabGrid').innerHTML=sources+cloudSection+pagination;
+      wordbookPreviewEntry();
       $('vocabGrid').querySelectorAll('[data-wordbook-page]').forEach(btn=>btn.onclick=()=>{
         const key=btn.dataset.wordbookPage;
         const next=key==='prev'?page-1:key==='next'?page+1:Number(key);
@@ -1176,7 +1238,7 @@
         activeCloud=null;
         if(view==='reader'){navigate('library');$('storyText').textContent='';}
       }
-      cloudSaved=new Map();cloudProgress=[];personalBooks=[];recentBooks=[];++personalBooksRequest;
+      cloudSaved=new Map();cloudProgress=[];personalBooks=[];recentBooks=[];wordbookDemo=false;wordbookDemoPage=1;++personalBooksRequest;
       wordbookData=null;wordbookPage=1;++wordbookRequest;wordbookPending=false;glossaryCache.clear();cloudSessionKey=user?.name||null;
       updateHeroReadLabel();
       renderLibrary();renderAccount();renderReminder();
@@ -1680,7 +1742,7 @@
         if(segment>=0)seekSpeech(segment);
       }
     });
-$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;wordbookPage=1;wordbookData=null;renderWords()});
+$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;wordbookPage=1;wordbookDemoPage=1;wordbookData=null;renderWords()});
     // Cloud reading progress is saved automatically on scroll and chapter navigation.
     window.MiaowuChapterWords?.configure({
       request:serverRequest,refresh:refreshCloudLearning,
