@@ -93,3 +93,16 @@ html[data-theme="dark"] .vocab-card .vocab-example button.v11-example-word{
 html[data-theme=dark] .bookplate-page-status,html[data-theme=dark] .bookplate-page-controls button{background:var(--paper,#302a30);color:var(--ink,#eee2d8)}
 html[data-theme=dark] .bookplate-page-controls button[aria-current=page]{background:#854761;color:#fff}
 @media(max-width:620px){.bookplate-pagination{flex-direction:column;align-items:flex-start}.bookplate-page-controls{justify-content:flex-start}}
+
+
+/* Test-site-only demonstration entry; generated entirely in browser memory. */
+.bookplate-preview-entry{grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:13px 16px;border:1px dashed var(--wine,#672b41);border-radius:13px;background:var(--paper,#fffcf7);color:var(--ink,#322a2b);font-size:12px;line-height:1.65}
+.bookplate-preview-entry strong{color:var(--wine,#672b41);font-size:13px}
+.bookplate-preview-entry button{min-height:40px;border-radius:9px;border:1px solid var(--wine,#672b41);padding:7px 12px;color:var(--wine,#672b41);background:transparent;cursor:pointer}
+.bookplate-preview-entry small{flex:1 1 100%;font-size:11px;color:var(--muted,#847675)}
+.bookplate-preview-entry.is-active{border-style:solid}
+.bookplate-preview-card .word-status{margin:10px 0;font-size:12px;color:var(--muted,#847675)}
+.bookplate-demo-label{font-size:11px;color:var(--muted,#847675)}
+html[data-theme="dark"] .bookplate-preview-entry{background:var(--paper,#302a30);color:var(--ink,#eee2d8)}
+html[data-theme="dark"] .bookplate-preview-entry strong,html[data-theme="dark"] .bookplate-preview-entry button{color:#f1b8c6}
+@media(max-width:620px){.bookplate-preview-entry{flex-direction:column;align-items:flex-start;gap:7px}.bookplate-preview-entry button{width:100%}}
