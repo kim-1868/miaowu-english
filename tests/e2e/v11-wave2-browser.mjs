@@ -60,7 +60,7 @@ try{
  await page.locator("#mwWelcomeDialog").waitFor({state:"hidden",timeout:12000});
  let onboard=await page.evaluate(async()=>(await fetch("/api/me/onboarding")).json());
  ok("WELCOME_COMPLETION_PERSISTED",onboard.eligible===true&&onboard.pending===false&&onboard.completionKind==="finished");
- await page.locator('[data-nav="library"]').locator(':visible').first().click();
+ await page.locator('[data-nav="library"]:visible').first().click();
  await page.locator('#bookGrid [data-cloud-bookmark="wave2-qa-book"]').waitFor({state:"visible",timeout:16000});
  await page.locator('#bookGrid [data-cloud-bookmark="wave2-qa-book"]').click();
  await page.waitForFunction(async()=>{
@@ -68,7 +68,7 @@ try{
   const d=await r.json();return d.books?.some(b=>b.book_id==="wave2-qa-book"&&b.bookmarked===true&&b.state==="want");
  },null,{timeout:11000});
  ok("REAL_BOOKMARK_WANT_STATE_SAVED",true);
- await page.locator('[data-nav="account"]').locator(':visible').first().click();
+ await page.locator('[data-nav="account"]:visible').first().click();
  await page.locator('[data-personal-filter="want"]').click();
  await page.locator('[data-personal-book="wave2-qa-book"]').waitFor({state:"visible",timeout:11000});
  ok("ACCOUNT_SHELF_WANT_TAB_DISPLAYS_SAVED_BOOK",true);
@@ -124,7 +124,7 @@ try{
   const d=await r.json();return d.books?.some(b=>b.book_id==="wave2-qa-book"&&b.state==="finished");
  },null,{timeout:13000});
  ok("FINISH_LAST_CHAPTER_UPDATES_BOOK_STATE",true);
- await page.locator('[data-nav="account"]').locator(':visible').first().click();
+ await page.locator('[data-nav="account"]:visible').first().click();
  await page.locator('[data-personal-filter="finished"]').click();
  await page.locator('[data-personal-book="wave2-qa-book"]').waitFor({state:"visible"});
  ok("ACCOUNT_SHELF_FINISHED_TAB_VISIBLE",true);
