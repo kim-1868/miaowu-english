@@ -1,0 +1,118 @@
+name: V1.1 Wave2 integrated production-candidate isolated QA (NO DEPLOY)
+on:
+  push:
+    branches: [release/v11-wave2-prod-integrated-20261108]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-wave2-prod-candidate-qa
+  cancel-in-progress: false
+jobs:
+  code-static-and-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Verify production binding, scope and no staging artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          const x=JSON.parse(fs.readFileSync('deploy/production.wrangler.jsonc','utf8'));
+          assert.equal(x.name,'miaowu-english-production');
+          assert.equal(x.vars.APP_ENV,'production');
+          assert.equal(x.d1_databases[0].database_name,'miaowu-english-prod');
+          assert.equal(x.d1_databases[0].database_id,'649c71b3-340c-49bf-b806-3d39256851d3');
+          assert.equal(x.workers_dev,false);
+          assert.equal(x.preview_urls,false);
+          const html=fs.readFileSync('public/index.html','utf8');
+          for(const k of ['id="siteUpdateBanner"','id="myBookshelf"','id="mwWelcomeDialog"','voice-guard']) {
+            if(k==='voice-guard')continue;
+            assert.ok(html.includes(k),'missing '+k);
+          }
+          const app=fs.readFileSync('public/app.js','utf8');
+          assert.match(app,/function startReading\(/);
+          assert.match(app,/closeWord\(\);\s*stopReading\(\)/);
+          assert.match(app,/function positionStudyPopover/);
+          assert.match(fs.readFileSync('public/ops-updates.js','utf8'),/updatesLocalPreviewDialog/);
+          assert.doesNotMatch(fs.readFileSync('src/worker.js','utf8'),/reviewed-sense-aliases/);
+          console.log('WAVE2_VOICE_GUARD_BOOKSHELF_ANNOUNCEMENT_PROD_BINDING_VALID');
+          NODE
+      - name: Full Node and SQLite regression suite
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+      - name: Build exactly 50 announcement-preserving production assets
+        run: |
+          set -euo pipefail
+          node scripts/build-production-assets.mjs --approved-announcements
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          import {auditProductionAssets} from './scripts/build-production-assets.mjs';
+          assert.equal(auditProductionAssets({withAnnouncements:true}).assets.length,50);
+          const d=fs.readFileSync('dist-production/public/index.html','utf8');
+          for(const value of ['myBookshelf','mwWelcomeDialog','siteUpdateBanner','wave2-bookshelf'])assert.ok(d.includes(value));
+          assert.match(fs.readFileSync('dist-production/public/app.js','utf8'),/closeWord\(\);\s*stopReading\(\)/);
+          console.log('WAVE2_50_ASSETS_VERIFIED_NO_PRODUCTION_DEPLOYMENT');
+          NODE
+      - name: Compile Worker locally without any remote credentials
+        run: |
+          set -euo pipefail
+          npm install --no-save --ignore-scripts 'wrangler@^4'
+          npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/wave2-prod-candidate
+          test -z "${CLOUDFLARE_API_TOKEN:-}"
+  local-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install Chromium driver and Wrangler
+        run: |
+          npm install --no-save --ignore-scripts 'playwright-core@^1.55' 'wrangler@^4'
+          command -v google-chrome || command -v chromium
+          node --check tests/e2e/v11-wave2-browser.mjs
+      - name: Local synthetic D1 for actual 25 browser interactions
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/wave2-integrated-local-e2e
+          for f in db/001_schema.sql db/002_s1.sql db/003_public_categories.sql db/009_v11_onboarding.sql db/010_v11_my_bookshelf.sql db/012_v11_supplemental_dictionary.sql db/013_v11_supplemental_starter.sql tests/fixtures/v11-wave2-browser-qa.sql; do
+            npx wrangler d1 execute miaowu-english-test --local --config wrangler.jsonc --persist-to /tmp/wave2-integrated-local-e2e --file "$f" >/tmp/wave2-integrated-migration.log
+          done
+      - name: Isolated local Worker + real Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          export QA_ORIGIN=http://localhost:8787
+          export STAGING_PREVIEW_PASSWORD="$(openssl rand -hex 24)"
+          export ACTIVATION_PEPPER="$(openssl rand -hex 32)"
+          echo "::add-mask::$STAGING_PREVIEW_PASSWORD"
+          echo "::add-mask::$ACTIVATION_PEPPER"
+          umask 077
+          printf 'STAGING_PREVIEW_PASSWORD="%s"\nACTIVATION_PEPPER="%s"\n' "$STAGING_PREVIEW_PASSWORD" "$ACTIVATION_PEPPER" > .dev.vars
+          rm -f .env
+          npx wrangler dev --local --config wrangler.jsonc --persist-to /tmp/wave2-integrated-local-e2e --ip 127.0.0.1 --port 8787 >/tmp/wave2-integrated-server.log 2>&1 &
+          WORKER_PID=$!
+          trap 'kill "$WORKER_PID" 2>/dev/null || true; rm -f .dev.vars' EXIT
+          for i in $(seq 1 40); do
+            code="$(curl -sS --max-time 2 -o /tmp/wave2-integrated-guest -w '%{http_code}' "$QA_ORIGIN" 2>/dev/null || true)"
+            if [ "$code" = "401" ];then break;fi
+            sleep 2
+          done
+          test "$code" = 401 || { tail -n 20 /tmp/wave2-integrated-server.log; exit 1; }
+          code="$(curl -sS --max-time 8 -u "reviewer:$STAGING_PREVIEW_PASSWORD" -o /tmp/wave2-integrated-home -w '%{http_code}' "$QA_ORIGIN/")"
+          test "$code" = 200
+          node tests/e2e/v11-wave2-browser.mjs
+          echo 'LOCAL_CHROMIUM_SUCCESS__NO_REMOTE_DATABASE_OR_PROD_DEPLOYMENT'
