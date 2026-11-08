@@ -60,5 +60,5 @@ test("V1.1 owner-approved reader: source no longer contains learned-word review 
  assert.match(js,/学习本章新词/);
  assert.match(js,/api\.showWord\(word\.word_id\)/);
  assert.match(js,/api\.speak\(words\[/);
- assert.match(html,/chapter-words\.js\?v=20261108-v11-no-voluntary-review-r2/);
+ assert.match(html,/chapter-words\.js\?v=20261108-v11-no-voluntary-review-r3/);
 });
