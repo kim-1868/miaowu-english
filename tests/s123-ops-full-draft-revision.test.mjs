@@ -74,3 +74,35 @@ test("S123 stale editor version cannot accidentally overwrite someone else's new
   assert.equal(db.prepare("SELECT COUNT(*) n FROM chapter_words").get().n,733);
  }finally{db.close()}
 });
+
+
+test("S123 unpublished never-studied drafts may be fully reflowed without renumbering chapters or removing known word identities",()=>{
+ const {db,options}=prepare();
+ try{
+  const rewritten=structuredClone(options);
+  rewritten.validated.chapters[0].paragraphs.unshift({segments:[{text:"新增的自然段，不改变任何原来的学习词。"}]});
+  assert.throws(()=>planDraftRevision(rewritten),/PARAGRAPH_SHAPE_CHANGED/);
+  rewritten.allowSafeReflow=true;
+  const planned=planDraftRevision(rewritten);
+  assert.equal(planned.summary.remainsUnpublished,true);
+  batch(db,planned.statements);
+  assert.equal(db.prepare("SELECT status FROM books WHERE id=?").get(rewritten.validated.book.id).status,"draft");
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM chapters WHERE published_at IS NOT NULL").get().n,0);
+  assert.equal(db.prepare("PRAGMA foreign_key_check").all().length,0);
+ }finally{db.close()}
+});
+
+test("S123 safe full-book reflow still rejects removal of a previously referenced study word",()=>{
+ const {db,options}=prepare();
+ try{
+  const rewritten=structuredClone(options);
+  rewritten.allowSafeReflow=true;
+  const old=JSON.parse(options.originalChapters[0].content_json);
+  const id=old.paragraphs.flatMap(p=>p.segments).find(s=>s.wordId)?.wordId;
+  assert.ok(id);
+  for(const chapter of rewritten.validated.chapters)
+   for(const paragraph of chapter.paragraphs)
+    paragraph.segments=paragraph.segments.filter(s=>s.wordId!==id);
+  assert.throws(()=>planDraftRevision(rewritten),/ORIGINAL_STUDY_WORD_REMOVED/);
+ }finally{db.close()}
+});
