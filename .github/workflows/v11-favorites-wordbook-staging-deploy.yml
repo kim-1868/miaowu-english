@@ -1,3 +1,4 @@
+# Recheck after adapting legacy render harness to paginated server results.
 name: V1.1 favorites and wordbook paging STAGING preview only
 on:
   push:
