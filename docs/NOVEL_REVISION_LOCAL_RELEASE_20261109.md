@@ -15,7 +15,7 @@
 ```bash
 git clone --branch release/novel-revision-on-current-prod-20261109 https://github.com/kim-1868/miaowu-english.git miaowu-novel-fix
 cd miaowu-novel-fix
-npm install --no-save --ignore-scripts 'wrangler@^4'
+npm install --no-save --no-package-lock --ignore-scripts 'wrangler@^4'
 npx wrangler login
 node scripts/deploy-novel-revision-local.mjs
 ```
