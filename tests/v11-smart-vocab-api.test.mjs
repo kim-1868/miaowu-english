@@ -258,3 +258,47 @@ test('feature disabled keeps legacy words view independent from smart catalog',a
     assert.equal((await f.call('/api/me/smart-vocab?category=cet4')).status,404);
   }finally{f.sql.close()}
 });
+
+test('revoked or never-entitled history cannot mark an entitled new sense as learned',async()=>{
+  const f=fixture();
+  try{
+    row(f.sql,"INSERT INTO words(id,headword,part_of_speech,meaning_zh,phonetic_uk,example_en,example_zh) "+
+      "VALUES('four-premium','premium','adj.','高级的','/word/','A premium option.','一个高级选项。')");
+    row(f.sql,"INSERT INTO smart_vocab_catalog(category_id,word_id,frequency_rank,frequency_source,reviewed) "+
+      "VALUES('cet4','four-premium',4,'COCA',1)");
+    f.sql.prepare("UPDATE smart_vocab_levels SET expected_headwords=4 WHERE category_id='cet4'").run();
+    row(f.sql,"INSERT INTO user_words(user_id,word_id,status,bookmarked,due_at,last_seen_at) "+
+      "VALUES(?,?,'mastered',1,NULL,CURRENT_TIMESTAMP)",user.id,'s-premium');
+    const res=await f.call('/api/me/smart-vocab?category=cet4');
+    assert.equal(res.status,200);
+    const eligible=res.data.words.find(w=>w.word_id==='four-premium');
+    assert.ok(eligible,'a word known only through unauthorized level must still be offered');
+    assert.equal(eligible.review,false);
+  }finally{f.sql.close()}
+});
+test('verified unranked source word remains learnable AFTER ranked words',async()=>{
+  const f=fixture();
+  try{
+    row(f.sql,"INSERT INTO words(id,headword,part_of_speech,meaning_zh,phonetic_uk,example_en,example_zh) "+
+      "VALUES('s-supplement','enigmatic','adj.','神秘的','/word/','A curious puzzle.','一个奇特的谜题。')");
+    row(f.sql,"INSERT INTO smart_vocab_catalog(category_id,word_id,frequency_rank,frequency_source,reviewed) "+
+      "VALUES('cet4','s-supplement',NULL,'UNRANKED',1)");
+    f.sql.prepare("UPDATE smart_vocab_levels SET expected_headwords=4 WHERE category_id='cet4'").run();
+    const res=await f.call('/api/me/smart-vocab?category=cet4');
+    assert.equal(res.status,200);
+    assert.equal(res.data.words.at(-1).word_id,'s-supplement');
+    assert.equal(res.data.words.at(-1).ranking_tier,'SYLLABUS_COMPLETION');
+    assert.equal(res.data.words.at(-1).frequency_rank,null);
+  }finally{f.sql.close()}
+});
+test('catalog must fail closed when reviewed card lacks POS and has no stable sense identity',async()=>{
+  const f=fixture();
+  try{
+    row(f.sql,"INSERT INTO words(id,headword,part_of_speech,meaning_zh,phonetic_uk,example_en,example_zh) "+
+      "VALUES('s-no-pos','halcyon',NULL,'平静的','/word/','A quiet day.','平静的一天。')");
+    row(f.sql,"INSERT INTO smart_vocab_catalog(category_id,word_id,frequency_rank,frequency_source,reviewed) "+
+      "VALUES('cet4','s-no-pos',7,'COCA',1)");
+    f.sql.prepare("UPDATE smart_vocab_levels SET expected_headwords=4 WHERE category_id='cet4'").run();
+    assert.equal((await f.call('/api/me/smart-vocab?category=cet4')).status,503);
+  }finally{f.sql.close()}
+});
