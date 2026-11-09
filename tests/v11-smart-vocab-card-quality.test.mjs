@@ -55,3 +55,21 @@ test('inflected target words are a review warning, not a false rejection',()=>{
   assert.equal(x.structurallyReady,true);
   assert.ok(x.warnings.includes('EXAMPLE_TARGET_FORM_REVIEW'));
 });
+
+test('CET4 common abbreviations can be taught without pretending a COCA exam rank',()=>{
+  const card={...base,headword:'i.e.',word_id:'sv_cet4_i_e',part_of_speech:'abbr.',
+    meaning_zh:'也就是说',phonetic_uk:'/ˌaɪ ˈiː/',
+    example_en:'The meeting is virtual, i.e. it takes place online.',
+    example_zh:'会议是线上举行的，也就是说通过网络参加。',
+    frequency_source:'UNRANKED',frequency_rank:null,frequency_available:0};
+  assert.equal(auditSmartWordCard(card).structurallyReady,true);
+  assert.equal(auditSmartWordCard({...card,reviewed:false}).commerciallyApproved,false);
+  assert.equal(auditSmartWordCard({...card,frequency_rank:900}).structurallyReady,false);
+  assert.equal(auditSmartWordCard({...card,frequency_available:1}).structurallyReady,false);
+});
+
+test('CET4 source frequencies must be real: a COCA row with frequency_verified=0 is rejected',()=>{
+  const row={...base,frequency_available:0};
+  assert.equal(auditSmartWordCard(row).structurallyReady,false);
+  assert.ok(auditSmartWordCard(row).errors.includes('UNVERIFIED_FREQUENCY'));
+});
