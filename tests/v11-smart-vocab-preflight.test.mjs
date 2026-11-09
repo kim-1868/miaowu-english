@@ -105,3 +105,10 @@ test('unranked postgrad supplement cannot be advertised as true exam frequency',
   ]});
   assert.deepEqual(result.words.map(x=>x.word_id),['pg-2']);
 });
+
+test('revoked category grants never unlock smart vocabulary',()=>{
+  assert.equal(select({activeEntitlements:[{slug:'cet4',revoked_at:'today'}]}).available,false);
+  assert.equal(select({activeEntitlements:[{slug:'cet4',activation_status:'revoked'}]}).available,false);
+  assert.equal(select({activeEntitlements:[{slug:'cet4',active:false}]}).available,false);
+  assert.equal(select({activeEntitlements:[{slug:'cet4'}]}).available,true);
+});
