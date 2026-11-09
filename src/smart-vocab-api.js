@@ -42,7 +42,7 @@ async function catalogReady(env,categoryId,slug){
   const n=await db(env,
     "SELECT COUNT(DISTINCT LOWER(TRIM(w.headword))) AS n "+
     "FROM smart_vocab_catalog cv JOIN words w ON w.id=cv.word_id "+
-    "WHERE cv.category_id=? AND cv.reviewed=1 AND cv.frequency_verified=1 "+
+    "WHERE cv.category_id=? AND cv.reviewed=1 "+
     "AND TRIM(w.headword)!='' AND TRIM(COALESCE(w.meaning_zh,''))!='' "+
     "AND TRIM(COALESCE(w.part_of_speech,''))!='' AND INSTR(w.meaning_zh,'[')=0 "+
     "AND (TRIM(COALESCE(w.phonetic_uk,''))!='' OR TRIM(COALESCE(w.phonetic_us,''))!='') "+
@@ -61,7 +61,7 @@ async function card(env,categoryId,wordId){
     "cv.frequency_verified AS frequency_available,c.slug AS category_slug "+
     "FROM smart_vocab_catalog cv JOIN words w ON w.id=cv.word_id "+
     "JOIN categories c ON c.id=cv.category_id "+
-    "WHERE cv.category_id=? AND cv.word_id=? AND cv.reviewed=1 AND cv.frequency_verified=1 "+
+    "WHERE cv.category_id=? AND cv.word_id=? AND cv.reviewed=1 "+
     "AND TRIM(w.headword)!='' AND TRIM(COALESCE(w.meaning_zh,''))!='' "+
     "AND (TRIM(COALESCE(w.phonetic_uk,''))!='' OR TRIM(COALESCE(w.phonetic_us,''))!='') "+
     "AND TRIM(COALESCE(w.example_en,''))!='' AND TRIM(COALESCE(w.example_zh,''))!=''",
@@ -109,7 +109,7 @@ async function list(env,userId,category){
     "AND TRIM(w.headword)!='' AND TRIM(COALESCE(w.meaning_zh,''))!='' "+
     "AND (TRIM(COALESCE(w.phonetic_uk,''))!='' OR TRIM(COALESCE(w.phonetic_us,''))!='') "+
     "AND TRIM(COALESCE(w.example_en,''))!='' AND TRIM(COALESCE(w.example_zh,''))!='' "+
-    "ORDER BY cv.frequency_rank,cv.word_id LIMIT 15000",scope.id).all();
+    "ORDER BY (cv.frequency_rank IS NULL) ASC,cv.frequency_rank,cv.word_id LIMIT 15000",scope.id).all();
   // The catalog's manual reviewed flag alone does not override objective
   // field-quality failures. Protect both due and new cards.
   const all=(records.results||[]).filter(item=>
@@ -126,7 +126,8 @@ async function list(env,userId,category){
     due.push({...item,review:true,bookmarked:!!row.bookmarked,due_at:row.due_at});
   }
   due.sort((a,b)=>a.due_at.localeCompare(b.due_at)||
-    a.frequency_rank-b.frequency_rank||a.word_id.localeCompare(b.word_id));
+    (a.frequency_rank??Number.MAX_SAFE_INTEGER)-(b.frequency_rank??Number.MAX_SAFE_INTEGER)||
+    a.word_id.localeCompare(b.word_id));
   // Keep a healthy flow of fresh exam words even when many reviews are due.
   const selectedDue=[],seen=new Set();
   for(const word of due){
@@ -145,8 +146,8 @@ async function list(env,userId,category){
   return reply({category,words,hasDue:due.length>0,
     remainingNew:fresh.remaining+fresh.words.length-(words.length-selectedDue.length),
     frequencyNote:category==='postgrad'
-      ?'词频以词库标注来源为准；考研真题词频与通用语料词频分别标识。'
-      :'按已标注的 COCA/BNC 语料词频排序，不等于考试真题出现频率。'});
+      ?'有来源的真题及通用语料词频优先；未提供词频的审校词纲词汇作为补充。'
+      :'优先按已标注的 COCA/BNC 语料词频学习；无词频的审校词纲词汇随后补充，绝不编造排名。'});
 }
 
 async function parseBody(req){
