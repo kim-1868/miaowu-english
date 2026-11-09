@@ -1,3 +1,4 @@
+# Public-repo runner retry; secrets remain encrypted and only usable by private production workflow.
 name: Novels withdrawn revision guarded PROD deploy ONCE
 on:
   push:
