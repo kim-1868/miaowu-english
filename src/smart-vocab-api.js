@@ -86,7 +86,8 @@ async function list(env,userId,category){
   const records=await db(env,
     "SELECT w.id AS word_id,w.headword,w.phonetic_uk,w.phonetic_us,w.part_of_speech,"+
     "w.meaning_zh,w.example_en,w.example_zh,cv.frequency_rank,cv.frequency_source,"+
-    "c.slug AS category_slug FROM smart_vocab_catalog cv "+
+    "cv.frequency_verified AS frequency_available,c.slug AS category_slug "+
+    "FROM smart_vocab_catalog cv "+
     "JOIN words w ON w.id=cv.word_id JOIN categories c ON c.id=cv.category_id "+
     "WHERE cv.category_id=? AND cv.reviewed=1 AND cv.frequency_verified=1 "+
     "ORDER BY cv.frequency_rank,cv.word_id LIMIT 15000",scope.id).all();
@@ -119,7 +120,8 @@ async function list(env,userId,category){
     if(words.length>=20)break;
     words.push({...word,review:false,bookmarked:!!state.get(studyKey(word))?.bookmarked});
   }
-  return reply({category,words,hasDue:due.length>0,remainingNew:fresh.remaining,
+  return reply({category,words,hasDue:due.length>0,
+    remainingNew:fresh.remaining+fresh.words.length-(words.length-selectedDue.length),
     frequencyNote:category==='postgrad'
       ?'词频以词库标注来源为准；考研真题词频与通用语料词频分别标识。'
       :'按已标注的 COCA/BNC 语料词频排序，不等于考试真题出现频率。'});
