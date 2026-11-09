@@ -267,3 +267,41 @@ test('A4 does not export a candidate if the original book now exists or save fla
    /EXISTING_BOOK_REQUIRES_VERSIONED_REVISION/);
  }finally{sql.close()}
 });
+
+
+test('A4 export route enforces real staging publisher authentication and returns read-only candidate bundle',async()=>{
+ const {sql,env}=setup();
+ try{
+  const manuscript=novel();
+  const token='mwops_'+'f'.repeat(64),pepper='d'.repeat(64);
+  const digest=await digestOpsToken(token,pepper);
+  sql.prepare('INSERT INTO ops_operators VALUES(?,?,?,?,?,?,?)').run(
+    'ops-publisher','Publisher','publisher','staging',digest,1,null);
+  const p=await previewBindingManifest(env,{package:manuscript});
+  const payload={package:manuscript,requestId:'candidate-export-route-01',
+    expectedPackageSha256:p.package_sha256,
+    expectedBindingSha256:p.binding_sha256,
+    confirmSave:true};
+  await saveStagingBindingManifest(env,payload,actor);
+  const before=sql.prepare('SELECT total_changes() AS n').get().n;
+  const req=new Request('https://preview.example/api/ops/import/bindings/export',{
+    method:'POST',headers:{
+      'content-type':'application/json','X-Mw-Ops-Key':token
+    },body:JSON.stringify(payload)
+  });
+  const response=await handleOpsBindingManifest(req,{
+    ...env,OPS_TOKEN_PEPPER:pepper
+  },'/api/ops/import/bindings/export');
+  assert.equal(response.status,200);
+  const result=await response.json();
+  assert.equal(result.status,'STAGING_VERIFIED_NOT_IMPORTED');
+  assert.equal(result.dictionary_bindings[0].entry_id,'gdict_record');
+  assert.equal(result.original_package.book.id,'story-cet6-new');
+  assert.equal(result.publication_ready,false);
+  assert.equal(sql.prepare('SELECT total_changes() AS n').get().n,before);
+  const forbidden=await handleOpsBindingManifest(req,{
+    ...env,APP_ENV:'production',OPS_TOKEN_PEPPER:pepper
+  },'/api/ops/import/bindings/export');
+  assert.equal(forbidden.status,404);
+ }finally{sql.close()}
+});
