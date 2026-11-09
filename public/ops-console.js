@@ -1422,6 +1422,23 @@ if($("previewGlobalMatch"))button("previewGlobalMatch",async()=>{
    lines.push("第"+(x.chapters||[]).join("、")+"章 "+
      x.surface+" → "+why+"；建议："+(x.candidates||[]).map(y=>y.headword).join("/") );
  }
+ const binding=result.binding_proposal;
+ if(binding){
+   lines.push("逐次出现绑定候选："+binding.confirmed_occurrences+
+     "；需要人工检查的位置："+binding.review_required_occurrences);
+   const review=binding.review_queue||[];
+   if(review.length)lines.push("按章节/段落/词位置定位异常（前30个）：");
+   for(const entry of review.slice(0,30)){
+     lines.push("第"+entry.chapter_number+"章，第"+(entry.paragraph_index+1)+
+       "段，第"+(entry.segment_index+1)+"段元 · "+entry.surface+
+       "： "+entry.reason+"\n  语境："+entry.context);
+   }
+   if(binding.conflicting_legacy_ids?.length){
+     lines.push("警告：旧 wordId 指向不同主词头，必须先人工核对："+
+       binding.conflicting_legacy_ids.map(x=>x.legacy_word_id).join("、"));
+   }
+   lines.push("本报告不会直接生成正式上传包，也不会修改用户学习状态。");
+ }
  const panel=$("globalMatchReport");
  panel.textContent=lines.join("\n");panel.hidden=false;
 });
