@@ -37,26 +37,31 @@ function normalizedWord(row){
   };
 }
 
-function senseOf(row){
-  return studyKey({word_id:row.word_id||row.id,headword:row.headword,
+function senseOf(row,reviewedAliases){
+  // Optional operator-reviewed aliases only; never infer equality from headword alone.
+  const id=String(row.word_id||row.id||'');
+  const verified=reviewedAliases instanceof Map?reviewedAliases.get(id):null;
+  if(typeof verified==='string'&&/^reviewed:[a-zA-Z0-9_-]{8,128}$/.test(verified))
+    return verified;
+  return studyKey({word_id:id,headword:row.headword,
     part_of_speech:row.part_of_speech,meaning_zh:row.meaning_zh});
 }
 
 // Existing user_words rows, including unbookmarked words, are the source of
 // prior learning. Bookmark flags MUST NOT control whether a word is "new".
-export function previouslyLearnedKeys(studyRows=[]){
+export function previouslyLearnedKeys(studyRows=[],reviewedAliases=null){
   const known=new Set();
   for(const row of Array.isArray(studyRows)?studyRows:[]){
     if(!row||typeof row!=='object')continue;
     if(row.status==='new'&&!row.last_seen_at)continue;
     if(!row.word_id&&!row.id)continue;
-    known.add(senseOf(row));
+    known.add(senseOf(row,reviewedAliases));
   }
   return known;
 }
 
 export function selectSmartNewWords({
-  category,activeEntitlements,rankedWords,studyRows=[],
+  category,activeEntitlements,rankedWords,studyRows=[],reviewedAliases=null,
   catalogVerified=false,limit=20
 }={}){
   const slug=String(category||'').trim();
@@ -73,11 +78,11 @@ export function selectSmartNewWords({
   if(!Number.isInteger(limit)||limit<1||limit>20)
     return {available:false,reason:'INVALID_BATCH_SIZE',words:[]};
 
-  const known=previouslyLearnedKeys(studyRows),unique=new Map();
+  const known=previouslyLearnedKeys(studyRows,reviewedAliases),unique=new Map();
   for(const raw of Array.isArray(rankedWords)?rankedWords:[]){
     const w=normalizedWord(raw);
     if(!w||w.category_slug!==slug)continue;
-    const key=senseOf(w);
+    const key=senseOf(w,reviewedAliases);
     if(known.has(key))continue;
     const existing=unique.get(key);
     const comparable=x=>x.frequency_rank??Number.MAX_SAFE_INTEGER;
