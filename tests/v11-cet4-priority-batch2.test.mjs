@@ -51,6 +51,14 @@ test('98 first batch draft meanings now refer to one teaching sense per example'
   }
 });
 
+test('all 184 draft cards now teach a single Chinese sense matching each example',()=>{
+  const cards=[...pilot,...original,...next];
+  assert.equal(cards.filter(x=>x.meaning_zh.includes('；')).length,0);
+  assert.equal(cards.filter(x=>x.sense_review_note).length,65);
+  assert.equal(cards.filter(x=>x.sense_review_note)
+    .every(x=>x.reviewed===false),true);
+});
+
 test('optional collocations appear only on 141 useful cards, with no fabricated blank rows',()=>{
   const cards=[...original,...next];
   const withPairs=cards.filter(x=>Array.isArray(x.collocations)&&x.collocations.length);
