@@ -1698,7 +1698,7 @@ $('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalO
       login:showLogin
     });
     window.MiaowuSmartVocab?.configure({
-      request:serverRequest,refresh:refreshCloudLearning,
+      request:serverRequest,refresh:async()=>{wordbookData=null;await refreshCloudLearning()},
       speak:speakWord,toast,login:showLogin,
       user:()=>user?.name||null,
       renderWords:()=>{if(view==='words')renderWords()}
