@@ -16,6 +16,7 @@ function counts(){
 }
 function renderHome(loggedIn,saved,due){
   const el=host();if(!el)return;
+  const smartReady=!!window.MiaowuSmartVocab?.isAvailable?.();
   el.innerHTML='<div class="flash-intro"><div>'+
     '<span class="eyebrow">MIAOWU · QUICK MEMORY</span>'+
     '<h2>喵呜，翻开下一张藏书票</h2>'+
@@ -32,12 +33,16 @@ function renderHome(loggedIn,saved,due){
     [10,20].map(n=>'<button class="flash-pill '+(roundSize===n?'selected':'')+
       '" type="button" data-flash-size="'+n+'" aria-pressed="'+(roundSize===n)+'">'+n+' 张</button>').join("")+
     '</div></div>'+
-    '<div class="flash-choices"><button type="button" class="flash-choice" id="flashStartFlip">'+
+    '<div class="flash-choices '+(smartReady?'mw-smart-three':'')+'"><button type="button" class="flash-choice" id="flashStartFlip">'+
     '<span class="flash-choice-icon" aria-hidden="true">✦</span><strong>快刷词卡</strong>'+
     '<small>翻开释义 → 判断记忆 → 立即下一张</small><b>开始速记 →</b></button>'+
     '<button type="button" class="flash-choice" id="flashStartSpell">'+
     '<span class="flash-choice-icon" aria-hidden="true">♫</span><strong>听音拼写</strong>'+
-    '<small>听发音 / 看中文 → 键入或系统手写 → 核对</small><b>开始拼写 →</b></button></div>'+
+    '<small>听发音 / 看中文 → 键入或系统手写 → 核对</small><b>开始拼写 →</b></button>'+
+    (smartReady?'<button type="button" class="flash-choice" id="flashStartSmart">'+
+      '<span class="flash-choice-icon" aria-hidden="true">✧</span><strong>智能背单词</strong>'+
+      '<small>按已解锁考试词纲的可靠词频，优先学习未学词义</small><b>开始背词 →</b></button>':'')+
+    '</div>'+
     '<p class="flash-footnote">每次提交后同步学习记录。忘记的词会在本轮稍后再出现一次；单次答对不会自动标记「已掌握」。</p>'+
     '<div class="flash-status" id="flashStatus" role="status" aria-live="polite"></div></div>';
   el.querySelectorAll("[data-flash-scope]").forEach(b=>b.onclick=()=>{
@@ -53,6 +58,7 @@ function renderHome(loggedIn,saved,due){
   };
   $("flashStartFlip").onclick=()=>open("flip");
   $("flashStartSpell").onclick=()=>open("spell");
+  if($("flashStartSmart"))$("flashStartSmart").onclick=()=>window.MiaowuSmartVocab?.start();
 }
 async function begin(mode,page=1){
   if(busy||!api)return;
