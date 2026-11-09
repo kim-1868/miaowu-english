@@ -5,6 +5,7 @@
 const $=id=>document.getElementById(id);
 let key="",chosen=null,readiness=null,identity=null,busy=false;
 let liveEditorState=null,liveRevision=null,liveHistory=[];
+let globalMatchDecisions=[];
 let customerAdmin=null,claimAdmin=null,updatesAdmin=null;
 const byId=(tag,text,className)=>{
   const el=document.createElement(tag);
@@ -1270,6 +1271,9 @@ async function renderImportTagSuggestions(pkg){
 
 const uploadMsg=message=>{$("uploadStatus").textContent=message;};
 function resetNovel(){
+ globalMatchDecisions=[];
+ const reviewChoices=$("globalMatchChoices");
+ if(reviewChoices){reviewChoices.hidden=true;reviewChoices.replaceChildren();}
  pendingNovel=null;$("importNovel").disabled=true;$("reviseNovel").disabled=true;
  $("uploadTagSuggestions").replaceChildren();$("uploadTagStatus").textContent="识别小说后显示可选标签建议。";
  $("uploadReport").hidden=true;$("uploadPreview").hidden=true;
@@ -1400,10 +1404,12 @@ $("uploadNovel").addEventListener("change",()=>{
 button("checkNovel",async()=>{
  resetNovel();await examineNovel();
 });
-if($("previewGlobalMatch"))button("previewGlobalMatch",async()=>{
+async function previewGlobalMatch(){
  if(!pendingNovel||identity?.environment!=="staging")
    throw Error("请在预览站先识别小说，再检查统一词典匹配。");
- const result=await api("/api/ops/import/preflight","POST",{package:pendingNovel});
+ const result=await api("/api/ops/import/preflight","POST",{
+   package:pendingNovel,decisions:globalMatchDecisions
+ });
  const c=result.summary?.target||{};
  const lines=[
    "统一词典匹配预检（只读，不上架、不覆盖旧词卡）",
@@ -1412,7 +1418,7 @@ if($("previewGlobalMatch"))button("previewGlobalMatch",async()=>{
    "歧义待确认："+(c.needs_review||0)+"；词典缺词："+(c.missing||0),
    "正文其余英文："+(result.summary?.discovered_unique||0)+"个不同词形（仅供参考，不作为强制目标）",
    "词典索引状态："+(result.dictionary_status||"未知"),
-   "注意：现阶段仅检查旧词卡，不代表完整开源总词典已导入。"
+   "主词典索引："+(result.dictionary_index_ready?"已连接预览词典":"尚未接入；正在使用旧词卡只读对照")
  ];
  const exceptions=(result.targets||[]).filter(x=>x.status!=="matched");
  if(exceptions.length)lines.push("需复核的目标词（最多展示30个）：");
@@ -1441,7 +1447,57 @@ if($("previewGlobalMatch"))button("previewGlobalMatch",async()=>{
  }
  const panel=$("globalMatchReport");
  panel.textContent=lines.join("\n");panel.hidden=false;
+ const choices=$("globalMatchChoices");
+ if(choices){
+   choices.replaceChildren();
+   const review=(binding?.review_queue||[]).filter(x=>
+     x.reason!=="LEGACY_ID_MULTIPLE_CANONICAL_LEMMAS"&&
+     (x.candidates||[]).some(c=>c.teaching_ready&&c.form_reviewed));
+   choices.hidden=review.length===0;
+   if(review.length){
+     choices.append(byId("h3","待核对的上下文（只在当前浏览器预览，不会保存）"));
+     for(const item of review.slice(0,30)){
+       const candidates=(item.candidates||[]).filter(c=>
+         c.teaching_ready&&c.form_reviewed);
+       const group=byId("div",undefined,"row");
+       const label=byId("label",
+         "第"+item.chapter_number+"章·第"+(item.paragraph_index+1)+
+         "段：「"+item.surface+"」 — "+item.context);
+       const select=document.createElement("select");
+       select.setAttribute("aria-label",item.surface+" 的词典词头选择");
+       for(const candidate of candidates){
+         const option=document.createElement("option");
+         option.value=candidate.entry_id;
+         option.textContent=candidate.headword+" ("+candidate.evidence+")";
+         select.append(option);
+       }
+       const confirm=byId("button","仅预览确认","secondary");
+       confirm.type="button";
+       confirm.addEventListener("click",async()=>{
+         if(busy||!pendingNovel||!connected())return;
+         busy=true;confirm.disabled=true;
+         const decision={
+           chapter_number:item.chapter_number,
+           paragraph_index:item.paragraph_index,
+           segment_index:item.segment_index,
+           entry_id:select.value,confirmed:true
+         };
+         globalMatchDecisions.push(decision);
+         try{await previewGlobalMatch();}
+         catch(error){
+           globalMatchDecisions.pop();
+           uploadMsg(error.message||"本次匹配预览失败");
+         }finally{busy=false;confirm.disabled=false;syncButtons();}
+       });
+       group.append(label,select,confirm);choices.append(group);
+     }
+   }
+ }
+
+if($("previewGlobalMatch"))button("previewGlobalMatch",async()=>{
+  globalMatchDecisions=[];await previewGlobalMatch();
 });
+
 $("uploadCoverWithNovel").addEventListener("change",syncButtons);
 button("importNovel",async()=>{
   if(!pendingNovel)throw Error("请先识别并预览小说内容");
