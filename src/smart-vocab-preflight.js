@@ -54,7 +54,8 @@ export function selectSmartNewWords({
   // Authoritative backend entitlement check is mandatory BEFORE calling this
   // pure selector. The provided list must contain only active non-revoked grants.
   const authorized=Array.isArray(activeEntitlements)&&activeEntitlements.some(e=>
-    (typeof e==='string'?e:e?.slug)===slug);
+    typeof e==='string'?e===slug:
+    e?.slug===slug&&e.revoked_at==null&&e.activation_status!=='revoked'&&e.active!==false);
   if(!SMART_EXAMS.includes(slug)||!authorized)
     return {available:false,reason:'CATEGORY_NOT_ENTITLED',words:[]};
   // No verified complete lexicon => do NOT silently pretend novel words are the exam list.
