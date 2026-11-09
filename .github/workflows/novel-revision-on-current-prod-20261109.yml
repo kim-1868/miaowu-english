@@ -102,7 +102,17 @@ jobs:
           assert.equal(x.dataAccess,false);
           NODE
           echo "PUBLIC_EDGE_PROBE_OK_CHECKING_PROD_D1_READONLY_SCHEMA"
-          npx wrangler d1 execute miaowu-english-prod --remote --config deploy/.novel-revision-approved.jsonc --json --command "SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ops_live_book_versions') AS snapshots,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ops_book_content_versions') AS content_versions,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ops_audit_events') AS audit_events" >/tmp/novel-schema.json
+          if ! npx wrangler d1 execute miaowu-english-prod --remote --config deploy/.novel-revision-approved.jsonc --json --command "SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ops_live_book_versions') AS snapshots,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ops_book_content_versions') AS content_versions,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ops_audit_events') AS audit_events" >/tmp/novel-schema.json 2>/tmp/novel-d1-error;then
+            echo 'PROD_D1_READONLY_QUERY_UNAVAILABLE'
+            node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const raw=fs.readFileSync('/tmp/novel-schema.json','utf8')+'\n'+fs.readFileSync('/tmp/novel-d1-error','utf8');
+          const kinds=['not authorized','unauthorized','Unauthorized','Forbidden','forbidden','permission','permission denied','unknown option','Unknown argument','No such command','authentication','authentication error','Missing','missing','Error','error'];
+          console.log('D1_DIAGNOSTIC_CATEGORY='+(kinds.find(x=>raw.includes(x))||'UNKNOWN'));
+          console.log('D1_OUTPUT_PRESENT='+Boolean(raw.trim()));
+          NODE
+            exit 1
+          fi
           node --input-type=module <<'NODE'
           import fs from 'node:fs';import assert from 'node:assert/strict';
           const body=JSON.parse(fs.readFileSync('/tmp/novel-schema.json','utf8'));
