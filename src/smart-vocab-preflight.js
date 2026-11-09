@@ -18,7 +18,8 @@ function normalizedWord(row){
   const source=String(row.frequency_source||'').trim().toUpperCase();
   // Never make up a ranking, invent a meaning, or infer a product category.
   if(!/^[a-zA-Z0-9_-]{1,100}$/.test(id)||!headword||!meaning||
-     !SMART_EXAMS.includes(category)||!validRank(rank)||!RANK_SOURCES.has(source))return null;
+     !SMART_EXAMS.includes(category)||!validRank(rank)||!RANK_SOURCES.has(source)||
+     (source==='POSTGRAD_EXAM'&&row.frequency_available!==true))return null;
   return {
     word_id:id,headword,part_of_speech:pos,meaning_zh:meaning,
     category_slug:category,frequency_rank:rank,frequency_source:source,
