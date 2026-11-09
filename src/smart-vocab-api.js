@@ -13,6 +13,21 @@ const ID=/^[a-zA-Z0-9_-]{1,80}$/;
 const UUID=/^[0-9a-f]{8}-[0-9a-f-]{27,44}$/i;
 const isEnabled=env=>env.SMART_VOCAB_ENABLED==='true'&&
   env.SMART_VOCAB_SCHEMA_READY==='true';
+function withReviewedCollocations(row){
+  if(!row)return null;
+  let items=[];
+  if(row.collocations_json){
+    try{
+      const parsed=JSON.parse(row.collocations_json);
+      if(!Array.isArray(parsed))return null;
+      items=parsed;
+    }catch{return null}
+  }
+  const {collocations_json,...safe}=row;
+  const card={...safe,collocations:items};
+  return auditSmartWordCard(card).structurallyReady?card:null;
+}
+
 
 async function activeCategory(env,userId,slug){
   if(!SMART_EXAMS.includes(slug))return null;
@@ -57,7 +72,7 @@ async function catalogReady(env,categoryId,slug){
 async function card(env,categoryId,wordId){
   const result=await db(env,
     "SELECT w.id AS word_id,w.headword,w.phonetic_uk,w.phonetic_us,w.part_of_speech,"+
-    "w.meaning_zh,w.example_en,w.example_zh,cv.frequency_rank,cv.frequency_source,"+
+    "w.meaning_zh,w.example_en,w.example_zh,w.collocations_json,cv.frequency_rank,cv.frequency_source,"+
     "cv.frequency_verified AS frequency_available,c.slug AS category_slug "+
     "FROM smart_vocab_catalog cv JOIN words w ON w.id=cv.word_id "+
     "JOIN categories c ON c.id=cv.category_id "+
@@ -66,7 +81,7 @@ async function card(env,categoryId,wordId){
     "AND (TRIM(COALESCE(w.phonetic_uk,''))!='' OR TRIM(COALESCE(w.phonetic_us,''))!='') "+
     "AND TRIM(COALESCE(w.example_en,''))!='' AND TRIM(COALESCE(w.example_zh,''))!=''",
     categoryId,wordId).first();
-  return result&&auditSmartWordCard(result).structurallyReady?result:null;
+  return withReviewedCollocations(result);
 }
 
 async function studyRows(env,userId){
@@ -101,7 +116,7 @@ async function list(env,userId,category){
   if(!await catalogReady(env,scope.id,scope.slug))return error('CATALOG_NOT_READY',503);
   const records=await db(env,
     "SELECT w.id AS word_id,w.headword,w.phonetic_uk,w.phonetic_us,w.part_of_speech,"+
-    "w.meaning_zh,w.example_en,w.example_zh,cv.frequency_rank,cv.frequency_source,"+
+    "w.meaning_zh,w.example_en,w.example_zh,w.collocations_json,cv.frequency_rank,cv.frequency_source,"+
     "cv.frequency_verified AS frequency_available,c.slug AS category_slug "+
     "FROM smart_vocab_catalog cv "+
     "JOIN words w ON w.id=cv.word_id JOIN categories c ON c.id=cv.category_id "+
@@ -112,8 +127,7 @@ async function list(env,userId,category){
     "ORDER BY (cv.frequency_rank IS NULL) ASC,cv.frequency_rank,cv.word_id LIMIT 15000",scope.id).all();
   // The catalog's manual reviewed flag alone does not override objective
   // field-quality failures. Protect both due and new cards.
-  const all=(records.results||[]).filter(item=>
-    auditSmartWordCard(item).structurallyReady);
+  const all=(records.results||[]).map(withReviewedCollocations).filter(Boolean);
   const rows=await studyRows(env,userId),state=new Map();
   for(const row of rows){
     const key=studyKey(row);
