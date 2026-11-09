@@ -1437,6 +1437,10 @@ async function reviseExistingDraft(pkg,existing){
   confirmTitle:existing.title,requestId:requestId()};
  try{return await api("/api/ops/import/revise","POST",payload)}
  catch(error){
+  if(String(error.message).includes("WITHDRAWN_REVISION_HISTORY_SCHEMA_MISSING"))
+   throw Error("旧书历史版本备份表尚未部署到正式数据库，禁止替换旧书。请先完成受控 D1 迁移检查。");
+  if(String(error.message).includes("WITHDRAWN_REVISION_SCHEMA_CHECK_UNAVAILABLE"))
+   throw Error("无法核验旧书历史版本备份表，修订已停止，不会更改原书。");
   if(!String(error.message).includes("WITHDRAWN_REWRITE_CONFIRMATION_REQUIRED"))throw error;
   if(!window.confirm("此书曾正式上架，现已下架。确认允许新版全文重写并移除已废弃的词汇标注？\\n"+
      "系统必须先备份旧版，不会删除已有学习记录；替换后需要重新审核上架。"))return null;
