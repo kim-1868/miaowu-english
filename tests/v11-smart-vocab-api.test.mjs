@@ -30,7 +30,7 @@ function fixture({enabled=true,catalogReady=true}={}){
   ];
   for(const [id,head,pos,meaning] of words){
     row(sql,'INSERT INTO words(id,headword,part_of_speech,meaning_zh,phonetic_uk,example_en,example_zh) '+
-      'VALUES(?,?,?,?,?,?,?)',id,head,pos,meaning,'/word/',head+' matters.','这很重要。');
+      'VALUES(?,?,?,?,?,?,?)',id,head,pos,meaning,'/'+head+'/', 'Please remember the word '+head+' today.','请今天记住这个词。');
   }
   row(sql,"INSERT INTO chapter_words(chapter_id,word_id,context_sentence,context_anchor) "+
     "VALUES('ch-1','n-promise','novel context','p0:s0')");
