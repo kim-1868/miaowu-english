@@ -216,7 +216,8 @@ export async function handleOpsBindingManifest(req,env,path){
        name==='GLOBAL_DICTIONARY_INDEX_NOT_READY'||
        name==='GLOBAL_BINDING_SCHEMA_REQUIRED')
       return bad(name,503);
-    if(name==='GLOBAL_BINDING_SAVE_DISABLED'||name==='OPS_ROLE_FORBIDDEN')
+    if(name==='GLOBAL_BINDING_SAVE_DISABLED'||name==='GLOBAL_BINDING_EXPORT_DISABLED'||
+       name==='OPS_ROLE_FORBIDDEN')
       return bad(name,403);
     if(['BINDING_REVIEW_REQUIRED','STALE_BINDING_PREVIEW',
       'BINDING_REQUEST_ID_CONFLICT','EXISTING_BOOK_REQUIRES_VERSIONED_REVISION',
