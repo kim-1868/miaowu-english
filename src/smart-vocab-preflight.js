@@ -104,8 +104,9 @@ export function selectSmartNewWords({
     }
   }
   const ordered=[...unique.values()].sort((a,b)=>
+    Number(a.frequency_rank===null)-Number(b.frequency_rank===null)||
     Number(isBasicFunctionWord(a))-Number(isBasicFunctionWord(b))||
-    (a.frequency_rank??Infinity)-(b.frequency_rank??Infinity)||
+    (a.frequency_rank??Number.MAX_SAFE_INTEGER)-(b.frequency_rank??Number.MAX_SAFE_INTEGER)||
     a.headword.localeCompare(b.headword,'en')||a.word_id.localeCompare(b.word_id,'en'));
   return {available:true,reason:null,words:ordered.slice(0,limit),
     remaining:Math.max(0,ordered.length-limit)};
