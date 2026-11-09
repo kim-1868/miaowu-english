@@ -29,6 +29,25 @@ export async function relatedAccessibleWordIds(env,wordId,userId){
     "WHERE LOWER(TRIM(w.headword))=LOWER(TRIM(?)) "+availablePredicate;
   const found=await stmt(env,q,base.headword,userId).all();
   const matched=(found.results||[]).filter(w=>studyKey(w)===target).map(w=>w.id);
+  // The independent exam catalog is deliberately additive: only active,
+  // reviewed, purchased levels may share the existing word/sense state.
+  if(env.SMART_VOCAB_ENABLED==='true'&&env.SMART_VOCAB_SCHEMA_READY==='true'){
+    const smart=await stmt(env,
+      "SELECT DISTINCT w.id,w.headword,w.part_of_speech,w.meaning_zh FROM words w "+
+      "JOIN smart_vocab_catalog sc ON sc.word_id=w.id "+
+      "JOIN smart_vocab_levels lv ON lv.category_id=sc.category_id "+
+      "JOIN categories c ON c.id=sc.category_id "+
+      "JOIN entitlements e ON e.category_id=c.id AND e.user_id=? "+
+      "WHERE LOWER(TRIM(w.headword))=LOWER(TRIM(?)) "+
+      "AND sc.reviewed=1 AND sc.frequency_verified=1 AND lv.enabled=1 "+
+      "AND lv.catalog_verified_at IS NOT NULL AND c.is_visible=1 "+
+      "AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes ac "+
+      "WHERE ac.id=e.source_code_id AND ac.status='revoked')",
+      userId,base.headword).all();
+    for(const row of smart.results||[]){
+      if(studyKey(row)===target)matched.push(row.id);
+    }
+  }
   if(!matched.includes(wordId))matched.push(wordId);
   return [...new Set(matched)].sort();
 }
