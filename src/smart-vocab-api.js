@@ -34,6 +34,7 @@ async function catalogReady(env,categoryId){
     "FROM smart_vocab_catalog cv JOIN words w ON w.id=cv.word_id "+
     "WHERE cv.category_id=? AND cv.reviewed=1 AND cv.frequency_verified=1 "+
     "AND TRIM(w.headword)!='' AND TRIM(COALESCE(w.meaning_zh,''))!='' "+
+    "AND TRIM(COALESCE(w.part_of_speech,''))!='' "+
     "AND (TRIM(COALESCE(w.phonetic_uk,''))!='' OR TRIM(COALESCE(w.phonetic_us,''))!='') "+
     "AND TRIM(COALESCE(w.example_en,''))!='' AND TRIM(COALESCE(w.example_zh,''))!=''",
     categoryId).first();
@@ -49,15 +50,38 @@ async function card(env,categoryId,wordId){
     "JOIN categories c ON c.id=cv.category_id "+
     "WHERE cv.category_id=? AND cv.word_id=? AND cv.reviewed=1 AND cv.frequency_verified=1 "+
     "AND TRIM(w.headword)!='' AND TRIM(COALESCE(w.meaning_zh,''))!='' "+
+    "AND TRIM(COALESCE(w.part_of_speech,''))!='' "+
     "AND (TRIM(COALESCE(w.phonetic_uk,''))!='' OR TRIM(COALESCE(w.phonetic_us,''))!='') "+
     "AND TRIM(COALESCE(w.example_en,''))!='' AND TRIM(COALESCE(w.example_zh,''))!=''",
     categoryId,wordId).first();
 }
 
 async function studyRows(env,userId){
+  // Never inherit states from withdrawn books, revoked categories or another account.
+  const visibleNovel=
+    "EXISTS(SELECT 1 FROM chapter_words cw "+
+    "JOIN chapters ch ON ch.id=cw.chapter_id JOIN books b ON b.id=ch.book_id "+
+    "JOIN categories c ON c.id=b.category_id "+
+    "WHERE cw.word_id=uw.word_id AND b.status='published' AND c.is_visible=1 "+
+    "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
+    "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
+    "WHERE e.user_id=uw.user_id AND e.category_id=b.category_id "+
+    "AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes ac "+
+    "WHERE ac.id=e.source_code_id AND ac.status='revoked'))))";
+  const visibleSmart=
+    "EXISTS(SELECT 1 FROM smart_vocab_catalog cv "+
+    "JOIN smart_vocab_levels lv ON lv.category_id=cv.category_id "+
+    "JOIN categories c ON c.id=cv.category_id "+
+    "JOIN entitlements e ON e.category_id=c.id "+
+    "WHERE cv.word_id=uw.word_id AND cv.reviewed=1 AND cv.frequency_verified=1 "+
+    "AND lv.enabled=1 AND lv.catalog_verified_at IS NOT NULL AND c.is_visible=1 "+
+    "AND e.user_id=uw.user_id AND e.revoked_at IS NULL "+
+    "AND NOT EXISTS(SELECT 1 FROM activation_codes ac "+
+    "WHERE ac.id=e.source_code_id AND ac.status='revoked'))";
   const found=await db(env,"SELECT uw.word_id,uw.status,uw.bookmarked,uw.due_at,uw.last_seen_at,"+
     "w.headword,w.part_of_speech,w.meaning_zh FROM user_words uw "+
     "JOIN words w ON w.id=uw.word_id WHERE uw.user_id=? "+
+    "AND ("+visibleNovel+" OR "+visibleSmart+") "+
     "ORDER BY uw.last_seen_at DESC,uw.rowid DESC",userId).all();
   return found.results||[];
 }
@@ -71,7 +95,7 @@ async function visibleAliases(env,userId,source){
     "JOIN smart_vocab_levels lv ON lv.category_id=cv.category_id "+
     "JOIN categories c ON c.id=cv.category_id "+
     "JOIN entitlements e ON e.category_id=c.id AND e.user_id=? "+
-    "WHERE LOWER(TRIM(w.headword))=LOWER(TRIM(?)) AND cv.reviewed=1 "+
+    "WHERE LOWER(TRIM(w.headword))=LOWER(TRIM(?)) AND cv.reviewed=1 AND cv.frequency_verified=1 "+
     "AND lv.enabled=1 AND lv.catalog_verified_at IS NOT NULL "+
     "AND e.revoked_at IS NULL AND c.is_visible=1 AND "+
     "NOT EXISTS(SELECT 1 FROM activation_codes ac WHERE ac.id=e.source_code_id AND ac.status='revoked')",
@@ -92,14 +116,20 @@ async function list(env,userId,category){
     "JOIN words w ON w.id=cv.word_id JOIN categories c ON c.id=cv.category_id "+
     "WHERE cv.category_id=? AND cv.reviewed=1 AND cv.frequency_verified=1 "+
     "AND TRIM(w.headword)!='' AND TRIM(COALESCE(w.meaning_zh,''))!='' "+
+    "AND TRIM(COALESCE(w.part_of_speech,''))!='' "+
     "AND (TRIM(COALESCE(w.phonetic_uk,''))!='' OR TRIM(COALESCE(w.phonetic_us,''))!='') "+
     "AND TRIM(COALESCE(w.example_en,''))!='' AND TRIM(COALESCE(w.example_zh,''))!='' "+
-    "ORDER BY cv.frequency_rank,cv.word_id LIMIT 15000",scope.id).all();
+    "ORDER BY (cv.frequency_rank IS NULL),cv.frequency_rank,cv.word_id LIMIT 15000",scope.id).all();
   const all=records.results||[];
   const rows=await studyRows(env,userId),state=new Map();
   for(const row of rows){
     const key=studyKey(row);
-    if(!state.has(key))state.set(key,row);
+    const existing=state.get(key);
+    if(!existing){state.set(key,{...row});continue}
+    if(row.status==='mastered'&&existing.status!=='mastered')existing.status='mastered';
+    existing.bookmarked=Number(Boolean(existing.bookmarked||row.bookmarked));
+    if(existing.status!=='mastered'&&row.due_at&&
+       (!existing.due_at||row.due_at<existing.due_at))existing.due_at=row.due_at;
   }
   const due=[];
   for(const item of all){
@@ -108,7 +138,8 @@ async function list(env,userId,category){
     due.push({...item,review:true,bookmarked:!!row.bookmarked,due_at:row.due_at});
   }
   due.sort((a,b)=>a.due_at.localeCompare(b.due_at)||
-    a.frequency_rank-b.frequency_rank||a.word_id.localeCompare(b.word_id));
+    (a.frequency_rank??Number.MAX_SAFE_INTEGER)-
+    (b.frequency_rank??Number.MAX_SAFE_INTEGER)||a.word_id.localeCompare(b.word_id));
   // Keep a healthy flow of fresh exam words even when many reviews are due.
   const selectedDue=[],seen=new Set();
   for(const word of due){
