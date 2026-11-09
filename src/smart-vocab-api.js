@@ -176,7 +176,9 @@ async function submit(req,env,userId,kind){
     "SELECT user_id,word_id,game_type,result FROM review_events WHERE id=?",
     data.requestId).first();
   if(old){
-    if(old.user_id!==userId||old.word_id!==data.wordId||old.game_type!=='smart-vocab')
+    if(old.user_id!==userId||old.word_id!==data.wordId||
+      old.game_type!=='smart-vocab'||
+      (old.result==='correct')!==data.remembered)
       return error('REQUEST_ID_REUSED',409);
     return reply({saved:true,alreadyApplied:true,remembered:old.result==='correct'});
   }
@@ -200,10 +202,10 @@ async function submit(req,env,userId,kind){
       "INSERT INTO user_words(user_id,word_id,status,bookmarked,due_at,last_seen_at) "+
       "VALUES(?,?,'learning',0,datetime('now','+'||?||' days'),CURRENT_TIMESTAMP) "+
       "ON CONFLICT(user_id,word_id) DO UPDATE SET "+
-      "status=CASE WHEN user_words.status='mastered' AND ?=1 THEN 'mastered' ELSE 'learning' END,"+
-      "due_at=CASE WHEN user_words.status='mastered' AND ?=1 THEN NULL "+
+      "status=CASE WHEN user_words.status='mastered' THEN 'mastered' ELSE 'learning' END,"+
+      "due_at=CASE WHEN user_words.status='mastered' THEN NULL "+
       "ELSE excluded.due_at END,last_seen_at=CURRENT_TIMESTAMP",
-      userId,id,days,data.remembered?1:0,data.remembered?1:0))
+      userId,id,days))
   ];
   try{await env.DB.batch(queries)}
   catch(cause){
@@ -213,7 +215,9 @@ async function submit(req,env,userId,kind){
       "FROM review_events WHERE id=?",data.requestId).first();
     if(!repeated)throw cause;
     if(repeated.user_id!==userId||repeated.word_id!==data.wordId||
-      repeated.game_type!=='smart-vocab')return error('REQUEST_ID_REUSED',409);
+      repeated.game_type!=='smart-vocab'||
+      (repeated.result==='correct')!==data.remembered)
+      return error('REQUEST_ID_REUSED',409);
     return reply({saved:true,alreadyApplied:true,remembered:repeated.result==='correct'});
   }
   return reply({saved:true,remembered:data.remembered,wordId:data.wordId,
