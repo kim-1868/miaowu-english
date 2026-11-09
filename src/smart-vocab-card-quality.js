@@ -7,7 +7,7 @@ const string=v=>typeof v==='string'?v.trim():'';
 const cjk=/[\u3400-\u9fff]/u;
 const placeholder=/\b(?:todo|tbd|lorem ipsum|placeholder|example here|translation here)\b|待补充|暂无|例句待|示例待|\[\[|\]\]/iu;
 const technical=/\[(?:计|经|法|医|化|数|工|生|物|机|电|航|网|办|建|汽|农|地|天|语|体|音|摄)\]/u;
-const supportedPOS=/^(?:n\.|v\.|vt\.|vi\.|adj\.|adv\.|prep\.|pron\.|conj\.|art\.|num\.|interj\.|aux\.|phr\.|n\.\/v\.|v\.\/n\.)$/i;
+const supportedPOS=/^(?:(?:n|v|vt|vi|adj|adv|prep|pron|conj|art|num|interj|aux|phr)\.?|n\.?\/v\.?|v\.?\/n\.?)$/i;
 const sentenceWords=s=>(s.match(/[a-z]+(?:'[a-z]+)?/gi)||[]).length;
 
 export function auditSmartWordCard(card={}){
