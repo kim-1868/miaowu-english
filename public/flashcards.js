@@ -16,7 +16,7 @@ function counts(){
 }
 function renderHome(loggedIn,saved,due){
   const el=host();if(!el)return;
-  const smartReady=!!window.MiaowuSmartVocab?.isAvailable?.();
+  const smartReady=!!globalThis.MiaowuSmartVocab?.isAvailable?.();
   el.innerHTML='<div class="flash-intro"><div>'+
     '<span class="eyebrow">MIAOWU · QUICK MEMORY</span>'+
     '<h2>喵呜，翻开下一张藏书票</h2>'+
@@ -58,7 +58,7 @@ function renderHome(loggedIn,saved,due){
   };
   $("flashStartFlip").onclick=()=>open("flip");
   $("flashStartSpell").onclick=()=>open("spell");
-  if($("flashStartSmart"))$("flashStartSmart").onclick=()=>window.MiaowuSmartVocab?.start();
+  if($("flashStartSmart"))$("flashStartSmart").onclick=()=>globalThis.MiaowuSmartVocab?.start();
 }
 async function begin(mode,page=1){
   if(busy||!api)return;
