@@ -25,10 +25,19 @@ async function activeCategory(env,userId,slug){
 // A published catalog must contain as many *fully reviewed headwords* as its
 // separately audited expectation. No row, no manual signoff, or any missing
 // pronunciation / examples means fail-closed. The production gate also stays off.
-async function catalogReady(env,categoryId){
+const SOURCE_MIN_HEADWORDS=Object.freeze({
+  cet4:3849,cet6:5407,postgrad:4801,ielts:5040
+});
+async function catalogReady(env,categoryId,slug){
   const level=await db(env,"SELECT expected_headwords,enabled,catalog_verified_at "+
     "FROM smart_vocab_levels WHERE category_id=?",categoryId).first();
   if(!level||level.enabled!==1||!level.catalog_verified_at)return false;
+  // This is a lower bound from the user's ECDICT exam-tag snapshot, NOT an
+  // official examination count. Real production must also pass editorial audit.
+  const partialQA=env.APP_ENV==='staging'&&
+    env.SMART_VOCAB_QA_ALLOW_PARTIAL==='true';
+  if(!partialQA&&Number(level.expected_headwords)<SOURCE_MIN_HEADWORDS[slug])
+    return false;
   const n=await db(env,
     "SELECT COUNT(DISTINCT LOWER(TRIM(w.headword))) AS n "+
     "FROM smart_vocab_catalog cv JOIN words w ON w.id=cv.word_id "+
@@ -83,7 +92,7 @@ async function visibleAliases(env,userId,source){
 async function list(env,userId,category){
   const scope=await activeCategory(env,userId,category);
   if(!scope)return error('CATEGORY_NOT_ENTITLED',403);
-  if(!await catalogReady(env,scope.id))return error('CATALOG_NOT_READY',503);
+  if(!await catalogReady(env,scope.id,scope.slug))return error('CATALOG_NOT_READY',503);
   const records=await db(env,
     "SELECT w.id AS word_id,w.headword,w.phonetic_uk,w.phonetic_us,w.part_of_speech,"+
     "w.meaning_zh,w.example_en,w.example_zh,cv.frequency_rank,cv.frequency_source,"+
@@ -150,7 +159,7 @@ async function submit(req,env,userId,kind){
     return error('INVALID_INPUT',400);
   const category=await activeCategory(env,userId,data.category);
   if(!category)return error('CATEGORY_NOT_ENTITLED',403);
-  if(!await catalogReady(env,category.id))return error('CATALOG_NOT_READY',503);
+  if(!await catalogReady(env,category.id,category.slug))return error('CATALOG_NOT_READY',503);
   const w=await card(env,category.id,data.wordId);
   if(!w)return error('WORD_NOT_AVAILABLE',404);
   const aliases=await visibleAliases(env,userId,w);
@@ -216,7 +225,7 @@ async function status(env,userId){
   for(const slug of SMART_EXAMS){
     const c=await activeCategory(env,userId,slug);
     if(!c)continue;
-    entries.push({slug,available:await catalogReady(env,c.id)});
+    entries.push({slug,available:await catalogReady(env,c.id,c.slug)});
   }
   return reply({enabled:entries.some(e=>e.available),categories:entries});
 }
