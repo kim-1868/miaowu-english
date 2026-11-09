@@ -73,3 +73,14 @@ test('CET4 source frequencies must be real: a COCA row with frequency_verified=0
   assert.equal(auditSmartWordCard(row).structurallyReady,false);
   assert.ok(auditSmartWordCard(row).errors.includes('UNVERIFIED_FREQUENCY'));
 });
+
+test('collocations are optional, but malformed or empty supplied pairs block review',()=>{
+  assert.equal(auditSmartWordCard({...base,collocations:[]}).structurallyReady,true);
+  assert.equal(auditSmartWordCard({...base,collocations:[{
+    en:'clarify a question',zh:'把问题解释清楚'
+  }]}).structurallyReady,true);
+  for(const entry of [
+    [{en:'',zh:'澄清问题'}],[{en:'clarify a question',zh:''}],
+    [{en:'TODO',zh:'待补充'}],'not an array'
+  ])assert.equal(auditSmartWordCard({...base,collocations:entry}).structurallyReady,false);
+});
