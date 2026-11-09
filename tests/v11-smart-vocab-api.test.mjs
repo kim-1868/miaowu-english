@@ -299,7 +299,9 @@ test('a stale smart-card answer never unmarks a word explicitly mastered on anot
     assert.equal(result.status,200);
     const state=f.sql.prepare("SELECT status,bookmarked,due_at FROM user_words "+
       "WHERE user_id=? AND word_id='s-retain'").get(user.id);
-    assert.deepEqual(state,{status:'mastered',bookmarked:1,due_at:null});
+    assert.equal(state.status,'mastered');
+    assert.equal(state.bookmarked,1);
+    assert.equal(state.due_at,null);
   }finally{f.sql.close()}
 });
 
