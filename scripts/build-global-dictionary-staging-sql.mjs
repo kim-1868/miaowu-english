@@ -6,6 +6,7 @@ import {resolve,join} from 'node:path';
 import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {compileDictionaryDraftIndex} from './build-global-dictionary-index.mjs';
+import {compileUpstreamEcdictDraftIndex} from './build-upstream-ecdict-index.mjs';
 
 const TABLES=['global_dictionary_entries','global_dictionary_forms'];
 const sql=s=>"'"+String(s??'').replaceAll("'","''")+"'";
@@ -86,13 +87,18 @@ const direct=process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.me
 if(direct){
  const source=process.argv[2],at=process.argv.indexOf('--out'),output=at>=0?process.argv[at+1]:null;
  if(!source||!output||source.startsWith('-')||output.startsWith('-')){
-  console.error('Usage: node scripts/build-global-dictionary-staging-sql.mjs <owner-ECDICT-CSV> --out <private-dir>');
+  console.error('Usage: node scripts/build-global-dictionary-staging-sql.mjs <source.csv> --out <private-dir> [--upstream-ecdict]');
   process.exitCode=2;
  }else try{
   const raw=readFileSync(resolve(source));
   const sha=createHash('sha256').update(raw).digest('hex');
-  const index=compileDictionaryDraftIndex(raw.toString('utf8'));
-  const result=buildGlobalDictionaryImportSQL(index,{sourceSha256:sha});
+  const upstream=process.argv.includes('--upstream-ecdict');
+  const index=upstream?compileUpstreamEcdictDraftIndex(raw.toString('utf8'))
+    :compileDictionaryDraftIndex(raw.toString('utf8'));
+  const result=buildGlobalDictionaryImportSQL(index,{
+    sourceSha256:sha,
+    sourceKey:upstream?'upstream_ecdict_unverified':'owner_ecdict_exam_snapshot'
+  });
   const dir=resolve(output);mkdirSync(dir,{recursive:true});
   for(const part of result.chunks)writeFileSync(join(dir,part.name),part.sql);
   writeFileSync(join(dir,'INDEX_AUDIT.json'),JSON.stringify({
