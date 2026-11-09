@@ -4,6 +4,8 @@
 import {authenticateOperator,hasOpsRole} from './ops-access.js';
 import {buildGlobalDictionaryIndex,preflightNovelDictionaryMatches}
   from './global-dictionary-matcher.js';
+import {globalDictionaryTablesReady,loadGlobalDictionaryCandidateIndex}
+  from './global-dictionary-db.js';
 
 const H={'content-type':'application/json; charset=utf-8',
   'cache-control':'private, no-store','x-content-type-options':'nosniff'};
@@ -19,6 +21,21 @@ export async function inspectStagingNovelMatch(env,input){
   const keys=[...new Set([...scan.targets,...scan.discovered]
     .map(item=>item.normalized_surface))];
   if(keys.length>1500)throw Error('PREFLIGHT_TOO_MANY_DISTINCT_WORDS');
+  if(env.GLOBAL_DICTIONARY_LOOKUP_ENABLED==='true'){
+    if(!(await globalDictionaryTablesReady(env.DB)))
+      throw Error('DICTIONARY_SCHEMA_REQUIRED');
+    const sourced=await loadGlobalDictionaryCandidateIndex(env.DB,keys);
+    const analysis=preflightNovelDictionaryMatches(input,sourced.index);
+    return {...analysis,
+      dictionary_status:'GLOBAL_DICTIONARY_STAGING_DRAFT',
+      dictionary_index_ready:true,
+      source_names:sourced.sourceNames,
+      source_approved_count:sourced.approvedSourceCount,
+      ready_to_publish:false,release_blocked:true,
+      matched_source:'Dedicated global dictionary index with source-aware approval gates',
+      next_step:'Review source licensing, glossary teaching material, and all ambiguous forms before enabling automated link commits.'
+    };
+  }
   const dictionary=[];
   for(let i=0;i<keys.length;i+=50){
     const group=keys.slice(i,i+50);
@@ -73,6 +90,7 @@ export async function handleOpsImportPreflight(req,env,path){
     return json(await inspectStagingNovelMatch(env,payload));
   }catch(err){
     const code=String(err?.message||'');
+    if(code==='DICTIONARY_SCHEMA_REQUIRED')return failure(code,503);
     if(/^INVALID_NOVEL_|MATCH_SCAN_|MATCH_UNIQUE_|PREFLIGHT_TOO_MANY/.test(code))
       return failure(code,400);
     console.error('OPS_LEXICON_PREFLIGHT_FAILED');
