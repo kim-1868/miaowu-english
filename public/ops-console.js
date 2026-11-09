@@ -77,6 +77,8 @@ function syncButtons(){
   }
   $("importNovel").disabled=!(connected()&&pendingNovel&&$("uploadCoverWithNovel").files?.length&&
     pendingNovel.words?.every(w=>w.phoneticUk&&w.phoneticUs&&w.partOfSpeech&&w.meaningZh&&w.exampleEn&&w.exampleZh));
+  $("importNovel").textContent=identity?.environment==="staging"&&
+    globalSavedManifestRequestId?"上传并关联统一词典（仅保存草稿）":"确认上传并上架";
   $("tagSave").disabled=!connected()||!chosen||!$("tagText").value.trim();
   $("applyStoryTags").disabled=!connected()||catalogBooks.length===0;
   $("suggestTags").disabled=!connected()||!chosen;
@@ -1577,12 +1579,33 @@ button("importNovel",async()=>{
   const coverFile=$("uploadCoverWithNovel").files?.[0];
   if(!coverFile)throw Error("请先选择小说封面");
   const title=pendingNovel.book.title;
+  const attachVerified=identity?.environment==="staging"&&Boolean(globalSavedManifestRequestId);
+  if(attachVerified&&!globalManifestPreview?.attach_available)
+    throw Error("统一词典草稿关联功能尚未启用，不能以已绑定模式上传。");
   let created=null;
   try{
     uploadMsg("正在保存《"+title+"》的正文和词卡……");
     created=await api("/api/ops/import","POST",{package:pendingNovel});
     uploadMsg("草稿已保存，正在上传封面……");
     await uploadCoverForBook(created.bookId,coverFile);
+    if(attachVerified){
+      uploadMsg("草稿与封面已保存，正在核对并关联统一词典……");
+      const result=await api("/api/ops/import/bindings/attach","POST",{
+        package:pendingNovel,decisions:globalMatchDecisions,
+        requestId:globalSavedManifestRequestId,confirmAttach:true,
+        expectedPackageSha256:globalManifestPreview.package_sha256,
+        expectedBindingSha256:globalManifestPreview.binding_sha256
+      });
+      if(!result.attached||result.published!==false)
+        throw Error("词典关联未通过最终校验，草稿不会发布。");
+      const savedTitle=title;
+      $("uploadCoverWithNovel").value="";
+      resetNovel();await loadBooks(created.bookId);
+      uploadMsg("《"+savedTitle+"》已保存为未发布草稿，"+
+        result.bindings+"处学习目标已对应统一词典；"+
+        "阅读器共享词卡功能上线前，不自动发布。");
+      return;
+    }
     uploadMsg("封面上传成功，正在核对上架条件……");
     const snapshot=await api("/api/ops/books/"+encodeURIComponent(created.bookId)+"/readiness");
     if(!snapshot.quickPublishAvailable){
