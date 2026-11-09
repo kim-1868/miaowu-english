@@ -253,6 +253,6 @@
   }
   window.MiaowuSmartVocab=Object.freeze({
     configure,isAvailable:()=>available,sync,onEnter(){sync();firstEntry()},start,
-    close:hideStage
+    running:()=>stage()?.hidden===false,close:hideStage
   });
 })();
