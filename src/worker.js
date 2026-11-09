@@ -17,6 +17,7 @@ import { handleOpsLiveEdit } from "./ops-live-edit.js";
 import { handleBookCover } from "./book-covers.js";
 import { handleBookCoverTags } from "./book-cover-tags.js";
 import { handleLearningState } from "./reading-library.js";
+import {handleSmartVocab} from "./smart-vocab-api.js";
 import {handleMyBookshelf} from "./my-bookshelf.js";
 import {handleExampleWordLookup} from "./example-word-lookup.js";
 import {onboardingSchemaReady,registrationOnboardingStatement,handleOnboarding} from "./onboarding.js";
@@ -696,6 +697,8 @@ async function api(req, env) {
   }
   const user = await atStage("api.session_lookup", () => currentUser(req, env.DB));
   if(path==="/api/me/onboarding")return handleOnboarding(req,env,user);
+  if(path==="/api/me/smart-vocab"||path==="/api/me/smart-vocab/answer"||path==="/api/me/smart-vocab/bookmark")
+    return handleSmartVocab(req,env,path,user);
   if(path==="/api/lexicon/lookup")return handleExampleWordLookup(req,env,user);
   if(path==="/api/me/bookshelf"||path.startsWith("/api/me/bookshelf/"))return handleMyBookshelf(req,env,user);
   if(path==="/api/me/echo/available" || path==="/api/me/echo/answer" || path==="/api/me/echo/stats"){
