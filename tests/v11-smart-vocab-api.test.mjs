@@ -274,3 +274,31 @@ test('partial exam snapshot is never considered a verified production catalog',a
     assert.equal((await f.call('/api/me/smart-vocab?category=cet4')).status,503);
   }finally{f.sql.close()}
 });
+
+test('a reused requestId with the opposite answer is rejected, never silently accepted',async()=>{
+  const f=fixture();
+  try{
+    const requestId=randomUUID();
+    const a={category:'cet4',wordId:'s-clarify',remembered:true,requestId};
+    assert.equal((await f.call('/api/me/smart-vocab/answer','POST',a)).status,200);
+    const bad=await f.call('/api/me/smart-vocab/answer','POST',{...a,remembered:false});
+    assert.equal(bad.status,409);
+    assert.equal(bad.data.error,'REQUEST_ID_REUSED');
+    assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM review_events WHERE id=?')
+      .get(requestId).n,1);
+  }finally{f.sql.close()}
+});
+
+test('a stale smart-card answer never unmarks a word explicitly mastered on another device',async()=>{
+  const f=fixture();
+  try{
+    f.sql.prepare("INSERT INTO user_words(user_id,word_id,status,bookmarked,due_at) "+
+      "VALUES(?,?,'mastered',1,NULL)").run(user.id,'s-retain');
+    const result=await f.call('/api/me/smart-vocab/answer','POST',{
+      category:'cet4',wordId:'s-retain',remembered:false,requestId:randomUUID()});
+    assert.equal(result.status,200);
+    const state=f.sql.prepare("SELECT status,bookmarked,due_at FROM user_words "+
+      "WHERE user_id=? AND word_id='s-retain'").get(user.id);
+    assert.deepEqual(state,{status:'mastered',bookmarked:1,due_at:null});
+  }finally{f.sql.close()}
+});
