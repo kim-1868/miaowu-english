@@ -62,7 +62,7 @@ test('smart-vocabulary UI is staging-only until owner approves its release',()=>
   assert.doesNotMatch(allowlist,/smart-vocab/);
   assert.match(build,/stripDraftSmartVocab/);
   assert.match(build,/UNAPPROVED_SMART_VOCAB_UI_BUNDLE/);
-  assert.match(html,/src="\\/smart-vocab\\.js/);
-  assert.match(html,/href="\\/smart-vocab\\.css/);
-  assert.match(html,/src="\\/onboarding\\.js/);
+  assert.match(html,/src="\/smart-vocab\.js/);
+  assert.match(html,/href="\/smart-vocab\.css/);
+  assert.match(html,/src="\/onboarding\.js/);
 });
