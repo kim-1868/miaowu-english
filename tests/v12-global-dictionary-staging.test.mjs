@@ -149,3 +149,32 @@ test('staging preflight authorization remains mandatory when a real global index
   assert.equal(r.status,401);
  }finally{sql.close()}
 });
+
+
+test('editor picks a verified meaning for a specific ambiguous CET6 token without saving bindings or customer state',async()=>{
+ const {sql,db}=setup();
+ try{
+  sql.exec("UPDATE global_dictionary_sources SET license_reviewed=1,enabled=1 WHERE source_key='owner_ecdict_exam_snapshot'");
+  sql.exec("UPDATE global_dictionary_entries SET teaching_ready=1,reviewed_at='2026-11-10' WHERE headword IN ('see','saw')");
+  sql.exec("UPDATE global_dictionary_forms SET reviewed=1 WHERE form='saw' AND entry_id=(SELECT entry_id FROM global_dictionary_entries WHERE headword='see')");
+  const sample=structuredClone(manuscript);
+  sample.chapters[0].paragraphs[0].segments[1]={
+    wordId:'story-developed',surface:'saw',gloss:'看见'
+  };
+  const before=sql.prepare("SELECT total_changes() AS n").get().n;
+  const result=await inspectStagingNovelMatch({
+    DB:db,GLOBAL_DICTIONARY_LOOKUP_ENABLED:'true'
+  },{package:sample,decisions:[{
+    chapter_number:1,paragraph_index:0,segment_index:1,
+    entry_id:sql.prepare("SELECT entry_id FROM global_dictionary_entries WHERE headword='see'").get().entry_id,
+    confirmed:true
+  }]});
+  assert.equal(result.binding_proposal.confirmed_occurrences,1);
+  assert.equal(result.binding_proposal.review_required_occurrences,0);
+  assert.equal(result.binding_proposal.resolved[0].headword,'see');
+  assert.equal(result.binding_proposal.resolved[0].resolution,'reviewed_selection');
+  assert.equal(result.ready_to_publish,false);
+  assert.equal(result.binding_proposal.safe_to_autopublish,false);
+  assert.equal(sql.prepare("SELECT total_changes() AS n").get().n,before);
+ }finally{sql.close()}
+});
