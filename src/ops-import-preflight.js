@@ -15,6 +15,7 @@ const failure=(code,status)=>json({error:code},status);
 const MAX_BYTES=2_000_000;
 
 export async function inspectStagingNovelMatch(env,input){
+  const decisions=input?.decisions??[];
   const empty=buildGlobalDictionaryIndex();
   // A first parse performs the same bounded, read-only token discovery as
   // final matching. Do not trust the submitted word IDs or "reviewed" values.
@@ -28,7 +29,7 @@ export async function inspectStagingNovelMatch(env,input){
     const sourced=await loadGlobalDictionaryCandidateIndex(env.DB,keys);
     const analysis=preflightNovelDictionaryMatches(input,sourced.index);
     return {...analysis,
-      binding_proposal:planNovelDictionaryBindings(input,sourced.index),
+      binding_proposal:planNovelDictionaryBindings(input,sourced.index,{decisions}),
       dictionary_status:'GLOBAL_DICTIONARY_STAGING_DRAFT',
       dictionary_index_ready:true,
       source_names:sourced.sourceNames,
@@ -59,7 +60,7 @@ export async function inspectStagingNovelMatch(env,input){
   const analysis=preflightNovelDictionaryMatches(input,index);
   return {
     ...analysis,
-    binding_proposal:planNovelDictionaryBindings(input,index),
+    binding_proposal:planNovelDictionaryBindings(input,index,{decisions}),
     dictionary_status:'LEGACY_WORD_TABLE_ONLY_NOT_GLOBAL_INDEX',
     dictionary_index_ready:false,ready_to_publish:false,
     matched_source:'Existing words table; exact normalized spelling only',
@@ -94,6 +95,7 @@ export async function handleOpsImportPreflight(req,env,path){
   }catch(err){
     const code=String(err?.message||'');
     if(code==='DICTIONARY_SCHEMA_REQUIRED')return failure(code,503);
+    if(/^(INVALID_MATCH_DECISION|DUPLICATE_MATCH_DECISION|DECISION_NOT_IN_CANDIDATES|DECISION_CANNOT_OVERRIDE_SOURCE_REVIEW|DECISION_TARGET_NOT_FOUND)/.test(code))return failure(code,400);
     if(/^INVALID_NOVEL_|MATCH_SCAN_|MATCH_UNIQUE_|PREFLIGHT_TOO_MANY/.test(code))
       return failure(code,400);
     console.error('OPS_LEXICON_PREFLIGHT_FAILED');
