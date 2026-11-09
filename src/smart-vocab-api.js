@@ -1,5 +1,6 @@
 import {studyKey,relatedAccessibleWordIds} from './study-identity.js';
 import {selectSmartNewWords,SMART_EXAMS} from './smart-vocab-preflight.js';
+import {auditSmartWordCard} from './smart-vocab-card-quality.js';
 
 // Optional: the entire feature is invisible unless explicitly enabled on a
 // reviewed, migrated deployment. No existing novel/flashcard request calls here.
@@ -50,10 +51,10 @@ async function catalogReady(env,categoryId,slug){
 }
 
 async function card(env,categoryId,wordId){
-  return db(env,
+  const result=await db(env,
     "SELECT w.id AS word_id,w.headword,w.phonetic_uk,w.phonetic_us,w.part_of_speech,"+
     "w.meaning_zh,w.example_en,w.example_zh,cv.frequency_rank,cv.frequency_source,"+
-    "c.slug AS category_slug "+
+    "cv.frequency_verified AS frequency_available,c.slug AS category_slug "+
     "FROM smart_vocab_catalog cv JOIN words w ON w.id=cv.word_id "+
     "JOIN categories c ON c.id=cv.category_id "+
     "WHERE cv.category_id=? AND cv.word_id=? AND cv.reviewed=1 AND cv.frequency_verified=1 "+
@@ -61,6 +62,7 @@ async function card(env,categoryId,wordId){
     "AND (TRIM(COALESCE(w.phonetic_uk,''))!='' OR TRIM(COALESCE(w.phonetic_us,''))!='') "+
     "AND TRIM(COALESCE(w.example_en,''))!='' AND TRIM(COALESCE(w.example_zh,''))!=''",
     categoryId,wordId).first();
+  return result&&auditSmartWordCard(result).structurallyReady?result:null;
 }
 
 async function studyRows(env,userId){
@@ -104,7 +106,10 @@ async function list(env,userId,category){
     "AND (TRIM(COALESCE(w.phonetic_uk,''))!='' OR TRIM(COALESCE(w.phonetic_us,''))!='') "+
     "AND TRIM(COALESCE(w.example_en,''))!='' AND TRIM(COALESCE(w.example_zh,''))!='' "+
     "ORDER BY cv.frequency_rank,cv.word_id LIMIT 15000",scope.id).all();
-  const all=records.results||[];
+  // The catalog's manual reviewed flag alone does not override objective
+  // field-quality failures. Protect both due and new cards.
+  const all=(records.results||[]).filter(item=>
+    auditSmartWordCard(item).structurallyReady);
   const rows=await studyRows(env,userId),state=new Map();
   for(const row of rows){
     const key=studyKey(row);
