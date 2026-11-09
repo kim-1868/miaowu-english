@@ -16,7 +16,8 @@
     "MULTIPLE_SENSES_IN_SOURCE": 3064,
     "COCA_RANK_MISSING": 61,
     "BNC_RANK_MISSING": 31,
-    "SPECIAL_OR_SUSPECT_HEADWORD": 3
+    "SPECIAL_OR_SUSPECT_HEADWORD": 3,
+    "MANUAL_SOURCE_EXCEPTION": 10
   },
   "headwords_missing_both_corpus_ranks": 19,
   "flagged_source_headwords": 3127,
@@ -39,5 +40,10 @@
     "Do not mutate existing novels, words, user_words, review_events, entitlements",
     "The raw source is not uploaded to GitHub; this file contains aggregate audit only",
     "COCA/BNC frequency ranks are general corpus statistics not CET4 exam occurrence frequency"
-  ]
+  ],
+  "curated_natural_collocation_pairs": 76,
+  "unranked_headwords_source_note": "19 CET4 source headwords have neither COCA nor BNC ranking; approved cards must be shown as UNRANKED after ranked words.",
+  "qa_framework": "staging-only; review flags and source exceptions never auto-mark approved",
+  "cet4_release_readiness": "blocked: 108/3849 drafted, none independently editorially approved, live preview not yet tested",
+  "release_rule": "Only owner may choose production release after complete curated CET4 content and preview account regression."
 }
