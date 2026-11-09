@@ -189,3 +189,20 @@ test('A4.2 fails closed on a disabled staging switch and never exposes productio
   assert.equal(stagingNoToken.status,401);
  }finally{sql.close()}
 });
+
+
+test('A4.2 DB trigger rejects a late attachment if book status changes to published',async()=>{
+ const {sql,env}=setup();
+ try{
+  const pack=novel(),saved=await store(env,pack);
+  importOriginal(sql,pack);
+  sql.exec("UPDATE books SET status='published'");
+  assert.throws(()=>sql.prepare(
+   'INSERT INTO global_dictionary_book_bindings '+
+   '(book_id,chapter_id,context_anchor,legacy_word_id,entry_id,source_request_id,actor_id) '+
+   'VALUES(?,?,?,?,?,?,?)'
+  ).run(pack.book.id,pack.chapters[0].id,'p0:s1','old-record','gdict_record',
+    saved.requestId,actor.id),/GLOBAL_BINDING_REQUIRES_DRAFT_BOOK/);
+  assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM global_dictionary_book_bindings').get().n,0);
+ }finally{sql.close()}
+});
