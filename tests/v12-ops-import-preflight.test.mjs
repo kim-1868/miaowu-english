@@ -122,12 +122,15 @@ test('authorized staging publisher performs real SQLite-backed preflight with ze
     'legacy-record','record','/rekord/','/ri-kord/','n.','记录',
     'She kept a record of the journey.','她记录了旅程。');
   const db={prepare(query){
-   return {bind(...args){
-    return {
-     async all(){return {results:sql.prepare(query).all(...args)};},
-     async first(){return sql.prepare(query).get(...args);}
-    };
-   }};
+   return {
+    async all(){return {results:sql.prepare(query).all()};},
+    bind(...args){
+     return {
+      async all(){return {results:sql.prepare(query).all(...args)};},
+      async first(){return sql.prepare(query).get(...args);}
+     };
+    }
+   };
   }};
   const content=structuredClone(manuscript);
   content.chapters[0].paragraphs[0].segments=[{
