@@ -1,0 +1,164 @@
+# Public-runner guarded production release; separate Worker Edit and D1 Read tokens.
+# D1 permission was added by the owner. Re-run the immutable preflight before deploy.
+name: Novels withdrawn revision guarded PROD deploy ONCE
+on:
+  push:
+    branches: [release/novel-revision-on-current-prod-20261109]
+    paths: [.github/workflows/novel-revision-on-current-prod-20261109.yml]
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.repository == 'kim-1868/miaowu-english'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Verify branch, limited diff and production config
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = 'refs/heads/release/novel-revision-on-current-prod-20261109'
+          BASE='7b214633076907e2df6d34adcd95aaeed32aee21'
+          git merge-base --is-ancestor "$BASE" HEAD
+          git diff --name-only "$BASE" HEAD >/tmp/novel-changes
+          if grep -Ev '^(src/ops-draft-revision.js|src/ops-live-edit.js|public/ops-console.js|tests/s123-ops-full-draft-revision.test.mjs|tests/s156-ops-live-book-editor.test.mjs|.github/workflows/novel-revision-on-current-prod-20261109.yml|scripts/deploy-novel-revision-local.mjs|docs/NOVEL_REVISION_LOCAL_RELEASE_20261109.md)$' /tmp/novel-changes;then
+            echo 'UNEXPECTED_FILES_IN_RELEASE_ABORT';exit 1
+          fi
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';import assert from 'node:assert/strict';
+          const cfg=JSON.parse(fs.readFileSync('deploy/production.wrangler.jsonc','utf8'));
+          assert.equal(cfg.name,'miaowu-english-production');
+          assert.equal(cfg.vars.APP_ENV,'production');
+          assert.equal(cfg.d1_databases[0].database_name,'miaowu-english-prod');
+          assert.equal(cfg.d1_databases[0].database_id,'649c71b3-340c-49bf-b806-3d39256851d3');
+          assert.equal(cfg.workers_dev,false);assert.equal(cfg.preview_urls,false);
+          assert.match(fs.readFileSync('src/ops-draft-revision.js','utf8'),/WITHDRAWN_REWRITE_CONFIRMATION_REQUIRED/);
+          assert.match(fs.readFileSync('public/ops-console.js','utf8'),/confirmWithdrawnRewrite/);
+          NODE
+      - name: Run full regression tests and produce correct production asset bundle
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+          node scripts/build-production-assets.mjs --approved-announcements
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';import fs from 'node:fs';
+          import {auditProductionAssets} from './scripts/build-production-assets.mjs';
+          assert.equal(auditProductionAssets({withAnnouncements:true}).assets.length,50);
+          const html=fs.readFileSync('dist-production/public/index.html','utf8');
+          for(const id of ['siteUpdateBanner','myBookshelf','mwWelcomeDialog'])
+            assert.ok(html.includes('id="'+id+'"'));
+          const app=fs.readFileSync('dist-production/public/app.js','utf8');
+          assert.match(app,/PERSONAL_SHELF_PAGE_SIZE=9/);
+          assert.match(app,/function positionStudyPopover/);
+          assert.match(app,/closeWord\(\);\s*stopReading\(\)/);
+          assert.match(fs.readFileSync('dist-production/public/ops-console.js','utf8'),/confirmWithdrawnRewrite/);
+          NODE
+      - name: Compile only first
+        run: |
+          set -euo pipefail
+          npm install --no-save --ignore-scripts 'wrangler@^4'
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const cfg=JSON.parse(fs.readFileSync('deploy/production.wrangler.jsonc','utf8'));
+          cfg.vars.OPS_ANNOUNCEMENTS_ENABLED='true';
+          cfg.vars.V11_NOTICE_RELEASE_APPROVED='true';
+          fs.writeFileSync('deploy/.novel-revision-approved.jsonc',JSON.stringify(cfg,null,2)+'\n');
+          NODE
+          node scripts/check-production-config.mjs deploy/.novel-revision-approved.jsonc
+          npx wrangler deploy --dry-run --config deploy/.novel-revision-approved.jsonc --outdir .wrangler/novel-revision-dry-run
+      - name: Check live baseline, database schema and production protections before mutation
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_DEPLOY_TOKEN }}
+          CLOUDFLARE_D1_READ_TOKEN: ${{ secrets.CLOUDFLARE_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo 'PRODUCTION_DEPLOY_SECRET_MISSING';exit 1; }
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo 'CLOUDFLARE_ACCOUNT_ID_MISSING';exit 1; }
+          npx wrangler deployments status --name miaowu-english-production --config deploy/.novel-revision-approved.jsonc >/tmp/novel-current-deploy.txt
+          ORIGIN='https://miaowu-english-pages.pages.dev'
+          BASE='7b214633076907e2df6d34adcd95aaeed32aee21'
+          for file in app.js ops-console.js ops-updates.js site-updates.js v11-responsive.css v11-bookshelf.css;do
+            git show "$BASE:public/$file" > "/tmp/novel-base-$file"
+            curl -fsSL --retry 2 --max-time 25 "$ORIGIN/$file?novel_safe_probe=$GITHUB_SHA" -o "/tmp/novel-live-$file"
+            cmp -s "/tmp/novel-base-$file" "/tmp/novel-live-$file" || { echo "LIVE_SOURCE_MISMATCH_ABORT_$file";exit 1; }
+          done
+          OPS_HTTP=$(curl -sS --max-time 20 -o /tmp/novel-unauth-ops -w '%{http_code}' "$ORIGIN/api/ops/me")
+          echo "UNAUTHENTICATED_OPS_HTTP=$OPS_HTTP"
+          test "$OPS_HTTP" = 401
+          echo "OPS_AUTH_OK_CHECKING_PUBLIC_EDGE_PROBE"
+          curl -fsSL --max-time 25 "$ORIGIN/__miaowu_prod_edge_probe" -o /tmp/novel-edge.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';import assert from 'node:assert/strict';
+          const x=JSON.parse(fs.readFileSync('/tmp/novel-edge.json','utf8'));
+          assert.equal(x.ok,true);assert.equal(x.productionBindingPresent,true);
+          assert.equal(x.dataAccess,false);
+          NODE
+          echo "PUBLIC_EDGE_PROBE_OK_CHECKING_PROD_D1_READONLY_SCHEMA"
+          test -n "$CLOUDFLARE_D1_READ_TOKEN" || { echo 'D1_READ_ONLY_SECRET_REQUIRED_CLOUDFLARE_D1_READ_TOKEN';exit 1; }
+          if ! CLOUDFLARE_API_TOKEN="$CLOUDFLARE_D1_READ_TOKEN" npx wrangler d1 execute miaowu-english-prod --remote --config deploy/.novel-revision-approved.jsonc --json --command "SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ops_live_book_versions') AS snapshots,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ops_book_content_versions') AS content_versions,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ops_audit_events') AS audit_events" >/tmp/novel-schema.json 2>/tmp/novel-d1-error;then
+            echo 'PROD_D1_READONLY_QUERY_UNAVAILABLE'
+            node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const raw=fs.readFileSync('/tmp/novel-schema.json','utf8')+'\n'+fs.readFileSync('/tmp/novel-d1-error','utf8');
+          const kinds=['not authorized','unauthorized','Unauthorized','Forbidden','forbidden','permission','permission denied','unknown option','Unknown argument','No such command','authentication','authentication error','Missing','missing','Error','error'];
+          console.log('D1_DIAGNOSTIC_CATEGORY='+(kinds.find(x=>raw.includes(x))||'UNKNOWN'));
+          console.log('D1_OUTPUT_PRESENT='+Boolean(raw.trim()));
+          NODE
+            exit 1
+          fi
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';import assert from 'node:assert/strict';
+          const body=JSON.parse(fs.readFileSync('/tmp/novel-schema.json','utf8'));
+          const rows=Array.isArray(body)?body[0]?.results:body.results;
+          const first=rows?.[0];assert.ok(first,'Remote read-only D1 schema check missing');
+          assert.equal(Number(first.snapshots),1,'Required history snapshot table missing');
+          assert.equal(Number(first.content_versions),1,'Required optimistic version table missing');
+          assert.equal(Number(first.audit_events),1,'Required audit table missing');
+          console.log('PROD_D1_READ_ONLY_SCHEMA_PRESENT');
+          NODE
+          echo 'SAFE_SOURCE_BASELINE_AND_D1_SCHEMA_VERIFIED'
+      - name: Deploy guarded novel editor with Worker rollback on failed smoke
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_DEPLOY_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          deployed=0
+          rollback(){
+            rc=$?
+            if [ "$deployed" = 1 ];then
+              echo 'NOVEL_EDITOR_SMOKE_FAILED_ATTEMPT_WORKER_ROLLBACK'
+              npx wrangler rollback --name miaowu-english-production --config deploy/.novel-revision-approved.jsonc --message 'Novel revision guarded deploy smoke failure' || echo 'MANUAL_WORKER_ROLLBACK_REQUIRED'
+            fi
+            exit "$rc"
+          }
+          trap rollback ERR
+          npx wrangler deploy --keep-vars --config deploy/.novel-revision-approved.jsonc
+          deployed=1
+          ORIGIN='https://miaowu-english-pages.pages.dev'
+          ready=0
+          for i in $(seq 1 15);do
+            if curl -fsSL --max-time 20 "$ORIGIN/ops-console.js?novel_revise=$i" -o /tmp/novel-live-ops &&
+               grep -Fq 'confirmWithdrawnRewrite' /tmp/novel-live-ops;then ready=1;break;fi
+            sleep 3
+          done
+          test "$ready" = 1
+          curl -fsSL --max-time 20 "$ORIGIN/" -o /tmp/novel-home
+          grep -Fq 'id="myBookshelf"' /tmp/novel-home
+          grep -Fq 'id="mwWelcomeDialog"' /tmp/novel-home
+          test "$(curl -sS --max-time 20 -o /tmp/novel-ops-auth-after -w '%{http_code}' "$ORIGIN/api/ops/me")" = 401
+          npx wrangler deployments status --name miaowu-english-production --config deploy/.novel-revision-approved.jsonc
+          echo 'NOVEL_REVISIONS_PRODUCTION_DEPLOYED_NO_D1_MUTATION'
+          trap - ERR

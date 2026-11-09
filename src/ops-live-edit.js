@@ -43,7 +43,7 @@ const anchorRows=ch=>{
 };
 const unique=x=>[...new Set(x)];
 
-export function checkLivePackage(valid,current,existingWords){
+export function checkLivePackage(valid,current,existingWords,{allowAnchorRemoval=false}={}){
   const {book,chapters,words}=valid;
   if(book.id!==current.book.id||book.category!==current.book.category_id)
     throw Error("BOOK_ID_OR_CATEGORY_CHANGED");
@@ -55,6 +55,7 @@ export function checkLivePackage(valid,current,existingWords){
     throw Error("CHAPTER_NUMBERS_MUST_BE_CONTIGUOUS");
   const old=new Map(current.chapters.map(ch=>[ch.id,ch]));
   const previouslyUsed=new Map();
+  const removedAnchors=[];
   for(const a of current.anchors){
     if(!previouslyUsed.has(a.chapter_id))previouslyUsed.set(a.chapter_id,new Set());
     previouslyUsed.get(a.chapter_id).add(a.word_id);
@@ -66,7 +67,10 @@ export function checkLivePackage(valid,current,existingWords){
     const nextWordIds=new Set(next.paragraphs.flatMap(p=>
       p.segments.filter(s=>s.wordId).map(s=>s.wordId)));
     for(const wordId of previouslyUsed.get(ch.id)||[])
-      if(!nextWordIds.has(wordId))throw Error("EXISTING_STUDY_WORD_REMOVED");
+      if(!nextWordIds.has(wordId)){
+        if(!allowAnchorRemoval)throw Error("EXISTING_STUDY_WORD_REMOVED");
+        removedAnchors.push({chapterId:ch.id,wordId});
+      }
   }
   const additions=chapters.slice(current.chapters.length);
   if(additions.some(ch=>old.has(ch.id)))throw Error("DUPLICATE_CHAPTER_ID");
@@ -104,7 +108,8 @@ export function checkLivePackage(valid,current,existingWords){
     throw Error("NO_CHANGES_TO_PUBLISH");
   return {metadataChanged,changedChapters,
     addedChapters:additions.length,newWords:newWords.length,
-    totalChapters:chapters.length,studyAnchors:valid.mentionCount};
+    totalChapters:chapters.length,studyAnchors:valid.mentionCount,
+    removedStudyWords:removedAnchors.length,removedAnchors};
 }
 async function schemaReady(db){
   const info=await db.prepare("PRAGMA table_info(ops_live_book_versions)").all();
@@ -156,11 +161,11 @@ const hash=async x=>{
   const digest=await crypto.subtle.digest("SHA-256",bytes);
   return [...new Uint8Array(digest)].map(n=>n.toString(16).padStart(2,"0")).join("");
 };
-async function checkRevision(db,id,pkg){
+async function checkRevision(db,id,pkg,{allowAnchorRemoval=false}={}){
   const valid=validatePackage(pkg);
   const current=await readCurrent(db,id);
   const words=await wordRows(db,valid.words.map(x=>x.id));
-  const diff=checkLivePackage(valid,current,words);
+  const diff=checkLivePackage(valid,current,words,{allowAnchorRemoval});
   return {current,valid,diff,source:pkg,digest:await hash(pkg)};
 }
 async function snapshot(current,kind){
@@ -231,9 +236,11 @@ async function exportPackage(db,id){
 }
 async function preview(req,env,id){
   const body=await readJson(req);
-  const rev=await checkRevision(env.DB,id,body.package);
+  const rev=await checkRevision(env.DB,id,body.package,
+    {allowAnchorRemoval:body.allowAnchorRemoval===true});
   return reply({ready:true,bookId:id,expectedVersion:rev.current.book.version,
     digest:rev.digest,diff:rev.diff,
+    anchorRemovalRequiresConfirmation:rev.diff.removedStudyWords>0,
     warnings:["现有章节编号和目标词 ID 必须保持不变","新增章节允许追加，但旧章节不可删除",
       "已有词卡内容不可在此修改；这能保护其它书籍引用和学习记录",
       "确认发布后当前阅读者刷新页面即可加载新版内容"]});
@@ -277,7 +284,10 @@ async function publishRevision(req,env,id,actor){
   if(!requestValid(v.requestId)||!Number.isSafeInteger(v.expectedVersion)||
      !digestPattern.test(v.previewDigest||""))throw Error("INVALID_EDIT_CONFIRMATION");
   const replay=await priorEvent(env.DB,v.requestId,actor,id,"content");if(replay)return reply(replay);
-  const rev=await checkRevision(env.DB,id,v.package);
+  const rev=await checkRevision(env.DB,id,v.package,
+    {allowAnchorRemoval:v.allowAnchorRemoval===true});
+  if(rev.diff.removedStudyWords>0&&v.confirmAnchorRemoval!==true)
+    throw Error("ANCHOR_REMOVAL_CONFIRMATION_REQUIRED");
   if(rev.current.book.version!==v.expectedVersion)throw Error("STALE_BOOK_VERSION");
   if(v.previewDigest!==rev.digest)throw Error("PREVIEW_CHANGED_RECHECK_REQUIRED");
   const snapshotText=await snapshot(rev.current,"content");
@@ -428,7 +438,7 @@ export async function handleOpsLiveEdit(req,env,path){
       "INVALID_BOOK_METADATA","NO_METADATA_CHANGE","STALE_BOOK_VERSION","PREVIEW_CHANGED_RECHECK_REQUIRED",
       "NO_CHANGES_TO_PUBLISH","BOOK_ID_OR_CATEGORY_CHANGED","PUBLISHED_CHAPTER_REMOVAL_FORBIDDEN",
       "REVISION_TOO_LARGE","CHAPTER_NUMBERS_MUST_BE_CONTIGUOUS","EXISTING_CHAPTER_ID_OR_ORDER_CHANGED",
-      "EXISTING_STUDY_WORD_REMOVED","DUPLICATE_CHAPTER_ID","EXISTING_WORD_CARD_CHANGED",
+      "EXISTING_STUDY_WORD_REMOVED","ANCHOR_REMOVAL_CONFIRMATION_REQUIRED","DUPLICATE_CHAPTER_ID","EXISTING_WORD_CARD_CHANGED",
       "BACKUP_TOO_LARGE_USE_SMALLER_EDITION","REVISION_STATEMENT_LIMIT","INVALID_RESTORE_CONFIRMATION",
       "VERSION_NOT_FOUND","VERSION_BOOK_MISMATCH","VERSION_CATEGORY_MISMATCH",
       "RESTORE_CHAPTER_ID_MISSING","RESTORE_WOULD_REMOVE_READER_HISTORY",
