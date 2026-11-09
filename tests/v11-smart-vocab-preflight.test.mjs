@@ -79,7 +79,7 @@ test('only genuinely learned state excludes new recommendations; unused placehol
 });
 
 test('batch limit is bounded and remaining count represents unserved distinct senses',()=>{
-  const rankedWords=Array.from({length:24},(_,i)=>w('id-'+i,'headword'+i,'n.','编号'+i,i+1));
+  const rankedWords=Array.from({length:24},(_,i)=>w('id-'+i,'headword'+String.fromCharCode(97+i),'n.','编号'+i,i+1));
   const result=select({rankedWords});
   assert.equal(result.words.length,20);
   assert.equal(result.remaining,4);
