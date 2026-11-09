@@ -9,7 +9,7 @@ import {buildS86FreeChapter} from "./build-s86-free-first-chapter.mjs";
 const root=resolve(dirname(fileURLToPath(import.meta.url)),"..");
 const source=join(root,"public"),out=join(root,"dist-production","public");
 export const PRODUCTION_ASSET_ALLOWLIST=Object.freeze([
- "index.html","styles.css","flashcards.css","smart-vocab.css","app.js","chapter-words.js","echo-cloud.js","flashcards.js","smart-vocab.js",
+ "index.html","styles.css","flashcards.css","app.js","chapter-words.js","echo-cloud.js","flashcards.js",
  "install-guide.css","install-guide.js","onboarding.css","onboarding.js","v11-bookshelf.css","v11-reader.css","v11-wordbook.css","v11-responsive.css",
  "live.html","live-reader.js","live-reader.css",
  "ops.html","ops-console.js","ops-customers.js","ops-claims.js","ops-console.css","novel-file-parser.js","rainy-night.html",
@@ -65,6 +65,19 @@ function stripNotices(name,html){
    throw Error("UNAPPROVED_ANNOUNCEMENT_UI_BUNDLE_"+name);
  return html;
 }
+// Owner approval is still pending for the smart-vocabulary study experience.
+// Staging keeps the full new interface, but production builds retain the
+// existing exactly-reviewed asset count and never expose half-filled cards.
+function stripDraftSmartVocab(name,html){
+ if(name!=="index.html")return html;
+ html=html.replace(/\s*<link[^>]*href="\/smart-vocab\.css[^"]*"[^>]*>/g,"");
+ html=html.replace(/<section id="smartVocabStage"[^>]*><\/section>/g,"");
+ html=html.replace(/\s*<dialog id="smartVocabGuide"[\s\S]*?<\/dialog>/g,"");
+ html=html.replace(/\s*<script src="\/smart-vocab\.js[^"]*"><\/script>/g,"");
+ if(/smartVocabStage|smartVocabGuide|smart-vocab\.css|smart-vocab\.js/.test(html))
+  throw Error("UNAPPROVED_SMART_VOCAB_UI_BUNDLE_"+name);
+ return html;
+}
 export function buildProductionAssets({withAnnouncements=false}={}){
  rmSync(out,{recursive:true,force:true});
  mkdirSync(out,{recursive:true});
@@ -73,7 +86,11 @@ export function buildProductionAssets({withAnnouncements=false}={}){
    writeFileSync(join(out,name),buildS86FreeChapter());
   }else if(name==="rainy-night.html"){
    writeFileSync(join(out,name),buildRainyNightPublicSample());
-  }else if(!withAnnouncements&&(name==="index.html"||name==="ops.html")){
+  }else if(name==="index.html"){
+   const original=readFileSync(join(source,name),"utf8");
+   const oldNotices=withAnnouncements?original:stripNotices(name,original);
+   writeFileSync(join(out,name),stripDraftSmartVocab(name,oldNotices));
+  }else if(!withAnnouncements&&name==="ops.html"){
    writeFileSync(join(out,name),stripNotices(name,readFileSync(join(source,name),"utf8")));
   }else copyFileSync(join(source,name),join(out,name));
  }
