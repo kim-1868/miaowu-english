@@ -2,6 +2,7 @@
 // This module never reads novel chapters, changes saved words, or writes user state.
 // A caller must supply SERVER-VERIFIED active entitlements and a curated ranked lexicon.
 import {studyKey} from './study-identity.js';
+import {auditSmartWordCard} from './smart-vocab-card-quality.js';
 
 export const SMART_EXAMS=Object.freeze(['cet4','cet6','postgrad','ielts']);
 const RANK_SOURCES=new Set(['COCA','BNC','POSTGRAD_EXAM']);
@@ -35,6 +36,14 @@ function normalizedWord(row){
      !SMART_EXAMS.includes(category)||!validRank(rank)||!RANK_SOURCES.has(source)||
      (source==='POSTGRAD_EXAM'&&row.frequency_available!==true&&row.frequency_available!==1)||
      (!ipaUk&&!ipaUs)||!exampleEn||!exampleZh)return null;
+  // The same editorial lint used for draft review protects the runtime pool.
+  // No "reviewed" database flag may silently approve a placeholder card.
+  if(!auditSmartWordCard({
+    ...row,word_id:id,category_slug:category,frequency_rank:rank,
+    frequency_source:source,part_of_speech:pos,meaning_zh:meaning,
+    phonetic_uk:ipaUk,phonetic_us:ipaUs,example_en:exampleEn,
+    example_zh:exampleZh
+  }).structurallyReady)return null;
   return {
     word_id:id,headword,part_of_speech:pos,meaning_zh:meaning,
     category_slug:category,frequency_rank:rank,frequency_source:source,
