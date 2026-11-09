@@ -24,7 +24,7 @@ function normalizedWord(row){
   const meaning=String(row.meaning_zh||'').trim();
   const pos=String(row.part_of_speech||'').trim();
   const category=String(row.category_slug||'').trim();
-  const rank=Number(row.frequency_rank);
+  const rank=row.frequency_rank==null||row.frequency_rank===''?null:Number(row.frequency_rank);
   const source=String(row.frequency_source||'').trim().toUpperCase();
   const ipaUk=String(row.phonetic_uk||'').trim();
   const ipaUs=String(row.phonetic_us||'').trim();
@@ -33,7 +33,9 @@ function normalizedWord(row){
   // A card with no pronunciation or example is not suitable for a paid lesson.
   // Never make up a ranking, invent a meaning, or infer a product category.
   if(!/^[a-zA-Z0-9_-]{1,100}$/.test(id)||!headword||!meaning||
-     !SMART_EXAMS.includes(category)||!validRank(rank)||!RANK_SOURCES.has(source)||
+     !SMART_EXAMS.includes(category)||
+     (source==='UNRANKED'?rank!==null||row.frequency_available===1||row.frequency_available===true:
+       !validRank(rank)||!RANK_SOURCES.has(source)||row.frequency_available===0||row.frequency_available===false)||
      (source==='POSTGRAD_EXAM'&&row.frequency_available!==true&&row.frequency_available!==1)||
      (!ipaUk&&!ipaUs)||!exampleEn||!exampleZh)return null;
   // The same editorial lint used for draft review protects the runtime pool.
@@ -95,14 +97,15 @@ export function selectSmartNewWords({
     const key=senseOf(w);
     if(known.has(key))continue;
     const existing=unique.get(key);
-    if(!existing||w.frequency_rank<existing.frequency_rank||
-       (w.frequency_rank===existing.frequency_rank&&w.word_id<existing.word_id)){
+    const rankValue=x=>x.frequency_rank??Infinity;
+    if(!existing||rankValue(w)<rankValue(existing)||
+       (rankValue(w)===rankValue(existing)&&w.word_id<existing.word_id)){
       unique.set(key,w);
     }
   }
   const ordered=[...unique.values()].sort((a,b)=>
     Number(isBasicFunctionWord(a))-Number(isBasicFunctionWord(b))||
-    a.frequency_rank-b.frequency_rank||
+    (a.frequency_rank??Infinity)-(b.frequency_rank??Infinity)||
     a.headword.localeCompare(b.headword,'en')||a.word_id.localeCompare(b.word_id,'en'));
   return {available:true,reason:null,words:ordered.slice(0,limit),
     remaining:Math.max(0,ordered.length-limit)};
