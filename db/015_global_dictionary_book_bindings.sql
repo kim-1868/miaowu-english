@@ -15,3 +15,13 @@ CREATE INDEX IF NOT EXISTS ix_global_dictionary_bindings_entry
  ON global_dictionary_book_bindings(entry_id);
 CREATE INDEX IF NOT EXISTS ix_global_dictionary_bindings_request
  ON global_dictionary_book_bindings(source_request_id);
+
+-- Guard the publish-vs-attach race even if book status changes after the
+-- handler checks its initial draft snapshot.
+CREATE TRIGGER IF NOT EXISTS global_dictionary_bindings_draft_guard
+ BEFORE INSERT ON global_dictionary_book_bindings
+ BEGIN
+   SELECT CASE WHEN COALESCE(
+     (SELECT status FROM books WHERE id=NEW.book_id),'missing')!='draft'
+   THEN RAISE(ABORT,'GLOBAL_BINDING_REQUIRES_DRAFT_BOOK') END;
+ END;
