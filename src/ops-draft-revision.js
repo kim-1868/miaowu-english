@@ -97,7 +97,7 @@ export function planDraftRevision({validated,originalBook,originalChapters,
    throw Error("WITHDRAWN_BACKUP_TOO_LARGE");
   statements.push({sql:"INSERT INTO ops_live_book_versions"+
    "(id,book_id,actor_id,action,request_id,base_version,snapshot_json,summary_json) "+
-   "SELECT ?,b.id,?,'withdrawn_rewrite',?,v.version,?,? FROM books b "+
+   "SELECT ?,b.id,?,'content',?,v.version,?,? FROM books b "+
    "JOIN ops_book_content_versions v ON v.book_id=b.id "+
    "WHERE b.id=? AND b.status='draft' AND v.version=? "+
    "AND EXISTS(SELECT 1 FROM ops_audit_events a WHERE a.resource_type='book' "+
