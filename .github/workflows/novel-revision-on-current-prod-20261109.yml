@@ -26,7 +26,7 @@ jobs:
           BASE='7b214633076907e2df6d34adcd95aaeed32aee21'
           git merge-base --is-ancestor "$BASE" HEAD
           git diff --name-only "$BASE" HEAD >/tmp/novel-changes
-          if grep -Ev '^(src/ops-draft-revision.js|src/ops-live-edit.js|public/ops-console.js|tests/s123-ops-full-draft-revision.test.mjs|tests/s156-ops-live-book-editor.test.mjs|.github/workflows/novel-revision-on-current-prod-20261109.yml)$' /tmp/novel-changes;then
+          if grep -Ev '^(src/ops-draft-revision.js|src/ops-live-edit.js|public/ops-console.js|tests/s123-ops-full-draft-revision.test.mjs|tests/s156-ops-live-book-editor.test.mjs|.github/workflows/novel-revision-on-current-prod-20261109.yml|scripts/deploy-novel-revision-local.mjs|docs/NOVEL_REVISION_LOCAL_RELEASE_20261109.md)$' /tmp/novel-changes;then
             echo 'UNEXPECTED_FILES_IN_RELEASE_ABORT';exit 1
           fi
           node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
@@ -75,13 +75,13 @@ jobs:
           npx wrangler deploy --dry-run --config deploy/.novel-revision-approved.jsonc --outdir .wrangler/novel-revision-dry-run
       - name: Check live baseline, database schema and production protections before mutation
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_DEPLOY_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         shell: bash
         run: |
           set -euo pipefail
-          test -n "$CLOUDFLARE_API_TOKEN"
-          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo 'PRODUCTION_DEPLOY_SECRET_MISSING';exit 1; }
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo 'CLOUDFLARE_ACCOUNT_ID_MISSING';exit 1; }
           npx wrangler deployments status --name miaowu-english-production --config deploy/.novel-revision-approved.jsonc >/tmp/novel-current-deploy.txt
           ORIGIN='https://miaowu-english-pages.pages.dev'
           BASE='7b214633076907e2df6d34adcd95aaeed32aee21'
@@ -126,7 +126,7 @@ jobs:
           echo 'SAFE_SOURCE_BASELINE_AND_D1_SCHEMA_VERIFIED'
       - name: Deploy guarded novel editor with Worker rollback on failed smoke
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_DEPLOY_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         shell: bash
         run: |
