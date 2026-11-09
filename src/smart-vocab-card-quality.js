@@ -57,6 +57,24 @@ export function auditSmartWordCard(card={}){
     warnings.push('EXAMPLE_TARGET_FORM_REVIEW');
   if(string(card.meaning_zh).includes('；'))
     warnings.push('MULTIPLE_SENSES_REVIEW');
+  // Collocations are OPTIONAL. Show only genuinely curated pairs, never an
+  // empty placeholder row. Invalid supplied pairs are publication blockers.
+  if(card.collocations!==undefined&&card.collocations!==null){
+    if(!Array.isArray(card.collocations)||card.collocations.length>5)
+      put('COLLOCATION_FORMAT_NEEDS_REVIEW');
+    else{
+      const used=new Set();
+      for(const entry of card.collocations){
+        const en=string(entry?.en),zh=string(entry?.zh);
+        if(en.length<3||en.length>100||!/\p{Letter}/u.test(en)||
+          !cjk.test(zh)||zh.length>75||placeholder.test(en)||placeholder.test(zh))
+          put('COLLOCATION_NEEDS_REVIEW');
+        const token=en.toLocaleLowerCase('en-US');
+        if(used.has(token))warnings.push('DUPLICATE_COLLOCATION_REVIEW');
+        used.add(token);
+      }
+    }
+  }
   return {
     word_id:string(card.word_id),headword:word,
     category_slug:string(card.category_slug),
