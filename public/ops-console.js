@@ -54,6 +54,12 @@ function button(id,fn){
 function syncButtons(){
   syncSaleButtons();syncLiveEditorButtons();
   $("checkNovel").disabled=!connected()||!$("uploadNovel").files?.length;
+  // A1 preview is only exposed to verified staging publishers.
+  const matchButton=$("previewGlobalMatch");
+  if(matchButton){
+    matchButton.hidden=identity?.environment!=="staging";
+    matchButton.disabled=!connected()||!pendingNovel||identity?.environment!=="staging";
+  }
   $("importNovel").disabled=!(connected()&&pendingNovel&&$("uploadCoverWithNovel").files?.length&&
     pendingNovel.words?.every(w=>w.phoneticUk&&w.phoneticUs&&w.partOfSpeech&&w.meaningZh&&w.exampleEn&&w.exampleZh));
   $("tagSave").disabled=!connected()||!chosen||!$("tagText").value.trim();
@@ -1267,6 +1273,8 @@ function resetNovel(){
  pendingNovel=null;$("importNovel").disabled=true;$("reviseNovel").disabled=true;
  $("uploadTagSuggestions").replaceChildren();$("uploadTagStatus").textContent="识别小说后显示可选标签建议。";
  $("uploadReport").hidden=true;$("uploadPreview").hidden=true;
+ const matchReport=$("globalMatchReport");
+ if(matchReport){matchReport.hidden=true;matchReport.textContent="";}
 }
 function uploadedTitle(name){
  return name.replace(/\.(json|md|markdown|txt)$/i,"").replace(/[_-]+/g," ").trim();
@@ -1391,6 +1399,31 @@ $("uploadNovel").addEventListener("change",()=>{
 });
 button("checkNovel",async()=>{
  resetNovel();await examineNovel();
+});
+if($("previewGlobalMatch"))button("previewGlobalMatch",async()=>{
+ if(!pendingNovel||identity?.environment!=="staging")
+   throw Error("请在预览站先识别小说，再检查统一词典匹配。");
+ const result=await api("/api/ops/import/preflight","POST",{package:pendingNovel});
+ const c=result.summary?.target||{};
+ const lines=[
+   "统一词典匹配预检（只读，不上架、不覆盖旧词卡）",
+   "等级："+(result.category||"未知")+"；明确标注的目标词："+(result.summary?.target_unique??0),
+   "匹配成功："+(c.matched||0)+"；旧词库有词但教学待审："+(c.dictionary_only||0),
+   "歧义待确认："+(c.needs_review||0)+"；词典缺词："+(c.missing||0),
+   "正文其余英文："+(result.summary?.discovered_unique||0)+"个不同词形（仅供参考，不作为强制目标）",
+   "词典索引状态："+(result.dictionary_status||"未知"),
+   "注意：现阶段仅检查旧词卡，不代表完整开源总词典已导入。"
+ ];
+ const exceptions=(result.targets||[]).filter(x=>x.status!=="matched");
+ if(exceptions.length)lines.push("需复核的目标词（最多展示30个）：");
+ for(const x of exceptions.slice(0,30)){
+   const why=x.status==="needs_review"?"同形或多个词卡待确认":
+     x.status==="dictionary_only"?"旧卡可查但尚未按新标准审核":"当前词库未找到";
+   lines.push("第"+(x.chapters||[]).join("、")+"章 "+
+     x.surface+" → "+why+"；建议："+(x.candidates||[]).map(y=>y.headword).join("/") );
+ }
+ const panel=$("globalMatchReport");
+ panel.textContent=lines.join("\n");panel.hidden=false;
 });
 $("uploadCoverWithNovel").addEventListener("change",syncButtons);
 button("importNovel",async()=>{
