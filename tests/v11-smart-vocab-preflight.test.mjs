@@ -150,3 +150,27 @@ test('a verified ranked duplicate wins over the identical unranked sense',()=>{
   ]});
   assert.deepEqual(result.words.map(x=>x.word_id),['ranked']);
 });
+
+test('explicitly human-reviewed sense aliases prevent repeated lesson across books',()=>{
+  const learned=[{word_id:'novel-a',headword:'appeal',part_of_speech:'v.',
+    meaning_zh:'请求；呼吁',status:'learning',bookmarked:0,last_seen_at:'2026-11-09'}];
+  const rankedWords=[
+    w('standalone-b','appeal','v.','恳求；请求',1),
+    w('different-pos','appeal','n.','吸引力',2)
+  ];
+  const noReview=select({studyRows:learned,rankedWords});
+  assert.equal(noReview.words.length,2); // uncertain sense must not be guessed
+  const reviewedAliases=new Map([
+    ['novel-a','reviewed:appeal_ask_01'],
+    ['standalone-b','reviewed:appeal_ask_01']
+  ]);
+  const withReview=select({studyRows:learned,rankedWords,reviewedAliases});
+  assert.deepEqual(withReview.words.map(x=>x.word_id),['different-pos']);
+});
+test('unreviewed or malformed alias hints never merge separate senses',()=>{
+  const learned=[{word_id:'novel-a',headword:'appeal',part_of_speech:'v.',
+    meaning_zh:'请求',status:'learning',last_seen_at:'2026-11-09'}];
+  const result=select({studyRows:learned,rankedWords:[w('new','appeal','n.','吸引力',1)],
+    reviewedAliases:new Map([['novel-a','appeal'],['new','appeal']])});
+  assert.equal(result.words.length,1);
+});
