@@ -123,12 +123,14 @@ export async function saveStagingBindingManifest(env,payload,actor){
 }
 
 export async function handleOpsBindingManifest(req,env,path){
-  if(path!=='/api/ops/import/bindings/confirm'||req.method!=='POST'||
-     env.APP_ENV!=='staging')return bad('NOT_FOUND',404);
+  const preview=path==='/api/ops/import/bindings/preview';
+  const confirm=path==='/api/ops/import/bindings/confirm';
+  if(!(preview||confirm)||req.method!=='POST'||env.APP_ENV!=='staging')
+    return bad('NOT_FOUND',404);
   const auth=await authenticateOperator(req,env);
   if(auth.response)return auth.response;
   if(!hasOpsRole(auth.operator,'publisher'))return bad('OPS_ROLE_FORBIDDEN',403);
-  if(env.GLOBAL_DICTIONARY_BINDING_SAVE_ENABLED!=='true')
+  if(confirm&&env.GLOBAL_DICTIONARY_BINDING_SAVE_ENABLED!=='true')
     return bad('GLOBAL_BINDING_SAVE_DISABLED',403);
   let payload;
   try{
@@ -143,7 +145,8 @@ export async function handleOpsBindingManifest(req,env,path){
       return bad('INVALID_JSON',400);
   }catch{return bad('INVALID_JSON',400)}
   try{
-    return out(await saveStagingBindingManifest(env,payload,auth.operator),201);
+    return preview?out(await previewBindingManifest(env,payload)):
+      out(await saveStagingBindingManifest(env,payload,auth.operator),201);
   }catch(e){
     const name=String(e?.message||'');
     if(name.startsWith('Content validation:')||/^INVALID_(?:NOVEL|DICTIONARY|BINDING|MATCH)|^DECISION_/.test(name))
