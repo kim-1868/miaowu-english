@@ -63,6 +63,9 @@ async function catalogReady(env,categoryId,slug){
     "AND (TRIM(COALESCE(w.phonetic_uk,''))!='' OR TRIM(COALESCE(w.phonetic_us,''))!='') "+
     "AND LENGTH(TRIM(COALESCE(w.example_en,'')))>=15 "+
     "AND LENGTH(TRIM(COALESCE(w.example_zh,'')))>=3 "+
+    "AND CASE WHEN w.collocations_json IS NULL OR TRIM(w.collocations_json)='' THEN 1 "+
+    "WHEN json_valid(w.collocations_json)=1 THEN json_type(w.collocations_json)='array' "+
+    "ELSE 0 END=1 "+
     "AND LOWER(w.example_en) NOT LIKE '%todo%' "+
     "AND TRIM(COALESCE(w.example_en,''))!='' AND TRIM(COALESCE(w.example_zh,''))!=''",
     categoryId).first();
