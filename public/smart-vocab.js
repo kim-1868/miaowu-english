@@ -114,9 +114,17 @@
     const item=current(),w=item.word,feedback=item.feedback;
     const title=item.retry?'再记一次 · 巩固记忆':w.review?'到期复习':w.frequency_source==='UNRANKED'?'词纲补充 · 未标注词频':'词频推荐 · 新词';
     const pronunciation=esc(w.phonetic_us||w.phonetic_uk||'');
+    // Collocations are strictly optional. An empty card never shows a
+    // "常用搭配" placeholder, and all text is escaped before rendering.
+    const pairs=Array.isArray(w.collocations)?w.collocations.slice(0,3):[];
+    const collocations=pairs.length?'<div class="mw-smart-collocations">'+
+      '<strong>常用搭配</strong>'+
+      pairs.map(pair=>'<p><span>'+esc(pair.en)+'</span> · '+esc(pair.zh)+'</p>').join('')+
+      '</div>':'';
     const detail='<div class="mw-smart-detail">'+
       '<div class="mw-smart-meaning">'+esc(w.part_of_speech||'')+' '+esc(w.meaning_zh)+'</div>'+
-      '<p>'+esc(w.example_en)+'</p><small>'+esc(w.example_zh)+'</small></div>';
+      '<p>'+esc(w.example_en)+'</p><small>'+esc(w.example_zh)+'</small>'+
+      collocations+'</div>';
     let actions='';
     if(feedback){
       actions='<p class="mw-smart-feedback" role="status">'+
