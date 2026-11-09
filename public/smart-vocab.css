@@ -33,6 +33,14 @@
 .mw-smart-meaning{font-weight:700;font-size:17px}
 .mw-smart-detail p{margin:8px 0 3px;font-size:15px}
 .mw-smart-detail small{color:#987684;font-size:13px}
+.mw-smart-collocations{margin-top:14px;padding:10px 12px;border-radius:12px;
+ background:rgba(184,137,151,.08);text-align:left}
+.mw-smart-collocations strong{font-size:12px;color:#8a6172}
+.mw-smart-collocations p{font-size:12px;line-height:1.7;margin:6px 0;color:#846471}
+.mw-smart-collocations span{font-weight:600;color:#75495e}
+html[data-theme="dark"] .mw-smart-collocations{background:rgba(208,159,184,.1)}
+html[data-theme="dark"] .mw-smart-collocations p,
+html[data-theme="dark"] .mw-smart-collocations span{color:#f2d5e1}
 .mw-smart-bookmark{border-top:1px solid #f0e6e1;padding-top:12px;margin-top:18px}
 .mw-smart-bookmark button{border:1px solid #ddc6c9;border-radius:11px;
  background:transparent;color:#855267;padding:9px 13px;cursor:pointer}
