@@ -57,7 +57,8 @@ function fixture({enabled=true,catalogReady=true}={}){
       catch(error){sql.exec('ROLLBACK');throw error}
     }
   };
-  const env={DB:adapter,SMART_VOCAB_ENABLED:enabled?'true':'false',SMART_VOCAB_SCHEMA_READY:'true'};
+  const env={DB:adapter,APP_ENV:'staging',SMART_VOCAB_QA_ALLOW_PARTIAL:'true',
+    SMART_VOCAB_ENABLED:enabled?'true':'false',SMART_VOCAB_SCHEMA_READY:'true'};
   async function call(path,method='GET',body=null,auth=user){
     const req=new Request('https://example.test'+path,{method,
       ...(body?{headers:{'content-type':'application/json'},body:JSON.stringify(body)}:{})});
@@ -256,5 +257,20 @@ test('feature disabled keeps legacy words view independent from smart catalog',a
     assert.equal(original.status,200);
     assert.equal(original.data.words.length,0);
     assert.equal((await f.call('/api/me/smart-vocab?category=cet4')).status,404);
+  }finally{f.sql.close()}
+});
+
+test('partial exam snapshot is never considered a verified production catalog',async()=>{
+  const f=fixture();
+  try{
+    f.env.APP_ENV='production';
+    const status=await f.call('/api/me/smart-vocab/status');
+    assert.equal(status.status,200);
+    assert.equal(status.data.enabled,false);
+    assert.equal(status.data.categories[0].available,false);
+    assert.equal((await f.call('/api/me/smart-vocab?category=cet4')).status,503);
+    // An incorrectly retained QA flag is ignored outside staging.
+    f.env.SMART_VOCAB_QA_ALLOW_PARTIAL='true';
+    assert.equal((await f.call('/api/me/smart-vocab?category=cet4')).status,503);
   }finally{f.sql.close()}
 });
