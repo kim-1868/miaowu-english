@@ -302,3 +302,36 @@ test('a stale smart-card answer never unmarks a word explicitly mastered on anot
     assert.deepEqual(state,{status:'mastered',bookmarked:1,due_at:null});
   }finally{f.sql.close()}
 });
+
+test('remembering an already scheduled word cannot accidentally shorten its review date',async()=>{
+  const f=fixture();
+  try{
+    f.sql.prepare("INSERT INTO user_words(user_id,word_id,status,bookmarked,due_at,last_seen_at) "+
+      "VALUES(?,?,'learning',0,datetime('now','+30 days'),CURRENT_TIMESTAMP)")
+      .run(user.id,'s-retain');
+    const before=f.sql.prepare("SELECT due_at FROM user_words WHERE user_id=? AND word_id='s-retain'")
+      .get(user.id).due_at;
+    assert.equal((await f.call('/api/me/smart-vocab/answer','POST',{
+      category:'cet4',wordId:'s-retain',remembered:true,
+      requestId:randomUUID()})).status,200);
+    const after=f.sql.prepare("SELECT due_at,status,bookmarked FROM user_words "+
+      "WHERE user_id=? AND word_id='s-retain'").get(user.id);
+    assert.equal(after.due_at,before);
+    assert.equal(after.status,'learning');
+    assert.equal(after.bookmarked,0);
+  }finally{f.sql.close()}
+});
+
+test('manually reviewed but still placeholder-filled cards cannot be served',async()=>{
+  const f=fixture();
+  try{
+    f.sql.prepare("UPDATE words SET meaning_zh='vt. 澄清；[计] 占位' WHERE id='s-clarify'").run();
+    const selected=await f.call('/api/me/smart-vocab?category=cet4');
+    assert.equal(selected.status,200);
+    assert.equal(selected.data.words.some(w=>w.word_id==='s-clarify'),false);
+    const forbidden=await f.call('/api/me/smart-vocab/answer','POST',{
+      category:'cet4',wordId:'s-clarify',remembered:true,
+      requestId:randomUUID()});
+    assert.equal(forbidden.status,404);
+  }finally{f.sql.close()}
+});
