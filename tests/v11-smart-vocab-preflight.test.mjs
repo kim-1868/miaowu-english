@@ -121,3 +121,13 @@ test('incomplete learning cards are withheld instead of displaying missing IPA o
   const result=select({rankedWords:[valid,noIpa,noEnglish,noChinese]});
   assert.deepEqual(result.words.map(x=>x.word_id),['ok']);
 });
+
+test('useful high-frequency content words precede grammar glue, without dropping coverage',()=>{
+  const result=select({rankedWords:[
+    w('art','the','art.','这个',1),
+    w('verb','clarify','v.','澄清',25),
+    w('noun','promise','n.','承诺',13)
+  ]});
+  assert.deepEqual(result.words.map(x=>x.word_id),['noun','verb','art']);
+  assert.equal(result.words.length,3);
+});
