@@ -112,3 +112,12 @@ test('revoked category grants never unlock smart vocabulary',()=>{
   assert.equal(select({activeEntitlements:[{slug:'cet4',active:false}]}).available,false);
   assert.equal(select({activeEntitlements:[{slug:'cet4'}]}).available,true);
 });
+
+test('incomplete learning cards are withheld instead of displaying missing IPA or examples',()=>{
+  const valid=w('ok','clarify','v.','澄清',1);
+  const noIpa={...w('ipa','silent','adj.','沉默的',2),phonetic_uk:'',phonetic_us:''};
+  const noEnglish={...w('en','incomplete','adj.','不完整的',3),example_en:''};
+  const noChinese={...w('zh','missing','adj.','缺少的',4),example_zh:''};
+  const result=select({rankedWords:[valid,noIpa,noEnglish,noChinese]});
+  assert.deepEqual(result.words.map(x=>x.word_id),['ok']);
+});
