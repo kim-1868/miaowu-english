@@ -44,7 +44,11 @@ async function catalogReady(env,categoryId,slug){
     "FROM smart_vocab_catalog cv JOIN words w ON w.id=cv.word_id "+
     "WHERE cv.category_id=? AND cv.reviewed=1 AND cv.frequency_verified=1 "+
     "AND TRIM(w.headword)!='' AND TRIM(COALESCE(w.meaning_zh,''))!='' "+
+    "AND TRIM(COALESCE(w.part_of_speech,''))!='' AND INSTR(w.meaning_zh,'[')=0 "+
     "AND (TRIM(COALESCE(w.phonetic_uk,''))!='' OR TRIM(COALESCE(w.phonetic_us,''))!='') "+
+    "AND LENGTH(TRIM(COALESCE(w.example_en,'')))>=15 "+
+    "AND LENGTH(TRIM(COALESCE(w.example_zh,'')))>=3 "+
+    "AND LOWER(w.example_en) NOT LIKE '%todo%' "+
     "AND TRIM(COALESCE(w.example_en,''))!='' AND TRIM(COALESCE(w.example_zh,''))!=''",
     categoryId).first();
   return Number(n?.n||0)>=Number(level.expected_headwords);
