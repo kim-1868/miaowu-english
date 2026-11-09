@@ -122,7 +122,7 @@
     function asMeaning(c){return WORDS[c]?`${safe(c)}：${safe(WORDS[c].meaning)}`:safe(c)}
     function reportExamResult(q,ans,hint=false){if(quizAnswer!==null)return;quizAnswer=ans;const ok=ans.toLowerCase().trim()===q.word; if(ok)quizScore++;recordAnswer(q.word,ok,hint);renderQuiz()}
 
-    function navigate(to){if(view==='echo'&&echoMode==='cloud'&&window.MiaowuCloudEcho?.running()){window.MiaowuCloudEcho.leave(to);return}if(view==='echo'&&echoMode==='demo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='words'&&to!=='words'&&window.MiaowuSmartVocab?.running?.())window.MiaowuSmartVocab.close();if(view==='reader'&&to!=='reader'){closeWord();clearTimeout(readingSaveTimer);void saveReadingProgress({quiet:true});stopReading();}view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words'){renderWords();window.MiaowuSmartVocab?.onEnter()}if(to==='echo')renderQuiz();if(to==='account'){renderAccount();if(user)void loadPersonalBookshelf()}$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
+    function navigate(to){if(view==='echo'&&echoMode==='cloud'&&window.MiaowuCloudEcho?.running()){window.MiaowuCloudEcho.leave(to);return}if(view==='echo'&&echoMode==='demo'&&echoPhase==='playing'&&quizIndex<quizQuestions.length&&to!=='echo'){confirmEchoExit(to);return}if(view==='words'&&to!=='words'&&globalThis.MiaowuSmartVocab?.running?.())globalThis.MiaowuSmartVocab.close();if(view==='reader'&&to!=='reader'){closeWord();clearTimeout(readingSaveTimer);void saveReadingProgress({quiet:true});stopReading();}view=to;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+to));document.querySelectorAll('[data-nav]').forEach(el=>{el.classList.toggle('on',el.dataset.nav===to);el.classList.toggle('active',el.dataset.nav===to)});window.scrollTo({top:0,behavior:'instant'});if(to==='library'){renderLibrary();renderReminder();}if(to==='words'){renderWords();globalThis.MiaowuSmartVocab?.onEnter()}if(to==='echo')renderQuiz();if(to==='account'){renderAccount();if(user)void loadPersonalBookshelf()}$('topAccount').textContent=user?('你好，'+user.name):'登录 / 激活'}
 
     // D1 is the primary reader source. Legacy chapter sample stays unreachable from default book cards.
     // No paid chapter bodies are bundled into app.js or held in a client-side book constant.
@@ -981,7 +981,7 @@
       }
     }
     function renderWords(){
-      window.MiaowuSmartVocab?.sync();
+      globalThis.MiaowuSmartVocab?.sync();
       globalThis.MiaowuFlashcards?.render({
         loggedIn:!!user,saved:wordbookData?.allTotal??cloudSaved.size,due:cloudFlashDue,
         sessionKey:user?.name||null
@@ -1697,7 +1697,7 @@ $('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalO
       saved:()=>cloudSaved.size,due:()=>cloudFlashDue,
       login:showLogin
     });
-    window.MiaowuSmartVocab?.configure({
+    globalThis.MiaowuSmartVocab?.configure({
       request:serverRequest,refresh:async()=>{wordbookData=null;await refreshCloudLearning()},
       speak:speakWord,toast,login:showLogin,
       user:()=>user?.name||null,
