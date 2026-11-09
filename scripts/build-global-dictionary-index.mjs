@@ -56,7 +56,7 @@ export function compileDictionaryDraftIndex(input){
      const colon=section.indexOf(':');
      if(colon<1){stats.sourceTokenWarnings++;continue}
      const code=section.slice(0,colon),form=normalizedLemma(section.slice(colon+1));
-     if(!APPROVED_FORM_CODES.has(code)||!form||form===lemma){
+     if(!APPROVED_FORM_CODES.has(code)||!form||form.length<2||form===lemma){
        stats.sourceTokenWarnings++;continue;
      }
      const signature=form+'\u0000'+lemma;
