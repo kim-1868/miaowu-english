@@ -50,7 +50,9 @@ function normalizedWord(row){
     word_id:id,headword,part_of_speech:pos,meaning_zh:meaning,
     category_slug:category,frequency_rank:rank,frequency_source:source,
     phonetic_uk:ipaUk,phonetic_us:ipaUs,
-    example_en:exampleEn,example_zh:exampleZh
+    example_en:exampleEn,example_zh:exampleZh,
+    ...(Array.isArray(row.collocations)&&row.collocations.length?
+      {collocations:row.collocations.slice(0,5)}:{})
   };
 }
 
