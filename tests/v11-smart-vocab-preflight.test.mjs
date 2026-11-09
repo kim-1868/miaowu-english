@@ -95,3 +95,13 @@ test('selection never edits input rows and never exposes novel passage fields',(
   for(const key of ['book_title','chapter_id','context_sentence'])
     assert.equal(Object.hasOwn(result.words[0],key),false);
 });
+
+test('unranked postgrad supplement cannot be advertised as true exam frequency',()=>{
+  const row=w('pg-1','hypothesis','n.','假说',12,'postgrad');
+  const result=select({category:'postgrad',activeEntitlements:['postgrad'],rankedWords:[
+    {...row,frequency_source:'POSTGRAD_EXAM',frequency_available:false},
+    {...w('pg-2','academic','adj.','学术的',20,'postgrad'),
+      frequency_source:'POSTGRAD_EXAM',frequency_available:true}
+  ]});
+  assert.deepEqual(result.words.map(x=>x.word_id),['pg-2']);
+});
