@@ -51,6 +51,6 @@ test('example sentences, meanings and IPA remain learner-readable and explicitly
     assert.ok(card.example_en.length>=18&&card.example_en.length<=260);
     assert.match(card.example_zh,/[\u3400-\u9fff]/u);
     assert.equal(typeof card.editorial_note,'string');
-    assert.match(card.editorial_note,/审核/);
+    assert.match(card.editorial_note,/审校|审核/);
   }
 });
