@@ -131,3 +131,32 @@ test('useful high-frequency content words precede grammar glue, without dropping
   assert.deepEqual(result.words.map(x=>x.word_id),['noun','verb','art']);
   assert.equal(result.words.length,3);
 });
+
+test('unranked but reviewed CET4 supplement is retained after every ranked word',()=>{
+  const extra={
+    ...w('supplement','abbreviation','n.','缩写',1),
+    frequency_rank:null,frequency_source:'UNRANKED',frequency_available:0
+  };
+  const result=select({rankedWords:[
+    extra,w('ordinary','study','v.','学习',300),
+    w('function','the','art.','这',1)
+  ]});
+  assert.deepEqual(result.words.map(x=>x.word_id),['ordinary','function','supplement']);
+  assert.equal(result.words.at(-1).frequency_rank,null);
+});
+
+test('unranked contractions and CET4 abbreviations require genuine teaching fields',()=>{
+  const abbr={
+    ...w('cet4-bc','B.C.','abbr.','公元前',1),
+    frequency_rank:null,frequency_source:'UNRANKED',frequency_available:0,
+    example_en:'The building was constructed around 400 B.C.',
+    example_zh:'这栋建筑大约建于公元前400年。',
+    phonetic_uk:'/ˌbiː ˈsiː/'
+  };
+  const good=select({rankedWords:[abbr]});
+  assert.equal(good.words.length,1);
+  assert.equal(good.words[0].frequency_source,'UNRANKED');
+  assert.equal(select({rankedWords:[{...abbr,example_en:''}]}).words.length,0);
+  assert.equal(select({rankedWords:[{...abbr,frequency_rank:999}]}).words.length,0);
+  assert.equal(select({rankedWords:[{...abbr,frequency_available:1}]}).words.length,0);
+});
