@@ -6,6 +6,15 @@ import {studyKey} from './study-identity.js';
 export const SMART_EXAMS=Object.freeze(['cet4','cet6','postgrad','ielts']);
 const RANK_SOURCES=new Set(['COCA','BNC','POSTGRAD_EXAM']);
 const validRank=n=>Number.isSafeInteger(n)&&n>0;
+// High-frequency function words remain in the full syllabus, but do not
+// crowd the first rounds ahead of useful exam content words.
+const BASIC_FUNCTION_WORDS=new Set([
+  'the','a','an','of','to','in','on','at','and','or','but','for',
+  'be','is','are','was','were','am','it','he','she','they','i',
+  'you','we','me','my','your','our','their','this','that','these',
+  'those','who','what','which','not'
+]);
+const isBasicFunctionWord=w=>BASIC_FUNCTION_WORDS.has(w.headword.toLocaleLowerCase('en-US'));
 
 function normalizedWord(row){
   if(!row||typeof row!=='object')return null;
@@ -82,7 +91,9 @@ export function selectSmartNewWords({
       unique.set(key,w);
     }
   }
-  const ordered=[...unique.values()].sort((a,b)=>a.frequency_rank-b.frequency_rank||
+  const ordered=[...unique.values()].sort((a,b)=>
+    Number(isBasicFunctionWord(a))-Number(isBasicFunctionWord(b))||
+    a.frequency_rank-b.frequency_rank||
     a.headword.localeCompare(b.headword,'en')||a.word_id.localeCompare(b.word_id,'en'));
   return {available:true,reason:null,words:ordered.slice(0,limit),
     remaining:Math.max(0,ordered.length-limit)};
