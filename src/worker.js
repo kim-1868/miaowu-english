@@ -663,7 +663,8 @@ async function api(req, env) {
     if(path.startsWith("/api/ops/claims/"))return handleOpsClaims(req,env,path);
     if(path==="/api/ops/import/preflight")return handleOpsImportPreflight(req,env,path);
     if(path==="/api/ops/import/bindings/preview"||
-       path==="/api/ops/import/bindings/confirm")return handleOpsBindingManifest(req,env,path);
+       path==="/api/ops/import/bindings/confirm"||
+       path==="/api/ops/import/bindings/export")return handleOpsBindingManifest(req,env,path);
     if(path==="/api/ops/import"||path==="/api/ops/lexicon")return handleOpsImport(req,env,path);
     if(path==="/api/ops/import/revise")return handleOpsDraftRevision(req,env,path);
     if(/^\/api\/ops\/books\/[a-z][a-z0-9_-]{2,79}\/live-editor(?:\/|$)/.test(path))
