@@ -1466,11 +1466,20 @@ button("reviseNovel",async()=>{
   throw Error("修订稿编号/书名必须与当前选中的未发布草稿一致");
  if(!readiness?.contentFingerprint)throw Error("无法取得草稿版本，请重新选择书籍");
  if(!window.confirm("确认用刚才预览的文件更新《"+chosen.title+
-  "》的未发布正文和词卡？系统将保留书籍编号、用户购买权益与已有学习记录；原版本审核会失效。"))return;
- const changed=await api("/api/ops/import/revise","POST",{
-  package:pendingNovel,expectedFingerprint:readiness.contentFingerprint,
-  confirmTitle:chosen.title,requestId:requestId()
- });
+  "》的正文和词卡？系统将保留书籍编号、用户购买权益与已有学习记录；原版本审核会失效。"))return;
+ // Start with strict mode. Only historically withdrawn books may request
+ // a second explicit approval to retire old chapter annotations.
+ const payload={package:pendingNovel,expectedFingerprint:readiness.contentFingerprint,
+  confirmTitle:chosen.title,requestId:requestId()};
+ let changed;
+ try{changed=await api("/api/ops/import/revise","POST",payload)}
+ catch(e){
+  if(!String(e.message).includes("WITHDRAWN_REWRITE_CONFIRMATION_REQUIRED"))throw e;
+  if(!window.confirm("此书曾正式上架，现已下架。确认允许新版全文重写并移除不再使用的旧词标注？\\n"+
+   "旧词卡和学习记录保留；系统将为原版创建备份，之后仍需重新审核上架。"))return;
+  changed=await api("/api/ops/import/revise","POST",
+   {...payload,confirmWithdrawnRewrite:true});
+ }
  uploadMsg("已安全更新未发布草稿《"+chosen.title+"》，"+
   changed.chapters+"章、"+changed.newAnchors+"处词汇标注。请重新审核最新版后再发布。");
  resetNovel();await loadBooks(chosen.id);
