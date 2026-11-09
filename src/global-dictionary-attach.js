@@ -138,26 +138,25 @@ export async function attachDictionaryBindingsToStagingDraft(env,payload,actor){
     bookId:valid.book.id,bindings:attach.length,published:false,
     readerSwitched:false,userDataChanged:false};
  }
- // D1.batch is atomic; any failed FK/duplicate aborts the entire attachment.
- // The old chapter_words and customer tables are never modified.
- try{
-  for(let i=0;i<attach.length;i+=25){
-    const batch=attach.slice(i,i+25);
-    const stmts=batch.map(one=>env.DB.prepare(
+ // One atomic D1.batch even for a long novel: at most 14 rows x 7
+ // parameters per INSERT, staying under D1's 100-parameter limit.
+ // Existing chapter_words and all customer tables remain untouched.
+ const insertStatements=[];
+ for(let i=0;i<attach.length;i+=14){
+   const portion=attach.slice(i,i+14);
+   insertStatements.push(env.DB.prepare(
      'INSERT INTO global_dictionary_book_bindings '+
      '(book_id,chapter_id,context_anchor,legacy_word_id,entry_id,'+
-     'source_request_id,actor_id) VALUES(?,?,?,?,?,?,?)'
-    ).bind(one.book_id,one.chapter_id,one.context_anchor,
-     one.legacy_word_id,one.entry_id,one.source_request_id,one.actor_id));
-    // NOTE: multiple batches need transactional consistency at the API level.
-    // In this initial adapter we only allow a single D1 batch for atomicity.
-    if(attach.length>25)throw Error('ATTACH_BATCH_SIZE_EXCEEDED');
-    await env.DB.batch(stmts);
-  }
- }catch(e){
-  if(e?.message==='ATTACH_BATCH_SIZE_EXCEEDED')throw e;
-  throw Error('DICTIONARY_BINDING_ATTACHMENT_FAILED');
+     'source_request_id,actor_id) VALUES '+
+      portion.map(()=>'(?,?,?,?,?,?,?)').join(',')
+   ).bind(...portion.flatMap(one=>[
+     one.book_id,one.chapter_id,one.context_anchor,one.legacy_word_id,
+     one.entry_id,one.source_request_id,one.actor_id
+   ])));
  }
+ if(insertStatements.length>800)throw Error('ATTACH_STATEMENT_LIMIT');
+ try{await env.DB.batch(insertStatements)}
+ catch{throw Error('DICTIONARY_BINDING_ATTACHMENT_FAILED')}
  return {attached:true,idempotent:false,status:'draft-only',
    bookId:valid.book.id,bindings:attach.length,published:false,
    readerSwitched:false,userDataChanged:false};
