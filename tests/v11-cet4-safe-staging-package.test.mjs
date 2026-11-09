@@ -57,3 +57,9 @@ test('mismatched level, duplicate IDs and missing teacher signoff cannot enter s
   assert.throws(()=>compileCET4SignedOffSQL([sample,sample],{previewOnly:true}),/DUPLICATE_WORD_ID/);
   assert.throws(()=>compileCET4SignedOffSQL([{...sample,editorial_approved_by:''}],{previewOnly:true}),/EDITORIAL_APPROVAL_REQUIRED/);
 });
+
+test('CET4 staging rejects combining two meanings in a single otherwise signed card',()=>{
+  assert.throws(()=>compileCET4SignedOffSQL([{
+    ...sample,meaning_zh:'确认；证实'
+  }],{previewOnly:true}),/CET4_MULTIPLE_SENSES_NEED_SPLIT/);
+});
