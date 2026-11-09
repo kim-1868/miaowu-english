@@ -2,12 +2,12 @@
 // Structural lint does not replace bilingual meaning / naturalness human review.
 // Never set reviewed=1 in code as a side effect of passing lint.
 const ALLOWED_LEVELS=new Set(['cet4','cet6','postgrad','ielts']);
-const SOURCES=new Set(['COCA','BNC','POSTGRAD_EXAM']);
+const SOURCES=new Set(['COCA','BNC','POSTGRAD_EXAM','UNRANKED']);
 const string=v=>typeof v==='string'?v.trim():'';
 const cjk=/[\u3400-\u9fff]/u;
 const placeholder=/\b(?:todo|tbd|lorem ipsum|placeholder|example here|translation here)\b|待补充|暂无|例句待|示例待|\[\[|\]\]/iu;
 const technical=/\[(?:计|经|法|医|化|数|工|生|物|机|电|航|网|办|建|汽|农|地|天|语|体|音|摄)\]/u;
-const supportedPOS=/^(?:(?:n|v|vt|vi|adj|adv|prep|pron|conj|art|num|interj|aux|phr)\.?|n\.?\/v\.?|v\.?\/n\.?)$/i;
+const supportedPOS=/^(?:(?:n|v|vt|vi|adj|adv|prep|pron|conj|art|num|interj|aux|phr|abbr)\.?|n\.?\/v\.?|v\.?\/n\.?)$/i;
 const sentenceWords=s=>(s.match(/[a-z]+(?:'[a-z]+)?/gi)||[]).length;
 
 export function auditSmartWordCard(card={}){
@@ -18,12 +18,21 @@ export function auditSmartWordCard(card={}){
   const pos=string(card.part_of_speech);
   const example=string(card.example_en),translation=string(card.example_zh);
   const rank=card.frequency_rank;
-  if(!/^[a-z][a-z\s'-]{0,64}$/i.test(word))put('INVALID_HEADWORD');
+  const source=string(card.frequency_source).toUpperCase();
+  if(!/^(?:[a-z][a-z\s'-]{0,64}|(?:[a-z]\.){2,5})$/i.test(word))put('INVALID_HEADWORD');
   if(!/^[a-z0-9_-]{1,80}$/i.test(string(card.word_id)))put('INVALID_WORD_ID');
   if(!ALLOWED_LEVELS.has(string(card.category_slug)))put('INVALID_EXAM_LEVEL');
-  if(!Number.isSafeInteger(rank)||rank<=0)put('INVALID_FREQUENCY_RANK');
-  if(!SOURCES.has(string(card.frequency_source).toUpperCase()))put('INVALID_FREQUENCY_SOURCE');
-  if(string(card.frequency_source).toUpperCase()==='POSTGRAD_EXAM'&&
+  if(!SOURCES.has(source))put('INVALID_FREQUENCY_SOURCE');
+  if(source==='UNRANKED'){
+    if(rank!==null&&rank!==undefined&&rank!=='')put('UNRANKED_MUST_NOT_HAVE_FREQUENCY');
+    if(card.frequency_available===true||card.frequency_available===1)
+      put('UNRANKED_MUST_NOT_BE_VERIFIED');
+  }else{
+    if(!Number.isSafeInteger(rank)||rank<=0)put('INVALID_FREQUENCY_RANK');
+    if(card.frequency_available===false||card.frequency_available===0)
+      put('UNVERIFIED_FREQUENCY');
+  }
+  if(source==='POSTGRAD_EXAM'&&
     card.frequency_available!==true&&card.frequency_available!==1)
     put('UNVERIFIED_EXAM_FREQUENCY');
   if(!pos||!supportedPOS.test(pos))put('POS_NEEDS_REVIEW');
