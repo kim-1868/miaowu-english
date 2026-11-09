@@ -5,7 +5,7 @@
 const $=id=>document.getElementById(id);
 let key="",chosen=null,readiness=null,identity=null,busy=false;
 let liveEditorState=null,liveRevision=null,liveHistory=[];
-let globalMatchDecisions=[];
+let globalMatchDecisions=[],globalManifestPreview=null;
 let customerAdmin=null,claimAdmin=null,updatesAdmin=null;
 const byId=(tag,text,className)=>{
   const el=document.createElement(tag);
@@ -60,6 +60,13 @@ function syncButtons(){
   if(matchButton){
     matchButton.hidden=identity?.environment!=="staging";
     matchButton.disabled=!connected()||!pendingNovel||identity?.environment!=="staging";
+  }
+  const saveBindings=$("stageGlobalBindings");
+  if(saveBindings){
+    saveBindings.hidden=identity?.environment!=="staging"||
+      !globalManifestPreview?.save_available;
+    saveBindings.disabled=!connected()||!pendingNovel||
+      !globalManifestPreview?.ready_to_stage;
   }
   $("importNovel").disabled=!(connected()&&pendingNovel&&$("uploadCoverWithNovel").files?.length&&
     pendingNovel.words?.every(w=>w.phoneticUk&&w.phoneticUs&&w.partOfSpeech&&w.meaningZh&&w.exampleEn&&w.exampleZh));
@@ -1271,7 +1278,7 @@ async function renderImportTagSuggestions(pkg){
 
 const uploadMsg=message=>{$("uploadStatus").textContent=message;};
 function resetNovel(){
- globalMatchDecisions=[];
+ globalMatchDecisions=[];globalManifestPreview=null;
  const reviewChoices=$("globalMatchChoices");
  if(reviewChoices){reviewChoices.hidden=true;reviewChoices.replaceChildren();}
  pendingNovel=null;$("importNovel").disabled=true;$("reviseNovel").disabled=true;
@@ -1405,6 +1412,7 @@ button("checkNovel",async()=>{
  resetNovel();await examineNovel();
 });
 async function previewGlobalMatch(){
+ globalManifestPreview=null;
  if(!pendingNovel||identity?.environment!=="staging")
    throw Error("请在预览站先识别小说，再检查统一词典匹配。");
  const result=await api("/api/ops/import/preflight","POST",{
@@ -1445,8 +1453,23 @@ async function previewGlobalMatch(){
    }
    lines.push("本报告不会直接生成正式上传包，也不会修改用户学习状态。");
  }
+ if(result.dictionary_index_ready){
+   try{
+     globalManifestPreview=await api("/api/ops/import/bindings/preview","POST",{
+       package:pendingNovel,decisions:globalMatchDecisions
+     });
+     lines.push("候选关联审核："+
+       (globalManifestPreview.ready_to_stage?"全部目标词可保存候选（不会上架）":
+       "仍有"+globalManifestPreview.blockers.length+"个异常须先处理"));
+     if(globalManifestPreview.ready_to_stage&&!globalManifestPreview.save_available)
+       lines.push("候选保存功能尚未启用；仅可预览，不可持久化。");
+   }catch(error){
+     lines.push("关联清单预览暂不可用："+error.message);
+   }
+ }
  const panel=$("globalMatchReport");
  panel.textContent=lines.join("\n");panel.hidden=false;
+ syncButtons();
  const choices=$("globalMatchChoices");
  if(choices){
    choices.replaceChildren();
@@ -1499,6 +1522,22 @@ if($("previewGlobalMatch"))button("previewGlobalMatch",async()=>{
   globalMatchDecisions=[];await previewGlobalMatch();
 });
 
+if($("stageGlobalBindings"))button("stageGlobalBindings",async()=>{
+ if(identity?.environment!=="staging"||!pendingNovel||
+    !globalManifestPreview?.ready_to_stage||
+    !globalManifestPreview?.save_available)
+   throw Error("此阶段尚不能保存词典关联。请先完成匹配预检。");
+ if(!window.confirm("确认保存当前审核通过的词典关联候选？"+
+    "只会在预览站记录候选，不会上传或上架小说，也不会修改学习状态。"))return;
+ const data=await api("/api/ops/import/bindings/confirm","POST",{
+   package:pendingNovel,decisions:globalMatchDecisions,
+   requestId:requestId(),confirmSave:true,
+   expectedPackageSha256:globalManifestPreview.package_sha256,
+   expectedBindingSha256:globalManifestPreview.binding_sha256
+ });
+ uploadMsg("词典关联候选已保存到预览站（"+(data.count||0)+
+   "处目标词）；小说尚未上架，用户状态未变。");
+});
 $("uploadCoverWithNovel").addEventListener("change",syncButtons);
 button("importNovel",async()=>{
   if(!pendingNovel)throw Error("请先识别并预览小说内容");
