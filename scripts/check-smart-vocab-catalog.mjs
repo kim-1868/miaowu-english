@@ -7,8 +7,10 @@ import {existsSync} from 'node:fs';
 
 const target=process.argv[2];
 const strict=process.argv.includes('--require-ready');
+const production=process.argv.includes('--production');
+const MIN_EXAM_HEADWORDS={cet4:3849,cet6:5407,postgrad:4801,ielts:5040};
 if(!target||target.startsWith('-')||!existsSync(target)){
-  console.error('Usage: node --experimental-sqlite scripts/check-smart-vocab-catalog.mjs <staging-snapshot.db> [--require-ready]');
+  console.error('Usage: node --experimental-sqlite scripts/check-smart-vocab-catalog.mjs <staging-snapshot.db> [--require-ready] [--production]');
   process.exit(2);
 }
 let conn;
@@ -42,7 +44,8 @@ try{
       "FROM smart_vocab_catalog cv JOIN words w ON w.id=cv.word_id "+
       "WHERE cv.category_id=?").get(l.category_id);
     const ready=!!l.enabled&&!!l.catalog_verified_at&&
-      Number(r.ready_headwords)>=Number(l.expected_headwords);
+      Number(r.ready_headwords)>=Number(l.expected_headwords)&&
+      (!production||Number(l.expected_headwords)>=Number(MIN_EXAM_HEADWORDS[l.slug]||Infinity));
     out.push({
       level:l.slug,enabled:!!l.enabled,expectedHeadwords:l.expected_headwords,
       audited:!!l.catalog_verified_at,readyHeadwords:r.ready_headwords,
@@ -53,7 +56,7 @@ try{
       ready
     });
   }
-  console.log(JSON.stringify({status:'OFFLINE_READ_ONLY',levels:out},null,2));
+  console.log(JSON.stringify({status:'OFFLINE_READ_ONLY',productionCoverageRequired:production,levels:out},null,2));
   if(strict&&(!out.length||out.some(l=>!l.ready)))process.exitCode=1;
 }catch(e){
   console.error('CATALOG_AUDIT_BLOCKED:',e?.message||String(e));
