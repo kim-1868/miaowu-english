@@ -29,7 +29,7 @@ try{
     const r=conn.prepare(
       "SELECT COUNT(*) AS rows_total,"+
       "COUNT(DISTINCT LOWER(TRIM(w.headword))) AS total_headwords,"+
-      "COUNT(DISTINCT CASE WHEN cv.reviewed=1 AND cv.frequency_verified=1 "+
+      "COUNT(DISTINCT CASE WHEN cv.reviewed=1 "+
       "AND TRIM(w.headword)!='' AND TRIM(COALESCE(w.meaning_zh,''))!='' "+
       "AND TRIM(COALESCE(w.part_of_speech,''))!='' AND INSTR(w.meaning_zh,'[')=0 "+
       "AND (TRIM(COALESCE(w.phonetic_uk,''))!='' OR TRIM(COALESCE(w.phonetic_us,''))!='') "+
