@@ -56,11 +56,13 @@ test('missing smart cards are never rendered and bookmarks keep feedback separat
   assert.match(ui,/pendingAnswer/);
 });
 
-test('production allowlist includes exactly the two optional new client assets',()=>{
+test('smart-vocabulary UI is staging-only until owner approves its release',()=>{
   const build=read('scripts/build-production-assets.mjs'),html=read('public/index.html');
-  assert.match(build,/"smart-vocab\.js"/);
-  assert.match(build,/"smart-vocab\.css"/);
-  assert.match(html,/src="\/smart-vocab\.js/);
-  assert.match(html,/href="\/smart-vocab\.css/);
-  assert.match(html,/src="\/onboarding\.js/);
+  const allowlist=build.split('PRODUCTION_ASSET_ALLOWLIST=Object.freeze([')[1]?.split(']);')[0]||'';
+  assert.doesNotMatch(allowlist,/smart-vocab/);
+  assert.match(build,/stripDraftSmartVocab/);
+  assert.match(build,/UNAPPROVED_SMART_VOCAB_UI_BUNDLE/);
+  assert.match(html,/src="\\/smart-vocab\\.js/);
+  assert.match(html,/href="\\/smart-vocab\\.css/);
+  assert.match(html,/src="\\/onboarding\\.js/);
 });
