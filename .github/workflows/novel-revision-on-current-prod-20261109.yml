@@ -77,6 +77,7 @@ jobs:
       - name: Check live baseline, database schema and production protections before mutation
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_DEPLOY_TOKEN }}
+          CLOUDFLARE_D1_READ_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         shell: bash
         run: |
@@ -103,7 +104,8 @@ jobs:
           assert.equal(x.dataAccess,false);
           NODE
           echo "PUBLIC_EDGE_PROBE_OK_CHECKING_PROD_D1_READONLY_SCHEMA"
-          if ! npx wrangler d1 execute miaowu-english-prod --remote --config deploy/.novel-revision-approved.jsonc --json --command "SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ops_live_book_versions') AS snapshots,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ops_book_content_versions') AS content_versions,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ops_audit_events') AS audit_events" >/tmp/novel-schema.json 2>/tmp/novel-d1-error;then
+          test -n "$CLOUDFLARE_D1_READ_TOKEN" || { echo 'D1_READ_TOKEN_NOT_CONFIGURED';exit 1; }
+          if ! CLOUDFLARE_API_TOKEN="$CLOUDFLARE_D1_READ_TOKEN" npx wrangler d1 execute miaowu-english-prod --remote --config deploy/.novel-revision-approved.jsonc --json --command "SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ops_live_book_versions') AS snapshots,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ops_book_content_versions') AS content_versions,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ops_audit_events') AS audit_events" >/tmp/novel-schema.json 2>/tmp/novel-d1-error;then
             echo 'PROD_D1_READONLY_QUERY_UNAVAILABLE'
             node --input-type=module <<'NODE'
           import fs from 'node:fs';
