@@ -650,7 +650,7 @@
         tray.style.setProperty('padding','18px 17px calc(18px + env(safe-area-inset-bottom))','important');
       }else{
         backdrop.style.removeProperty('display');
-        backdrop.style.removeProperty('pointer-events');
+        backdrop.style.setProperty('pointer-events','none','important');
         ['position','display','visibility','z-index','top','bottom','left','right',
           'width','max-width','max-height','overflow-y','background','color',
           'border-radius','box-shadow','padding'].forEach(prop=>tray.style.removeProperty(prop));
@@ -1586,6 +1586,7 @@
     $('storyText').addEventListener('click',e=>{
       const word=e.target.closest('[data-cloud-word]');
       if(word){e.preventDefault();e.stopPropagation();showCloudWord(word.dataset.cloudWord,word);window.MiaowuOnboarding?.wordTapped();return;}
+      if($('wordPop').classList.contains('on')){closeWord();return;}
       if(e.target.closest('button,a,[role=button]'))return;
       const p=e.target.closest('[data-audio-paragraph]');
       // Hovering or clicking ordinary text never starts narration.
@@ -1596,7 +1597,12 @@
         if(segment>=0)seekSpeech(segment);
       }
     });
-$('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
+document.addEventListener('click',e=>{
+      if(!$('wordPop').classList.contains('on')||$('wordPop').contains(e.target))return;
+      if(e.target.closest('[data-cloud-word],[data-word]'))return;
+      closeWord();
+    });
+    $('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;renderWords()});
     // Cloud reading progress is saved automatically on scroll and chapter navigation.
     window.MiaowuChapterWords?.configure({
       request:serverRequest,refresh:refreshCloudLearning,
