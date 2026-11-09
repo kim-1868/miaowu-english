@@ -327,11 +327,12 @@ test('manually reviewed but still placeholder-filled cards cannot be served',asy
   try{
     f.sql.prepare("UPDATE words SET meaning_zh='vt. 澄清；[计] 占位' WHERE id='s-clarify'").run();
     const selected=await f.call('/api/me/smart-vocab?category=cet4');
-    assert.equal(selected.status,200);
-    assert.equal(selected.data.words.some(w=>w.word_id==='s-clarify'),false);
+    // A single malformed reviewed card prevents the entire level from
+    // claiming complete editorial readiness.
+    assert.equal(selected.status,503);
     const forbidden=await f.call('/api/me/smart-vocab/answer','POST',{
       category:'cet4',wordId:'s-clarify',remembered:true,
       requestId:randomUUID()});
-    assert.equal(forbidden.status,404);
+    assert.equal(forbidden.status,503);
   }finally{f.sql.close()}
 });
