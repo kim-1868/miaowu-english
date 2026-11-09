@@ -23,13 +23,24 @@ async function canReadChapter(env,id,userId){
     "AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked')))",id,userId).first();
 }
 async function canStudyWord(env,id,userId){
-  return sql(env,"SELECT w.id FROM words w WHERE w.id=? AND EXISTS("+ 
+  const legacy=await sql(env,"SELECT w.id FROM words w WHERE w.id=? AND EXISTS("+ 
     "SELECT 1 FROM chapter_words cw JOIN chapters ch ON ch.id=cw.chapter_id "+
     "JOIN books b ON b.id=ch.book_id JOIN categories c ON c.id=b.category_id "+
     "WHERE cw.word_id=w.id AND b.status='published' AND c.is_visible=1 "+
     "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
     "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e "+
     "WHERE e.user_id=? AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked'))))",id,userId).first();
+  if(legacy)return legacy;
+  if(!smartVocabEnabled(env))return null;
+  return sql(env,"SELECT cv.word_id AS id FROM smart_vocab_catalog cv "+
+    "JOIN smart_vocab_levels lv ON lv.category_id=cv.category_id "+
+    "JOIN categories c ON c.id=cv.category_id "+
+    "JOIN entitlements e ON e.category_id=c.id "+
+    "WHERE cv.word_id=? AND e.user_id=? AND c.is_visible=1 "+
+    "AND cv.reviewed=1 AND cv.frequency_verified=1 "+
+    "AND lv.enabled=1 AND lv.catalog_verified_at IS NOT NULL "+
+    "AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v "+
+    "WHERE v.id=e.source_code_id AND v.status='revoked')",id,userId).first();
 }
 async function progressList(env,userId){
   const found=await sql(env,"SELECT p.chapter_id,p.progress,p.completed_at,p.updated_at,"+
@@ -74,18 +85,12 @@ async function wordList(env,userId){
     "ORDER BY ch2.chapter_no ASC LIMIT 1) AS context_sentence "+
     "FROM user_words uw "+
     "JOIN words w ON w.id=uw.word_id WHERE uw.user_id=? AND uw.bookmarked=1 "+
-    "AND EXISTS(SELECT 1 FROM chapter_words cw JOIN chapters ch ON ch.id=cw.chapter_id "+
-    "JOIN books b ON b.id=ch.book_id JOIN categories c ON c.id=b.category_id "+
-    "WHERE cw.word_id=uw.word_id AND b.status='published' AND c.is_visible=1 "+
-    "AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP "+
-    "AND (ch.is_preview=1 OR EXISTS(SELECT 1 FROM entitlements e WHERE e.user_id=uw.user_id "+
-    "AND e.category_id=b.category_id AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked')))) "+
-    "ORDER BY uw.last_seen_at DESC LIMIT 4000",userId).all();
+    "AND "+flashVisibleFor(env)+" ORDER BY uw.last_seen_at DESC LIMIT 4000",userId).all();
   // The old list is capped for display, but the fast-learning due counter
   // must count the user's entire entitled collection, not only 200 rows.
   const dueRows=await sql(env,"SELECT uw.word_id,w.headword,w.part_of_speech,w.meaning_zh "+
     "FROM user_words uw JOIN words w ON w.id=uw.word_id "+
-    "WHERE uw.user_id=? AND uw.bookmarked=1 AND "+flashVisible+" "+flashScope("due"),userId).all();
+    "WHERE uw.user_id=? AND uw.bookmarked=1 AND "+flashVisibleFor(env)+" "+flashScope("due"),userId).all();
   return json({flashDue:uniqueStudyRows(dueRows.results||[]).length,
     words:uniqueStudyRows(result.results||[]).slice(0,200).map(w=>{
     let pairs=[];try{const parsed=JSON.parse(w.collocations_json||"[]");if(Array.isArray(parsed))pairs=parsed.slice(0,8)}catch{}
@@ -108,7 +113,7 @@ async function wordbookPage(req,env,userId){
     const result=await sql(env,
       "SELECT uw.word_id,uw.status,uw.last_seen_at,w.headword,w.part_of_speech,w.meaning_zh "+
       "FROM user_words uw JOIN words w ON w.id=uw.word_id "+
-      "WHERE uw.user_id=? AND uw.bookmarked=1 AND "+flashVisible+" "+
+      "WHERE uw.user_id=? AND uw.bookmarked=1 AND "+flashVisibleFor(env)+" "+
       "ORDER BY uw.last_seen_at DESC,uw.word_id DESC LIMIT ? OFFSET ?",
       userId,chunk,offset).all();
     const rows=result.results||[];
@@ -200,6 +205,20 @@ async function quickReview(req,env,userId){
 
 // V30: bookplate memory sessions. Only accessible bookmarked words can appear
 // or be reviewed; all due dates and spell-check results are authoritative in D1.
+const smartVocabEnabled=env=>env.SMART_VOCAB_ENABLED==='true'&&
+  env.SMART_VOCAB_SCHEMA_READY==='true';
+const smartVisible=
+  "EXISTS(SELECT 1 FROM smart_vocab_catalog sc "+
+  "JOIN smart_vocab_levels sl ON sl.category_id=sc.category_id "+
+  "JOIN categories cc ON cc.id=sc.category_id "+
+  "JOIN entitlements se ON se.category_id=cc.id AND se.user_id=uw.user_id "+
+  "WHERE sc.word_id=uw.word_id AND sc.reviewed=1 AND sc.frequency_verified=1 "+
+  "AND sl.enabled=1 AND sl.catalog_verified_at IS NOT NULL "+
+  "AND cc.is_visible=1 AND se.revoked_at IS NULL "+
+  "AND NOT EXISTS(SELECT 1 FROM activation_codes av "+
+  "WHERE av.id=se.source_code_id AND av.status='revoked'))";
+const flashVisibleFor=env=>smartVocabEnabled(env)?
+  "("+flashVisible+" OR "+smartVisible+")":flashVisible;
 const flashVisible=
   "EXISTS(SELECT 1 FROM chapter_words cw JOIN chapters ch ON ch.id=cw.chapter_id "+
   "JOIN books b ON b.id=ch.book_id JOIN categories c ON c.id=b.category_id "+
@@ -220,7 +239,7 @@ async function flashcardPool(req,env,userId){
     return err("INVALID_FLASHCARD_SCOPE",400);
   const page=Number(pageString),limit=Number(sizeString),offset=(page-1)*limit;
   const from="FROM user_words uw JOIN words w ON w.id=uw.word_id "+
-    "WHERE uw.user_id=? AND uw.bookmarked=1 AND "+flashVisible+" "+flashScope(scope);
+    "WHERE uw.user_id=? AND uw.bookmarked=1 AND "+flashVisibleFor(env)+" "+flashScope(scope);
   // Deduplicate BEFORE pagination, otherwise ten aliases could consume ten card slots.
   const result=await sql(env,
     "SELECT uw.word_id,uw.status,uw.due_at,w.headword,w.meaning_zh,w.phonetic_uk,"+
@@ -260,7 +279,7 @@ async function flashcardAnswer(req,env,userId){
   }
   const word=await sql(env,"SELECT w.headword,w.meaning_zh,uw.status FROM user_words uw "+
     "JOIN words w ON w.id=uw.word_id WHERE uw.user_id=? AND uw.word_id=? "+
-    "AND uw.bookmarked=1 AND "+flashVisible,userId,wordId).first();
+    "AND uw.bookmarked=1 AND "+flashVisibleFor(env),userId,wordId).first();
   if(!word)return err("FLASHCARD_WORD_UNAVAILABLE",403);
   // Flip cards are honest self-ratings; spelling is ALWAYS evaluated here.
   const correct=mode==="flip"?judgment==="known":
