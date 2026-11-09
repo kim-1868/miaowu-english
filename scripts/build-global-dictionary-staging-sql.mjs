@@ -32,10 +32,11 @@ export function buildGlobalDictionaryImportSQL(index,options={}){
     if(known.has(e.entry_id)||names.has(e.headword.toLowerCase()))throw Error('DUPLICATE_DICTIONARY_ENTRY');
     known.set(e.entry_id,e);names.add(e.headword.toLowerCase());
   }
+  const byHead=new Map(entries.map(e=>[e.headword,e.entry_id]));
   for(const f of forms){
     if(typeof f.form!=='string'||!names.has(String(f.headword||'').toLowerCase())||
       f.reviewed!==false||f.verified!==false)throw Error('INVALID_OR_PREAPPROVED_INFLECTION');
-    const id=entries.find(e=>e.headword===f.headword)?.entry_id;
+    const id=byHead.get(f.headword);
     if(!id)throw Error('INFLECTION_ENTRY_NOT_FOUND');
     const sig=f.form.toLowerCase()+'\0'+id;
     if(pairs.has(sig))throw Error('DUPLICATE_INFLECTION');
@@ -56,7 +57,6 @@ export function buildGlobalDictionaryImportSQL(index,options={}){
     body.push('COMMIT;');
     chunks.push({name:'01-entries-'+String(n+1).padStart(4,'0')+'.sql',sql:body.join('\n')+'\n'});
   }
-  const byHead=new Map(entries.map(e=>[e.headword,e.entry_id]));
   for(const [n,part] of batches(forms,size).entries()){
     const body=['-- Source inflections are unreviewed. No automatic learning match.','BEGIN TRANSACTION;'];
     for(const f of part)
