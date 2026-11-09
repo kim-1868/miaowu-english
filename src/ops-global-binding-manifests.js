@@ -123,15 +123,74 @@ export async function saveStagingBindingManifest(env,payload,actor){
     count:result.total_targets};
 }
 
+
+// A4.1: export only a VERIFIED, previously saved, content-addressed sidecar.
+// The original publication import remains unchanged until its versioned
+// transaction and user migration controls are independently validated.
+export async function exportVerifiedBindingBundle(env,payload,actor){
+  if(env.APP_ENV!=='staging'||env.GLOBAL_DICTIONARY_LOOKUP_ENABLED!=='true'||
+     env.GLOBAL_DICTIONARY_BINDING_SAVE_ENABLED!=='true')
+    throw Error('GLOBAL_BINDING_EXPORT_DISABLED');
+  if(!hasOpsRole(actor,'publisher'))throw Error('OPS_ROLE_FORBIDDEN');
+  if(!REQUEST.test(payload?.requestId||'')||
+     !HEX.test(payload?.expectedPackageSha256||'')||
+     !HEX.test(payload?.expectedBindingSha256||''))
+    throw Error('INVALID_BINDING_EXPORT');
+  const prior=await env.DB.prepare(
+    'SELECT request_id,book_id,category_id,package_sha256,binding_sha256,'+
+    'bindings_json,total_occurrences,actor_id,status '+
+    'FROM global_dictionary_binding_manifests WHERE request_id=?'
+  ).bind(payload.requestId).first();
+  if(!prior||prior.status!=='candidate')throw Error('BINDING_CANDIDATE_NOT_FOUND');
+  if(prior.actor_id!==actor.id)throw Error('BINDING_ACTOR_MISMATCH');
+  // Safe for the first version only: currently published books must use the
+  // existing revision API, never this new-book candidate pathway.
+  const exists=await env.DB.prepare('SELECT id FROM books WHERE id=?')
+    .bind(prior.book_id).first();
+  if(exists)throw Error('EXISTING_BOOK_REQUIRES_VERSIONED_REVISION');
+  const fresh=await previewBindingManifest(env,payload);
+  if(!fresh.ready_to_stage)throw Error('BINDING_REVIEW_REQUIRED');
+  if(fresh.book_id!==prior.book_id||fresh.category_id!==prior.category_id||
+     fresh.total_targets!==prior.total_occurrences||
+     fresh.package_sha256!==prior.package_sha256||
+     fresh.binding_sha256!==prior.binding_sha256||
+     fresh.package_sha256!==payload.expectedPackageSha256||
+     fresh.binding_sha256!==payload.expectedBindingSha256)
+    throw Error('STALE_BINDING_PREVIEW');
+  // The stored JSON is never authoritative. Compare the entire canonical
+  // manifest rather than trusting a matching, potentially compromised hash.
+  let oldBindings;
+  try{oldBindings=JSON.parse(prior.bindings_json)}catch{
+    throw Error('BINDING_STORED_MANIFEST_CORRUPTED');
+  }
+  if(JSON.stringify(oldBindings)!==JSON.stringify(fresh.manifest.bindings))
+    throw Error('BINDING_STORED_MANIFEST_CORRUPTED');
+  const source=payload.package??payload;
+  const envelope={
+    format:'miaowu-global-dictionary-binding-bundle-v1',
+    status:'STAGING_VERIFIED_NOT_IMPORTED',
+    request_id:prior.request_id,
+    package_sha256:prior.package_sha256,
+    binding_sha256:prior.binding_sha256,
+    book_id:prior.book_id,category_id:prior.category_id,
+    original_package:source,
+    dictionary_bindings:fresh.manifest.bindings,
+    publication_ready:false,
+    next_step:'Versioned import adapter must check both hashes again before attaching bindings. This bundle must not bypass the existing chapter/word data protections.'
+  };
+  return envelope;
+}
+
 export async function handleOpsBindingManifest(req,env,path){
   const preview=path==='/api/ops/import/bindings/preview';
   const confirm=path==='/api/ops/import/bindings/confirm';
-  if(!(preview||confirm)||req.method!=='POST'||env.APP_ENV!=='staging')
+  const exportBundle=path==='/api/ops/import/bindings/export';
+  if(!(preview||confirm||exportBundle)||req.method!=='POST'||env.APP_ENV!=='staging')
     return bad('NOT_FOUND',404);
   const auth=await authenticateOperator(req,env);
   if(auth.response)return auth.response;
   if(!hasOpsRole(auth.operator,'publisher'))return bad('OPS_ROLE_FORBIDDEN',403);
-  if(confirm&&env.GLOBAL_DICTIONARY_BINDING_SAVE_ENABLED!=='true')
+  if((confirm||exportBundle)&&env.GLOBAL_DICTIONARY_BINDING_SAVE_ENABLED!=='true')
     return bad('GLOBAL_BINDING_SAVE_DISABLED',403);
   let payload;
   try{
@@ -146,8 +205,9 @@ export async function handleOpsBindingManifest(req,env,path){
       return bad('INVALID_JSON',400);
   }catch{return bad('INVALID_JSON',400)}
   try{
-    return preview?out(await previewBindingManifest(env,payload)):
-      out(await saveStagingBindingManifest(env,payload,auth.operator),201);
+    if(preview)return out(await previewBindingManifest(env,payload));
+    if(exportBundle)return out(await exportVerifiedBindingBundle(env,payload,auth.operator));
+    return out(await saveStagingBindingManifest(env,payload,auth.operator),201);
   }catch(e){
     const name=String(e?.message||'');
     if(name.startsWith('Content validation:')||/^INVALID_(?:NOVEL|DICTIONARY|BINDING|MATCH)|^DECISION_/.test(name))
@@ -160,7 +220,8 @@ export async function handleOpsBindingManifest(req,env,path){
       return bad(name,403);
     if(['BINDING_REVIEW_REQUIRED','STALE_BINDING_PREVIEW',
       'BINDING_REQUEST_ID_CONFLICT','EXISTING_BOOK_REQUIRES_VERSIONED_REVISION',
-      'BINDING_MANIFEST_CONFLICT'].includes(name))return bad(name,409);
+      'BINDING_MANIFEST_CONFLICT','BINDING_CANDIDATE_NOT_FOUND',
+      'BINDING_ACTOR_MISMATCH','BINDING_STORED_MANIFEST_CORRUPTED'].includes(name))return bad(name,409);
     console.error('OPS_BINDING_MANIFEST_SAVE_FAILED');
     return bad('BINDING_MANIFEST_UNAVAILABLE',503);
   }
