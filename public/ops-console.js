@@ -1493,6 +1493,7 @@ async function previewGlobalMatch(){
      }
    }
  }
+}
 
 if($("previewGlobalMatch"))button("previewGlobalMatch",async()=>{
   globalMatchDecisions=[];await previewGlobalMatch();
