@@ -63,6 +63,7 @@ export async function previewBindingManifest(env,payload){
     })),
     ready_to_stage:plan.review_required_occurrences===0&&
       resolved.length>0&&resolved.length===valid.mentionCount,
+    save_available:env.GLOBAL_DICTIONARY_BINDING_SAVE_ENABLED==='true',
     manifest
   };
 }
