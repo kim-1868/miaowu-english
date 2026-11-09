@@ -338,3 +338,39 @@ test('manually reviewed but still placeholder-filled cards cannot be served',asy
     assert.equal(forbidden.status,503);
   }finally{f.sql.close()}
 });
+
+test('fully reviewed unranked CET4 abbreviation counts toward headword coverage and appears last',async()=>{
+  const f=fixture();
+  try{
+    f.sql.prepare("INSERT INTO words(id,headword,part_of_speech,meaning_zh,phonetic_uk,example_en,example_zh) "+
+      "VALUES('s-bc','B.C.','abbr.','公元前','/ˌbiː ˈsiː/',"+
+      "'The temple dates back to 400 B.C.','这座神庙可追溯到公元前400年。')").run();
+    f.sql.prepare("INSERT INTO smart_vocab_catalog(category_id,word_id,frequency_rank,frequency_source,frequency_verified,reviewed) "+
+      "VALUES('cet4','s-bc',NULL,'UNRANKED',0,1)").run();
+    f.sql.prepare("UPDATE smart_vocab_levels SET expected_headwords=4 WHERE category_id='cet4'").run();
+    const result=await f.call('/api/me/smart-vocab?category=cet4');
+    assert.equal(result.status,200);
+    assert.deepEqual(result.data.words.map(w=>w.word_id),['s-clarify','s-retain','s-bc']);
+    const last=result.data.words.at(-1);
+    assert.equal(last.frequency_source,'UNRANKED');
+    assert.equal(last.frequency_rank,null);
+    assert.equal(result.data.frequencyNote.includes('无词频'),true);
+    const answer=await f.call('/api/me/smart-vocab/answer','POST',{
+      category:'cet4',wordId:'s-bc',remembered:true,requestId:randomUUID()});
+    assert.equal(answer.status,200);
+    assert.equal(f.sql.prepare("SELECT status FROM user_words WHERE user_id=? AND word_id='s-bc'")
+      .get(user.id).status,'learning');
+  }finally{f.sql.close()}
+});
+
+test('database forbids fake numeric ranks on unranked supplements',()=>{
+  const f=fixture();
+  try{
+    assert.throws(()=>f.sql.prepare(
+      "INSERT INTO smart_vocab_catalog(category_id,word_id,frequency_rank,frequency_source,frequency_verified,reviewed) "+
+      "VALUES('cet4','s-clarify',999,'UNRANKED',0,1)").run(),/CHECK constraint failed/i);
+    assert.throws(()=>f.sql.prepare(
+      "INSERT INTO smart_vocab_catalog(category_id,word_id,frequency_rank,frequency_source,frequency_verified,reviewed) "+
+      "VALUES('cet4','s-clarify',NULL,'UNRANKED',1,1)").run(),/CHECK constraint failed/i);
+  }finally{f.sql.close()}
+});
