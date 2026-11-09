@@ -4,6 +4,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {randomUUID} from 'node:crypto';
 import {handleSmartVocab} from '../src/smart-vocab-api.js';
+import {handleLearningState} from '../src/reading-library.js';
 
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const user={id:'smart-test-user',username:'learner'};
@@ -63,7 +64,13 @@ function fixture({enabled=true,catalogReady=true}={}){
     const result=await handleSmartVocab(req,env,new URL(req.url).pathname,auth);
     return {status:result.status,data:await result.json()};
   }
-  return {sql,env,call};
+  async function learning(path,method='GET',body=null){
+    const req=new Request('https://example.test'+path,{method,
+      ...(body?{headers:{'content-type':'application/json'},body:JSON.stringify(body)}:{})});
+    const result=await handleLearningState(req,env,new URL(req.url).pathname,user);
+    return {status:result.status,data:await result.json()};
+  }
+  return {sql,env,call,learning};
 }
 
 test('feature is opt-in only; anonymous users do not learn anything',async()=>{
@@ -200,5 +207,54 @@ test('missing table and disabled feature do not touch existing customer routes',
     assert.equal((await f.call('/api/me/smart-vocab?category=cet4')).status,404);
     assert.equal(f.sql.prepare("SELECT COUNT(*) n FROM user_words WHERE user_id=?")
       .get(user.id).n,1);
+  }finally{f.sql.close()}
+});
+
+test('smart bookmarks appear in the existing collection/flashcard pool without enrollment in a novel',async()=>{
+  const f=fixture();
+  try{
+    let res=await f.call('/api/me/smart-vocab/bookmark','POST',{
+      category:'cet4',wordId:'s-clarify',bookmarked:true});
+    assert.equal(res.status,200);
+    const collection=await f.learning('/api/me/wordbook?scope=all&page=1');
+    assert.equal(collection.status,200);
+    assert.ok(collection.data.words.some(w=>w.word_id==='s-clarify'));
+    const flash=await f.learning('/api/me/flashcards?scope=all&size=10&page=1');
+    assert.equal(flash.status,200);
+    assert.ok(flash.data.words.some(w=>w.word_id==='s-clarify'));
+    // Removing a bookmark never deletes the learning row.
+    await f.call('/api/me/smart-vocab/answer','POST',{
+      category:'cet4',wordId:'s-clarify',remembered:false,requestId:randomUUID()});
+    await f.call('/api/me/smart-vocab/bookmark','POST',{
+      category:'cet4',wordId:'s-clarify',bookmarked:false});
+    const saved=f.sql.prepare("SELECT status,bookmarked,due_at FROM user_words "+
+      "WHERE user_id=? AND word_id='s-clarify'").get(user.id);
+    assert.equal(saved.bookmarked,0);
+    assert.equal(saved.status,'learning');
+    assert.ok(saved.due_at);
+  }finally{f.sql.close()}
+});
+
+test('existing novel mastery action synchronizes with reviewed smart alias',async()=>{
+  const f=fixture();
+  try{
+    const changed=await f.learning('/api/me/words/n-promise','PUT',{
+      bookmarked:true,status:'mastered'});
+    assert.equal(changed.status,200);
+    const ids=f.sql.prepare("SELECT word_id,status,bookmarked FROM user_words WHERE user_id=? "+
+      "AND word_id IN ('n-promise','s-promise') ORDER BY word_id").all(user.id);
+    assert.equal(ids.length,2);
+    assert.equal(ids.every(x=>x.status==='mastered'&&x.bookmarked===1),true);
+  }finally{f.sql.close()}
+});
+
+test('feature disabled keeps legacy words view independent from smart catalog',async()=>{
+  const f=fixture();
+  try{
+    f.env.SMART_VOCAB_ENABLED='false';
+    const original=await f.learning('/api/me/wordbook?scope=all&page=1');
+    assert.equal(original.status,200);
+    assert.equal(original.data.words.length,0);
+    assert.equal((await f.call('/api/me/smart-vocab?category=cet4')).status,404);
   }finally{f.sql.close()}
 });
