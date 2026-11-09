@@ -12,6 +12,7 @@ import {handleOpsVoucher} from "./ops-vouchers.js";
 import { handleOpsClaims } from "./ops-claims.js";
 import { handlePublicClaim } from "./self-service-claims.js";
 import { handleOpsImport } from "./ops-import.js";
+import {handleOpsImportPreflight} from "./ops-import-preflight.js";
 import { handleOpsDraftRevision } from "./ops-draft-revision.js";
 import { handleOpsLiveEdit } from "./ops-live-edit.js";
 import { handleBookCover } from "./book-covers.js";
@@ -659,6 +660,7 @@ async function api(req, env) {
     if(path==="/api/ops/customers/query")return handleOpsCustomers(req,env,path);
     if(path==="/api/ops/customers/voucher-action")return handleOpsVoucher(req,env,path);
     if(path.startsWith("/api/ops/claims/"))return handleOpsClaims(req,env,path);
+    if(path==="/api/ops/import/preflight")return handleOpsImportPreflight(req,env,path);
     if(path==="/api/ops/import"||path==="/api/ops/lexicon")return handleOpsImport(req,env,path);
     if(path==="/api/ops/import/revise")return handleOpsDraftRevision(req,env,path);
     if(/^\/api\/ops\/books\/[a-z][a-z0-9_-]{2,79}\/live-editor(?:\/|$)/.test(path))
