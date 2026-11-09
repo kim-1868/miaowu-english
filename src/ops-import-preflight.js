@@ -6,6 +6,7 @@ import {buildGlobalDictionaryIndex,preflightNovelDictionaryMatches}
   from './global-dictionary-matcher.js';
 import {globalDictionaryTablesReady,loadGlobalDictionaryCandidateIndex}
   from './global-dictionary-db.js';
+import {planNovelDictionaryBindings} from './global-dictionary-bindings.js';
 
 const H={'content-type':'application/json; charset=utf-8',
   'cache-control':'private, no-store','x-content-type-options':'nosniff'};
@@ -27,6 +28,7 @@ export async function inspectStagingNovelMatch(env,input){
     const sourced=await loadGlobalDictionaryCandidateIndex(env.DB,keys);
     const analysis=preflightNovelDictionaryMatches(input,sourced.index);
     return {...analysis,
+      binding_proposal:planNovelDictionaryBindings(input,sourced.index),
       dictionary_status:'GLOBAL_DICTIONARY_STAGING_DRAFT',
       dictionary_index_ready:true,
       source_names:sourced.sourceNames,
@@ -57,6 +59,7 @@ export async function inspectStagingNovelMatch(env,input){
   const analysis=preflightNovelDictionaryMatches(input,index);
   return {
     ...analysis,
+    binding_proposal:planNovelDictionaryBindings(input,index),
     dictionary_status:'LEGACY_WORD_TABLE_ONLY_NOT_GLOBAL_INDEX',
     dictionary_index_ready:false,ready_to_publish:false,
     matched_source:'Existing words table; exact normalized spelling only',
