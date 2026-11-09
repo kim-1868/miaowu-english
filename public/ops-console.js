@@ -5,7 +5,7 @@
 const $=id=>document.getElementById(id);
 let key="",chosen=null,readiness=null,identity=null,busy=false;
 let liveEditorState=null,liveRevision=null,liveHistory=[];
-let globalMatchDecisions=[],globalManifestPreview=null;
+let globalMatchDecisions=[],globalManifestPreview=null,globalSavedManifestRequestId=null;
 let customerAdmin=null,claimAdmin=null,updatesAdmin=null;
 const byId=(tag,text,className)=>{
   const el=document.createElement(tag);
@@ -67,6 +67,13 @@ function syncButtons(){
       !globalManifestPreview?.save_available;
     saveBindings.disabled=!connected()||!pendingNovel||
       !globalManifestPreview?.ready_to_stage;
+  }
+  const downloadBindings=$("downloadGlobalBindingBundle");
+  if(downloadBindings){
+    downloadBindings.hidden=identity?.environment!=="staging"||
+      !globalSavedManifestRequestId;
+    downloadBindings.disabled=!connected()||!pendingNovel||
+      !globalSavedManifestRequestId||!globalManifestPreview?.ready_to_stage;
   }
   $("importNovel").disabled=!(connected()&&pendingNovel&&$("uploadCoverWithNovel").files?.length&&
     pendingNovel.words?.every(w=>w.phoneticUk&&w.phoneticUs&&w.partOfSpeech&&w.meaningZh&&w.exampleEn&&w.exampleZh));
@@ -1278,7 +1285,7 @@ async function renderImportTagSuggestions(pkg){
 
 const uploadMsg=message=>{$("uploadStatus").textContent=message;};
 function resetNovel(){
- globalMatchDecisions=[];globalManifestPreview=null;
+ globalMatchDecisions=[];globalManifestPreview=null;globalSavedManifestRequestId=null;
  const reviewChoices=$("globalMatchChoices");
  if(reviewChoices){reviewChoices.hidden=true;reviewChoices.replaceChildren();}
  pendingNovel=null;$("importNovel").disabled=true;$("reviseNovel").disabled=true;
@@ -1412,7 +1419,7 @@ button("checkNovel",async()=>{
  resetNovel();await examineNovel();
 });
 async function previewGlobalMatch(){
- globalManifestPreview=null;
+ globalManifestPreview=null;globalSavedManifestRequestId=null;
  if(!pendingNovel||identity?.environment!=="staging")
    throw Error("请在预览站先识别小说，再检查统一词典匹配。");
  const result=await api("/api/ops/import/preflight","POST",{
@@ -1529,14 +1536,40 @@ if($("stageGlobalBindings"))button("stageGlobalBindings",async()=>{
    throw Error("此阶段尚不能保存词典关联。请先完成匹配预检。");
  if(!window.confirm("确认保存当前审核通过的词典关联候选？"+
     "只会在预览站记录候选，不会上传或上架小说，也不会修改学习状态。"))return;
+ const newRequestId=requestId();
  const data=await api("/api/ops/import/bindings/confirm","POST",{
    package:pendingNovel,decisions:globalMatchDecisions,
-   requestId:requestId(),confirmSave:true,
+   requestId:newRequestId,confirmSave:true,
    expectedPackageSha256:globalManifestPreview.package_sha256,
    expectedBindingSha256:globalManifestPreview.binding_sha256
  });
+ globalSavedManifestRequestId=newRequestId;
+ syncButtons();
  uploadMsg("词典关联候选已保存到预览站（"+(data.count||0)+
    "处目标词）；小说尚未上架，用户状态未变。");
+});
+if($("downloadGlobalBindingBundle"))button("downloadGlobalBindingBundle",async()=>{
+ if(identity?.environment!=="staging"||!pendingNovel||
+    !globalSavedManifestRequestId||!globalManifestPreview?.ready_to_stage)
+   throw Error("请先完成词卡审核并在预览站保存关联候选。");
+ const packageData=await api("/api/ops/import/bindings/export","POST",{
+   package:pendingNovel,decisions:globalMatchDecisions,
+   requestId:globalSavedManifestRequestId,
+   expectedPackageSha256:globalManifestPreview.package_sha256,
+   expectedBindingSha256:globalManifestPreview.binding_sha256
+ });
+ if(packageData.status!=="STAGING_VERIFIED_NOT_IMPORTED"||
+    packageData.publication_ready!==false)
+   throw Error("返回的候选关联包状态不正确，已取消下载。");
+ const filename=(pendingNovel.book?.id||"novel")+"-dictionary-bindings.json";
+ const blob=new Blob([JSON.stringify(packageData,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob);
+ try{
+   const anchor=document.createElement("a");
+   anchor.href=url;anchor.download=filename;
+   document.body.append(anchor);anchor.click();anchor.remove();
+ }finally{setTimeout(()=>URL.revokeObjectURL(url),1000);}
+ uploadMsg("已生成词典关联候选 JSON（仅供审核；尚未上架或更改用户数据）。");
 });
 $("uploadCoverWithNovel").addEventListener("change",syncButtons);
 button("importNovel",async()=>{
