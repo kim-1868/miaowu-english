@@ -208,9 +208,21 @@ async function submit(req,env,userId,kind){
     nextReviewDays:days});
 }
 
+async function status(env,userId){
+  const entries=[];
+  for(const slug of SMART_EXAMS){
+    const c=await activeCategory(env,userId,slug);
+    if(!c)continue;
+    entries.push({slug,available:await catalogReady(env,c.id)});
+  }
+  return reply({enabled:entries.some(e=>e.available),categories:entries});
+}
+
 export async function handleSmartVocab(req,env,path,user){
   if(!isEnabled(env))return error('NOT_FOUND',404);
   if(!user)return error('LOGIN_REQUIRED',401);
+  const isStatus=path==='/api/me/smart-vocab/status';
+  if(isStatus&&req.method==='GET')return status(env,user.id);
   const isList=path==='/api/me/smart-vocab';
   const isAnswer=path==='/api/me/smart-vocab/answer';
   const isBookmark=path==='/api/me/smart-vocab/bookmark';
