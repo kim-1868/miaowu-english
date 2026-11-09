@@ -11,7 +11,10 @@ const HEAD_BRANCH='release/novel-revision-on-current-prod-20261109';
 const BASE_SHA='7b214633076907e2df6d34adcd95aaeed32aee21';
 const ROOT=resolve(import.meta.dirname,'..');
 process.chdir(ROOT);
-const cmd=(name,args,opts={})=>execFileSync(name,args,{encoding:'utf8',stdio:['ignore','pipe','pipe'],maxBuffer:8_000_000,...opts}).trim();
+const cmd=(name,args,opts={})=>{
+  const output=execFileSync(name,args,{encoding:'utf8',stdio:['ignore','pipe','pipe'],maxBuffer:8_000_000,...opts});
+  return typeof output==='string'?output.trim():'';
+};
 function run(name,args,opts={}){
   try{return cmd(name,args,opts)}
   catch(e){
@@ -60,10 +63,10 @@ async function main(){
     const host='https://miaowu-english-pages.pages.dev';
     for(const file of ['app.js','ops-console.js','ops-updates.js','site-updates.js',
       'v11-responsive.css','v11-bookshelf.css']){
-      const baseline=run('git',['show',BASE_SHA+':public/'+file]);
+      const baseline=execFileSync('git',['show',BASE_SHA+':public/'+file]);
       const res=await fetch(host+'/'+file+'?novel_owner_baseline='+currentSha,{cache:'no-store'});
       assert.equal(res.status,200,'Cannot inspect live '+file);
-      const remote=await res.text();
+      const remote=Buffer.from(await res.arrayBuffer());
       assert.equal(sha(remote),sha(baseline),'Live source drift: '+file);
       console.log('  match',file);
     }
@@ -100,11 +103,19 @@ async function main(){
       'Explicit owner confirmation missing. Set MW_NOVEL_PROD_APPROVED to DEPLOY_GUARDED_NOVEL_EDITOR.');
     console.log('STEP 6/6: deploy WITHOUT schema mutation, then smoke-check');
     run('npx',['wrangler','deploy','--keep-vars','--config',temp],{stdio:'inherit'});
-    const live=await fetch(host+'/ops-console.js?novel_owner_post='+currentSha,{cache:'no-store'});
-    assert.equal(live.status,200);assert.match(await live.text(),/reviseExistingDraft/);
-    const safe=await fetch(host+'/api/ops/me',{cache:'no-store'});
-    assert.equal(safe.status,401,'Security smoke failed: manual Wrangler rollback required');
-    console.log('PRODUCTION_GUARDED_NOVEL_EDITOR_DEPLOYED__NO_D1_DATA_WRITES');
+    try{
+      const live=await fetch(host+'/ops-console.js?novel_owner_post='+currentSha,{cache:'no-store'});
+      assert.equal(live.status,200);assert.match(await live.text(),/reviseExistingDraft/);
+      const safe=await fetch(host+'/api/ops/me',{cache:'no-store'});
+      assert.equal(safe.status,401,'Publisher auth gateway must remain private');
+      console.log('PRODUCTION_GUARDED_NOVEL_EDITOR_DEPLOYED__NO_D1_DATA_WRITES');
+    }catch(e){
+      console.error('DEPLOY_SMOKE_FAILED__ATTEMPTING_WORKER_ROLLBACK');
+      try{run('npx',['wrangler','rollback','--name','miaowu-english-production',
+        '--config',temp,'--message','Guarded novel editor smoke failed'],{stdio:'inherit'})}
+      catch(error){console.error('MANUAL_WORKER_ROLLBACK_REQUIRED',error.message)}
+      throw e;
+    }
   }finally{
     try{fs.unlinkSync(temp)}catch{}
   }
