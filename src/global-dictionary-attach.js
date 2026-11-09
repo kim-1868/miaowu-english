@@ -161,3 +161,53 @@ export async function attachDictionaryBindingsToStagingDraft(env,payload,actor){
    bookId:valid.book.id,bindings:attach.length,published:false,
    readerSwitched:false,userDataChanged:false};
 }
+
+
+export async function handleOpsDictionaryAttach(req,env,path){
+ if(path!=='/api/ops/import/bindings/attach'||req.method!=='POST'||
+    env.APP_ENV!=='staging')return fail('NOT_FOUND',404);
+ const auth=await authenticateOperator(req,env);
+ if(auth.response)return auth.response;
+ if(!hasOpsRole(auth.operator,'publisher'))return fail('OPS_ROLE_FORBIDDEN',403);
+ if(env.GLOBAL_DICTIONARY_BINDING_ATTACH_ENABLED!=='true')
+   return fail('GLOBAL_BINDING_ATTACH_DISABLED',403);
+ let payload;
+ try{
+   if(!/^application\/json(?:;|$)/i.test(req.headers.get('content-type')||''))
+     return fail('INVALID_CONTENT_TYPE',400);
+   if(Number(req.headers.get('content-length')||0)>MAX_BYTES)
+     return fail('PACKAGE_TOO_LARGE',413);
+   const raw=await req.text();
+   if(enc.encode(raw).length>MAX_BYTES)return fail('PACKAGE_TOO_LARGE',413);
+   payload=JSON.parse(raw);
+   if(!payload||typeof payload!=='object'||Array.isArray(payload))
+     return fail('INVALID_JSON',400);
+ }catch{return fail('INVALID_JSON',400)}
+ try{
+  return out(await attachDictionaryBindingsToStagingDraft(env,payload,auth.operator));
+ }catch(e){
+  const code=String(e?.message||'');
+  if(code.startsWith('Content validation:')||/^INVALID_|^DECISION_/.test(code))
+    return fail('INVALID_BINDING_ATTACH_INPUT',400);
+  if(code==='OPS_ROLE_FORBIDDEN'||code==='GLOBAL_BINDING_ATTACH_DISABLED')
+    return fail(code,403);
+  if(code==='GLOBAL_DICTIONARY_INDEX_NOT_ENABLED'||
+     code==='GLOBAL_DICTIONARY_INDEX_NOT_READY'||
+     code==='DICTIONARY_SCHEMA_REQUIRED')
+    return fail(code,503);
+  if(['BINDING_CANDIDATE_NOT_FOUND','BINDING_ACTOR_MISMATCH',
+      'BINDING_REVIEW_REQUIRED','STALE_BINDING_PREVIEW',
+      'BINDING_STORED_MANIFEST_CORRUPTED','IMPORT_BOOK_DRAFT_FIRST',
+      'BINDING_ATTACH_REQUIRES_DRAFT','UPLOADED_NOVEL_METADATA_DRIFT',
+      'UPLOADED_NOVEL_CHAPTER_COUNT_DRIFT',
+      'UPLOADED_NOVEL_CHAPTER_DUPLICATE','UPLOADED_NOVEL_CHAPTER_DRIFT',
+      'UPLOADED_NOVEL_CONTENT_INVALID','UPLOADED_NOVEL_CONTENT_DRIFT',
+      'UPLOADED_NOVEL_WORD_ANCHOR_COUNT_DRIFT',
+      'UPLOADED_NOVEL_WORD_ANCHOR_DRIFT',
+      'DUPLICATE_OR_MISSING_DICTIONARY_BINDING',
+      'DICTIONARY_BOOK_BINDING_CONFLICT'].includes(code))
+    return fail(code,409);
+  console.error('OPS_DICTIONARY_DRAFT_ATTACH_FAILED');
+  return fail('DICTIONARY_DRAFT_ATTACH_UNAVAILABLE',503);
+ }
+}
