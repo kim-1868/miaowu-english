@@ -90,7 +90,10 @@ jobs:
             curl -fsSL --retry 2 --max-time 25 "$ORIGIN/$file?novel_safe_probe=$GITHUB_SHA" -o "/tmp/novel-live-$file"
             cmp -s "/tmp/novel-base-$file" "/tmp/novel-live-$file" || { echo "LIVE_SOURCE_MISMATCH_ABORT_$file";exit 1; }
           done
-          test "$(curl -sS --max-time 20 -o /tmp/novel-unauth-ops -w '%{http_code}' "$ORIGIN/api/ops/me")" = 401
+          OPS_HTTP=$(curl -sS --max-time 20 -o /tmp/novel-unauth-ops -w '%{http_code}' "$ORIGIN/api/ops/me")
+          echo "UNAUTHENTICATED_OPS_HTTP=$OPS_HTTP"
+          test "$OPS_HTTP" = 401
+          echo "OPS_AUTH_OK_CHECKING_PUBLIC_EDGE_PROBE"
           curl -fsSL --max-time 25 "$ORIGIN/__miaowu_prod_edge_probe" -o /tmp/novel-edge.json
           node --input-type=module <<'NODE'
           import fs from 'node:fs';import assert from 'node:assert/strict';
@@ -98,6 +101,7 @@ jobs:
           assert.equal(x.ok,true);assert.equal(x.productionBindingPresent,true);
           assert.equal(x.dataAccess,false);
           NODE
+          echo "PUBLIC_EDGE_PROBE_OK_CHECKING_PROD_D1_READONLY_SCHEMA"
           npx wrangler d1 execute miaowu-english-prod --remote --config deploy/.novel-revision-approved.jsonc --json --command "SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ops_live_book_versions') AS snapshots,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ops_book_content_versions') AS content_versions,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ops_audit_events') AS audit_events" >/tmp/novel-schema.json
           node --input-type=module <<'NODE'
           import fs from 'node:fs';import assert from 'node:assert/strict';
