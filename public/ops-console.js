@@ -1380,7 +1380,16 @@ async function examineNovel(){
  if(report.anchors===0)throw Error("没有可点击的英文词汇标注，请检查词库匹配");
  if(JSON.stringify(pkg).length>1_500_000)throw Error("内容包过大，请缩短单次上传文件");
  if(report.metadataIncomplete.length)uploadMsg("预检发现"+report.metadataIncomplete.length+"个词卡缺少音标/例句。可以导入草稿，但必须补齐后才能正式上架。");
- else uploadMsg("文件识别成功。请检查下面的预览，选择封面，然后点击「确认上传并上架」。");
+ else{
+  const existing=catalogBooks.find(x=>x.id===pkg.book.id);
+  const sameTitle=catalogBooks.find(x=>x.title===pkg.book.title&&
+    x.category_id===pkg.book.category);
+  if(existing?.status==="draft")uploadMsg("识别为已存在的未发布原书《"+
+    existing.title+"》。确认上传时将进入有备份的版本修订流程，不会重复创建新书。");
+  else if(existing?.status==="published")uploadMsg("检测到此书仍已发布。请在④选择原书，使用已发布小说修订入口。");
+  else if(sameTitle)uploadMsg("发现同名小说，但文件中的书籍 ID 不匹配。请核对原书编号，勿重复新建。");
+  else uploadMsg("文件识别成功。请检查下面的预览，选择封面，然后点击「确认上传并上架」。");
+ }
  pendingNovel=pkg;
  await renderImportTagSuggestions(pkg);
  syncButtons();
