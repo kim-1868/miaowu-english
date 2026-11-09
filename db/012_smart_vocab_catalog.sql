@@ -9,9 +9,17 @@ CREATE TABLE IF NOT EXISTS smart_vocab_levels (
 CREATE TABLE IF NOT EXISTS smart_vocab_catalog (
   category_id TEXT NOT NULL REFERENCES categories(id),
   word_id TEXT NOT NULL REFERENCES words(id),
-  frequency_rank INTEGER NOT NULL CHECK(frequency_rank > 0),
-  frequency_source TEXT NOT NULL CHECK(frequency_source IN ('COCA','BNC','POSTGRAD_EXAM')),
+  -- Some ECDICT CET4 headwords have neither a COCA nor a BNC rank.
+  -- Preserve truthful full-coverage teaching by allowing a reviewed,
+  -- explicitly unranked supplementary card. Never invent a frequency.
+  frequency_rank INTEGER CHECK(frequency_rank > 0),
+  frequency_source TEXT NOT NULL CHECK(frequency_source IN ('COCA','BNC','POSTGRAD_EXAM','UNRANKED')),
   frequency_verified INTEGER NOT NULL DEFAULT 1 CHECK(frequency_verified IN (0,1)),
+  CHECK(
+    (frequency_source='UNRANKED' AND frequency_rank IS NULL AND frequency_verified=0)
+    OR
+    (frequency_source!='UNRANKED' AND frequency_rank IS NOT NULL AND frequency_verified=1)
+  ),
   reviewed INTEGER NOT NULL DEFAULT 0 CHECK(reviewed IN (0,1)),
   PRIMARY KEY(category_id,word_id)
 );
