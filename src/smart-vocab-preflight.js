@@ -16,15 +16,21 @@ function normalizedWord(row){
   const category=String(row.category_slug||'').trim();
   const rank=Number(row.frequency_rank);
   const source=String(row.frequency_source||'').trim().toUpperCase();
+  const ipaUk=String(row.phonetic_uk||'').trim();
+  const ipaUs=String(row.phonetic_us||'').trim();
+  const exampleEn=String(row.example_en||'').trim();
+  const exampleZh=String(row.example_zh||'').trim();
+  // A card with no pronunciation or example is not suitable for a paid lesson.
   // Never make up a ranking, invent a meaning, or infer a product category.
   if(!/^[a-zA-Z0-9_-]{1,100}$/.test(id)||!headword||!meaning||
      !SMART_EXAMS.includes(category)||!validRank(rank)||!RANK_SOURCES.has(source)||
-     (source==='POSTGRAD_EXAM'&&row.frequency_available!==true))return null;
+     (source==='POSTGRAD_EXAM'&&row.frequency_available!==true)||
+     (!ipaUk&&!ipaUs)||!exampleEn||!exampleZh)return null;
   return {
     word_id:id,headword,part_of_speech:pos,meaning_zh:meaning,
     category_slug:category,frequency_rank:rank,frequency_source:source,
-    phonetic_uk:String(row.phonetic_uk||''),phonetic_us:String(row.phonetic_us||''),
-    example_en:String(row.example_en||''),example_zh:String(row.example_zh||'')
+    phonetic_uk:ipaUk,phonetic_us:ipaUs,
+    example_en:exampleEn,example_zh:exampleZh
   };
 }
 
