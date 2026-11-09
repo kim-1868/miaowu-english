@@ -47,7 +47,8 @@ const checkChanged=()=>({
  params:[] // filled per target book
 });
 export function planDraftRevision({validated,originalBook,originalChapters,
- originalWords,externalWordIds=[],expectedVersion,requestId,actorId,allowSafeReflow=false}){
+ originalWords,externalWordIds=[],expectedVersion,requestId,actorId,allowSafeReflow=false,
+ withdrawnHistory=false,previousAnchors=[],previousDescription=""}){
  const {book,chapters,words,mentionCount}=validated;
  if(!originalBook||originalBook.status!=="draft"||originalBook.id!==book.id||
     originalBook.category_id!==book.category||originalBook.title!==book.title)
@@ -72,8 +73,39 @@ export function planDraftRevision({validated,originalBook,originalChapters,
   if(!allowSafeReflow)preserveOriginalAnchors(old,ch);
  }
  const prevWords=new Map(originalWords.map(w=>[w.id,w]));
+ // A withdrawn book was published before. Historical word identities are immutable.
+ if(withdrawnHistory){
+  if(!allowSafeReflow||originalChapters.some(ch=>ch.published_at!=null))
+   throw Error("WITHDRAWN_REVISION_NOT_SAFE");
+  for(const w of words){
+   const prev=prevWords.get(w.id);
+   if(prev){const next=wordFields(w);
+    if(prev.headword!==next.headword||
+       ["phonetic_uk","phonetic_us","part_of_speech","meaning_zh","example_en",
+        "example_zh","collocations_json"].some(k=>normalized(prev[k])!==normalized(next[k])))
+      throw Error("HISTORICAL_WORD_CARD_CHANGED");
+   }
+  }
+ }
  const globalOthers=new Set(externalWordIds);
  const statements=[];
+ if(withdrawnHistory){
+  const snapshot=JSON.stringify({book:{id:originalBook.id,category_id:originalBook.category_id,
+   title:originalBook.title,description:previousDescription},chapters:originalChapters,
+   anchors:previousAnchors});
+  if(new TextEncoder().encode(snapshot).length>1_700_000)
+   throw Error("WITHDRAWN_BACKUP_TOO_LARGE");
+  statements.push({sql:"INSERT INTO ops_live_book_versions"+
+   "(id,book_id,actor_id,action,request_id,base_version,snapshot_json,summary_json) "+
+   "SELECT ?,b.id,?,'withdrawn_rewrite',?,v.version,?,? FROM books b "+
+   "JOIN ops_book_content_versions v ON v.book_id=b.id "+
+   "WHERE b.id=? AND b.status='draft' AND v.version=? "+
+   "AND EXISTS(SELECT 1 FROM ops_audit_events a WHERE a.resource_type='book' "+
+   "AND a.resource_id=b.id AND a.event_type='book.withdraw')",
+   params:[crypto.randomUUID(),actorId,requestId,snapshot,
+     JSON.stringify({chapters:chapters.length,newAnchors:mentionCount}),book.id,expectedVersion]});
+  statements.push({...checkChanged(),params:[book.id,book.category,book.title]});
+ }
  const guard="INSERT INTO books(id,category_id,title) SELECT ?,?,? WHERE "+
   "NOT EXISTS(SELECT 1 FROM ops_book_content_versions WHERE book_id=? AND version=?)";
  statements.push({sql:guard,params:[book.id,book.category,book.title,book.id,expectedVersion]});
@@ -143,7 +175,7 @@ export function planDraftRevision({validated,originalBook,originalChapters,
  if(statements.length>1600)throw Error("TOO_MANY_REVISION_STATEMENTS");
  return {statements,summary:{bookId:book.id,chapters:chapters.length,
   newAnchors:inserted,wordCards:words.length,remainsUnpublished:true,
-  approvalInvalidated:true}};
+  approvalInvalidated:true,withdrawnHistory}};
 }
 async function readBody(req){
  if(!/^application\/json(?:;|$)/i.test(req.headers.get("content-type")||""))
@@ -179,7 +211,7 @@ export async function handleOpsDraftRevision(req,env,path){
  // Only an unpublished, never-studied draft may reflow paragraph positions.
  // Keep the original per-paragraph anchor rules whenever publication or
  // study history exists. If the history check is unavailable, fail closed.
- let allowSafeReflow=false;
+ let allowSafeReflow=false,withdrawnHistory=false;
  try{
   const risk=await stmt(env.DB,
    "SELECT "+ 
@@ -188,16 +220,32 @@ export async function handleOpsDraftRevision(req,env,path){
    "(SELECT COUNT(*) FROM review_events WHERE chapter_id IN "+
    "(SELECT id FROM chapters WHERE book_id=?)) AS review_count,"+
    "(SELECT COUNT(*) FROM ops_audit_events WHERE resource_type='book' "+
-   "AND resource_id=? AND event_type='book.publish') AS publish_count",
-   id,id,id).first();
-  allowSafeReflow=!!risk&&Number(risk.read_count)===0&&
-   Number(risk.review_count)===0&&Number(risk.publish_count)===0;
+   "AND resource_id=? AND event_type='book.publish') AS publish_count,"+
+   "(SELECT COUNT(*) FROM ops_audit_events WHERE resource_type='book' "+
+   "AND resource_id=? AND event_type='book.withdraw') AS withdraw_count",
+   id,id,id,id).first();
+  withdrawnHistory=Number(risk?.publish_count)>0||Number(risk?.withdraw_count)>0;
+  allowSafeReflow=!!risk&&(
+    (!withdrawnHistory&&Number(risk.read_count)===0&&Number(risk.review_count)===0)||
+    (withdrawnHistory&&Number(risk.withdraw_count)>0&&
+      input.confirmWithdrawnRewrite===true));
+  if(withdrawnHistory&&!allowSafeReflow)
+   return reject("WITHDRAWN_REWRITE_CONFIRMATION_REQUIRED",409);
  }catch{
   return reject("DRAFT_REFLOW_HISTORY_CHECK_UNAVAILABLE",503);
  }
  const wordIds=valid.words.map(w=>w.id);
  const originalWords=[];
  const externalIds=[];
+ const previousAnchors=[];
+ let previousDescription="";
+ if(withdrawnHistory){
+  const old=await stmt(env.DB,"SELECT description FROM books WHERE id=?",id).first();
+  previousDescription=old?.description||"";
+  const anchors=await stmt(env.DB,"SELECT cw.chapter_id,cw.word_id,cw.context_sentence,cw.context_anchor "+
+   "FROM chapter_words cw JOIN chapters ch ON ch.id=cw.chapter_id WHERE ch.book_id=?",id).all();
+  previousAnchors.push(...(anchors.results||[]));
+ }
  for(let j=0;j<wordIds.length;j+=65){
   const ids=wordIds.slice(j,j+65);
   const rows=await stmt(env.DB,"SELECT * FROM words WHERE id IN ("+
@@ -212,11 +260,14 @@ export async function handleOpsDraftRevision(req,env,path){
  try{plan=planDraftRevision({validated:valid,originalBook:status,
   originalChapters:originals.results||[],originalWords,
   externalWordIds:externalIds,expectedVersion:version.version,
-  requestId:input.requestId,actorId:auth.operator.id,allowSafeReflow})}
+  requestId:input.requestId,actorId:auth.operator.id,allowSafeReflow,
+  withdrawnHistory,previousAnchors,previousDescription})}
  catch(e){
   const known=new Set(["SHARED_WORD_CARD_CONFLICT","BOOK_NOT_SAME_DRAFT",
    "CHAPTERS_NOT_SAME_UNPUBLISHED_SET","CHAPTER_ID_OR_ORDER_CHANGED",
-   "PARAGRAPH_SHAPE_CHANGED","ORIGINAL_STUDY_ANCHOR_REMOVED"]);
+   "PARAGRAPH_SHAPE_CHANGED","ORIGINAL_STUDY_ANCHOR_REMOVED",
+   "HISTORICAL_WORD_CARD_CHANGED","WITHDRAWN_REVISION_NOT_SAFE",
+   "WITHDRAWN_BACKUP_TOO_LARGE"]);
   return reject(known.has(e.message)?e.message:"REVISED_PACKAGE_INCOMPATIBLE",409);
  }
  try{await env.DB.batch(plan.statements.map(x=>stmt(env.DB,x.sql,...x.params)))}
