@@ -209,8 +209,10 @@ async function submit(req,env,userId,kind){
       "ON CONFLICT(user_id,word_id) DO UPDATE SET "+
       "status=CASE WHEN user_words.status='mastered' THEN 'mastered' ELSE 'learning' END,"+
       "due_at=CASE WHEN user_words.status='mastered' THEN NULL "+
+      "WHEN ?=1 AND user_words.due_at IS NOT NULL "+
+      "AND user_words.due_at>excluded.due_at THEN user_words.due_at "+
       "ELSE excluded.due_at END,last_seen_at=CURRENT_TIMESTAMP",
-      userId,id,days))
+      userId,id,days,data.remembered?1:0))
   ];
   try{await env.DB.batch(queries)}
   catch(cause){
