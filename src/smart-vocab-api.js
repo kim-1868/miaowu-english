@@ -91,6 +91,9 @@ async function list(env,userId,category){
     "FROM smart_vocab_catalog cv "+
     "JOIN words w ON w.id=cv.word_id JOIN categories c ON c.id=cv.category_id "+
     "WHERE cv.category_id=? AND cv.reviewed=1 AND cv.frequency_verified=1 "+
+    "AND TRIM(w.headword)!='' AND TRIM(COALESCE(w.meaning_zh,''))!='' "+
+    "AND (TRIM(COALESCE(w.phonetic_uk,''))!='' OR TRIM(COALESCE(w.phonetic_us,''))!='') "+
+    "AND TRIM(COALESCE(w.example_en,''))!='' AND TRIM(COALESCE(w.example_zh,''))!='' "+
     "ORDER BY cv.frequency_rank,cv.word_id LIMIT 15000",scope.id).all();
   const all=records.results||[];
   const rows=await studyRows(env,userId),state=new Map();
