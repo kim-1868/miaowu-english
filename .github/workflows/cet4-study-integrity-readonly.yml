@@ -1,0 +1,105 @@
+name: CET4 live study integrity audit (read-only, aggregate only)
+on:
+  push:
+    branches: [audit/cet4-live-vocabulary-readonly-20261105]
+    paths: [.github/workflows/cet4-study-integrity-readonly.yml]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CF_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_API_TOKEN }}
+      CF_D1_DATABASE: 649c71b3-340c-49bf-b806-3d39256851d3
+    steps:
+      - name: Audit aggregate canonical study state without printing user data
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os, json, urllib.request, unicodedata, collections
+          account=os.environ.get('CF_ACCOUNT','')
+          token=os.environ.get('CF_D1_TOKEN','')
+          db=os.environ['CF_D1_DATABASE']
+          if not account or not token: raise SystemExit('CET4_AUDIT_CREDENTIALS_MISSING')
+          endpoint=f'https://api.cloudflare.com/client/v4/accounts/{account}/d1/database/{db}/query'
+          def query(sql):
+              req=urllib.request.Request(endpoint,method='POST',
+                  data=json.dumps({'sql':sql}).encode('utf8'),
+                  headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'})
+              with urllib.request.urlopen(req,timeout=90) as response: data=json.load(response)
+              if not data.get('success') or not data.get('result') or not data['result'][0].get('success'):
+                  raise RuntimeError('D1_READONLY_QUERY_FAILED')
+              return data['result'][0]['results']
+          # No raw user identifiers or learning rows are ever logged.
+          words=query("""
+              SELECT DISTINCT w.id,w.headword,w.part_of_speech,w.meaning_zh
+              FROM words w JOIN chapter_words cw ON cw.word_id=w.id
+              JOIN chapters ch ON ch.id=cw.chapter_id JOIN books b ON b.id=ch.book_id
+              JOIN categories c ON c.id=b.category_id
+              WHERE c.slug='cet4' AND c.is_visible=1 AND b.status='published'
+                AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP
+          """)
+          def norm(v):
+              return unicodedata.normalize('NFKC',str(v or '')).strip().lower()
+          def key(w):
+              lemma=''.join(norm(w.get('headword')).split())
+              pos=''.join(norm(w.get('part_of_speech')).replace('.','').replace('。','').replace('／','/').split())
+              meaning=''.join(norm(w.get('meaning_zh')).split('；')[0].split(';')[0].split())
+              return 'sense:'+lemma+'|'+pos+'|'+meaning if lemma and pos and meaning else 'legacy:'+str(w.get('word_id') or w.get('id'))
+          groups=collections.defaultdict(set)
+          for w in words:groups[key(w)].add(w['id'])
+          print('CET4_CANONICAL_AGGREGATE='+json.dumps({
+            'published_raw_word_ids':len(words),
+            'derived_study_keys':len(groups),
+            'multi_id_study_keys':sum(len(v)>1 for v in groups.values()),
+            'largest_alias_group':max(map(len,groups.values()),default=0)
+          },sort_keys=True))
+          tables={x['name'] for x in query("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('user_words','user_study_schedules','review_events','reviewed_sense_aliases')")}
+          print('CET4_STUDY_TABLES='+json.dumps({k:(k in tables) for k in ['user_words','user_study_schedules','review_events','reviewed_sense_aliases']},sort_keys=True))
+          if 'user_words' not in tables:raise RuntimeError('USER_WORDS_TABLE_MISSING')
+          states=query("""
+              SELECT uw.user_id,uw.word_id,uw.status,uw.bookmarked,uw.due_at,
+                     w.headword,w.part_of_speech,w.meaning_zh
+              FROM user_words uw JOIN words w ON w.id=uw.word_id
+              WHERE EXISTS (
+                SELECT 1 FROM chapter_words cw JOIN chapters ch ON ch.id=cw.chapter_id
+                JOIN books b ON b.id=ch.book_id JOIN categories c ON c.id=b.category_id
+                WHERE cw.word_id=uw.word_id AND c.slug='cet4' AND c.is_visible=1
+                AND b.status='published' AND ch.published_at IS NOT NULL
+                AND ch.published_at<=CURRENT_TIMESTAMP
+                AND (ch.is_preview=1 OR EXISTS (
+                  SELECT 1 FROM entitlements e
+                  WHERE e.user_id=uw.user_id AND e.category_id=b.category_id
+                  AND e.revoked_at IS NULL
+                  AND NOT EXISTS(SELECT 1 FROM activation_codes a
+                    WHERE a.id=e.source_code_id AND a.status='revoked')))
+              )
+          """)
+          byuser=collections.defaultdict(list)
+          for w in states:byuser[(w['user_id'],key(w))].append(w)
+          legacy_conflicts=sum(1 for rows in byuser.values() if len(rows)>1 and
+              (len(set(x['status'] for x in rows))>1 or
+               len(set(int(x['bookmarked'] or 0) for x in rows))>1))
+          plans=[]
+          if 'user_study_schedules' in tables:
+              plans=query("SELECT user_id,study_key,mastered,bookmarked,due_at FROM user_study_schedules")
+          planmap={(p['user_id'],p['study_key']):p for p in plans}
+          explicit_master_conflicts=0
+          explicit_bookmark_conflicts=0
+          for identity,rows in byuser.items():
+              p=planmap.get(identity)
+              if not p:continue
+              explicit_master_conflicts+=bool(not int(p['mastered']) and any(x['status']=='mastered' for x in rows))
+              explicit_bookmark_conflicts+=bool(not int(p['bookmarked']) and any(int(x['bookmarked'] or 0) for x in rows))
+          # Suppress low-user granular counts: only global integrity flags.
+          result={'legacy_alias_disagreements_exist':legacy_conflicts>0,
+                  'explicit_unmaster_legacy_disagreements_exist':explicit_master_conflicts>0,
+                  'explicit_unbookmark_legacy_disagreements_exist':explicit_bookmark_conflicts>0,
+                  'has_canonical_schedules':bool(plans),
+                  'assessed_only_entitled_published_cet4':True,
+                  'read_only':True}
+          print('CET4_STUDY_INTEGRITY_FLAGS='+json.dumps(result,sort_keys=True))
+          PY
