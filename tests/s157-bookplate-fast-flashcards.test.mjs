@@ -201,7 +201,7 @@ test("S157: customer learning screen is reachable and original bookplate grid an
   assert.ok(html.includes('id="vocabGrid"'));
   assert.ok(html.includes('src="/flashcards.js?v=20261105-v31-word-only"'));
   assert.ok(html.includes('href="/flashcards.css?v=20261105-v31-word-only"'));
-  assert.ok(html.includes('src="/app.js?v=20261108-wave1-popover-voice-guard"'));
+  assert.ok(html.includes('src="/app.js?v=20261108-wave2-bookshelf"'));
   assert.ok(app.includes("window.MiaowuFlashcards?.configure"));
   assert.ok(app.includes("globalThis.MiaowuFlashcards?.render"));
   assert.ok(!ui.includes("来自你的小说记忆"));
@@ -226,5 +226,5 @@ test("S157: customer learning screen is reachable and original bookplate grid an
   assert.ok(PRODUCTION_ASSET_ALLOWLIST.includes("flashcards.js"));
   assert.ok(PRODUCTION_ASSET_ALLOWLIST.includes("flashcards.css"));
   const build=buildProductionAssets();
-  assert.equal(build.assets.length,43);
+  assert.equal(build.assets.length,46);
 });

@@ -17,6 +17,9 @@ import { handleOpsLiveEdit } from "./ops-live-edit.js";
 import { handleBookCover } from "./book-covers.js";
 import { handleBookCoverTags } from "./book-cover-tags.js";
 import { handleLearningState } from "./reading-library.js";
+import {handleMyBookshelf} from "./my-bookshelf.js";
+import {handleExampleWordLookup} from "./example-word-lookup.js";
+import {onboardingSchemaReady,registrationOnboardingStatement,handleOnboarding} from "./onboarding.js";
 import { annotateStudyWords } from "./study-identity.js";
 import {handleEcho} from "./echo-cloud.js";
 import {
@@ -97,6 +100,7 @@ async function register(req, env) {
   const { hash, salt } = await atStage("register.password_hash", () => newPasswordHash(body.password, env));
   const session = await atStage("register.session_token", () => sessionData(userId));
   const recovery=null; // Manual account recovery only: do not issue end-user recovery codes.
+  const onboardingReady=await onboardingSchemaReady(env);
   try {
     // D1.batch is transactional: an invalid or used code causes the NOT NULL
     // entitlement insert to fail, rolling back user and session creation.
@@ -113,7 +117,8 @@ async function register(req, env) {
       dbStmt(db, `INSERT INTO sessions(id_hash,user_id,expires_at) VALUES(?,?,?)`,
         session.idHash, userId, session.expires),
       ...(recovery?[dbStmt(db,`INSERT INTO account_recovery(user_id,code_hash)
-        VALUES(?,?)`,userId,recovery.codeHash)]:[])
+        VALUES(?,?)`,userId,recovery.codeHash)]:[]),
+      ...(onboardingReady?[registrationOnboardingStatement(env,userId)]:[])
     ]);
   } catch {
     await atStage("register.failed_attempt", () => countFailure(db, key));
@@ -690,6 +695,9 @@ async function api(req, env) {
     return issueStagingVoucher(req, env);
   }
   const user = await atStage("api.session_lookup", () => currentUser(req, env.DB));
+  if(path==="/api/me/onboarding")return handleOnboarding(req,env,user);
+  if(path==="/api/lexicon/lookup")return handleExampleWordLookup(req,env,user);
+  if(path==="/api/me/bookshelf"||path.startsWith("/api/me/bookshelf/"))return handleMyBookshelf(req,env,user);
   if(path==="/api/me/echo/available" || path==="/api/me/echo/answer" || path==="/api/me/echo/stats"){
     return handleEcho(req,env,path,user);
   }

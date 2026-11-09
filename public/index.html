@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="/styles.css?v=20261104-v28-night-selection" />
   <link rel="stylesheet" href="/flashcards.css?v=20261105-v31-word-only" />
   <link rel="stylesheet" href="/install-guide.css?v=20261106-v11-p1" />
+  <link rel="stylesheet" href="/onboarding.css?v=20261108-wave2" />
+  <link rel="stylesheet" href="/v11-bookshelf.css?v=20261108-wave2" />
   <link rel="stylesheet" href="/v11-reader.css?v=20261106-p2&amp;fold=20261108-v1" />
   <link rel="stylesheet" href="/v11-wordbook.css?v=20261106-p5-inline-example" />
   <link rel="stylesheet" href="/v11-responsive.css?v=20261108-wave1-mobile" />
@@ -94,6 +96,7 @@
     <section id="view-words" class="view app-section"><div class="page-intro"><div><span class="eyebrow">YOUR WORD COLLECTION</span><h1>我的记忆藏书票</h1><p>单词不是孤立的条目。每一个单词，都有它被你遇见时的故事。</p></div><button class="secondary-btn" id="wordbookRead">返回故事 →</button></div><section id="flashcardTrainer" class="flashcard-trainer" aria-label="记忆藏书票快速学习"></section><div class="filter-row"><button class="filter-chip active" data-word-filter="all">全部收藏</button><button class="filter-chip" data-word-filter="learning">待复习</button><button class="filter-chip" data-word-filter="mastered">已记住</button></div><div class="wordbook-layout"><div class="wordbook-grid" id="vocabGrid"></div><aside><div class="side-panel"><span class="eyebrow">YOUR BOOKPLATE</span><div class="stamp">KEEP<br><small>THE WORDS</small><br>✦</div><h3 style="text-align:center">把好故事，留在心里</h3><p class="side-caption" style="text-align:center">收藏单词，再从原剧情中把它想起来。复习只是轻轻翻开另一页。</p><div class="metric"><span>我的藏书票</span><strong id="bookplateCount">0</strong></div></div></aside></div></section>
     <section id="view-echo" class="view app-section"><div class="echo-wrap"><div class="echo-banner"><span class="eyebrow" style="color:#e9c2a5">STORY ECHO · THE MEMORY GAME</span><h2>剧情回声</h2><p>闭上书页，故事还在。选择剧情填词、情境选择或单词找回，复习你真正读过的章节。</p></div><div id="echoModeSwitch"></div><div id="quizContainer"></div></div></section>
     <section id="view-account" class="view app-section"><div class="page-intro"><div><span class="eyebrow">MY PRIVATE LIBRARY</span><h1>我的书房</h1><p>这里收藏你拥有的故事，也记录它们陪你记住的词。</p></div></div><div id="accountPanel"></div>
+      <section id="myBookshelf" class="v11-personal-shelf" aria-label="我的书架" hidden></section>
       <section class="install-guide-entry" aria-labelledby="installGuideEntryTitle">
         <div><h2 id="installGuideEntryTitle">添加到手机桌面</h2><p>下次打开妙屋更方便，不用再找网址啦。</p></div>
         <button type="button" id="openInstallGuide">查看教程 →</button>
@@ -108,6 +111,20 @@
 </div>
   <div class="popover-backdrop" id="wordBackdrop"></div><div class="word-pop" id="wordPop" role="dialog" aria-label="单词学习面板" aria-live="polite"></div>
   <div class="modal-overlay" id="modalOverlay"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button class="modal-close" id="modalClose" aria-label="关闭">×</button><div id="modalContent"></div></div></div>
+  <dialog id="mwWelcomeDialog" class="mw-welcome-dialog" aria-labelledby="mwWelcomeTitle" aria-describedby="mwWelcomeBody">
+    <span class="mw-welcome-step" id="mwWelcomePosition">1 / 3</span>
+    <div class="mw-welcome-mark" id="mwWelcomeMark" aria-hidden="true">🐈</div>
+    <h2 id="mwWelcomeTitle">欢迎来到妙屋英语！</h2>
+    <p id="mwWelcomeBody">在中文故事里轻松学习英语单词。</p>
+    <div class="mw-welcome-controls">
+      <button type="button" id="mwWelcomeSkip">跳过</button>
+      <button type="button" id="mwWelcomeBack">上一步</button>
+      <button class="mw-primary" type="button" id="mwWelcomeNext">下一步</button>
+    </div>
+    <div class="mw-onboard-after"><button type="button" id="mwWelcomeInstall" hidden>添加到手机桌面 · 查看教程</button></div>
+    <p class="mw-welcome-error" id="mwWelcomeError" role="alert" hidden>暂时无法保存引导进度，请检查网络后重试。</p>
+  </dialog>
+  <div id="mwWordHint" class="mw-word-hint" role="status" data-open="false"><span>点击英文单词可以查看词义、听发音，还能加入生词本。</span><button type="button">知道啦</button></div>
   <dialog id="siteUpdateDialog" class="mw-updates-dialog" aria-labelledby="siteUpdateDialogTitle">
     <div class="mw-updates-dialog-heading">
       <div><span class="mw-updates-eyebrow">WORDLETTER · WHAT'S NEW</span><h2 id="siteUpdateDialogTitle">妙屋新鲜事</h2></div>
@@ -148,8 +165,9 @@
   <script src="/chapter-words.js?v=20261108-v11-no-voluntary-review-r3"></script>
   <script src="/echo-cloud.js?v=20261103-v12-review-cover"></script>
   <script src="/flashcards.js?v=20261105-v31-word-only"></script>
-  <script src="/app.js?v=20261108-wave1-popover-voice-guard"></script>
+  <script src="/app.js?v=20261108-wave2-bookshelf"></script>
   <script src="/install-guide.js?v=20261106-v11-p1"></script>
+  <script src="/onboarding.js?v=20261108-wave2"></script>
   <script src="/site-updates.js?v=20261108-wave1-history"></script>
 </body>
 </html>

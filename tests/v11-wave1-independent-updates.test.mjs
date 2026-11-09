@@ -41,7 +41,7 @@ test("wave1: phone/touch rules extend prior release without altering learning da
  assert.match(css,/min-height:\s*44px/);
  assert.match(css,/@media\s*\(max-width:\s*360px\)/);
  assert.match(html,/v11-responsive\.css\?v=20261108-wave1-mobile/);
- assert.match(html,/app\.js\?v=20261108-wave1-popover-voice-guard/);
+ assert.match(html,/app\.js\?v=20261108-wave2-bookshelf/);
 });
 test("wave1: revoked vouchers never claim effective entitlement in ops listings",()=>{
  const code=read("src/ops-claims.js"),users=read("src/ops-customers.js");
@@ -49,9 +49,9 @@ test("wave1: revoked vouchers never claim effective entitlement in ops listings"
  assert.match(users,/a\.status<>'revoked'/);
  assert.match(users,/v\.status='revoked'/);
 });
-test("wave1: no migration or accidental P4 study engine in this independent release",()=>{
+test("wave2: optional features still exclude P4 study engine",()=>{
  const app=read("public/app.js"),worker=read("src/worker.js");
- assert.doesNotMatch(worker,/user_study_schedules|handleOnboarding|handleMyBookshelf/);
- assert.doesNotMatch(app,/MiaowuOnboarding|loadPersonalBookshelf/);
+ assert.doesNotMatch(worker,/user_study_schedules|study-schedule-store/);
+ assert.match(app,/MiaowuOnboarding|loadPersonalBookshelf/);
  assert.doesNotMatch(read("public/chapter-words.js"),/自愿复习已学词/);
 });
