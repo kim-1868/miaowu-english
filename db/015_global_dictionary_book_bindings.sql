@@ -1,0 +1,17 @@
+-- A4.2 additive STAGING-ONLY binding overlay for imported DRAFT novels.
+-- Does not replace chapter_words, words, user_words, or entitlement data.
+CREATE TABLE IF NOT EXISTS global_dictionary_book_bindings (
+ book_id TEXT NOT NULL REFERENCES books(id),
+ chapter_id TEXT NOT NULL REFERENCES chapters(id),
+ context_anchor TEXT NOT NULL,
+ legacy_word_id TEXT NOT NULL REFERENCES words(id),
+ entry_id TEXT NOT NULL REFERENCES global_dictionary_entries(entry_id),
+ source_request_id TEXT NOT NULL REFERENCES global_dictionary_binding_manifests(request_id),
+ actor_id TEXT NOT NULL,
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ PRIMARY KEY (book_id,chapter_id,context_anchor)
+);
+CREATE INDEX IF NOT EXISTS ix_global_dictionary_bindings_entry
+ ON global_dictionary_book_bindings(entry_id);
+CREATE INDEX IF NOT EXISTS ix_global_dictionary_bindings_request
+ ON global_dictionary_book_bindings(source_request_id);
