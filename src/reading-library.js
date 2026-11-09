@@ -37,7 +37,7 @@ async function canStudyWord(env,id,userId){
     "JOIN categories c ON c.id=cv.category_id "+
     "JOIN entitlements e ON e.category_id=c.id "+
     "WHERE cv.word_id=? AND e.user_id=? AND c.is_visible=1 "+
-    "AND cv.reviewed=1 AND cv.frequency_verified=1 "+
+    "AND cv.reviewed=1 "+
     "AND lv.enabled=1 AND lv.catalog_verified_at IS NOT NULL "+
     "AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes v "+
     "WHERE v.id=e.source_code_id AND v.status='revoked')",id,userId).first();
@@ -212,7 +212,7 @@ const smartVisible=
   "JOIN smart_vocab_levels sl ON sl.category_id=sc.category_id "+
   "JOIN categories cc ON cc.id=sc.category_id "+
   "JOIN entitlements se ON se.category_id=cc.id AND se.user_id=uw.user_id "+
-  "WHERE sc.word_id=uw.word_id AND sc.reviewed=1 AND sc.frequency_verified=1 "+
+  "WHERE sc.word_id=uw.word_id AND sc.reviewed=1 "+
   "AND sl.enabled=1 AND sl.catalog_verified_at IS NOT NULL "+
   "AND cc.is_visible=1 AND se.revoked_at IS NULL "+
   "AND NOT EXISTS(SELECT 1 FROM activation_codes av "+
