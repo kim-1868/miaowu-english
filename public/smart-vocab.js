@@ -112,7 +112,7 @@
     if(!session)return;
     if(session.index>=session.queue.length){drawFinish();return}
     const item=current(),w=item.word,feedback=item.feedback;
-    const title=item.retry?'再记一次 · 巩固记忆':w.review?'到期复习':'词频推荐 · 新词';
+    const title=item.retry?'再记一次 · 巩固记忆':w.review?'到期复习':w.frequency_source==='UNRANKED'?'词纲补充 · 未标注词频':'词频推荐 · 新词';
     const pronunciation=esc(w.phonetic_us||w.phonetic_uk||'');
     const detail='<div class="mw-smart-detail">'+
       '<div class="mw-smart-meaning">'+esc(w.part_of_speech||'')+' '+esc(w.meaning_zh)+'</div>'+
