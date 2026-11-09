@@ -1,4 +1,5 @@
-# Public-repo runner retry; secrets remain encrypted and only usable by private production workflow.
+# Public-runner guarded production release; separate Worker Edit and D1 Read tokens.
+# D1 permission was added by the owner. Re-run the immutable preflight before deploy.
 name: Novels withdrawn revision guarded PROD deploy ONCE
 on:
   push:
