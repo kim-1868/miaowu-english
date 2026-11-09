@@ -1412,11 +1412,69 @@ button("checkNovel",async()=>{
  resetNovel();await examineNovel();
 });
 $("uploadCoverWithNovel").addEventListener("change",syncButtons);
+// Updating a withdrawn book must NEVER take the new-book POST path.
+// Keep the same book/chapter identities and require the publisher's explicit
+// second approval before replacing historical content.
+async function reviseExistingDraft(pkg,existing){
+ if(existing.status!=="draft")throw Error("此书仍已发布。请使用已发布小说的版本修订入口。");
+ if(existing.id!==pkg.book.id||existing.title!==pkg.book.title||
+    existing.category_id!==pkg.book.category)
+   throw Error("原书编号、书名或分类与修订文件不一致；停止操作以保护原书。");
+ await openBook(existing);
+ if(!readiness?.contentFingerprint)throw Error("原书审核版本不可用，请刷新后重试");
+ if(!window.confirm("检测到已存在的小说《"+existing.title+
+   "》。此操作将更新原书，不新建同名书；阅读记录和旧词卡保留。确认继续吗？"))return null;
+ const payload={package:pkg,expectedFingerprint:readiness.contentFingerprint,
+  confirmTitle:existing.title,requestId:requestId()};
+ try{return await api("/api/ops/import/revise","POST",payload)}
+ catch(error){
+  if(!String(error.message).includes("WITHDRAWN_REWRITE_CONFIRMATION_REQUIRED"))throw error;
+  if(!window.confirm("此书曾正式上架，现已下架。确认允许新版全文重写并移除已废弃的词汇标注？\\n"+
+     "系统必须先备份旧版，不会删除已有学习记录；替换后需要重新审核上架。"))return null;
+  return api("/api/ops/import/revise","POST",
+    {...payload,confirmWithdrawnRewrite:true});
+ }
+}
 button("importNovel",async()=>{
   if(!pendingNovel)throw Error("请先识别并预览小说内容");
   const coverFile=$("uploadCoverWithNovel").files?.[0];
   if(!coverFile)throw Error("请先选择小说封面");
   const title=pendingNovel.book.title;
+  const existing=catalogBooks.find(x=>x.id===pendingNovel.book.id);
+  if(existing){
+    if(existing.status!=="draft")throw Error("《"+title+
+      "》仍处于已发布状态。请在④选择原书，使用版本修订入口；新书导入不会覆盖它。");
+    const modified=await reviseExistingDraft(pendingNovel,existing);
+    if(!modified)return;
+    uploadMsg("旧书正文已完成版本修订，正在更新封面并检查能否上架……");
+    try{
+      await uploadCoverForBook(existing.id,coverFile);
+      const snapshot=await api("/api/ops/books/"+encodeURIComponent(existing.id)+"/readiness");
+      if(!snapshot.quickPublishAvailable){
+        const problems=(snapshot.blockers||[]).map(x=>x.message).join("；");
+        uploadMsg("《"+title+"》已成功替换并保留旧书记录，但还不能重新上架："+(problems||
+          "需要重新通过内容审核")+"。请在④选择原书，完成审核后在⑤确认上架。");
+        await loadBooks(existing.id);return;
+      }
+      if(!window.confirm("《"+title+"》的新版内容已通过自动上架条件。确认将更新后的原书重新公开上架吗？")){
+        uploadMsg("《"+title+"》已保存修订稿，尚未重新上架。");
+        await loadBooks(existing.id);return;
+      }
+      await quickPublishBook(existing.id,snapshot);
+      resetNovel();await loadBooks(existing.id);
+      uploadMsg("《"+title+"》已成功替换原书并重新上架，旧书编号和用户学习记录已保留。");
+    }catch(error){
+      await loadBooks(existing.id);
+      uploadMsg("《"+title+"》的正文修订已保存，但封面或上架尚未完成："+error.message+
+        "。不要重复导入，请在④选中原书继续处理。");
+    }
+    return;
+  }
+  // A renamed or regenerated-ID package must not silently create a duplicate
+  // of a book that already occupies the same publishing slot.
+  const sameTitle=catalogBooks.find(x=>x.title===title&&x.category_id===pendingNovel.book.category);
+  if(sameTitle)throw Error("已经存在同名同分类书籍，但修订文件的书籍编号不同。"+
+    "请恢复原书 ID 和原章节 ID，不能重新生成编号绕过 409。");
   let created=null;
   try{
     uploadMsg("正在保存《"+title+"》的正文和词卡……");
@@ -1464,25 +1522,12 @@ button("reviseNovel",async()=>{
  if(!chosen||chosen.status!=="draft"||!pendingNovel||
   pendingNovel.book?.id!==chosen.id||pendingNovel.book?.title!==chosen.title)
   throw Error("修订稿编号/书名必须与当前选中的未发布草稿一致");
- if(!readiness?.contentFingerprint)throw Error("无法取得草稿版本，请重新选择书籍");
- if(!window.confirm("确认用刚才预览的文件更新《"+chosen.title+
-  "》的正文和词卡？系统将保留书籍编号、用户购买权益与已有学习记录；原版本审核会失效。"))return;
- // Start with strict mode. Only historically withdrawn books may request
- // a second explicit approval to retire old chapter annotations.
- const payload={package:pendingNovel,expectedFingerprint:readiness.contentFingerprint,
-  confirmTitle:chosen.title,requestId:requestId()};
- let changed;
- try{changed=await api("/api/ops/import/revise","POST",payload)}
- catch(e){
-  if(!String(e.message).includes("WITHDRAWN_REWRITE_CONFIRMATION_REQUIRED"))throw e;
-  if(!window.confirm("此书曾正式上架，现已下架。确认允许新版全文重写并移除不再使用的旧词标注？\\n"+
-   "旧词卡和学习记录保留；系统将为原版创建备份，之后仍需重新审核上架。"))return;
-  changed=await api("/api/ops/import/revise","POST",
-   {...payload,confirmWithdrawnRewrite:true});
- }
+ const id=chosen.id;
+ const changed=await reviseExistingDraft(pendingNovel,chosen);
+ if(!changed)return;
  uploadMsg("已安全更新未发布草稿《"+chosen.title+"》，"+
   changed.chapters+"章、"+changed.newAnchors+"处词汇标注。请重新审核最新版后再发布。");
- resetNovel();await loadBooks(chosen.id);
+ resetNovel();await loadBooks(id);
 });
 
 // Merchant issuance shares the publisher's short-lived operator credential.
