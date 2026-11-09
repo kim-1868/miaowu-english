@@ -79,3 +79,17 @@ html[data-theme="dark"] .vocab-card .vocab-example button.v11-example-word{
  background:transparent;
  color:inherit;
 }
+
+
+/* Paginated memory bookplates, independent of the flashcard learning session. */
+.bookplate-page-status{grid-column:1/-1;display:block;margin:8px 0;padding:15px 16px;border:1px solid var(--line,#e7ddd4);border-radius:12px;background:var(--paper,#fffcf7);color:var(--muted,#847675);font-size:13px}
+.bookplate-pagination{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:16px 0 2px;padding:10px 0}
+.bookplate-page-summary{font-size:12px;color:var(--muted,#847675)}
+.bookplate-page-controls{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:6px}
+.bookplate-page-controls button{min-height:40px;min-width:40px;border:1px solid var(--line,#e7ddd4);background:var(--paper,#fffcf7);color:var(--wine,#672b41);border-radius:9px;padding:7px 11px;font-size:12px;cursor:pointer}
+.bookplate-page-controls button[aria-current=page]{background:var(--wine,#672b41);border-color:var(--wine,#672b41);color:#fff;opacity:1}
+.bookplate-page-controls button:disabled:not([aria-current=page]){opacity:.45;cursor:not-allowed}
+.bookplate-page-controls button:focus-visible{outline:2px solid var(--wine,#672b41);outline-offset:2px}
+html[data-theme=dark] .bookplate-page-status,html[data-theme=dark] .bookplate-page-controls button{background:var(--paper,#302a30);color:var(--ink,#eee2d8)}
+html[data-theme=dark] .bookplate-page-controls button[aria-current=page]{background:#854761;color:#fff}
+@media(max-width:620px){.bookplate-pagination{flex-direction:column;align-items:flex-start}.bookplate-page-controls{justify-content:flex-start}}

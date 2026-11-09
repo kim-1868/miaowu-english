@@ -9,13 +9,14 @@ assert.ok(a>=0&&b>a);
 function harness({loggedIn=true,cloudWords=[],localDemo=["contract"]}={}){
  const nodes=new Map();
  const $=id=>{
-  if(!nodes.has(id))nodes.set(id,{innerHTML:"",textContent:"",onclick:null});
+  if(!nodes.has(id))nodes.set(id,{innerHTML:"",textContent:"",onclick:null,querySelectorAll:()=>[]});
   return nodes.get(id);
  };
  const words=new Map(cloudWords.map(w=>[w.word_id,w]));
  const ctx={
   $,document:{querySelectorAll:()=>[]},wordFilter:"all",
   user:loggedIn?{name:"buyer_a"}:null,cloudSaved:words,
+  wordbookData:null,wordbookPage:1,wordbookPending:false,wordbookRequest:0,
   saved:new Set(localDemo),
   safe:s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])),
   navigate:()=>{},showLogin:()=>{},toast:()=>{},speakWord:()=>{},
@@ -23,7 +24,14 @@ function harness({loggedIn=true,cloudWords=[],localDemo=["contract"]}={}){
   refreshCloudLearning:()=>{}
  };
  const render=runInNewContext(js.slice(a,b)+"\nrenderWords",ctx);
- return {render,ctx,$};
+ return {render(){
+   // This legacy render-only harness supplies the server response for its test scope;
+   // database pagination and identity deduplication are exercised in SQLite tests.
+   const scope=ctx.wordFilter;
+   const visible=cloudWords.filter(w=>scope==="all"||(scope==="mastered"?w.status==="mastered":w.status!=="mastered"));
+   ctx.wordbookData={scope,words:visible,total:visible.length,allTotal:cloudWords.length,totalPages:1,page:1};
+   return render();
+ },ctx,$};
 }
 const cloudWord={word_id:"vocab-contract",headword:"contract",status:"learning",
  phonetic_uk:"/ˈkɒntrækt/",part_of_speech:"n.",meaning_zh:"合同",

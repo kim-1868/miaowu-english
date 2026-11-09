@@ -41,7 +41,7 @@ test("wave1: phone/touch rules extend prior release without altering learning da
  assert.match(css,/min-height:\s*44px/);
  assert.match(css,/@media\s*\(max-width:\s*360px\)/);
  assert.match(html,/v11-responsive\.css\?v=20261108-wave1-mobile/);
- assert.match(html,/app\.js\?v=20261108-wave2-bookshelf/);
+ assert.match(html,/app\.js\?v=20261109-favorites-wordbook12/);
 });
 test("wave1: revoked vouchers never claim effective entitlement in ops listings",()=>{
  const code=read("src/ops-claims.js"),users=read("src/ops-customers.js");

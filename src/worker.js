@@ -701,7 +701,7 @@ async function api(req, env) {
   if(path==="/api/me/echo/available" || path==="/api/me/echo/answer" || path==="/api/me/echo/stats"){
     return handleEcho(req,env,path,user);
   }
-  if (path === "/api/me/quick-review" || path === "/api/me/progress" || path === "/api/me/words" || path === "/api/me/flashcards" || path === "/api/me/flashcards/answer" || /^\/api\/me\/words\//.test(path)) {
+  if (path === "/api/me/quick-review" || path === "/api/me/progress" || path === "/api/me/words" || path === "/api/me/wordbook" || path === "/api/me/flashcards" || path === "/api/me/flashcards/answer" || /^\/api\/me\/words\//.test(path)) {
     return handleLearningState(req,env,path,user);
   }
   if (path === "/api/auth/register" && req.method === "POST") return register(req, env);

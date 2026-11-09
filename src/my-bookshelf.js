@@ -25,7 +25,7 @@ async function listBooks(env,userId){
  "WHERE b.status='published' AND c.is_visible=1",
  "AND (ub.book_id IS NOT NULL OR EXISTS(SELECT 1 FROM reading_progress rp JOIN chapters ch ON ch.id=rp.chapter_id",
  "WHERE rp.user_id=? AND ch.book_id=b.id AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP))",
- "ORDER BY COALESCE(last_read_at,ub.created_at) DESC,b.title LIMIT 200"
+ "ORDER BY CASE WHEN ub.book_id IS NOT NULL THEN 0 ELSE 1 END,COALESCE(last_read_at,ub.created_at) DESC,b.title LIMIT 200"
  ].join(" ");
  const result=await sql(env,statement,userId,userId,userId,userId,userId,userId,userId).all();
  return (result.results||[]).map(b=>{
@@ -41,8 +41,12 @@ export async function handleMyBookshelf(request,env,user){
  if(!user)return fail("LOGIN_REQUIRED",401);
  if(!await bookshelfSchemaReady(env))return fail("BOOKSHELF_NOT_READY",503);
  const path=new URL(request.url).pathname;
- if(path==="/api/me/bookshelf"&&request.method==="GET")
-  return json({books:await listBooks(env,user.id)});
+ if(path==="/api/me/bookshelf"&&request.method==="GET"){
+  const all=await listBooks(env,user.id);
+  // Only explicit bookmarks belong to MY bookshelf. Reading history is separate.
+  return json({books:all.filter(b=>b.bookmarked),
+    recent:all.filter(b=>!b.bookmarked&&b.started_chapters>0).slice(0,12)});
+ }
  const match=path.match(/^\/api\/me\/bookshelf\/([a-zA-Z0-9_-]{1,80})$/);
  if(!match)return fail("NOT_FOUND",404);
  if(request.method!=="PUT")return fail("METHOD_NOT_ALLOWED",405);
