@@ -59,3 +59,14 @@ test('new CET-4-only selection never accepts another tier or special tokens as o
   assert.equal(r.queue[0].headword,'P.M.');
   assert.equal(r.queue[0].publishable,false);
 });
+
+test('questionable CET4 spellings and outdated dictionary labels stay in a manual-review queue',()=>{
+  const data=cols.join(',')+'\n'+
+    one('四级','四级','reservior','','','n. 贮水池','','')+'\n'+
+    one('四级','四级','negro','/x/','','n. 旧称','',1)+'\n';
+  const result=auditCET4Source(data);
+  assert.equal(result.summary.flags.MANUAL_SOURCE_EXCEPTION,2);
+  assert.equal(result.queue.every(x=>x.reviewed===false&&x.publishable===false),true);
+  assert.ok(result.queue.some(x=>x.source_exception_reason==='POSSIBLE_TYPO_RESERVOIR'));
+  assert.ok(result.queue.some(x=>x.source_exception_reason==='OUTDATED_HURTFUL_DICTIONARY_LABEL_REVIEW'));
+});
