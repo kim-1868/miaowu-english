@@ -39,7 +39,7 @@ export async function relatedAccessibleWordIds(env,wordId,userId){
       "JOIN categories c ON c.id=sc.category_id "+
       "JOIN entitlements e ON e.category_id=c.id AND e.user_id=? "+
       "WHERE LOWER(TRIM(w.headword))=LOWER(TRIM(?)) "+
-      "AND sc.reviewed=1 AND sc.frequency_verified=1 AND lv.enabled=1 "+
+      "AND sc.reviewed=1 AND lv.enabled=1 "+
       "AND lv.catalog_verified_at IS NOT NULL AND c.is_visible=1 "+
       "AND e.revoked_at IS NULL AND NOT EXISTS(SELECT 1 FROM activation_codes ac "+
       "WHERE ac.id=e.source_code_id AND ac.status='revoked')",
