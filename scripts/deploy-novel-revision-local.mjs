@@ -33,7 +33,7 @@ async function main(){
   const allow=new Set(['public/ops-console.js','src/ops-draft-revision.js','src/ops-live-edit.js',
     'tests/s123-ops-full-draft-revision.test.mjs','tests/s156-ops-live-book-editor.test.mjs',
     '.github/workflows/novel-revision-on-current-prod-20261109.yml',
-    'scripts/deploy-novel-revision-local.mjs']);
+    'scripts/deploy-novel-revision-local.mjs','docs/NOVEL_REVISION_LOCAL_RELEASE_20261109.md']);
   assert.deepEqual(changed.filter(x=>!allow.has(x)),[],'Unapproved production file change');
   const src=fs.readFileSync('public/ops-console.js','utf8');
   assert.match(src,/WITHDRAWN_REWRITE_CONFIRMATION_REQUIRED/);
