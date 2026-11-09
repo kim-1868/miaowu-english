@@ -56,7 +56,7 @@ function fixture({enabled=true,catalogReady=true}={}){
       catch(error){sql.exec('ROLLBACK');throw error}
     }
   };
-  const env={DB:adapter,SMART_VOCAB_ENABLED:enabled?'true':'false'};
+  const env={DB:adapter,SMART_VOCAB_ENABLED:enabled?'true':'false',SMART_VOCAB_SCHEMA_READY:'true'};
   async function call(path,method='GET',body=null,auth=user){
     const req=new Request('https://example.test'+path,{method,
       ...(body?{headers:{'content-type':'application/json'},body:JSON.stringify(body)}:{})});
