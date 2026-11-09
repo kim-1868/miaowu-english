@@ -26,7 +26,7 @@
     rememberGuide();
   }
   function firstEntry(){
-    if(!available||!account||hasSeenGuide())return;
+    if(!available||!account||hasSeenGuide()||!$('view-words')?.classList.contains('active'))return;
     const dialog=$('smartVocabGuide');if(!dialog||dialog.open)return;
     if(typeof dialog.showModal==='function')dialog.showModal();
     else dialog.setAttribute('open','');
