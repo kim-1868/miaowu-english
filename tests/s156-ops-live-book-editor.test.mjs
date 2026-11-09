@@ -260,3 +260,33 @@ test("S156 publisher UI offers a standalone inline editor without ever changing 
   assert.ok(js.includes("/live-editor/export"));
   assert.match(css,/V29: versioned publisher editor/);
 });
+
+test("S156 opt-in published rewrite may retire obsolete anchors without deleting learning history",async()=>{
+  const {db,call}=await setup();
+  try{
+    const changed=structuredClone(pkg);
+    changed.chapters[0].paragraphs[0].segments=[{text:"全新剧情不再硬塞过时词汇。"}];
+    const forbidden=await call("preview","POST",{package:changed});
+    assert.equal(forbidden.data.error,"EXISTING_STUDY_WORD_REMOVED");
+    const ready=await call("preview","POST",{package:changed,allowAnchorRemoval:true});
+    assert.equal(ready.status,200,JSON.stringify(ready.data));
+    assert.equal(ready.data.diff.removedStudyWords,1);
+    assert.deepEqual(ready.data.diff.removedAnchors,
+      [{chapterId:"story-chapter-one",wordId:"story-word-one"}]);
+    assert.equal(ready.data.anchorRemovalRequiresConfirmation,true);
+    const unconfirmed=await call("publish","POST",{package:changed,allowAnchorRemoval:true,
+      previewDigest:ready.data.digest,expectedVersion:ready.data.expectedVersion,
+      requestId:"anchor_without_approval_01"});
+    assert.equal(unconfirmed.data.error,"ANCHOR_REMOVAL_CONFIRMATION_REQUIRED");
+    const completed=await call("publish","POST",{package:changed,allowAnchorRemoval:true,
+      confirmAnchorRemoval:true,previewDigest:ready.data.digest,
+      expectedVersion:ready.data.expectedVersion,requestId:"anchor_confirmed_01"});
+    assert.equal(completed.status,200,JSON.stringify(completed.data));
+    assert.equal(db.prepare("SELECT COUNT(*) n FROM chapter_words WHERE word_id='story-word-one'").get().n,0);
+    assert.equal(db.prepare("SELECT COUNT(*) n FROM words WHERE id='story-word-one'").get().n,1);
+    assert.equal(db.prepare("SELECT COUNT(*) n FROM user_words WHERE word_id='story-word-one'").get().n,1);
+    assert.equal(db.prepare("SELECT progress FROM reading_progress").get().progress,0.75);
+    assert.equal(db.prepare("SELECT COUNT(*) n FROM ops_live_book_versions").get().n,1);
+    assert.equal(db.prepare("PRAGMA foreign_key_check").all().length,0);
+  }finally{db.close()}
+});
