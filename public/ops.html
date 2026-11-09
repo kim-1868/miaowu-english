@@ -272,12 +272,14 @@
     <textarea id="uploadBookDescription" rows="2" maxlength="2000" placeholder="输入书籍简介，用于书架卡片"></textarea>
     <div class="row">
       <button id="checkNovel" class="secondary" disabled type="button">识别文件并检查内容</button>
+      <button id="previewGlobalMatch" class="secondary" disabled hidden type="button">统一词典自动匹配预检 · 仅预览站</button>
       <button id="importNovel" disabled type="button">确认上传并上架</button>
       <button id="useSelectedDraft" class="secondary" disabled type="button">使用当前选中草稿的书名和编号</button>
       <button id="reviseNovel" disabled type="button">替换当前未发布草稿（不上架）</button>
     </div>
     <div id="uploadStatus" role="status" aria-live="polite" class="status">请先验证运营身份，再选择文件。</div>
     <pre id="uploadReport" class="report" hidden></pre>
+    <pre id="globalMatchReport" class="report" hidden aria-live="polite"></pre>
     <div class="ops-tag-editor">
       <h3>新小说剧情标签建议</h3>
       <p class="hint">识别小说后，根据故事简介、章节标题及部分正文生成可选标签。勾选的建议会在确认上架成功后保存；不合适的可取消。</p>
