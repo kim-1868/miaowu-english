@@ -121,3 +121,32 @@ test('incomplete learning cards are withheld instead of displaying missing IPA o
   const result=select({rankedWords:[valid,noIpa,noEnglish,noChinese]});
   assert.deepEqual(result.words.map(x=>x.word_id),['ok']);
 });
+
+test('full-syllabus unranked words are kept last without fabricated frequencies',()=>{
+  const result=select({rankedWords:[
+    {...w('missing-a','zircon','n.','锆石',0),frequency_source:'UNRANKED',frequency_rank:null},
+    w('ranked-b','engage','v.','参与',12),
+    {...w('missing-b','yellow','adj.','黄色的',0),frequency_source:'UNRANKED',frequency_rank:null}
+  ]});
+  assert.deepEqual(result.words.map(x=>x.word_id),['ranked-b','missing-b','missing-a']);
+  assert.equal(result.words[1].frequency_rank,null);
+  assert.equal(result.words[1].ranking_tier,'SYLLABUS_COMPLETION');
+  assert.equal(result.words[0].ranking_tier,'FREQUENCY');
+});
+
+test('missing frequency cannot masquerade as corpus or examination frequency',()=>{
+  const result=select({rankedWords:[
+    {...w('invalid','fiction','n.','小说',0),frequency_rank:null,frequency_source:'COCA'},
+    {...w('bad-rank','art','n.','艺术',42),frequency_source:'UNRANKED'},
+    {...w('allowed','etymology','n.','词源',0),frequency_rank:null,frequency_source:'UNRANKED'}
+  ]});
+  assert.deepEqual(result.words.map(x=>x.word_id),['allowed']);
+});
+
+test('a verified ranked duplicate wins over the identical unranked sense',()=>{
+  const result=select({rankedWords:[
+    {...w('supplement','frugal','adj.','节俭的',0),frequency_rank:null,frequency_source:'UNRANKED'},
+    w('ranked','frugal','adj.','节俭的',943)
+  ]});
+  assert.deepEqual(result.words.map(x=>x.word_id),['ranked']);
+});
