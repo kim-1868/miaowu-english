@@ -7,6 +7,20 @@ import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 const TECH=/\[[^\]]{1,12}\]/u;
 const SAFE=/^[A-Za-z][A-Za-z'-]*$/;
+// Source anomalies are review tasks, NOT automatic headword replacements.
+// Any headword change requires rechecking the exam syllabus and sense ID.
+const MANUAL_SOURCE_EXCEPTIONS=Object.freeze({
+  reservior:'POSSIBLE_TYPO_RESERVOIR',
+  uptodate:'STANDARD_HYPHENATION_REVIEW',
+  'world-wide':'MODERN_SPELLING_VARIANT_REVIEW',
+  waggon:'BRITISH_VARIANT_REVIEW',
+  'living-room':'STANDARD_SPACING_REVIEW',
+  'B.C.':'ABBREVIATION_REVIEW',
+  'P.M.':'ABBREVIATION_REVIEW',
+  'i.e.':'ABBREVIATION_REVIEW',
+  negro:'OUTDATED_HURTFUL_DICTIONARY_LABEL_REVIEW',
+  reflexion:'SPELLED_VARIANT_REVIEW'
+});
 
 export function parseCsv(text){
   const input=String(text||'').replace(/^\uFEFF/,'');
@@ -38,7 +52,8 @@ export function auditCET4Source(text){
     firstTierCET4:0,firstTierHighSchool:0,
     flaggedHeadwords:0,flags:{IPA_MISSING:0,POS_MISSING:0,
       DICTIONARY_TAGS:0,MULTIPLE_POS_IN_SOURCE:0,MULTIPLE_SENSES_IN_SOURCE:0,
-      COCA_RANK_MISSING:0,BNC_RANK_MISSING:0,SPECIAL_OR_SUSPECT_HEADWORD:0}};
+      COCA_RANK_MISSING:0,BNC_RANK_MISSING:0,SPECIAL_OR_SUSPECT_HEADWORD:0,
+      MANUAL_SOURCE_EXCEPTION:0}};
   const seen=new Set(),queue=[];
   const trimmed=(r,k)=>String(r[ix[k]]||'').trim();
   const rank=s=>/^[1-9]\d*$/.test(s)?Number(s):null;
@@ -64,6 +79,8 @@ export function auditCET4Source(text){
     if(coca===null)flags.push('COCA_RANK_MISSING');
     if(bnc===null)flags.push('BNC_RANK_MISSING');
     if(!SAFE.test(word))flags.push('SPECIAL_OR_SUSPECT_HEADWORD');
+    const exception=MANUAL_SOURCE_EXCEPTIONS[word]||MANUAL_SOURCE_EXCEPTIONS[word.toLowerCase()];
+    if(exception)flags.push('MANUAL_SOURCE_EXCEPTION');
     if(first==='四级')stats.firstTierCET4++;
     else if(first==='高考')stats.firstTierHighSchool++;
     flags.forEach(f=>{stats.flags[f]++});
@@ -74,6 +91,7 @@ export function auditCET4Source(text){
       frequency_rank:coca??bnc,
       raw_ipa_unverified:ipa,raw_pos_unverified:pos,
       raw_meaning_unverified:meaning,source_flags:flags,
+      source_exception_reason:exception||null,
       reviewed:false,publishable:false
     });
   }
