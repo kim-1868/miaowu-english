@@ -51,6 +51,7 @@
       finally{
         if(account===identity){checked=true;renderAvailability();firstEntry()}
         checking=null;
+        if(account!==identity)sync();
       }
     })();
     return checking;
