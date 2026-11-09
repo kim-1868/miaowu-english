@@ -234,6 +234,19 @@ export async function handleOpsDraftRevision(req,env,path){
  }catch{
   return reject("DRAFT_REFLOW_HISTORY_CHECK_UNAVAILABLE",503);
  }
+ // The historical snapshot table is mandatory for formerly published books.
+ // Detect a missing production migration with a clear 503 BEFORE any write;
+ // never degrade this into a generic 409 or skip immutable backups.
+ if(withdrawnHistory){
+  let schema;
+  try{
+   const res=await stmt(env.DB,"PRAGMA table_info(ops_live_book_versions)").all();
+   schema=new Set((res.results||[]).map(row=>row.name));
+  }catch{return reject("WITHDRAWN_REVISION_SCHEMA_CHECK_UNAVAILABLE",503)}
+  if(!["id","book_id","actor_id","action","request_id","base_version",
+   "snapshot_json","summary_json"].every(name=>schema.has(name)))
+   return reject("WITHDRAWN_REVISION_HISTORY_SCHEMA_MISSING",503);
+ }
  const wordIds=valid.words.map(w=>w.id);
  const originalWords=[];
  const externalIds=[];
