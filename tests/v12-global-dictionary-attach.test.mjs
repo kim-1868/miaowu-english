@@ -36,6 +36,8 @@ function setup(){
   for(const file of ['013_global_dictionary.sql','014_global_dictionary_bindings.sql',
     '015_global_dictionary_book_bindings.sql'])
     sql.exec(readFileSync(new URL('../db/'+file,import.meta.url),'utf8'));
+  sql.exec('CREATE TABLE word_categories(word_id TEXT,category_id TEXT,'+
+    'proficiency_note TEXT,PRIMARY KEY(word_id,category_id));');
   sql.exec('CREATE TABLE ops_operators(id TEXT,display_name TEXT,role TEXT,'+
     'environment TEXT,key_digest TEXT,is_active INTEGER,revoked_at TEXT);');
   sql.exec('CREATE TABLE ops_audit_events(id TEXT,actor_id TEXT,event_type TEXT,request_id TEXT);');
