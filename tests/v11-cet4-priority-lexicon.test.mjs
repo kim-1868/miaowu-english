@@ -54,3 +54,15 @@ test('example sentences, meanings and IPA remain learner-readable and explicitly
     assert.match(card.editorial_note,/审校|审核/);
   }
 });
+
+test('76 common collocation pairs are natural optional fields and remaining cards stay uncluttered',()=>{
+  const shown=cet4.filter(c=>Array.isArray(c.collocations)&&c.collocations.length>0);
+  assert.equal(shown.length,76);
+  assert.equal(cet4.length-shown.length,22);
+  for(const card of shown){
+    assert.equal(card.collocations.length,1);
+    assert.equal(auditSmartWordCard(card).structurallyReady,true);
+    const p=card.collocations[0];
+    assert.ok(p.en.length>3&&p.zh.length>1);
+  }
+});
