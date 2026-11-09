@@ -98,3 +98,54 @@ test('first scan is bounded: oversized and malformed inputs fail before any D1 l
  }),/INVALID_NOVEL_CHAPTER/);
  assert.equal(db.calls.length,0);
 });
+
+test('authorized staging publisher performs real SQLite-backed preflight with zero writes',async()=>{
+ const {DatabaseSync}=await import('node:sqlite');
+ const {webcrypto}=await import('node:crypto');
+ if(!globalThis.crypto)globalThis.crypto=webcrypto;
+ const {digestOpsToken}=await import('../src/ops-access.js');
+ const sql=new DatabaseSync(':memory:');
+ try{
+  sql.exec("CREATE TABLE ops_operators("+
+    "id TEXT,display_name TEXT,role TEXT,environment TEXT,"+
+    "key_digest TEXT,is_active INTEGER,revoked_at TEXT);"+
+    "CREATE TABLE ops_audit_events("+
+    "id TEXT,actor_id TEXT,event_type TEXT,request_id TEXT);"+
+    "CREATE TABLE words("+
+    "id TEXT,headword TEXT,phonetic_uk TEXT,phonetic_us TEXT,"+
+    "part_of_speech TEXT,meaning_zh TEXT,example_en TEXT,example_zh TEXT);");
+  const token='mwops_'+'a'.repeat(64),pepper='b'.repeat(64);
+  const digest=await digestOpsToken(token,pepper);
+  sql.prepare("INSERT INTO ops_operators VALUES(?,?,?,?,?,?,?)").run(
+    'ops-reviewer','Staging Publisher','publisher','staging',digest,1,null);
+  sql.prepare("INSERT INTO words VALUES(?,?,?,?,?,?,?,?)").run(
+    'legacy-record','record','/rekord/','/ri-kord/','n.','记录',
+    'She kept a record of the journey.','她记录了旅程。');
+  const db={prepare(query){
+   return {bind(...args){
+    return {
+     async all(){return {results:sql.prepare(query).all(...args)};},
+     async first(){return sql.prepare(query).get(...args);}
+    };
+   }};
+  }};
+  const content=structuredClone(manuscript);
+  content.chapters[0].paragraphs[0].segments=[{
+   wordId:'old-record',surface:'record',gloss:'记录'
+  }];
+  const req=new Request('https://preview.example/api/ops/import/preflight',{
+   method:'POST',headers:{'content-type':'application/json',
+     'X-Mw-Ops-Key':token},body:JSON.stringify({package:content})
+  });
+  const response=await handleOpsImportPreflight(req,{
+   APP_ENV:'staging',OPS_TOKEN_PEPPER:pepper,DB:db
+  },'/api/ops/import/preflight');
+  assert.equal(response.status,200);
+  const body=await response.json();
+  assert.equal(body.targets[0].status,'dictionary_only');
+  assert.equal(body.targets[0].entry_id,'legacy-record');
+  assert.equal(body.ready_to_publish,false);
+  assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM words").get().n,1);
+  assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM ops_audit_events").get().n,0);
+ }finally{sql.close()}
+});
