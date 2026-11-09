@@ -10,7 +10,8 @@ const error=(code,status)=>reply({error:code},status);
 const db=(env,q,...args)=>env.DB.prepare(q).bind(...args);
 const ID=/^[a-zA-Z0-9_-]{1,80}$/;
 const UUID=/^[0-9a-f]{8}-[0-9a-f-]{27,44}$/i;
-const isEnabled=env=>env.SMART_VOCAB_ENABLED==='true';
+const isEnabled=env=>env.SMART_VOCAB_ENABLED==='true'&&
+  env.SMART_VOCAB_SCHEMA_READY==='true';
 
 async function activeCategory(env,userId,slug){
   if(!SMART_EXAMS.includes(slug))return null;
