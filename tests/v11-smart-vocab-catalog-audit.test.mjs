@@ -20,12 +20,15 @@ test('offline smart catalog audit passes only complete reviewed enabled level an
     db.prepare("INSERT INTO smart_vocab_levels(category_id,expected_headwords,catalog_verified_at,enabled) "+
       "VALUES('cet4',1,CURRENT_TIMESTAMP,1)").run();
     db.close();
-    const run=()=>spawnSync(process.execPath,['--experimental-sqlite',
+    const run=(opts=[])=>spawnSync(process.execPath,['--experimental-sqlite',
       new URL('../scripts/check-smart-vocab-catalog.mjs',import.meta.url).pathname,
-      p,'--require-ready'],{encoding:'utf8'});
+      p,'--require-ready',...opts],{encoding:'utf8'});
     const accepted=run();
     assert.equal(accepted.status,0,accepted.stderr);
     assert.equal(JSON.parse(accepted.stdout).levels[0].ready,true);
+    const notEnoughForProduction=run(['--production']);
+    assert.equal(notEnoughForProduction.status,1);
+    assert.equal(JSON.parse(notEnoughForProduction.stdout).levels[0].ready,false);
     const change=new DatabaseSync(p);
     change.prepare("UPDATE smart_vocab_catalog SET reviewed=0 WHERE word_id='candidate'").run();
     change.close();
