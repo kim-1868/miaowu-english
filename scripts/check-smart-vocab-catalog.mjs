@@ -31,7 +31,11 @@ try{
       "COUNT(DISTINCT LOWER(TRIM(w.headword))) AS total_headwords,"+
       "COUNT(DISTINCT CASE WHEN cv.reviewed=1 AND cv.frequency_verified=1 "+
       "AND TRIM(w.headword)!='' AND TRIM(COALESCE(w.meaning_zh,''))!='' "+
+      "AND TRIM(COALESCE(w.part_of_speech,''))!='' AND INSTR(w.meaning_zh,'[')=0 "+
       "AND (TRIM(COALESCE(w.phonetic_uk,''))!='' OR TRIM(COALESCE(w.phonetic_us,''))!='') "+
+      "AND LENGTH(TRIM(COALESCE(w.example_en,'')))>=15 "+
+      "AND LENGTH(TRIM(COALESCE(w.example_zh,'')))>=3 "+
+      "AND LOWER(w.example_en) NOT LIKE '%todo%' "+
       "AND TRIM(COALESCE(w.example_en,''))!='' AND TRIM(COALESCE(w.example_zh,''))!='' "+
       "THEN LOWER(TRIM(w.headword)) END) AS ready_headwords,"+
       "SUM(CASE WHEN cv.reviewed=0 THEN 1 ELSE 0 END) AS not_reviewed,"+
