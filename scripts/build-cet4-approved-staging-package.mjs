@@ -24,6 +24,10 @@ export function compileCET4SignedOffSQL(cards,options={}){
   for(const card of cards){
     if(card.category_slug!=='cet4')throw Error('MIXED_EXAM_CARD_'+card.word_id);
     if(!submitted(card))throw Error('EDITORIAL_APPROVAL_REQUIRED_'+card.word_id);
+    // Do not bundle several context-dependent senses into a single item.
+    // Every reviewed card must teach exactly one contextual meaning.
+    if(/[；;]/u.test(String(card.meaning_zh||'')))
+      throw Error('CET4_MULTIPLE_SENSES_NEED_SPLIT_'+card.word_id);
     const id=String(card.word_id);
     const headword=String(card.headword).toLowerCase().trim();
     if(ids.has(id))throw Error('DUPLICATE_WORD_ID_'+id);
