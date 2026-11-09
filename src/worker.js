@@ -697,7 +697,7 @@ async function api(req, env) {
   }
   const user = await atStage("api.session_lookup", () => currentUser(req, env.DB));
   if(path==="/api/me/onboarding")return handleOnboarding(req,env,user);
-  if(path==="/api/me/smart-vocab"||path==="/api/me/smart-vocab/answer"||path==="/api/me/smart-vocab/bookmark")
+  if(path==="/api/me/smart-vocab"||path==="/api/me/smart-vocab/status"||path==="/api/me/smart-vocab/answer"||path==="/api/me/smart-vocab/bookmark")
     return handleSmartVocab(req,env,path,user);
   if(path==="/api/lexicon/lookup")return handleExampleWordLookup(req,env,user);
   if(path==="/api/me/bookshelf"||path.startsWith("/api/me/bookshelf/"))return handleMyBookshelf(req,env,user);
