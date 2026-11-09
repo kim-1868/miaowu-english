@@ -374,3 +374,27 @@ test('database forbids fake numeric ranks on unranked supplements',()=>{
       "VALUES('cet4','s-clarify',NULL,'UNRANKED',1,1)").run(),/CHECK constraint failed/i);
   }finally{f.sql.close()}
 });
+
+test('smart CET4 API returns approved collocation pairs but hides empty ones',async()=>{
+  const f=fixture();
+  try{
+    f.sql.prepare("UPDATE words SET collocations_json=? WHERE id='s-clarify'").run(
+      JSON.stringify([{en:'clarify the issue',zh:'澄清问题'}]));
+    const page=await f.call('/api/me/smart-vocab?category=cet4');
+    assert.equal(page.status,200);
+    const clarified=page.data.words.find(w=>w.word_id==='s-clarify');
+    const retained=page.data.words.find(w=>w.word_id==='s-retain');
+    assert.deepEqual(clarified.collocations,[{en:'clarify the issue',zh:'澄清问题'}]);
+    assert.equal(Object.hasOwn(retained,'collocations'),false);
+  }finally{f.sql.close()}
+});
+
+test('broken collocation JSON fails the whole incomplete CET4 catalog closed',async()=>{
+  const f=fixture();
+  try{
+    f.sql.prepare("UPDATE words SET collocations_json='not valid json' WHERE id='s-clarify'").run();
+    const page=await f.call('/api/me/smart-vocab?category=cet4');
+    assert.equal(page.status,503);
+    assert.equal(page.data.error,'CATALOG_NOT_READY');
+  }finally{f.sql.close()}
+});
