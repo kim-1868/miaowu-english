@@ -62,12 +62,12 @@ test('different sense and POS must not merge, aliases of one sense must collapse
   assert.deepEqual(result.words.map(x=>x.word_id),['a','c']);
 });
 
-test('no POS is treated as a distinct legacy ID, never blindly conflated',()=>{
+test('new teaching cards without a clear part of speech are withheld, not incorrectly conflated',()=>{
   const result=select({studyRows:[{
     word_id:'novel-old',headword:'match',part_of_speech:'',
     meaning_zh:'比赛',status:'mastered',bookmarked:0
   }],rankedWords:[w('lex-new','match','','比赛',1)]});
-  assert.deepEqual(result.words.map(x=>x.word_id),['lex-new']);
+  assert.deepEqual(result.words.map(x=>x.word_id),[]);
 });
 
 test('only genuinely learned state excludes new recommendations; unused placeholders do not',()=>{
