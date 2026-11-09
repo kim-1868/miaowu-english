@@ -4,7 +4,7 @@
 import {studyKey} from './study-identity.js';
 
 export const SMART_EXAMS=Object.freeze(['cet4','cet6','postgrad','ielts']);
-const RANK_SOURCES=new Set(['COCA','BNC','POSTGRAD_EXAM']);
+const RANK_SOURCES=new Set(['COCA','BNC','POSTGRAD_EXAM','UNRANKED']);
 const validRank=n=>Number.isSafeInteger(n)&&n>0;
 
 function normalizedWord(row){
@@ -14,7 +14,8 @@ function normalizedWord(row){
   const meaning=String(row.meaning_zh||'').trim();
   const pos=String(row.part_of_speech||'').trim();
   const category=String(row.category_slug||'').trim();
-  const rank=Number(row.frequency_rank);
+  const rawRank=row.frequency_rank;
+  const rank=rawRank==null||rawRank===''?null:Number(rawRank);
   const source=String(row.frequency_source||'').trim().toUpperCase();
   const ipaUk=String(row.phonetic_uk||'').trim();
   const ipaUs=String(row.phonetic_us||'').trim();
@@ -23,12 +24,14 @@ function normalizedWord(row){
   // A card with no pronunciation or example is not suitable for a paid lesson.
   // Never make up a ranking, invent a meaning, or infer a product category.
   if(!/^[a-zA-Z0-9_-]{1,100}$/.test(id)||!headword||!meaning||
-     !SMART_EXAMS.includes(category)||!validRank(rank)||!RANK_SOURCES.has(source)||
+     !SMART_EXAMS.includes(category)||!RANK_SOURCES.has(source)||
+     (source==='UNRANKED'?rank!==null:!validRank(rank))||
      (source==='POSTGRAD_EXAM'&&row.frequency_available!==true)||
      (!ipaUk&&!ipaUs)||!exampleEn||!exampleZh)return null;
   return {
     word_id:id,headword,part_of_speech:pos,meaning_zh:meaning,
     category_slug:category,frequency_rank:rank,frequency_source:source,
+    ranking_tier:source==='UNRANKED'?'SYLLABUS_COMPLETION':'FREQUENCY',
     phonetic_uk:ipaUk,phonetic_us:ipaUs,
     example_en:exampleEn,example_zh:exampleZh
   };
@@ -77,12 +80,15 @@ export function selectSmartNewWords({
     const key=senseOf(w);
     if(known.has(key))continue;
     const existing=unique.get(key);
-    if(!existing||w.frequency_rank<existing.frequency_rank||
-       (w.frequency_rank===existing.frequency_rank&&w.word_id<existing.word_id)){
+    const comparable=x=>x.frequency_rank??Number.MAX_SAFE_INTEGER;
+    if(!existing||comparable(w)<comparable(existing)||
+       (comparable(w)===comparable(existing)&&w.word_id<existing.word_id)){
       unique.set(key,w);
     }
   }
-  const ordered=[...unique.values()].sort((a,b)=>a.frequency_rank-b.frequency_rank||
+  // Unranked syllabus words remain learnable AFTER ranked words, but are never called high-frequency.
+  const comparable=x=>x.frequency_rank??Number.MAX_SAFE_INTEGER;
+  const ordered=[...unique.values()].sort((a,b)=>comparable(a)-comparable(b)||
     a.headword.localeCompare(b.headword,'en')||a.word_id.localeCompare(b.word_id,'en'));
   return {available:true,reason:null,words:ordered.slice(0,limit),
     remaining:Math.max(0,ordered.length-limit)};
