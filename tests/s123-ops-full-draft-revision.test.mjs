@@ -134,7 +134,7 @@ test("S123 withdrawn published-history draft can be rewritten only with explicit
    withdrawnHistory:true,previousAnchors:db.prepare("SELECT * FROM chapter_words").all(),
    previousDescription:"旧版内容"};
   const wrong=structuredClone(changed);wrong.allowSafeReflow=false;
-  assert.throws(()=>planDraftRevision(wrong),/WITHDRAWN_REVISION_NOT_SAFE/);
+  assert.throws(()=>planDraftRevision(wrong),/PARAGRAPH_SHAPE_CHANGED|WITHDRAWN_REVISION_NOT_SAFE/);
   const changedCard=structuredClone(changed);
   changedCard.validated.words[0].meaningZh="错误修改的历史释义";
   assert.throws(()=>planDraftRevision(changedCard),/HISTORICAL_WORD_CARD_CHANGED/);
