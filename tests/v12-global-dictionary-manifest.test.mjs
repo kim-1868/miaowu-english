@@ -4,7 +4,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {webcrypto} from 'node:crypto';
 import {previewBindingManifest,saveStagingBindingManifest,
-  handleOpsBindingManifest} from '../src/ops-global-binding-manifests.js';
+  exportVerifiedBindingBundle,handleOpsBindingManifest} from '../src/ops-global-binding-manifests.js';
 import {digestOpsToken} from '../src/ops-access.js';
 if(!globalThis.crypto)globalThis.crypto=webcrypto;
 
@@ -191,5 +191,79 @@ test('A3.2 permissions restrict both preview and candidate save to staging publi
     OPS_TOKEN_PEPPER:pepper
   },'/api/ops/import/bindings/confirm');
   assert.equal(block.status,401);
+ }finally{sql.close()}
+});
+
+
+test('A4 exported bundle repeats source and sidecar without replacing historical word IDs',async()=>{
+ const {sql,env}=setup();
+ try{
+  const manuscript=novel(),before=structuredClone(manuscript);
+  const p=await previewBindingManifest(env,{package:manuscript});
+  const request={
+    package:manuscript,requestId:'candidate-export-01',confirmSave:true,
+    expectedPackageSha256:p.package_sha256,
+    expectedBindingSha256:p.binding_sha256
+  };
+  await saveStagingBindingManifest(env,request,actor);
+  const changes=sql.prepare('SELECT total_changes() AS n').get().n;
+  const b=await exportVerifiedBindingBundle(env,request,actor);
+  assert.equal(b.format,'miaowu-global-dictionary-binding-bundle-v1');
+  assert.equal(b.status,'STAGING_VERIFIED_NOT_IMPORTED');
+  assert.equal(b.publication_ready,false);
+  assert.equal(b.package_sha256,p.package_sha256);
+  assert.equal(b.binding_sha256,p.binding_sha256);
+  assert.deepEqual(b.original_package,manuscript);
+  assert.deepEqual(b.original_package, before);
+  assert.equal(b.dictionary_bindings[0].legacy_word_id,'novel-record');
+  assert.equal(b.dictionary_bindings[0].entry_id,'gdict_record');
+  assert.equal(sql.prepare('SELECT total_changes() AS n').get().n,changes);
+  assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM books').get().n,0);
+ }finally{sql.close()}
+});
+test('A4 export detects modified source, different operator, stale source review and tampered stored bindings',async()=>{
+ const {sql,env}=setup();
+ try{
+  const manuscript=novel(),p=await previewBindingManifest(env,{package:manuscript});
+  const request={
+    package:manuscript,requestId:'candidate-export-02',confirmSave:true,
+    expectedPackageSha256:p.package_sha256,
+    expectedBindingSha256:p.binding_sha256
+  };
+  await saveStagingBindingManifest(env,request,actor);
+  await assert.rejects(()=>exportVerifiedBindingBundle(env,request,{
+   id:'ops-another',role:'publisher'
+  }),/BINDING_ACTOR_MISMATCH/);
+  const altered=structuredClone(manuscript);altered.chapters[0].title='后续被改了';
+  await assert.rejects(()=>exportVerifiedBindingBundle(env,{
+   ...request,package:altered
+  },actor),/STALE_BINDING_PREVIEW/);
+  sql.prepare('UPDATE global_dictionary_binding_manifests SET bindings_json=? WHERE request_id=?')
+    .run('[{"entry_id":"gdict_record"}]',request.requestId);
+  await assert.rejects(()=>exportVerifiedBindingBundle(env,request,actor),
+   /BINDING_STORED_MANIFEST_CORRUPTED/);
+  sql.prepare('UPDATE global_dictionary_binding_manifests SET bindings_json=? WHERE request_id=?')
+    .run(JSON.stringify(p.manifest.bindings),request.requestId);
+  sql.exec('UPDATE global_dictionary_sources SET enabled=0,license_reviewed=0');
+  await assert.rejects(()=>exportVerifiedBindingBundle(env,request,actor),
+   /BINDING_REVIEW_REQUIRED/);
+ }finally{sql.close()}
+});
+test('A4 does not export a candidate if the original book now exists or save flag is disabled',async()=>{
+ const {sql,env}=setup();
+ try{
+  const manuscript=novel(),p=await previewBindingManifest(env,{package:manuscript});
+  const request={
+   package:manuscript,requestId:'candidate-export-03',confirmSave:true,
+   expectedPackageSha256:p.package_sha256,
+   expectedBindingSha256:p.binding_sha256
+  };
+  await saveStagingBindingManifest(env,request,actor);
+  await assert.rejects(()=>exportVerifiedBindingBundle({
+   ...env,GLOBAL_DICTIONARY_BINDING_SAVE_ENABLED:'false'
+  },request,actor),/GLOBAL_BINDING_EXPORT_DISABLED/);
+  sql.prepare('INSERT INTO books(id) VALUES(?)').run(manuscript.book.id);
+  await assert.rejects(()=>exportVerifiedBindingBundle(env,request,actor),
+   /EXISTING_BOOK_REQUIRES_VERSIONED_REVISION/);
  }finally{sql.close()}
 });
