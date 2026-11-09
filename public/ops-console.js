@@ -423,6 +423,8 @@ function liveRevisionSummary(data){
     "修订章节："+changed.filter(x=>x.kind==="revised").length+" 章",
     "新增章节："+diff.addedChapters+" 章",
     "新增词卡："+diff.newWords+" 个",
+    "旧版不再引用的学习词："+(diff.removedStudyWords||0)+" 个（历史词卡和学习记录保留）",
+    ...(diff.removedAnchors||[]).slice(0,30).map(x=>"移除旧版正文标注："+x.chapterId+" / "+x.wordId),
     "新版本总章数："+diff.totalChapters+" 章",
     "英文词汇标注："+diff.studyAnchors+" 处",
     "书名或简介变更："+(diff.metadataChanged?"是":"否"),
@@ -481,14 +483,26 @@ button("liveCheckRevision",async()=>{
   const pkg=data?.package??data;
   if(pkg?.book?.id!==chosen.id)throw Error("小说内部编号必须与选中书籍一致，不可创建另一部书。");
   const id=chosen.id,version=liveEditorState.version;
-  const preview=await api("/api/ops/books/"+encodeURIComponent(id)+
-    "/live-editor/preview","POST",{package:pkg});
+  let preview,allowAnchorRemoval=false;
+  try{
+    preview=await api("/api/ops/books/"+encodeURIComponent(id)+
+      "/live-editor/preview","POST",{package:pkg});
+  }catch(e){
+    if(!String(e.message).includes("EXISTING_STUDY_WORD_REMOVED"))throw e;
+    // A preview is read-only; expose the exact retired anchors before allowing any write.
+    preview=await api("/api/ops/books/"+encodeURIComponent(id)+
+      "/live-editor/preview","POST",{package:pkg,allowAnchorRemoval:true});
+    allowAnchorRemoval=true;
+  }
   if(chosen?.id!==id||liveEditorState?.version!==version)return;
-  liveRevision={bookId:id,version,digest:preview.digest,package:pkg};
+  liveRevision={bookId:id,version,digest:preview.digest,package:pkg,allowAnchorRemoval,
+    removedStudyWords:preview.diff?.removedStudyWords||0};
   $("liveRevisionDiff").textContent=liveRevisionSummary(preview);
   $("liveRevisionDiff").hidden=false;
   renderLiveRevisionSample(pkg);
-  $("liveEditorStatus").textContent="预览检查通过。确认没有误改书籍编号、章节关联和学习词汇后，可以发布新版。";
+  $("liveEditorStatus").textContent=liveRevision.removedStudyWords?
+    "预览发现旧版中 "+liveRevision.removedStudyWords+" 个词不再在新版正文引用。旧词卡、收藏及学习记录均保留；发布时需再次确认。":
+    "预览检查通过。确认没有误改书籍编号、章节关联和学习词汇后，可以发布新版。";
 });
 button("livePublishRevision",async()=>{
   if(!chosen||!liveEditorState||!liveRevision||
@@ -497,9 +511,14 @@ button("livePublishRevision",async()=>{
   const id=chosen.id,version=liveRevision.version,doc=liveRevision.package;
   if(!window.confirm("确认将《"+chosen.title+"》的已发布正文替换为刚才预览的新版本？"+
     "\n旧版会自动保存；读者阅读权益、已学单词与章节进度不会被删除。"))return;
+  if(liveRevision.removedStudyWords&&!window.confirm(
+    "新版正文将不再引用 "+liveRevision.removedStudyWords+" 个旧版词汇。\\n"+
+    "这些词卡和学习历史不会删除，旧版会保留在历史记录中。确认继续？"))return;
   const result=await api("/api/ops/books/"+encodeURIComponent(id)+
     "/live-editor/publish","POST",{
       package:doc,expectedVersion:version,
+      allowAnchorRemoval:liveRevision.allowAnchorRemoval,
+      confirmAnchorRemoval:liveRevision.removedStudyWords>0,
       previewDigest:liveRevision.digest,requestId:requestId()
     });
   await loadBooks(id);
