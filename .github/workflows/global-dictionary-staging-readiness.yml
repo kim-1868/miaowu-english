@@ -44,10 +44,13 @@ jobs:
       - name: Install Wrangler for metadata-only D1 SELECT
         shell: bash
         run: npm install --no-save --ignore-scripts wrangler@^4
-      - name: Query isolated staging D1 schema only, redact raw output
+      - name: Query isolated staging D1 schema using separate least-privilege D1 Read token
+        # This workflow never uses the production Worker deployment token.
+        # Set repository Actions secret CLOUDFLARE_STAGING_D1_READ_TOKEN.
+
         shell: bash
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_READ_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
