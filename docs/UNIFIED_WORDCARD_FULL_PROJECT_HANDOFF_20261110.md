@@ -4,6 +4,15 @@
 
 **2026-11-10 最新操作入口：** 用户 Cloudflare D1 Token 授权步骤、GitHub Secret 名称、既有只读工作流重跑链接、后续 A–K 交付验收表，见 [统一词典授权与后续执行清单](UNIFIED_WORDCARD_AUTH_AND_DELIVERY_RUNBOOK_20261110.md)。该执行清单也已保存到私人 Library：`/开发英语单词学习网站/妙屋英语_统一词典_授权与后续执行清单_20261110.md`，供其他聊天直接读取。**修订：Cloudflare D1 Read Secret 已保存且真实只读检查通过；测试库统一词典表 0/10，Time Travel 恢复点可读。真实建表仍需独立写权限、备份与人工放行。**
 
+## 2026-11-10 · 全量词头离线分片完成，真实云端仍只有考试候选（优先读此段）
+
+- **新增可复现程序及真实 CI 验收**：完整 400,183 词头 + 56,898 词形候选均通过临时 SQLite 全量回放，但 staging D1 目前只真实写入 11,422 考试词头 + 16,442 词形；剩余 388,761 + 40,456 在 GitHub Actions 生成 9 个**未执行**批次，绝不把离线成功算成线上完成。
+- [全量离线验收 run 42850583900](https://github.com/kim-1868/miaowu-english/actions/runs/42850583900) 通过（6 项生成器测试、4 项安全工作流测试、九批哈希和行数校验）；更近期回归 [run 42850847556](https://github.com/kim-1868/miaowu-english/actions/runs/42850847556) 同样通过。已生成的候选 SQL 归档 artifact `13781435146`，没有用户、付费小说、商业例句等私有内容。
+- 为剩余九批新增 `.github/workflows/global-dictionary-staging-remainder-cohort-manual.yml`：仅 feature 分支/测试 D1，经 `staging-d1-schema-approval` 人工批准，逐批要求原表状态不变、文件哈希、每批全量加密备份先持久保存、再导入 ≤50,000 行。main 只注册 fail-closed 入口；**尚未启动任何一批真实余量导入**。
+- 独立只读验收 [run 42848827545](https://github.com/kim-1868/miaowu-english/actions/runs/42848827545) 已创建，但 GitHub 环境仍等待负责人审批，不能称该任务已验证成功。
+- 所有词头仍是 `teaching_ready=0` 的候选索引；**正式审核批准的教学义项 = 0**。1150 历史义项审核和当前四级23本/六级5本实际最新版本全文匹配、复习去重、V2 线上端到端都尚未完成。为避免旧文档误导，详细分批执行与阻断请参阅 [全量上线计划](GLOBAL_DICTIONARY_FULL_SOURCE_ROLLOUT_20261110.md)。
+- 后续若测试库出现异常，不能重跑已部分写入批次或直接删表，须先核实行数与加密备份。新书“无需 `words[]`”的技术方向成立，但只有词义、例句和许可真实审核通过后才可自动教学匹配；不同义项不能共用记忆状态。
+
 ## 2026-11-10 23:46（北京时间）· 真实测试 D1 考试词头候选导入成功（最新）
 
 - **刚完成** GitHub Actions 手动审批运行 [42847388782](https://github.com/kim-1868/miaowu-english/actions/runs/42847388782)，job `129938463140` `Success`。37/37 SQL 导入批次成功：**11,422 个考试标签候选词头、16,442 条候选词形关联、1 个禁用来源**。
