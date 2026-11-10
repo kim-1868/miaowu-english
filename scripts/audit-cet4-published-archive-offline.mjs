@@ -58,7 +58,7 @@ export function auditCET4ArchivedBooks(documents,index,{catalog=null}={}){
    packaged_wordcards:wordCards.length,used_wordcards:used.size,
    unused_wordcards:wordCards.filter(w=>!used.has(w.id)).length,
    missing_card_references:missingRefs.size,gloss_mismatched_cards:glossMismatch.size,
-   cards_missing_ipa:wordCards.filter(w=>!str(w.phoneticUs??w.phonetic_us??w.phoneticUk??w.phonetic_uk)).length,
+   cards_missing_ipa:wordCards.filter(w=>![w.phoneticUs,w.phonetic_us,w.phoneticUk,w.phonetic_uk].some(x=>str(x))).length,
    cards_missing_example:wordCards.filter(w=>!str(w.exampleEn??w.example_en)||!str(w.exampleZh??w.example_zh)).length,
    matches:lookup.summary.target,
    exceptions:lookup.targets.filter(x=>['needs_review','missing'].includes(x.status))

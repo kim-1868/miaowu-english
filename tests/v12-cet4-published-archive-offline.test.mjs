@@ -45,6 +45,12 @@ test('identical cross-book senses are candidates only, never auto-migrate learni
  assert.equal(r.approved_lessons_asserted,0);
  assert.equal(r.modified_user_data,false);
 });
+test('UK-only verified phonetic field remains acceptable in archive audit',()=>{
+ const w=card('one','customer','顾客');
+ w.phoneticUs='';w.phoneticUk='/ˈkʌstəmə/';
+ const r=auditCET4ArchivedBooks([doc('uk-only',[w],['one'])],index);
+ assert.equal(r.books[0].cards_missing_ipa,0);
+});
 test('stale and structurally corrupt archives fail closed',()=>{
  const a=doc('a',[card('one','customer','顾客')],['one']);
  assert.throws(()=>auditCET4ArchivedBooks([],index),/EMPTY_ARCHIVED/);
