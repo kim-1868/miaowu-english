@@ -51,7 +51,7 @@
 - 旧用户学习状态以同一已审 sense ID 归并，保留收藏、最早待复习间隔、掌握状态冲突复核；不会因词头相同把多个词义合并，购买权限不变。
 
 ## 当前阻断点
-1. [只读 post-index audit run 42848827545](https://github.com/kim-1868/miaowu-english/actions/runs/42848827545) 的受保护环境审批还未确认 Success。即使当前候选导入工作流已有计数验证，也建议完成独立只读审计再批准 cohort 1。
+1. **已完成**：[只读 post-index audit run 42848827545](https://github.com/kim-1868/miaowu-english/actions/runs/42848827545)，job `129943544968`，`completed/success`，原始日志确认 `STAGING_POSTINDEX_11422_ENTRIES_16442_FORMS_ONE_DISABLED_SOURCE_VERIFIED`、`STAGING_POSTINDEX_ZERO_APPROVED_SENSES_AND_ZERO_STUDY_BINDINGS`、`STAGING_POSTINDEX_HISTORICAL_BASELINE_4_59_9_262_VERIFIED` 和 `STAGING_POSTINDEX_READ_ONLY_NO_D1_MUTATION_NO_PRODUCTION_ACCESS`。独立只读门禁**已通过**，不可再标记待审批。现可在核对当日 Cloudflare D1 写入额度后，依序**人工批准**第 1 批受控 staging 导入。
 2. 批次 1–9 均是**未来明确人工审批执行**，CI 通过 ≠ 云端导入完成。
 3. 当前 0 正式签核 sense，缺少所有线上28本书受保护完整包、上下文锚点和编辑审批。未经真实来源与审核通过不能声称“全量词卡已完成”或“自动配卡上线”。
 
