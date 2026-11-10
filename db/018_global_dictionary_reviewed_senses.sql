@@ -1,7 +1,7 @@
 -- B1.3 STAGING ONLY. Separate stable learning senses beneath a single display card.
 -- Do NOT apply without D1 test backup, approvals and rollback.
 CREATE TABLE IF NOT EXISTS global_dictionary_senses (
- sense_id TEXT PRIMARY KEY CHECK(sense_id GLOB 'gds_[0-9a-f]*' AND length(sense_id)=28),
+ sense_id TEXT PRIMARY KEY CHECK(length(sense_id)=28 AND substr(sense_id,1,4)='gds_' AND substr(sense_id,5) NOT GLOB '*[^0-9a-f]*'),
  entry_id TEXT NOT NULL REFERENCES global_dictionary_entries(entry_id),
  pos TEXT NOT NULL CHECK(length(trim(pos))>0),
  meaning_zh TEXT NOT NULL CHECK(length(trim(meaning_zh))>0),

@@ -69,6 +69,7 @@ test('018 schema protects approved sense identity and links only licensed review
    'VALUES(?,?,?,?,?,?,?,?,?,?)';
   db.prepare(insert).run(a,'gdict_record','n.','记录','Keep a record.','留下记录。','editor','2026-11-10',1,1);
   db.prepare(insert).run(b,'gdict_record','v.','录制','Record the event.','录制活动。','editor','2026-11-10',0,0);
+  assert.throws(()=>db.prepare(insert).run('gds_'+'z'.repeat(24),'gdict_record','n.','错误','Test.','测试。','editor','2026-11-10',0,0),/CHECK constraint failed/);
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM global_dictionary_senses').get().n,2);
   assert.throws(()=>db.prepare('UPDATE global_dictionary_senses SET pos=? WHERE sense_id=?').run('v.',a),/REVIEWED_SENSE_IDENTITY_IMMUTABLE/);
   const link='INSERT INTO global_dictionary_legacy_sense_links '+
