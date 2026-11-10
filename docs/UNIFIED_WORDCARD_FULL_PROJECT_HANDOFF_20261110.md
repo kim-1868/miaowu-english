@@ -4,6 +4,14 @@
 
 **2026-11-10 最新操作入口：** 用户 Cloudflare D1 Token 授权步骤、GitHub Secret 名称、既有只读工作流重跑链接、后续 A–K 交付验收表，见 [统一词典授权与后续执行清单](UNIFIED_WORDCARD_AUTH_AND_DELIVERY_RUNBOOK_20261110.md)。该执行清单也已保存到私人 Library：`/开发英语单词学习网站/妙屋英语_统一词典_授权与后续执行清单_20261110.md`，供其他聊天直接读取。**修订：Cloudflare D1 Read Secret 已保存且真实只读检查通过；测试库统一词典表 0/10，Time Travel 恢复点可读。真实建表仍需独立写权限、备份与人工放行。**
 
+## 2026-11-11 · 开源词典提速实测并入主线（最新）
+- **用户已同意整合 GitHub 开源资源提高统一词卡产能**，不变更优先级：四级、六级、考研第一期 7,391 词头，旧小说配卡和后续新书 V2 自动找卡；暂停让额外 40 万候选词头导入成为阻塞。
+- 已锁定 ECDICT（MIT，固定上游提交）和 ipa-dict `en_US.txt`（美音，固定提交）为**候选辅助来源**。真实 owner 私有词表与 IPA 来源逐一匹配：**7,299/7,391（98.76%）有美式读音候选，92 缺失，1,114 多读音待义项审核**；不能把这些计数作为已发布词卡数。
+- 在公有仓代码中新增纯离线辅助生成器 `scripts/build-exam-first-open-source-card-candidates.py` + 5 项严格防误发布测试 + 真实固定 GitHub 来源烟雾 CI [run 42862811984](https://github.com/kim-1868/miaowu-english/actions/runs/42862811984) **Success**：4 个公开 fixture 的源释义/美音候选接入成功；实际 Publisher-approved senses=0，D1 writes=0。
+- `ipa-dict` 英式来源的许可链另审，本阶段**不直接采用 `en_UK.txt`**；英文例句仍由本项目独立原创、审校。ECDDCT 字段及任何外部来源的完整商业使用权仍需逐字段审核；repo LICENSE 不等于全部第三方音频/例句权益。
+- 具体后续见 [开源资源提速与实际执行计划](EXAM_FIRST_OPEN_SOURCE_ACCELERATION_20261111.md)。本轮 7391 个**私人**完整词卡字段候选包尚未实际生成/审核；不能当成完成。真实优先工作转为批量候选补充、100–200 条/批内容签核、已上线小说最新版只读配卡核验、V2 staging。
+- **此段优先于后面过期的操作入口说明**：staging D1 013–018 和 61,422 候选词头已完成；下文历史「0/10 表」是旧记录，不得作为当前状态。
+
 ## 2026-11-11 · 最近期状态补充：新书自动发现的运营台交互已编码、未部署（最高优先级）
 
 - [GitHub QA 42860327774](https://github.com/kim-1868/miaowu-english/actions/runs/42860327774) **33/33 测试通过**；`public/ops-console.js` 已对纯文本（未标注单词）的 V2 JSON 使用 staging-only `POST /api/ops/import/dictionary-v2/discover` 自动扫描；展示已审核唯一义项候选和每一处异常。
