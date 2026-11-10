@@ -36,12 +36,13 @@ def extract_pos_candidates_from_translation(translation):
     values = []
     # ECDICT typically encodes line breaks as the literal two characters backslash-n.
     for line in translation.replace("\\r\\n", "\n").replace("\\n", "\n").replace("\r", "\n").splitlines():
-        m = POS_PREFIX.match(line)
-        if not m:
-            continue
-        pos = POS_CANONICAL.get(m.group(1).lower(), m.group(1).lower()) + "."
-        if pos not in values:
-            values.append(pos)
+        for section in re.split(r"[；;]", line):
+            m = POS_PREFIX.match(section)
+            if not m:
+                continue
+            pos = POS_CANONICAL.get(m.group(1).lower(), m.group(1).lower()) + "."
+            if pos not in values:
+                values.append(pos)
     return values
 
 
