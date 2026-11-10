@@ -6,6 +6,7 @@ on:
       - .github/workflows/global-dictionary-full-remainder-offline.yml
       - scripts/prepare-full-dictionary-remainder.py
       - tests/test_full_dictionary_remainder.py
+      - scripts/verify-staging-dictionary-remainder-cohort.py
       - db/013_global_dictionary.sql
   workflow_dispatch:
 permissions:
@@ -68,6 +69,17 @@ jobs:
           assert all(c['rows']<=50000 and c['requires_owner_approval'] for c in x['cohorts'])
           print('FULL_REMAINDER_388761_HEADWORDS_40456_FORMS_9_UNREVIEWED_COHORTS_PREPARED')
           PY
+      - name: Verify each of nine pinned cohort manifests, SQL digests and prefix totals
+        shell: bash
+        run: |
+          set -euo pipefail
+          export_dir="$RUNNER_TEMP/full-dictionary-remainder-cohorts"
+          for cohort in 1 2 3 4 5 6 7 8 9; do
+            python scripts/verify-staging-dictionary-remainder-cohort.py \
+              --root "$export_dir" --cohort "$cohort" \
+              --out "$RUNNER_TEMP/cohort-validation-$cohort.json"
+          done
+          echo 'ALL_NINE_FULL_DICTIONARY_COHORT_MANIFESTS_VALIDATED_NO_D1_ACCESS'
       - name: Upload ONLY unreviewed publicly sourced candidate SQL cohorts
         uses: actions/upload-artifact@v4
         with:
