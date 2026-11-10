@@ -27,7 +27,8 @@ jobs:
         with:
           python-version: '3.12'
       - name: Run all offline remainder unit tests
-        run: python -m unittest discover -s tests -p 'test_full_dictionary_remainder.py' -v
+        run: |
+          python -m unittest discover -s tests -p 'test_full_dictionary_remainder.py' -v
           python -m unittest discover -s tests -p 'test_staging_dictionary_remainder_workflow.py' -v
       - name: Recover pinned audited upstream source without Cloudflare token
         shell: bash
