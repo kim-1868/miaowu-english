@@ -32,3 +32,11 @@ test('renamed dictionary V2 compatible draft is still recognized by its source l
  const x=v1();x.sourceLabel='dictionary-v2';
  assert.throws(()=>planOpsBookImport(validatePackage(x)),/DICTIONARY_SENSE_BINDING_REQUIRED/);
 });
+
+test('a forged stable sense ID is blocked from the ordinary V1 importer',()=>{
+ const novel=v1();
+ novel.words[0].id='gds_'+'b'.repeat(24);
+ novel.chapters[0].paragraphs[0].segments[1].wordId=novel.words[0].id;
+ assert.throws(()=>planOpsBookImport(validatePackage(novel)),
+  /DICTIONARY_SENSE_BINDING_REQUIRED/);
+});

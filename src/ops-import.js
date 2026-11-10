@@ -37,7 +37,7 @@ export function assertIndependentStudyIdentityBeforeImport(validated){
  if(!validated||!Array.isArray(validated.words))
   throw Error("INVALID_PACKAGE");
  if(String(validated.label||"").startsWith("dictionary-v2")||
-    validated.words.some(x=>/^(?:gdict_|v2_tmp_)/.test(x?.id||"")))
+    validated.words.some(x=>/^(?:gdict_|gds_|v2_tmp_)/.test(x?.id||"")))
   throw Error("DICTIONARY_SENSE_BINDING_REQUIRED");
  return true;
 }
