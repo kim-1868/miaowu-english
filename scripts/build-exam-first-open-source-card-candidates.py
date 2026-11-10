@@ -57,7 +57,7 @@ def load_targets(path):
                 identity = "gdict_" + hashlib.sha256(word.encode("utf-8")).hexdigest()[:24]
                 if not WORD.fullmatch(word) or not ENTRY.fullmatch(str(row.get("entry_id") or "")) or row["entry_id"] != identity:
                     raise ValueError(f"UNSAFE_TARGET_IDENTITY_LINE_{i}")
-            elif (row.get("status") != "abbreviation_pending_editorial" or
+            elif (row.get("status") != "missing_abbreviation_or_token" or
                   row.get("entry_id") is not None or not ABBR.fullmatch(word)):
                 raise ValueError(f"UNSAFE_ABBREVIATION_LINE_{i}")
             targets[word] = row
