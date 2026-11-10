@@ -138,12 +138,60 @@ def audit_file(source, out_dir):
             f.write(json.dumps(dict(form=form, headword=word,
                 source="ECDICT_EXCHANGE_UNVERIFIED", reviewed=False,
                 verified=False), ensure_ascii=False) + "\n")
+    # Rehearse the EXACT additive D1 candidate schema against the full source
+    # in this disposable SQLite workspace. This is NOT Cloudflare D1, cannot
+    # migrate a remote database and never signs off any lesson or licence.
+    schema_path = Path(__file__).resolve().parents[1] / "db" / "013_global_dictionary.sql"
+    schema_bytes = schema_path.read_bytes()
+    con.create_function("canonical_dictionary_entry_id", 1,
+        lambda word: "gdict_" + hashlib.sha256(word.encode("utf-8")).hexdigest()[:24],
+        deterministic=True)
+    con.execute("PRAGMA foreign_keys=ON")
+    con.executescript(schema_bytes.decode("utf-8"))
+    con.execute("BEGIN")
+    con.execute(
+        "INSERT INTO global_dictionary_entries(entry_id,headword,exam_levels_json,"
+        "source_name,teaching_ready,reviewed_at) "
+        "SELECT canonical_dictionary_entry_id(headword),headword,exam_levels_json,"
+        "'upstream_ecdict_unverified',0,NULL "
+        "FROM headwords WHERE duplicates=0")
+    con.execute(
+        "INSERT INTO global_dictionary_forms(form,entry_id,source_name,reviewed) "
+        "SELECT f.form,canonical_dictionary_entry_id(f.headword),"
+        "'upstream_ecdict_unverified',0 "
+        "FROM forms f JOIN headwords h ON h.headword=f.headword "
+        "WHERE h.duplicates=0")
+    con.execute(
+        "INSERT INTO global_dictionary_sources(source_key,license_name,"
+        "license_reviewed,source_sha256,imported_entries,imported_forms,"
+        "imported_at,enabled) VALUES(?,?,?,?,?,?,datetime('now'),0)",
+        ("upstream_ecdict_unverified", "MIT_UPSTREAM_VERIFICATION_PENDING", 0,
+         source_sha, counts["retained_headwords"], counts["candidate_forms"]))
+    con.commit()
+    ecount = con.execute("SELECT COUNT(*) FROM global_dictionary_entries").fetchone()[0]
+    fcount = con.execute("SELECT COUNT(*) FROM global_dictionary_forms").fetchone()[0]
+    unsafe = con.execute("SELECT COUNT(*) FROM global_dictionary_entries "
+       "WHERE teaching_ready!=0 OR reviewed_at IS NOT NULL").fetchone()[0]
+    unsafe += con.execute("SELECT COUNT(*) FROM global_dictionary_forms "
+       "WHERE reviewed!=0").fetchone()[0]
+    unsafe += con.execute("SELECT COUNT(*) FROM global_dictionary_sources "
+       "WHERE enabled!=0 OR license_reviewed!=0").fetchone()[0]
+    fk_errors = list(con.execute("PRAGMA foreign_key_check"))
+    if (ecount != counts["retained_headwords"] or
+        fcount != counts["candidate_forms"] or unsafe or fk_errors):
+        raise ValueError("GLOBAL_DICTIONARY_D1_SCHEMA_REHEARSAL_FAILED")
+    schema_check = dict(status="DISPOSABLE_SQLITE_D1_SCHEMA_REHEARSAL_PASSED",
+        entries=ecount, forms=fcount, approved_entries=0, reviewed_forms=0,
+        enabled_sources=0, foreign_key_violations=0,
+        schema_sha256=hashlib.sha256(schema_bytes).hexdigest(),
+        cloudflare_d1_migrated=False, production_data_changed=False)
     report = dict(
         status="FULL_UPSTREAM_LEXICON_DRAFT_NOT_APPROVED_NOT_DEPLOYED",
         source_sha256=source_sha, source_bytes=src.stat().st_size,
         source_repository="https://github.com/skywind3000/ECDICT",
         license_notice="MIT repository declaration; upstream third-party data provenance not yet signed off",
         source_statistics=stats, index_statistics=counts,
+        sqlite_staging_schema_rehearsal=schema_check,
         exam_level_counts=level_counts,
         excluded_headword_examples=invalid_examples,
         imported_into_d1=False, training_cards_approved=0,
