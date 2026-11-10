@@ -120,3 +120,12 @@
 - 当前工作流 job-level `if` 需要 actor、repository、分支、三个手动确认值全部精确一致。截图足以确认 actor 与分支，但**无法独立确认哪一个输入文本不匹配**；不能猜测或宣称一个确定的输错字段。
 - 已将手动确认值检查从 job 级别转移到最前的独立 fail-closed 步骤，逐项输出脱敏错误类别（`STAGING_TARGET_CONFIRMATION_MISMATCH` / `STAGING_UUID_CONFIRMATION_MISMATCH` / `STAGING_APPROVAL_TEXT_MISMATCH` / `BACKUP_RUN_ID_MUST_BE_NUMERIC`），不会打印实际字段值；仓库/actor/branch 的 job 级门禁仍保留。错误时即停止，绝不进入 D1 导出或迁移。提交 `2ee037e`，增加回归测试 `ff512ee`。
 - 请在新的 CI 通过之后从新版本手动创建一次新 run，不要 rerun 旧 SHA，保持正确 feature 分支以及此前加密备份 run `42836917076`。若任务红叉，再看具体首个失败步骤，而不是重复猜输入。
+
+## 2026-11-10 · 真实测试 D1 013–018 schema 迁移通过（已验证 GitHub 原始日志）
+- 运行：`https://github.com/kim-1868/miaowu-english/actions/runs/42843020562`，job ID `129922972396`，执行 commit `65de9a1`，整体成功。
+- 审批环境 `staging-d1-schema-approval` 已通过；参数确认 `STAGING_INPUT_CONFIRMATIONS_VALIDATED_NO_DATABASE_WRITES`、加密备份 `42836917076` 验证 `APPROVED_ENCRYPTED_BACKUP_ARTIFACT_EXISTS`。
+- 运行前再次成功 `STAGING_REMOTE_EXPORT_AND_DISPOSABLE_SQLITE_REPLAY_OK`，Time Travel `STAGING_D1_BOOKMARK_AVAILABLE_VALUE_PRIVATE`；恢复参考点为 `2026-11-10T15:19:12.619Z`（仅记录非私密 UTC，书签密文未外泄）。
+- 远程测试 D1 日志分别显示：`STAGING_TEST_SCHEMA_FILE_013_APPLIED`、`014_APPLIED`、`015_APPLIED`、`016_APPLIED`、`017_APPLIED`、`018_APPLIED`。
+- 工作流最终返回 `{"status":"STAGING_DICTIONARY_SCHEMA_APPLIED_TO_TEST_ONLY","files_applied":6,"tables":10,"triggers":5,"old_learning_rows_written":0,"production_d1_accessed":false}`。
+- **已完成：测试 D1 结构部署。尚未导入候选词头或正式签核教学义项；尚未实施历史小说配卡、历史用户学习义项迁移、预览 Worker 部署和前端端到端验收。** 不得将「迁移成功」误写成「统一词典全量教学卡已完成」。
+- 下一阶段先执行迁移后只读数据完整性核查（10 张表、5 个触发器、4 张基础表存在、Foreign key、未经审核项未发布）；其后再进行候选索引导入与审核词义，并保证测试草稿隔离与生产站零影响。
