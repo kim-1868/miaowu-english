@@ -7,6 +7,8 @@ import {globalDictionaryTablesReady,loadGlobalDictionaryCandidateIndex}
 import {normalizeDictionaryNovelV2,convertDictionaryNovelV2}
   from './global-dictionary-novel-v2.js';
 import {planApprovedNovelSenseAnchors} from './global-dictionary-sense-anchor.js';
+import {extractUnmarkedV2EnglishTokens,planApprovedNovelAutoDiscovery}
+ from './global-dictionary-auto-discovery.js';
 
 const H={'content-type':'application/json; charset=utf-8',
  'cache-control':'private, no-store','x-content-type-options':'nosniff'};
@@ -66,8 +68,47 @@ export async function inspectStagingDictionaryNovelV2(env,payload){
    ready_for_sense_study:converted.ready_to_convert&&senseAudit.ready_for_sense_study,
    next_step:'V1 package is a compatibility draft. Stable reviewed sense IDs and staging user-state tests are required before publication.'};
 }
+// Authorized read-only preview of English tokens in V2 stories that do not
+// yet contain marked {surface,gloss} targets. No guessed meaning is accepted.
+export async function inspectStagingDictionaryAutoDiscovery(env,payload){
+ if(env.APP_ENV!=='staging'||env.GLOBAL_DICTIONARY_LOOKUP_ENABLED!=='true')
+  throw Error('DICTIONARY_V2_NOT_ENABLED');
+ if(!(await globalDictionaryTablesReady(env.DB)))
+  throw Error('DICTIONARY_SCHEMA_REQUIRED');
+ const source=payload?.package??payload;
+ const extracted=extractUnmarkedV2EnglishTokens(source);
+ const lookup=await loadGlobalDictionaryCandidateIndex(
+  env.DB,extracted.unique_spellings);
+ const ids=[...new Set([...lookup.index.byWord.values()]
+  .flat().map(x=>x.entry_id))];
+ const lessons=new Map(),senses=[];
+ for(const group of groups(ids)){
+  if(!group.length)continue;
+  const params=group.map(()=>'?').join(',');
+  const cards=await env.DB.prepare(
+   'SELECT entry_id,headword,senses_json,phonetic_uk,phonetic_us,'+
+   'part_of_speech,meaning_zh,example_en,example_zh,collocations_json,'+
+   'reviewed_by,reviewed_at FROM global_dictionary_lessons WHERE entry_id IN ('+
+   params+')'
+  ).bind(...group).all();
+  for(const card of cards.results||[]){
+   if(lessons.has(card.entry_id))throw Error('DUPLICATE_REVIEWED_DICTIONARY_LESSON');
+   lessons.set(card.entry_id,card);
+  }
+  const reviewed=await env.DB.prepare(
+   'SELECT sense_id,entry_id,pos,meaning_zh,reviewed_by,reviewed_at,approved,active '+
+   'FROM global_dictionary_senses WHERE entry_id IN ('+params+')'
+  ).bind(...group).all();
+  senses.push(...(reviewed.results||[]));
+ }
+ return {...planApprovedNovelAutoDiscovery(extracted,lookup.index,{
+  lessons,senses
+ }),dictionary_status:'STAGING_APPROVED_SENSES_ONLY',
+  next_step:'Editor must confirm each contextual meaning before generating a V2 learning target; this endpoint does not mutate the manuscript or publish.'};
+}
 export async function handleOpsDictionaryNovelV2(req,env,path){
- if(path!=='/api/ops/import/dictionary-v2/preflight'||
+ if(!['/api/ops/import/dictionary-v2/preflight',
+       '/api/ops/import/dictionary-v2/discover'].includes(path)||
     req.method!=='POST'||env.APP_ENV!=='staging')
    return json({error:'NOT_FOUND'},404);
  const auth=await authenticateOperator(req,env);
@@ -90,11 +131,13 @@ export async function handleOpsDictionaryNovelV2(req,env,path){
    return json({error:'INVALID_NOVEL_PACKAGE'},400);
  }catch{return json({error:'INVALID_JSON'},400)}
  try{
-  return json(await inspectStagingDictionaryNovelV2(env,payload));
+  return json(path.endsWith('/discover')?
+    await inspectStagingDictionaryAutoDiscovery(env,payload):
+    await inspectStagingDictionaryNovelV2(env,payload));
  }catch(e){
   const code=String(e?.message||'');
   if(code.startsWith('Content validation:')||
-     /^(INVALID_DICTIONARY_V2|V2_|DICTIONARY_V2_|DUPLICATE_DICTIONARY_V2)/.test(code) &&
+     /^(INVALID_DICTIONARY_V2|V2_|DICTIONARY_V2_|DUPLICATE_DICTIONARY_V2|INVALID_AUTO_DISCOVERY|AUTO_DISCOVERY_)/.test(code) &&
        code!=='DICTIONARY_V2_NOT_ENABLED')
    return json({error:'INVALID_DICTIONARY_V2_PACKAGE',detail:code.slice(0,180)},400);
   if(code==='DICTIONARY_SCHEMA_REQUIRED'||code==='DICTIONARY_V2_NOT_ENABLED')
