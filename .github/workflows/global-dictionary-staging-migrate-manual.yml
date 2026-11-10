@@ -14,8 +14,13 @@ on:
         type: string
         required: true
         description: Enter STAGING_013_018_ADD_ONLY
+      encrypted_backup_run_id:
+        type: string
+        required: true
+        description: Successful durable encrypted staging backup workflow run ID
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: staging-dictionary-schema-manual
   cancel-in-progress: false
@@ -69,6 +74,30 @@ jobs:
           done
           echo 'STAGING_REMOTE_EXPORT_AND_DISPOSABLE_SQLITE_REPLAY_OK'
           echo 'EPHEMERAL_RUNNER_BACKUP_IS_NOT_DURABLE_RECOVERY__TIMETRAVEL_STILL_REQUIRED'
+      - name: Require successful persisted encrypted backup artifact before ANY D1 mutation
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BACKUP_RUN_ID: ${{ inputs.encrypted_backup_run_id }}
+        run: |
+          set -euo pipefail
+          [[ "$BACKUP_RUN_ID" =~ ^[0-9]+$ ]] || { echo 'INVALID_BACKUP_RUN_ID'; exit 1; }
+          run_json="$RUNNER_TEMP/staging-backup-run-metadata.json"
+          artifact_json="$RUNNER_TEMP/staging-backup-artifacts-metadata.json"
+          trap 'rm -f "$run_json" "$artifact_json"' EXIT
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID" > "$run_json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID/artifacts" > "$artifact_json"
+          jq -e '
+            .status=="completed" and
+            .conclusion=="success" and
+            .head_branch=="feature/v11-smart-vocab-preflight-20261109" and
+            .path==".github/workflows/global-dictionary-staging-durable-encrypted-backup.yml"
+          ' "$run_json" >/dev/null || { echo 'BACKUP_WORKFLOW_NOT_VERIFIED'; exit 1; }
+          jq -e '
+            [.artifacts[] | select(.name=="miaowu-staging-d1-encrypted-backup" and .expired==false and .size_in_bytes>0)] | length > 0
+          ' "$artifact_json" >/dev/null || { echo 'PERSISTED_ENCRYPTED_BACKUP_ARTIFACT_MISSING'; exit 1; }
+          echo 'APPROVED_ENCRYPTED_BACKUP_ARTIFACT_EXISTS'
+          echo 'BACKUP_RETENTION_IS_FINITE_MAKE_SEPARATE_OFFLINE_COPY'
       - name: Apply only six explicit additive schema files to test database after approval
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
