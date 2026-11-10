@@ -4,6 +4,13 @@
 
 **2026-11-10 最新操作入口：** 用户 Cloudflare D1 Token 授权步骤、GitHub Secret 名称、既有只读工作流重跑链接、后续 A–K 交付验收表，见 [统一词典授权与后续执行清单](UNIFIED_WORDCARD_AUTH_AND_DELIVERY_RUNBOOK_20261110.md)。该执行清单也已保存到私人 Library：`/开发英语单词学习网站/妙屋英语_统一词典_授权与后续执行清单_20261110.md`，供其他聊天直接读取。**修订：Cloudflare D1 Read Secret 已保存且真实只读检查通过；测试库统一词典表 0/10，Time Travel 恢复点可读。真实建表仍需独立写权限、备份与人工放行。**
 
+## 2026-11-11 · 最近期状态补充：新书自动发现的运营台交互已编码、未部署（最高优先级）
+
+- [GitHub QA 42860327774](https://github.com/kim-1868/miaowu-english/actions/runs/42860327774) **33/33 测试通过**；`public/ops-console.js` 已对纯文本（未标注单词）的 V2 JSON 使用 staging-only `POST /api/ops/import/dictionary-v2/discover` 自动扫描；展示已审核唯一义项候选和每一处异常。
+- 只要存在缺词/未审/多义项，界面**不允许一键生成草稿**（需编辑先处理全部异常）；全部候选唯一时，Publisher 可明确点击核对确认，使用 `public/auto-discovery-v2-draft.js` 保留每个中文段落及英文词原始字符偏移转换为 `{surface,gloss}`，再经过原 V2 preflight 和后续学习 sense 审核。拒绝重叠偏移、被修改上下文、伪造 stable sense ID；不写库、不发售、不合并学习状态。
+- **这还是 GitHub 功能代码和本地/CI 验证成功，不是预览站或正式站的线上部署**。发布需独立 staging 验收/Publisher 登录并通过 QA；现阶段实际已审批 sense 仍为 0，真实文章不能直接自动转为可售卡。
+- 私人内容审核任务 zip 和第一期 6,550 内容缺口在 Library 路径见下文。完整说明：[EXAM_FIRST_P1_REAL_EXECUTION_20261111.md](EXAM_FIRST_P1_REAL_EXECUTION_20261111.md)。
+
 ## 2026-11-11 · 最新主线实现进展：7391 词卡缺口清算 + 预览 OPS 新书纯文本自动发现（优先读）
 
 - [最新执行记录](EXAM_FIRST_P1_REAL_EXECUTION_20261111.md) 与 [GitHub QA 42859349776](https://github.com/kim-1868/miaowu-english/actions/runs/42859349776)：**31/31 测试通过**，新增加三级考试原始词表 + 历史义项 + 新原创例句的纯离线审稿计划工具 `src/global-dictionary-exam-first-review.js`、`scripts/audit-private-exam-first.mjs`。
