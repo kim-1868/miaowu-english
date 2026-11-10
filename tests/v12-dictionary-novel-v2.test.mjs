@@ -225,3 +225,51 @@ test('V2 preflight endpoint stays staging-only and requires the publisher secret
   assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM ops_audit_events').get().n,0);
  }finally{sql.close()}
 });
+
+
+test('full upstream inflection also exists as dictionary headword: exact approved Chinese sense selects reviewed lemma',async()=>{
+ const {sql,env}=fixture();
+ try{
+  sql.prepare('INSERT INTO global_dictionary_entries '+
+   '(entry_id,headword,exam_levels_json,source_name,teaching_ready) '+
+   'VALUES(?,?,?,?,?)').run('gdict_recorded','recorded','["cet6"]',
+     'owner_ecdict_exam_snapshot',0);
+  const source=manuscript();
+  const result=await inspectStagingDictionaryNovelV2(env,{package:source});
+  assert.equal(result.ready_to_convert,true);
+  assert.equal(result.unique_main_cards,1);
+  assert.equal(result.converted_package.words[0].id,'gdict_record');
+  assert.ok(result.resolved.some(x=>x.surface==='recorded'&&
+   x.reason==='UNIQUE_REVIEWED_CONTEXT_SENSE'));
+  assert.ok(result.review_queue.length===0);
+  const changed=manuscript();
+  changed.chapters[0].paragraphs[1].segments[1].gloss='制造';
+  const uncertain=await inspectStagingDictionaryNovelV2(env,{package:changed});
+  assert.equal(uncertain.ready_to_convert,false);
+  assert.equal(uncertain.review_queue.length,1);
+  assert.equal(uncertain.review_queue[0].reason,'AMBIGUOUS_HEADWORD_OR_INFLECTION');
+ }finally{sql.close()}
+});
+test('never silently choose among two fully approved dictionary headwords with the same Chinese gloss',async()=>{
+ const {sql,env}=fixture();
+ try{
+  sql.prepare('INSERT INTO global_dictionary_entries '+
+   '(entry_id,headword,exam_levels_json,source_name,teaching_ready,reviewed_at) '+
+   'VALUES(?,?,?,?,?,?)').run('gdict_recorded','recorded','["cet6"]',
+    'owner_ecdict_exam_snapshot',1,'2026-11-10');
+  sql.prepare('INSERT INTO global_dictionary_lessons '+
+   '(entry_id,headword,senses_json,phonetic_uk,phonetic_us,part_of_speech,'+
+   'meaning_zh,example_en,example_zh,collocations_json,reviewed_by,reviewed_at) '+
+   'VALUES(?,?,?,?,?,?,?,?,?,?,?,?)').run(
+    'gdict_recorded','recorded',JSON.stringify([{
+     pos:'v.',meaningZh:'记录',exampleEn:'They recorded it.',
+     exampleZh:'他们记录了这件事。'
+    }]),'/rɪˈkɔːd/','/rɪˈkɔːrd/','v.','记录',
+    'They recorded it.','他们记录了这件事。','[]','editor','2026-11-10');
+  const result=await inspectStagingDictionaryNovelV2(env,{package:manuscript()});
+  assert.equal(result.ready_to_convert,false);
+  assert.equal(result.review_queue.length,1);
+  assert.equal(result.review_queue[0].normalized_surface,'recorded');
+  assert.equal(result.review_queue[0].reason,'AMBIGUOUS_HEADWORD_OR_INFLECTION');
+ }finally{sql.close()}
+});
