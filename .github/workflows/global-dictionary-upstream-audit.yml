@@ -52,6 +52,14 @@ jobs:
           print('source_sha256:',x['source_sha256'])
           if n<10000 or x['training_cards_approved']!=0 or x['imported_into_d1']:
               raise SystemExit('unsafe or unexpectedly small upstream source')
+          rehearsal=x['sqlite_staging_schema_rehearsal']
+          if rehearsal['entries']!=n or rehearsal['forms']!=x['index_statistics']['candidate_forms']:
+              raise SystemExit('schema dry-run row count mismatch')
+          if (rehearsal['approved_entries'] or rehearsal['reviewed_forms'] or
+              rehearsal['enabled_sources'] or rehearsal['foreign_key_violations'] or
+              rehearsal['cloudflare_d1_migrated']):
+              raise SystemExit('unsafe dictionary approvals or schema rehearsal failures')
+          print('schema_dry_run_status:',rehearsal['status'])
           PY
       - name: Upload candidate lexicon + independent MIT notice (no production migration)
         uses: actions/upload-artifact@v4
