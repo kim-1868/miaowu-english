@@ -248,6 +248,7 @@
   <section class="panel" aria-label="上传新小说">
     <div class="panel-heading"><h2>⑦ 上传并发布新小说</h2><span class="soft">仅限已验证发布者</span></div>
     <p class="hint">上传 JSON / Markdown / TXT，识别预览，选择封面，点击「确认上传并上架」。系统会核对章节、词卡资料、权益边界，不通过时保留草稿并提示修正。</p>
+    <p class="hint">预览站新增：支持不附带 <code>words[]</code> 的 V2 小说 JSON。只需在需要学习的单词处标注 <code>{"surface":"record","gloss":"录制"}</code>，系统使用已审核的统一词典生成共享主词卡；普通英文原文不强制生成学习卡。未审核、歧义或缺词会暂停导入。</p>
     <div class="row">
       <label class="stretch" for="uploadNovel">选择小说文件（JSON / Markdown / TXT）
         <input id="uploadNovel" type="file" accept=".json,.md,.markdown,.txt,application/json,text/plain,text/markdown"></label>
