@@ -45,7 +45,8 @@
 - `src/ops-dictionary-v2.js` 已增加 `inspectStagingDictionaryAutoDiscovery`：从真实 staging D1 只读加载匹配词头/lesson/sense，使用旧 Publisher 认证与 `GLOBAL_DICTIONARY_LOOKUP_ENABLED` 特性开关。
 - `src/worker.js` 增加 **POST `/api/ops/import/dictionary-v2/discover`**：仅 staging + 已验证 Publisher 可以调用；原 `/preflight` 仍然保留，且 V1 已上架旧书操作完全未变。
 - 专项测试包括模拟多义 `record` 必须人工确认，以及单一已审核义项只生成可供编辑确认的提案；SQLite 集成证明不写 `books/user_words/review_events`。
-- **当前是代码+自动化测试通过，不是预览站已部署**；运营台还需要把新的只读建议接到可操作的选择/确认 UI，再进行真机/浏览器 E2E 验收。
+- **新版运营台交互代码也已完成（但尚未部署预览站）**：`public/ops-console.js` 的 V2 上传检查新增「无显式目标词」自动识别分支，展示唯一已审核词义建议和未处理项；只要还有未经审核/歧义项就禁止快捷生成草稿，避免悄悄漏词。全部唯一候选由 Publisher 在界面核对并点击确认后，通过 `public/auto-discovery-v2-draft.js` 严格按原文本偏移拆成 `{text}` 与 `{surface,gloss}`，再走原 V2 preflight、稳定义项核验和运营台草稿预览。没有 `words[]`，不自动发布、不修改旧用户进度。测试样本覆盖原文不变、偏移过期/重复/伪造 sense ID 一律拒绝。
+- [最新专用 CI 42860327774](https://github.com/kim-1868/miaowu-english/actions/runs/42860327774) **33/33 成功**：审稿队列、后端 D1 义项读取、运营台浏览器纯转换函数、V2 老接口/SQLite E2E 等全部测试通过。**还没有真实 staging Worker 部署/运营浏览器验收，不代表新功能已在线。**
 
 ## 接下来按优先级完成、绝不偏离
 1. **先审历史 1,067 条**：重点处理 204 个跨书高复用、429 个低冲突、434 个多义/音标专项候选，现有 40 条原创例句仅为编辑草稿。逐项确认真实 IPA、义项、商业许可、原创例句、历史映射；真正通过 OPS Publisher 签核后才创建 approved sense。
