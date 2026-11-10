@@ -184,3 +184,28 @@ test('E2E: an invented V2 target meaning remains blocked before any book or mani
     .get().n,0);
  }finally{sql.close()}
 });
+
+
+test('E2E: a V1 package cannot impersonate an approved canonical card using forged examples',async()=>{
+ const {sql,env}=setup();
+ try{
+  const result=await inspectStagingDictionaryNovelV2(env,{package:sample('cet4')});
+  assert.equal(result.ready_to_convert,true);
+  const original=result.converted_package;
+  const checked=await previewBindingManifest(env,{package:original});
+  assert.equal(checked.ready_to_stage,true);
+  const forged=structuredClone(original);
+  forged.words[0].exampleEn='A fabricated marketing sentence replaces the reviewed dictionary example.';
+  const rejected=await previewBindingManifest(env,{package:forged});
+  assert.equal(rejected.ready_to_stage,false);
+  assert.ok(rejected.blockers.some(x=>x.reason==='CANONICAL_WORD_CARD_CONTENT_MISMATCH'));
+  await assert.rejects(()=>saveStagingBindingManifest(env,{
+    package:forged,requestId:'forged-main-card-01',confirmSave:true,
+    expectedPackageSha256:rejected.package_sha256,
+    expectedBindingSha256:rejected.binding_sha256
+  },actor),/BINDING_REVIEW_REQUIRED/);
+  assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM books').get().n,0);
+  assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM global_dictionary_binding_manifests')
+    .get().n,0);
+ }finally{sql.close()}
+});
