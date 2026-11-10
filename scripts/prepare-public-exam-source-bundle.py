@@ -27,11 +27,11 @@ def digest(path):
 
 def compile_sources(index_path,audit_path,source_csv,source_license,
                     ipa_us,ipa_license,script_path,out,
-                    *,expected=EXPECTED_EXAM_HEADWORDS):
+                    *,expected=EXPECTED_EXAM_HEADWORDS,fixture=False):
     report=json.loads(Path(audit_path).read_text(encoding="utf-8"))
     if(report.get("source_sha256")!=INDEX_SHA or
-       report.get("index_statistics",{}).get("retained_headwords")!=400183 or
-       report.get("index_statistics",{}).get("candidate_forms")!=56898):
+       (not fixture and (report.get("index_statistics",{}).get("retained_headwords")!=400183 or
+       report.get("index_statistics",{}).get("candidate_forms")!=56898))):
         raise ValueError("INDEX_PROVENANCE_NOT_VERIFIED")
     candidates=set()
     source_rows=0
@@ -50,7 +50,7 @@ def compile_sources(index_path,audit_path,source_csv,source_license,
                 if w in candidates:
                     raise ValueError("DUPLICATE_EXAM_HEADWORD")
                 candidates.add(w)
-    if source_rows!=400183 or len(candidates)!=expected:
+    if source_rows!=report.get('index_statistics',{}).get('retained_headwords') or len(candidates)!=expected:
         raise ValueError("EXAM_SOURCE_COUNT_DRIFT")
     for license_path in (source_license,ipa_license):
         notice=Path(license_path).read_text(encoding="utf-8")
