@@ -34,3 +34,16 @@ test('backup workflow identity accepts exact GitHub API path and repository-pref
  assert.match(migration,/\.conclusion=="success"/);
  assert.match(migration,/\.status=="completed"/);
 });
+
+test('invalid staging inputs fail as explicit pre-write step rather than silently skipped job',()=>{
+ assert.match(migration,/Fail closed with clear diagnostics for all confirmation inputs/);
+ const preflight=migration.indexOf('Fail closed with clear diagnostics for all confirmation inputs');
+ const exportStep=migration.indexOf('Verify full test D1 export and independent local SQLite replay');
+ const writeStep=migration.indexOf('Apply only six explicit additive schema files');
+ assert.ok(preflight>0 && exportStep>preflight && writeStep>exportStep);
+ for(const marker of ['STAGING_TARGET_CONFIRMATION_MISMATCH','STAGING_UUID_CONFIRMATION_MISMATCH','STAGING_APPROVAL_TEXT_MISMATCH','BACKUP_RUN_ID_MUST_BE_NUMERIC'])
+  assert.ok(migration.includes(marker),marker);
+ const jobGate=migration.split('    environment:')[0];
+ assert.doesNotMatch(jobGate,/inputs\.confirm_target\s*==/);
+ assert.doesNotMatch(jobGate,/inputs\.confirmation\s*==/);
+});
