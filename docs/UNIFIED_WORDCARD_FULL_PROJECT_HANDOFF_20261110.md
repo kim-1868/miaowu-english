@@ -25,6 +25,18 @@
 
 **数据归属与读取方式：** 私有旧卡/收费小说上下文只留在 ChatGPT Library，不复制公共 GitHub。其他窗口在 Library 搜索准确文件名直接读取；本仓库仅保存不泄漏正文的 [摘要与只读脚本](LEGACY_20261106_PUBLISHED_CARDS_PRIVATE_SOURCE_20261110.md)。这是填充统一教学卡、回溯老身份、修复跨书重复问题的首要历史复用来源；仍需当前正式版及人工义项审核，不能将 1056 个重复旧 ID 直接合并用户复习状态。
 
+## 2026-11-10 最新 B1.3–B1.4 实施进度及授权阻断（优先阅读）
+
+**本段覆盖其他较旧的“一词头只有一份掌握状态”说法。**
+- **总原则：英文词头只有一张展示主卡，但学习状态必须按稳定的已审核义项 sense_id 独立**，相同已审义项跨书不重复学习；异义项分别学习。
+- 已提交 `db/018_global_dictionary_reviewed_senses.sql`、`src/global-dictionary-sense-anchor.js`、`src/global-dictionary-sense-study-rehearsal.js`：已审 sense_id、旧卡 ID 审核关联、章节锚点绑定和按义项合并历史复习的**只读演练**。全部尚未迁移生产/预览数据库。
+- 已提交 `scripts/build-private-historical-sense-worklist.mjs` 和 `scripts/build-private-historical-lesson-drafts.mjs`：从本人的历史私有词卡快照一次性制作 **920 个主词条草稿 / 1,150 个严格义项草稿**（输出于用户本地私有目录，代码已提交；不是已经执行完整私有生成或独立审核完成）。保留 2,206 个旧 ID，禁止自动审核。
+- 我们对历史快照实际再次统计：384 组重复文本候选、1,056 张额外重复卡、**180 个有多个文本义项的词头**、**173 组英美音标存在差异的义项候选**。优先审核高重复、多义项和音标冲突。
+- V2 小说 `/api/ops/import/dictionary-v2/preflight` 已增加 `sense_preflight`，用 018 表中真实审核通过的 sense_id 按章节/段落/位置对齐语境。旧版兼容主卡仍可产出**草稿**，但 `ready_for_sense_study=false` 时不能认作学习状态安全。
+- GitHub CI 截至 2026-11-10 S1 [run 42805336251](https://github.com/kim-1868/miaowu-english/actions/runs/42805336251) 707/708 通过，0 失败、1 跳过；后续提交请以最新 SHA CI 为准。
+- **Cloudflare 真实预览 D1 只读检查未通过**：[Run 42805328444](https://github.com/kim-1868/miaowu-english/actions/runs/42805328444) 判定 `STAGING_D1_READONLY_PROBE_FAILED_D1_TOKEN_PERMISSION`。GitHub Secret 虽存在，但当前 Token 对 D1 远程查询权限不足；不可因此假称已做迁移或实际预览验收。需项目负责人在 Cloudflare 重新授予**仅测试 D1 miaowu-english-test** 所需读写权限/重设安全 Token 后方可执行备份、迁移。不要在公开仓库或聊天发送 Token。
+- 当前正式四级 23 本、六级 5 本的线上受保护正文仍待运营发布者安全导出。不允许从 2026-11-06 跨等级 23 本旧快照推断实时当前覆盖率。
+
 ## 统一身份不变规则
 
 **一个英文主词头可以展示一张主卡，但记忆和复习进度按已审核的 `sense_id` 单独计算**。例如：
