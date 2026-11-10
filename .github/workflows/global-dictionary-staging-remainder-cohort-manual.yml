@@ -73,7 +73,7 @@ jobs:
           curl --fail --silent --show-error --location --retry 3 \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/13778823874/zip" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/13781435146/zip" \
             -o "$archive"
           unzip -t "$archive" >/dev/null
           unzip -q "$archive" -d "$root"
