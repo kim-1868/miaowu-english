@@ -88,3 +88,10 @@
 - 人工写库工作流 `.github/workflows/global-dictionary-staging-migrate-manual.yml` 已新增强制入参 `encrypted_backup_run_id`：必须通过 GitHub API 核验同一 feature 分支成功的加密备份工作流及未过期的加密 artifact，缺失则在远程迁移前中止。
 - 现阶段无成功的持久加密备份运行号，也没有远程 D1 013–018 实际迁移。**切勿把代码写入当作已经备份或迁移**。需要用户自行批准受保护 Environment 并保存解密密码后，方可真正运行备份。
 - Actions Artifact 30 天期限不是永久保存；备份成功后应下载加密 artifact 到独立私有存储，并保留解密密码；再开展隔离副本恢复验证。不得将备份文件或解密密钥公开发布。
+
+## 2026-11-10 · 加密备份运行成功（用户截图核对）
+- GitHub Actions `Dictionary staging D1 encrypted persistent backup (NO remote writes) #1`，源提交 `f2467e3`，分支 `feature/v11-smart-vocab-preflight-20261109`；截图显示 `Success`、`Artifacts: 1`、`backup-test-d1` 绿色（24 秒）；页面总历时 5m39s。
+- 根据经审核的工作流，运行成功表明备份导出、GPG 加密/解密、离线 SQLite 数据完整性及外键验证步骤执行完毕，并产生至少一个 GitHub Artifact。**截图没有展示 Artifact 文件名、大小、到期日或逐步日志；这些仍须核验。**
+- 目前加密备份仅确认保存在 GitHub Actions Artifact（配置保留 30 天），不能把这个等同于用户已下载离线持久保存；解密密码的唯一长期副本需要用户在密码管理器中安全保存。
+- 人工词典迁移工作流含 `encrypted_backup_run_id` 门禁，待从 GitHub 运行详情取得真实数字 run ID；未执行 D1 013–018 迁移，未导入 400183 词头，未操作正式站。
+- 下一操作：用户下载该加密 Artifact 至安全本地或私人备份空间（不得上传公开仓库），核实保存与解密密码已妥善留存；确认后再运行独立的受保护测试 D1 schema 迁移。对 GitHub CI 运行号不可猜测。
