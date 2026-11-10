@@ -92,6 +92,23 @@ export async function previewBindingManifest(env,payload){
         segment_index:binding.segment_index,surface:binding.surface,
         reason:'CONTEXT_GLOSS_NOT_IN_REVIEWED_DICTIONARY_SENSES'});
     }
+    // V2 output reuses the canonical entry ID as the public reader's words.id.
+    // A malicious V1 package must not forge that ID while substituting
+    // different example sentences, phonetics, meanings, or collocations.
+    // Legacy independent IDs remain sidecar-only compatibility proposals.
+    if(binding.legacy_word_id===binding.entry_id){
+      const submitted=valid.words.find(x=>x.id===binding.legacy_word_id);
+      const keys=['headword','phoneticUk','phoneticUs','partOfSpeech',
+        'meaningZh','exampleEn','exampleZh','collocations'];
+      if(!submitted||keys.some(key=>
+        JSON.stringify(submitted[key]??null)!==
+          JSON.stringify(checked.lesson[key]??null))){
+        gateFailures.push({chapter_number:binding.chapter_number,
+          paragraph_index:binding.paragraph_index,
+          segment_index:binding.segment_index,surface:binding.surface,
+          reason:'CANONICAL_WORD_CARD_CONTENT_MISMATCH'});
+      }
+    }
   }
   const manifest={
     version:1,book_id:valid.book.id,category_id:valid.book.category,
