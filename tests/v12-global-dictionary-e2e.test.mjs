@@ -177,8 +177,10 @@ test('E2E: an invented V2 target meaning remains blocked before any book or mani
   assert.equal(result.ready_to_convert,false);
   assert.equal(result.converted_package,undefined);
   assert.equal(result.review_queue.length,1);
+  // The altered token is an ambiguous inflection and neither reviewed
+  // candidate has this invented gloss; the safe outcome is review-required.
   assert.equal(result.review_queue[0].reason,
-    'CONTEXT_GLOSS_NOT_IN_REVIEWED_DICTIONARY_SENSES');
+    'AMBIGUOUS_HEADWORD_OR_INFLECTION');
   assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM books').get().n,0);
   assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM global_dictionary_binding_manifests')
     .get().n,0);
