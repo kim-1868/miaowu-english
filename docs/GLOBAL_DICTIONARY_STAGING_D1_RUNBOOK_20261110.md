@@ -81,3 +81,10 @@
 - 目前只有整体/Job 成功的截图，没有单独截取导出验证步骤的成功标记日志；只能按该工作流所提交的步骤推断，不将截屏当作持久备份证明。
 - 该工作流在 `RUNNER_TEMP` 导出数据并临时 SQLite 恢复验证，结束删除文件；**没有 GitHub artifact、无外部加密持久备份、无远程副本恢复**。
 - **上线阻断仍在**：先备份至受控持久介质，独立验证可恢复与数据一致性，再授权运行会写库的 `global-dictionary-staging-migrate-manual.yml`；不得合并 Draft PR #206 到正式站。
+
+## 2026-11-10 · 持久加密备份的实际执行条件（未运行）
+- 已新增 `.github/workflows/global-dictionary-staging-durable-encrypted-backup.yml`：测试 D1 完整 SQL 导出 → 使用 GnuPG AES-256 密码加密 → 解密比较 → 离线 SQLite 恢复并验证完整性和外键 → 将**仅加密后**的 `.gpg` 文件保存为 GitHub Actions Artifact（30 天），不将明文和密码上传仓库或 artifact。
+- 环境还需设置第三个私有 Secret `STAGING_D1_BACKUP_PASSPHRASE`（密码必须是由安全随机数生成器产生、长度至少 32 字符；必须自行离线保存且不可发送到公开聊天）。现有两个 Cloudflare Secret 不适合作为可持久解密的备份密钥。未设置时备份工作流 **主动失败，不会上传未经加密的数据库**。
+- 人工写库工作流 `.github/workflows/global-dictionary-staging-migrate-manual.yml` 已新增强制入参 `encrypted_backup_run_id`：必须通过 GitHub API 核验同一 feature 分支成功的加密备份工作流及未过期的加密 artifact，缺失则在远程迁移前中止。
+- 现阶段无成功的持久加密备份运行号，也没有远程 D1 013–018 实际迁移。**切勿把代码写入当作已经备份或迁移**。需要用户自行批准受保护 Environment 并保存解密密码后，方可真正运行备份。
+- Actions Artifact 30 天期限不是永久保存；备份成功后应下载加密 artifact 到独立私有存储，并保留解密密码；再开展隔离副本恢复验证。不得将备份文件或解密密钥公开发布。
