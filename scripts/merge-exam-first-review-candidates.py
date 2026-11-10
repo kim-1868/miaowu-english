@@ -8,6 +8,7 @@ import argparse
 import collections
 import hashlib
 import json
+import re
 from pathlib import Path
 
 TIERS = ('基础', '四级新增', '六级新增', '考研新增')
@@ -31,6 +32,33 @@ def sha(path):
         for chunk in iter(lambda:f.read(1<<20),b''):
             dig.update(chunk)
     return dig.hexdigest()
+
+
+# ECDICT sometimes leaves its CSV pos column empty but prefixes translation
+# lines with part-of-speech labels. These are source text hints ONLY: they are
+# not normalized reviewed senses and never imply pronunciation approval.
+_POS_PREFIX = re.compile(r'^\s*(vt\.vi|interj|pron|prep|conj|adj|adv|art|aux|modal|num|abbr|phr|vt|vi|int|n|v|a)\.\s+(.+)', re.I)
+
+def unreviewed_pos_hints(ecdict):
+    if not isinstance(ecdict,dict):
+        return []
+    raw=ecdict.get('raw_chinese_meanings_unverified') or ''
+    if not isinstance(raw,str):
+        return []
+    # ECDICT CSV often encodes newline characters as two literal characters.
+    raw=raw.replace('\\n','\n')
+    hints=[]
+    for segment in raw.splitlines():
+        m=_POS_PREFIX.match(segment)
+        if not m:
+            continue
+        pos=m.group(1).lower()
+        snippet=m.group(2).strip()
+        if not snippet:
+            continue
+        hints.append({'pos_source_label_unverified':pos,
+                      'meaning_source_fragment_unverified':snippet[:240]})
+    return hints
 
 def plan(target_path,historical_path,drafts_path,source_path=None,batch_size=150):
     if not (1<=batch_size<=200):
@@ -88,6 +116,7 @@ def plan(target_path,historical_path,drafts_path,source_path=None,batch_size=150
         if set(source)!=set(by_word):
             raise ValueError('OPENSOURCE_MISSING_OWNER_ROWS')
     results=[]; lane_counts=collections.Counter(); tier_counts=collections.Counter()
+    pos_headwords=0; pos_multiclass=0; pos_fragments=0
     for t in targets:
         word=t['headword']; hist=by_word[word]
         lane=min((PRIORITY.index(h['review_priority_lane']) for h in hist),default=3)
@@ -112,6 +141,10 @@ def plan(target_path,historical_path,drafts_path,source_path=None,batch_size=150
                 'publisher_approved':False
             })
         src=source.get(word)
+        pos_hints=unreviewed_pos_hints(src.get('ecdict')) if src else []
+        pos_headwords+=bool(pos_hints)
+        pos_multiclass+=(len({h['pos_source_label_unverified'] for h in pos_hints})>1)
+        pos_fragments+=len(pos_hints)
         result={
             'schema':'wordletter-exam-first-private-review-v1',
             'headword':word,'entry_id':identity[word],
@@ -119,6 +152,7 @@ def plan(target_path,historical_path,drafts_path,source_path=None,batch_size=150
             'review_lane':state,'review_sense_count':len(sense_rows),
             'historical_sense_candidates':sense_rows,
             'source_ecdict_unverified':src.get('ecdict') if src else None,
+            'source_pos_hints_unverified':pos_hints,
             'source_ipa_us_unverified':src.get('phonetic_us_candidates_unverified') if src else None,
             'source_blockers':src.get('blockers',[]) if src else ['PINNED_ECDICT_AND_IPA_SOURCE_JOIN_PENDING'],
             'requires_new_original_example':not any(s['editorial_example_en_draft'] for s in sense_rows),
@@ -140,6 +174,9 @@ def plan(target_path,historical_path,drafts_path,source_path=None,batch_size=150
         'legacy_old_word_ids_preserved':len(used_old),
         'original_editorial_example_suggestions':len(suggestions),
         'headwords_with_pinned_opensource_candidates':len(source),
+        'ecdict_pos_hint_headwords_unverified':pos_headwords,
+        'ecdict_pos_hint_multiclass_headwords_unverified':pos_multiclass,
+        'ecdict_pos_hint_fragments_unverified':pos_fragments,
         'review_lanes':dict(lane_counts),
         'tiers':dict(tier_counts),
         'batch_size':batch_size,'batches':(len(results)+batch_size-1)//batch_size,
