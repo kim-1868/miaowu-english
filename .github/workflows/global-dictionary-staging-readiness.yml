@@ -57,7 +57,20 @@ jobs:
           fi
           SQL="SELECT name FROM sqlite_master WHERE type='table' AND name IN ('books','words','user_words','chapter_words','global_dictionary_sources','global_dictionary_entries','global_dictionary_forms','global_dictionary_lessons','global_dictionary_senses','global_dictionary_legacy_sense_links','global_dictionary_book_sense_bindings') ORDER BY name;"
           if ! npx wrangler d1 execute miaowu-english-test --remote --config wrangler.jsonc --command "$SQL" >/tmp/global-dictionary-staging-tables 2>&1; then
-            echo 'STAGING_D1_READONLY_QUERY_FAILED_NO_SCHEMA_ASSERTION'
+            node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const raw=fs.readFileSync('/tmp/global-dictionary-staging-tables','utf8');
+          const types=[
+           [/Authentication error|Invalid API Token|not authorized|permission|insufficient privileges|code: 10000|code 10000/i,'D1_TOKEN_PERMISSION'],
+           [/database.*not found|unknown database|no database/i,'STAGING_DATABASE_LOOKUP'],
+           [/failed to fetch|network|connect|timeout|429|503/i,'NETWORK_OR_RATE_LIMIT'],
+           [/unknown option|invalid argument|Unexpected argument|could not find config/i,'WRANGLER_CLI_ARGUMENT'],
+           [/SQLITE_ERROR|near .+ syntax error|not a valid SQL/i,'READONLY_SQL_SYNTAX']
+          ];
+          const type=types.find(([re])=>re.test(raw))?.[1]||'UNKNOWN_REDACTED_ERROR';
+          console.log('STAGING_D1_READONLY_PROBE_FAILED_'+type);
+          console.log('PRIVATE_ERROR_TEXT_NOT_EXPORTED_TO_CI');
+          NODE
             exit 1
           fi
           node --input-type=module <<'NODE'
