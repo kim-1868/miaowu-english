@@ -163,6 +163,15 @@ export function convertDictionaryNovelV2(source,index,lessons,{decisions=[]}={})
    review_queue.push({...base,reason:'LESSON_NOT_APPROVED_OR_INCOMPLETE'});
    continue;
   }
+  // Even an exact English lemma may have unrelated senses. A valid card
+  // does not prove the author's gloss is that lemma's reviewed meaning.
+  // Guard before generating both the V1 words[] and per-token wordId.
+  const glossKey=item.gloss.normalize('NFKC').replace(/\s+/gu,'').trim();
+  if(!audited.senses.some(sense=>
+    sense.meaningZh.normalize('NFKC').replace(/\s+/gu,'').trim()===glossKey)){
+   review_queue.push({...base,reason:'CONTEXT_GLOSS_NOT_IN_REVIEWED_DICTIONARY_SENSES'});
+   continue;
+  }
   if(byCard.has(selected.entry_id)&&
      JSON.stringify(byCard.get(selected.entry_id))!==
      JSON.stringify(audited.lesson))
