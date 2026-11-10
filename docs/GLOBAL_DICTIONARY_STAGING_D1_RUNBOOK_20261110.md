@@ -74,3 +74,10 @@
 - 修正原人工迁移工作流导出参数由 `--yes` 改为官方明确支持的 `--skip-confirmation`（提交 `469e8c1`）；未启动该人工迁移工作流。
 - 新的备份演练工作流设为 feature 分支 push 触发，需用户在 GitHub Actions 看到 `Dictionary staging D1 BACKUP and local restore rehearsal (no D1 writes)` 并按环境人工审批。必须查看真实 CI 日志，代码提交不能视为远程备份成功。
 - 官方参考：https://developers.cloudflare.com/d1/wrangler-commands/ 与 https://developers.cloudflare.com/d1/reference/time-travel/ 。
+
+## 2026-11-10 · 备份恢复演练实际运行状态（用户截图确认）
+- GitHub Actions `Dictionary staging D1 BACKUP and local restore rehearsal (no D1 writes) #1`，运行分支 `feature/v11-smart-vocab-preflight-20261109`，源提交前缀 `804c25a`。
+- 截图显示 `The deployments have been approved`、整体 `Success`、`export-and-replay` 绿色成功（job 16 秒；页面总耗时 1m28s）。
+- 目前只有整体/Job 成功的截图，没有单独截取导出验证步骤的成功标记日志；只能按该工作流所提交的步骤推断，不将截屏当作持久备份证明。
+- 该工作流在 `RUNNER_TEMP` 导出数据并临时 SQLite 恢复验证，结束删除文件；**没有 GitHub artifact、无外部加密持久备份、无远程副本恢复**。
+- **上线阻断仍在**：先备份至受控持久介质，独立验证可恢复与数据一致性，再授权运行会写库的 `global-dictionary-staging-migrate-manual.yml`；不得合并 Draft PR #206 到正式站。
