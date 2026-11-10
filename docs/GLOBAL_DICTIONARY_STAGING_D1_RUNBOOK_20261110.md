@@ -52,3 +52,8 @@
 - 新增 `.github/workflows/global-dictionary-staging-authorized-readonly.yml`（SHA `75dca6c`）：在受保护环境获批准后，只读取测试 D1 的核心表/词典表数量和 Time Travel 元数据，不导出用户记录、不输出书籍内容、不执行 SQL DDL/DML 或部署。
 - 此 workflow 通过对应文件变动的 feature 分支 push 触发；可在 Actions 找到 `Dictionary staging D1 authorized READ ONLY baseline`，若出现 `Review deployments`，由账户所有人审批。**勿启动** `Manual staging D1 dictionary schema 013-018 (never production)`，那是会写库的不同工作流。
 - 审批后必须根据 CI 实际结论继续。即使只读成功，仍未满足持久备份、独立恢复、正式教学义项审核等上线条件。
+
+## 2026-11-10 · 用户预览 D1 只读授权验收
+- 用户提供 GitHub Actions 截图：`Dictionary staging D1 authorized READ ONLY baseline #1`，提交前缀 `75dca6c`，分支 `feature/v11-smart-vocab-preflight-20261109`；页面显示 `The deployments have been approved`、整体 `Success`、`readonly-test-d1` 绿色成功（job 15 秒）。
+- 这证明环境审批与只读工作流运行成功；**未在此确认具体 D1 表计数与 Time Travel 输出的逐行日志**，应在后续阶段保留脱敏检查结果。
+- 此次仍未操作 schema 013–018 远程迁移、完整 SQL 导出、持久备份、远程恢复演习、教学义项审核或 Worker 部署；上述项目持续未完成，禁止提前启动写库工作流。
