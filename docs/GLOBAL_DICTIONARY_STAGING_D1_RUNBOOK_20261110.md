@@ -66,3 +66,11 @@
 - `STAGING_D1_TIMETRAVEL_INFO_AVAILABLE_VALUE_REDACTED`
 - `NO_EXPORT_NO_RESTORE_NO_MIGRATION_NO_DEPLOYMENT`
 结论：隔离测试 D1 的四张核心表已确认、统一词典十表尚未迁移、Time Travel info 可读取，**无数据库写入**。检查结果符合预期。**尚未完成备份导出、持久化保存、独立恢复演练、词头导入、教学词卡审核或读者数据迁移；不可直接发布或绕过写入门禁。**
+
+## 2026-11-10 · 备份演练已准备（需审批执行）
+- 新增 `.github/workflows/global-dictionary-staging-backup-rehearsal.yml`（提交 `804c25a`），仅在受保护 GitHub Environment `staging-d1-schema-approval` 中运行，固定测试库名称及 UUID：`miaowu-english-test` / `88a817cb-23bb-4ae4-bcb8-92286c4165d4`。
+- 使用官方 Wrangler `d1 export --remote --skip-confirmation` 导出完整测试库到 Runner 私有临时文件；使用 `sqlite3` 离线恢复，核验 `integrity_check`、`foreign_key_check`、4 张基础表及迁移前词典表为 0；核验 Time Travel 元数据，**不执行远程 D1 写入或恢复**。
+- 敏感 SQL/SQLite 备份不放入 GitHub artifacts、不进日志、不进仓库；当前流程结束会删除临时文件。因此它是**可重复的恢复演练，不是持久备份**。下一步必须另行将加密的测试库备份存到受控持久介质，并验证读取与恢复后，方能启动写库迁移。
+- 修正原人工迁移工作流导出参数由 `--yes` 改为官方明确支持的 `--skip-confirmation`（提交 `469e8c1`）；未启动该人工迁移工作流。
+- 新的备份演练工作流设为 feature 分支 push 触发，需用户在 GitHub Actions 看到 `Dictionary staging D1 BACKUP and local restore rehearsal (no D1 writes)` 并按环境人工审批。必须查看真实 CI 日志，代码提交不能视为远程备份成功。
+- 官方参考：https://developers.cloudflare.com/d1/wrangler-commands/ 与 https://developers.cloudflare.com/d1/reference/time-travel/ 。
