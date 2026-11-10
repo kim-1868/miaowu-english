@@ -122,5 +122,25 @@ class SourceCandidateTests(unittest.TestCase):
                 self.build(p)
 
 
+    def test_translation_prefix_pos_candidates_are_safe_review_hints(self):
+        text = r"n. 记录\nvt. 记录\nvi. 录音\na. 创纪录的\n[计] 术语\nn. 纪录"
+        self.assertEqual(
+            mod.extract_pos_candidates_from_translation(text),
+            ["n.", "vt.", "vi.", "adj."]
+        )
+        self.assertEqual(mod.extract_pos_candidates_from_translation("adj. 丰富的\nadv. 丰富地"), ["adj.", "adv."])
+        self.assertEqual(mod.extract_pos_candidates_from_translation("[计] n. 不应误认"), [])
+        self.assertEqual(mod.extract_pos_candidates_from_translation(None), [])
+        with tempfile.TemporaryDirectory() as d:
+            p = self.sources(d)
+            self.build(p)
+            lines = [json.loads(x) for x in (p / "private-output/exam-first-opensource-candidate-only.jsonl").read_text().splitlines()]
+            self.assertEqual(lines[0]["ecdict"]["pos_candidates_from_translation_unverified"], ["adj."])
+            self.assertEqual(lines[1]["ecdict"]["pos_candidates_from_translation_unverified"], ["n.", "vt."])
+            summary = json.loads((p / "private-output/candidate-summary.json").read_text())
+            self.assertEqual(summary["ecdict_pos_prefix_extracted"], 2)
+            self.assertEqual(summary["publishable_rows"], 0)
+
+
 if __name__=="__main__":
     unittest.main()
