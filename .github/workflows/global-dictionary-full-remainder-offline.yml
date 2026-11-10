@@ -7,6 +7,8 @@ on:
       - scripts/prepare-full-dictionary-remainder.py
       - tests/test_full_dictionary_remainder.py
       - scripts/verify-staging-dictionary-remainder-cohort.py
+      - tests/test_staging_dictionary_remainder_workflow.py
+      - .github/workflows/global-dictionary-staging-remainder-cohort-manual.yml
       - db/013_global_dictionary.sql
   workflow_dispatch:
 permissions:
@@ -25,7 +27,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Run all offline remainder unit tests
-        run: python -m unittest discover -s tests -p 'test_full_dictionary_remainder.py' -v
+        run: python -m unittest discover -s tests -p 'test_full_dictionary_remainder.py' -v\n          python -m unittest discover -s tests -p 'test_staging_dictionary_remainder_workflow.py' -v
       - name: Recover pinned audited upstream source without Cloudflare token
         shell: bash
         env:
