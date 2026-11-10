@@ -1357,6 +1357,34 @@ async function examineNovel(){
  if(/\.json$/i.test(novel.name)){
   try{const data=JSON.parse(source);pkg=data.package??data;}
   catch{throw Error("文件不是有效JSON，请检查文件格式")}
+  if(pkg?.version===2){
+    if(identity?.environment!=="staging")
+      throw Error("无需附带词卡的新版小说 JSON 暂只在预览站支持。");
+    const result=await api("/api/ops/import/dictionary-v2/preflight","POST",{
+      package:pkg
+    });
+    if(!result.ready_to_convert||!result.converted_package){
+      const blocked=result.review_queue||[];
+      $("uploadReport").hidden=false;
+      $("uploadReport").textContent=[
+        "统一词典自动识别（V2：小说不需要 words[]）",
+        "目标词总出现："+result.source_target_occurrences,
+        "已审核并可匹配："+result.approved_occurrences,
+        "仍需人工审核："+blocked.length,
+        ...blocked.slice(0,35).map(x=>
+          "第"+x.chapter_number+"章·第"+(x.paragraph_index+1)+"段 · "+
+          x.surface+"："+x.reason+
+          "；候选："+(x.candidates||[]).map(c=>c.headword).join("/"))
+      ].join("\n");
+      uploadMsg("新版小说已识别，但有"+blocked.length+
+        "处词卡关联或教学资料待复核；当前不允许上传，旧内容不会受到影响。");
+      syncButtons();
+      return;
+    }
+    pkg=result.converted_package;
+    uploadMsg("已从审核后的统一词典自动生成"+result.unique_main_cards+
+      "张共享主词卡，保持原文与词义标注不变。下一步检查预览及封面。");
+  }
   report=localReport(pkg,null);
  }else if(/\.(md|markdown|txt)$/i.test(novel.name)){
   const title=$("uploadBookTitle").value.trim()||uploadedTitle(novel.name);
