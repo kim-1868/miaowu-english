@@ -94,3 +94,25 @@ jobs:
           console.log('NO_STORY_NO_ACCOUNT_NO_SECRET_DATA_EXPORTED');
           console.log('NO_CLOUDFLARE_DATABASE_WRITE_OR_DEPLOYMENT_EXECUTED');
           NODE
+      - name: Verify D1 Time Travel bookmark is readable, never print its value
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo 'STAGING_D1_BOOKMARK_READ_BLOCKED_MISSING_SECRET'
+            exit 1
+          fi
+          # This is a metadata read, never "restore". Do not log the bookmark.
+          if ! npx wrangler d1 time-travel info miaowu-english-test --config wrangler.jsonc >/tmp/private-staging-bookmark 2>&1; then
+            echo 'STAGING_D1_BOOKMARK_READ_BLOCKED_OR_UNSUPPORTED'
+            exit 1
+          fi
+          if ! grep -qi 'bookmark' /tmp/private-staging-bookmark; then
+            echo 'STAGING_D1_BOOKMARK_NOT_REPORTED'
+            exit 1
+          fi
+          echo 'STAGING_D1_TIMETRAVEL_BOOKMARK_READ_OK'
+          echo 'NO_RESTORE_NO_MIGRATION_NO_EXPORT_NO_BOOKMARK_DISCLOSURE'
