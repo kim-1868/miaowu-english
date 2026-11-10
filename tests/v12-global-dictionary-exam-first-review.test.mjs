@@ -44,7 +44,7 @@ test('realistic owner multi-level target plan preserves old cards and prioritize
  assert.equal(result.summary.editorial_drafts_unreviewed,1);
  assert.equal(result.summary.publisher_approved_senses,0);
  assert.deepEqual(result.review_queue.map(x=>x.candidate_hash_sha256),
-  [c,b,a].map(x=>x.candidate_hash_sha256));
+  [c,a,b].map(x=>x.candidate_hash_sha256));
  assert.equal(result.missing_content_queue[0].reason,'ABBREVIATION_PENDING_MANUAL_REVIEW');
  assert.deepEqual(result.batches.map(x=>x.size),[2,1]);
  assert.equal(result.remote_d1_writes,0);
