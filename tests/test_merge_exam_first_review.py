@@ -36,6 +36,24 @@ class MergeTest(unittest.TestCase):
         items,summary=self.run_plan('s')
         self.assertEqual(summary['headwords_with_pinned_opensource_candidates'],2)
         self.assertEqual(items[0]['source_ipa_us_unverified'],['/a/'])
+    def test_ecdict_pos_hint_extraction_unreviewed(self):
+        self.assertEqual(review_join.unreviewed_pos_hints({'raw_chinese_meanings_unverified':
+            r'n. 记录, 履历\nvt. 录制, 记录\na. 创纪录的\n[计] 录制'}),[
+            {'pos_source_label_unverified':'n','meaning_source_fragment_unverified':'记录, 履历'},
+            {'pos_source_label_unverified':'vt','meaning_source_fragment_unverified':'录制, 记录'},
+            {'pos_source_label_unverified':'a','meaning_source_fragment_unverified':'创纪录的'}])
+        self.w('s',[{'headword':word,'entry_id':eid,'teaching_ready':False,
+                      'publisher_approved':False,'publication_ready':False,'sense_id':None,
+                      'ecdict':{'raw_chinese_meanings_unverified':
+                          r'n. 记录\nvt. 录制' if word=='record' else 'n. 苹果'},
+                      'phonetic_us_candidates_unverified':['/a/']}
+                    for word,eid in [('record','gdict_123'),('apple','gdict_234')]])
+        items,summary=self.run_plan('s')
+        self.assertEqual(summary['ecdict_pos_hint_headwords_unverified'],2)
+        self.assertEqual(summary['ecdict_pos_hint_multiclass_headwords_unverified'],1)
+        self.assertEqual(summary['ecdict_pos_hint_fragments_unverified'],3)
+        self.assertTrue(all(not x['publisher_approved'] and not x['teaching_ready'] for x in items))
+
     def test_source_preapproved_blocks(self):
         self.w('s',[{'headword':'record','entry_id':'gdict_123','teaching_ready':True,'publisher_approved':False,'publication_ready':False,'sense_id':None}])
         with self.assertRaisesRegex(ValueError,'UNSAFE_OPENSOURCE_CANDIDATE'):
