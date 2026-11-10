@@ -40,3 +40,9 @@
 ## 目前结论
 - 可作为起点：本地 SQLite 400,183 词头 / 56,898 词形零外键错误模拟；677 项测试中 676 通过、1 跳过、0 失败（详见专项报告）。
 - **尚无可认定的远程测试 D1 迁移证据；0 个正式批准教学义项。不得把本清单勾选为完成，也不得将 Draft PR #206 合并上线。**
+
+## 2026-11-10 安全门禁补强（代码已提交，远程尚未执行）
+- 手动迁移 workflow `.github/workflows/global-dictionary-staging-migrate-manual.yml` 在申请写入前先用官方 `wrangler d1 export --remote` 导出 **测试 D1 完整 schema + 数据**，使用 SQLite CLI 恢复到独立文件，并检查完整性、外键与 4 张历史基础表；任意失败则停在写入前。
+- 离线防回退测试 `tests/v12-dictionary-staging-export-gate.test.mjs` 已加入自动 dry-run 工作流；请以 GitHub Actions 实际结果为准，代码提交不等于 CI 已通过。
+- **重要限制**：Runner 中的导出文件只在当前 job 短暂保存并于结束删除，**不是持久备份**；即使回放成功也不能替代事先安全保存的独立备份和 D1 Time Travel 恢复保障。现有 workflow 仅核实 bookmark 存在，尚未实际对远程隔离副本进行恢复测试。未补齐持久恢复证明和保护环境人工批准前，不应启动 `apply-on-test-only`。
+- 本次没有使用 Cloudflare 密钥，没有触发远程导出/迁移，没有启动正式站部署。测试 D1 环境授权、实际备份保留、预览 Worker 验收依旧待完成。
