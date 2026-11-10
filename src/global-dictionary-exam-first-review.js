@@ -25,7 +25,7 @@ export function planExamFirstPrivateEditorialQueue({
       row.priority_order!==words.size+1||!(WORD.test(head)||ABBR.test(head))||
       forbiddenApproval(row))throw Error('INVALID_EXAM_FIRST_TARGET');
    const exact=row.status==='exact_unreviewed_candidate';
-   if(exact&&(!ENTRY.test(row.entry_id||'')||
+   if(exact&&(!WORD.test(head)||!ENTRY.test(row.entry_id||'')||
       !Array.isArray(row.upstream_exam_tags)||!row.upstream_exam_tags.length))
      throw Error('TARGET_SOURCE_INDEX_UNVERIFIED');
    if(!exact&&(row.status!=='missing_abbreviation_or_token'||row.entry_id!=null||
