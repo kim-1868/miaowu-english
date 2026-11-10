@@ -113,3 +113,10 @@
 - 核实备份 run `42836917076` 的 GitHub API 真值：`status=completed`，`conclusion=success`，`head_branch=feature/v11-smart-vocab-preflight-20261109`，`path=.github/workflows/global-dictionary-staging-durable-encrypted-backup.yml`。旧门禁仅接受 `/.github/...` 后缀，拒绝了没有斜杠前缀的合法路径。此处是门禁误拒，不是备份失效。
 - 已修复为**精确匹配路径或仓库前缀路径**两种 GitHub API 合法形式，同时保持备份运行成功、分支一致、未过期非空 Artifact 的条件；提交 `64e9040`。增加回归测试，提交 `22f0dfb`。
 - 修复后的迁移 **尚未实际运行**，旧 run 仍然失败；下次必须从 `Run workflow` 发起**新运行**并选 feature 分支，不能点击旧失败 run 的 `Re-run jobs`（否则仍引用旧的 commit SHA）。
+
+## 2026-11-10 · 第二次迁移任务被跳过（未写库）
+- 用户截图显示手动迁移工作流 **#2**（提交 `7dd3947`）状态为 `Skipped`，任务 `apply-on-test-only` 未执行，因此不是 Cloudflare SQL 执行错误；并未发生本次远程 D1 写入。
+- 实际 GitHub run `42841540964`，job `129917776248`，GitHub Jobs API 确认任务结论为 `skipped` 且无步骤记录。
+- 当前工作流 job-level `if` 需要 actor、repository、分支、三个手动确认值全部精确一致。截图足以确认 actor 与分支，但**无法独立确认哪一个输入文本不匹配**；不能猜测或宣称一个确定的输错字段。
+- 已将手动确认值检查从 job 级别转移到最前的独立 fail-closed 步骤，逐项输出脱敏错误类别（`STAGING_TARGET_CONFIRMATION_MISMATCH` / `STAGING_UUID_CONFIRMATION_MISMATCH` / `STAGING_APPROVAL_TEXT_MISMATCH` / `BACKUP_RUN_ID_MUST_BE_NUMERIC`），不会打印实际字段值；仓库/actor/branch 的 job 级门禁仍保留。错误时即停止，绝不进入 D1 导出或迁移。提交 `2ee037e`，增加回归测试 `ff512ee`。
+- 请在新的 CI 通过之后从新版本手动创建一次新 run，不要 rerun 旧 SHA，保持正确 feature 分支以及此前加密备份 run `42836917076`。若任务红叉，再看具体首个失败步骤，而不是重复猜输入。
