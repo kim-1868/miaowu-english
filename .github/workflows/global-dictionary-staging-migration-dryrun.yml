@@ -11,7 +11,9 @@ on:
       - db/017_global_dictionary_legacy_links.sql
       - db/018_global_dictionary_reviewed_senses.sql
       - scripts/rehearse-dictionary-staging-migration.mjs
+      - scripts/rehearse-dictionary-staging-rollback.mjs
       - tests/v12-dictionary-staging-additive-plan.test.mjs
+      - tests/v12-dictionary-staging-rollback.test.mjs
   workflow_dispatch:
 permissions:
   contents: read
@@ -30,5 +32,6 @@ jobs:
         run: |
           set -euo pipefail
           node --experimental-sqlite scripts/rehearse-dictionary-staging-migration.mjs
-          node --experimental-sqlite --test tests/v12-dictionary-staging-additive-plan.test.mjs
+          node --experimental-sqlite scripts/rehearse-dictionary-staging-rollback.mjs
+          node --experimental-sqlite --test tests/v12-dictionary-staging-additive-plan.test.mjs tests/v12-dictionary-staging-rollback.test.mjs
           echo "NO_CLOUDFLARE_SECRETS_NO_REMOTE_MIGRATIONS_NO_DATA_WRITES"
