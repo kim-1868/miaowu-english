@@ -1,0 +1,31 @@
+name: Global dictionary exam-first private review JOIN synthetic QA
+on:
+  push:
+    paths:
+      - scripts/merge-exam-first-review-candidates.py
+      - tests/test_merge_exam_first_review.py
+      - .github/workflows/global-dictionary-review-join-qa.yml
+  pull_request:
+    paths:
+      - scripts/merge-exam-first-review-candidates.py
+      - tests/test_merge_exam_first_review.py
+      - .github/workflows/global-dictionary-review-join-qa.yml
+permissions:
+  contents: read
+jobs:
+  synthetic-private-data-free:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify review join rejects identity collisions and never publishes
+        run: python -m unittest discover -s tests -p 'test_merge_exam_first_review.py' -v
+      - name: Assert zero remote publishing and no owner datasets in this workflow
+        run: |
+          ! grep -E 'wrangler|CLOUDFLARE_|curl|requests|urllib|publisher_approved.*True' scripts/merge-exam-first-review-candidates.py
+          echo 'SYNTHETIC_QA_ONLY_NO_PRIVATE_INPUT_NO_D1'
