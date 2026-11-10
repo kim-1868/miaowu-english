@@ -668,7 +668,9 @@ async function api(req, env) {
        path==="/api/ops/import/bindings/confirm"||
        path==="/api/ops/import/bindings/export")return handleOpsBindingManifest(req,env,path);
     if(path==="/api/ops/import/bindings/attach")return handleOpsDictionaryAttach(req,env,path);
-    if(path==="/api/ops/import/dictionary-v2/preflight")return handleOpsDictionaryNovelV2(req,env,path);
+    if(path==="/api/ops/import/dictionary-v2/preflight"||
+       path==="/api/ops/import/dictionary-v2/discover")
+      return handleOpsDictionaryNovelV2(req,env,path);
     if(path==="/api/ops/import"||path==="/api/ops/lexicon")return handleOpsImport(req,env,path);
     if(path==="/api/ops/import/revise")return handleOpsDraftRevision(req,env,path);
     if(/^\/api\/ops\/books\/[a-z][a-z0-9_-]{2,79}\/live-editor(?:\/|$)/.test(path))
