@@ -159,10 +159,16 @@ test('same form can resolve to different canonical entries in different contexts
     '(entry_id,headword,senses_json,phonetic_uk,phonetic_us,part_of_speech,'+
     'meaning_zh,example_en,example_zh,collocations_json,reviewed_by,reviewed_at) '+
     'VALUES(?,?,?,?,?,?,?,?,?,?,?,?)').run(
-      entry,word,JSON.stringify([{pos:'v.',meaningZh:'看见',
-        exampleEn:'I saw a bird.',exampleZh:'我看见一只鸟。'}]),
-      '/sɔː/','/sɔː/','v.','看见',
-      'I saw a bird.','我看见一只鸟。','[]','reviewer','2026-11-10');
+      entry,word,JSON.stringify([entry==='gdict_saw'
+        ?{pos:'n.',meaningZh:'锯子',exampleEn:'The saw is sharp.',
+          exampleZh:'这把锯子很锋利。'}
+        :{pos:'v.',meaningZh:'看见',exampleEn:'I saw a bird.',
+          exampleZh:'我看见一只鸟。'}]),
+      '/sɔː/','/sɔː/',entry==='gdict_saw'?'n.':'v.',
+      entry==='gdict_saw'?'锯子':'看见',
+      entry==='gdict_saw'?'The saw is sharp.':'I saw a bird.',
+      entry==='gdict_saw'?'这把锯子很锋利。':'我看见一只鸟。',
+      '[]','reviewer','2026-11-10');
   }
   const without=await inspectStagingDictionaryNovelV2(env,{package:source});
   assert.equal(without.ready_to_convert,false);
@@ -271,5 +277,19 @@ test('never silently choose among two fully approved dictionary headwords with t
   assert.equal(result.review_queue.length,1);
   assert.equal(result.review_queue[0].normalized_surface,'recorded');
   assert.equal(result.review_queue[0].reason,'AMBIGUOUS_HEADWORD_OR_INFLECTION');
+ }finally{sql.close()}
+});
+
+test('A4.3 exact lemma still rejects an unsupported Chinese contextual gloss',async()=>{
+ const {sql,env}=fixture();
+ try{
+   const source=manuscript();
+   source.chapters[0].paragraphs[0].segments[1].gloss='扭曲事实';
+   const result=await inspectStagingDictionaryNovelV2(env,{package:source});
+   assert.equal(result.ready_to_convert,false);
+   assert.equal(result.converted_package,undefined);
+   assert.equal(result.review_queue.length,1);
+   assert.equal(result.review_queue[0].reason,
+     'CONTEXT_GLOSS_NOT_IN_REVIEWED_DICTIONARY_SENSES');
  }finally{sql.close()}
 });
