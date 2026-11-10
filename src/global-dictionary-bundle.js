@@ -53,7 +53,7 @@ export async function verifyGlobalDictionaryBindingBundle(bundle){
        !Number.isInteger(raw.segment_index)||
        !ID.test(raw.entry_id||'')||
        !ID.test(raw.legacy_word_id||'')||
-       !['unique_verified_match','reviewed_selection'].includes(raw.resolution))
+       !['unique_verified_match','reviewed_selection','canonical_anchored_reviewed_form'].includes(raw.resolution))
       throw Error('INVALID_DICTIONARY_BUNDLE_BINDING');
     const k=key(raw.chapter_number,raw.paragraph_index,raw.segment_index);
     if(seen.has(k))throw Error('BUNDLE_DUPLICATE_BINDING_COORDINATE');
