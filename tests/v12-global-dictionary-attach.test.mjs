@@ -34,7 +34,7 @@ function setup(){
  try{
   sql.exec(readFileSync(new URL('../db/001_schema.sql',import.meta.url),'utf8'));
   for(const file of ['013_global_dictionary.sql','014_global_dictionary_bindings.sql',
-    '015_global_dictionary_book_bindings.sql'])
+    '015_global_dictionary_book_bindings.sql','016_global_dictionary_lessons.sql'])
     sql.exec(readFileSync(new URL('../db/'+file,import.meta.url),'utf8'));
   sql.exec('CREATE TABLE word_categories(word_id TEXT,category_id TEXT,'+
     'proficiency_note TEXT,PRIMARY KEY(word_id,category_id));');
@@ -51,6 +51,20 @@ function setup(){
     'VALUES(?,?,?,?,?,?)').run(
       'gdict_record','record','["cet4","cet6"]',
       'owner_ecdict_exam_snapshot',1,'2026-11-10');
+
+  sql.prepare('INSERT INTO global_dictionary_lessons '+
+   '(entry_id,headword,senses_json,phonetic_uk,phonetic_us,part_of_speech,'+
+   'meaning_zh,example_en,example_zh,collocations_json,reviewed_by,reviewed_at) '+
+   'VALUES(?,?,?,?,?,?,?,?,?,?,?,?)').run(
+    'gdict_record','record',JSON.stringify([
+      {pos:'v.',meaningZh:'录制',exampleEn:'They recorded a conversation.',
+       exampleZh:'他们录制了对话。'},
+      {pos:'n.',meaningZh:'记录',exampleEn:'Keep a record of it.',
+       exampleZh:'把它记录下来。'}
+    ]),'/ˈrekɔːd/','/ˈrekɔːrd/','n./v.','记录；录制',
+    'They recorded the conversation.','他们录制了对话。',
+    '[]','reviewer-staging','2026-11-10');
+
   const db={
    prepare(query){
     const make=(args)=>({
