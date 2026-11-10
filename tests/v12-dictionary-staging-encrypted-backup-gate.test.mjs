@@ -26,3 +26,11 @@ test('manual migration requires durable verified encrypted backup run',()=>{
  assert.match(migration,/\.expired==false and \.size_in_bytes>0/);
  assert.match(migration,/PERSISTED_ENCRYPTED_BACKUP_ARTIFACT_MISSING/);
 });
+
+test('backup workflow identity accepts exact GitHub API path and repository-prefixed path, no other workflow',()=>{
+ const condition='(.path==".github/workflows/global-dictionary-staging-durable-encrypted-backup.yml" or (.path | endswith("/.github/workflows/global-dictionary-staging-durable-encrypted-backup.yml")))';
+ assert.ok(migration.includes(condition),'path check must match both GitHub API representations');
+ assert.match(migration,/\.head_branch=="feature\/v11-smart-vocab-preflight-20261109"/);
+ assert.match(migration,/\.conclusion=="success"/);
+ assert.match(migration,/\.status=="completed"/);
+});
