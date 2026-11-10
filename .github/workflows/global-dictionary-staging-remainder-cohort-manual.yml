@@ -168,7 +168,6 @@ jobs:
           import json,sys
           from pathlib import Path
           plan=json.load(open(sys.argv[1],encoding='utf-8'))
-          root=Path("PLACEHOLDER")
           for f in plan["files"]:
             print("full-remainder-candidate/" + f"cohort-{plan['cohort']:02d}-{plan['kind']}/" + f)
           PY
