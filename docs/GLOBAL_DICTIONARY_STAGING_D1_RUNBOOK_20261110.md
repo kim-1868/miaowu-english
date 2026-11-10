@@ -129,3 +129,9 @@
 - 工作流最终返回 `{"status":"STAGING_DICTIONARY_SCHEMA_APPLIED_TO_TEST_ONLY","files_applied":6,"tables":10,"triggers":5,"old_learning_rows_written":0,"production_d1_accessed":false}`。
 - **已完成：测试 D1 结构部署。尚未导入候选词头或正式签核教学义项；尚未实施历史小说配卡、历史用户学习义项迁移、预览 Worker 部署和前端端到端验收。** 不得将「迁移成功」误写成「统一词典全量教学卡已完成」。
 - 下一阶段先执行迁移后只读数据完整性核查（10 张表、5 个触发器、4 张基础表存在、Foreign key、未经审核项未发布）；其后再进行候选索引导入与审核词义，并保证测试草稿隔离与生产站零影响。
+
+## 2026-11-10 · 迁移后只读安全验收工作流
+- 追加 `.github/workflows/global-dictionary-staging-postmigration-readonly.yml`（提交 `82a33966`）；严格固定测试 D1 数据库名称/UUID、仓库/分支，使用同一个受保护审批环境。`push` 触发该 workflow，但仍需用户在 GitHub Actions 审批，才能用已保存的 Environment Secrets 读取 D1。
+- 仅通过 SELECT 查询真实测试 D1：4 张历史核心表、10 张统一词典表、5 个约束触发器，记录历史 `books/words/user_words/chapter_words` 匿名行数；在正式导入之前，要求词典候选、词形、审核课卡、义项为空，并且 `teaching_ready=0`、启用词源为 0。
+- 任务绝不执行 INSERT/UPDATE/DELETE/DDL，不导出用户数据、密钥、不部署 Worker；若不一致主动失败并阻断下一阶段导入，等待核查。
+- **尚无本次新只读审计的执行结果**，需要查看 `Dictionary staging D1 post-migration READ ONLY integrity audit` 的 GitHub Actions 运行结果并审批。只有其通过后，才开始隔离候选词头索引导入与审核义项的读写方案。
