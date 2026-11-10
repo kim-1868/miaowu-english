@@ -21,10 +21,7 @@ export function assertTestD1Configuration(configuration){
  return true;
 }
 export function assertGitHubManualApproval(env){
- if(!((env.GITHUB_EVENT_NAME==='workflow_dispatch')||
-      (env.GITHUB_EVENT_NAME==='push' &&
-       env.GITHUB_WORKFLOW==='One-shot guarded staging D1 dictionary 013-018' &&
-       env.GITHUB_WORKFLOW_REF?.includes('/.github/workflows/global-dictionary-staging-once-20261110.yml@refs/heads/feature/v11-smart-vocab-preflight-20261109')))||
+ if(env.GITHUB_EVENT_NAME!=='workflow_dispatch'||
     env.GITHUB_REPOSITORY!==REPO||env.GITHUB_ACTOR!=='kim-1868'||
     env.GITHUB_REF!==BRANCH||
     env.MIAOWU_STAGING_SCHEMA_APPROVAL!=='STAGING_013_018_ADD_ONLY'||
