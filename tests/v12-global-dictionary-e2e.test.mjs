@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {webcrypto} from 'node:crypto';
-import {inspectStagingDictionaryNovelV2} from '../src/ops-dictionary-v2.js';
+import {inspectStagingDictionaryNovelV2,inspectStagingDictionaryAutoDiscovery} from '../src/ops-dictionary-v2.js';
 import {previewBindingManifest,saveStagingBindingManifest}
  from '../src/ops-global-binding-manifests.js';
 import {attachDictionaryBindingsToStagingDraft}
@@ -234,5 +234,49 @@ test('E2E: a V1 package cannot impersonate an approved canonical card using forg
   assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM books').get().n,0);
   assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM global_dictionary_binding_manifests')
     .get().n,0);
+ }finally{sql.close()}
+});
+
+test('E2E staging unmarked English auto-discovery requires an approved unique sense and never writes user data',async()=>{
+ const {sql,env}=setup();
+ try{
+  sql.exec(readFileSync(new URL('../db/018_global_dictionary_reviewed_senses.sql',
+   import.meta.url),'utf8'));
+  for(const [sense_id,pos,meaning] of [
+    ['gds_'+'1'.repeat(24),'n.','记录'],
+    ['gds_'+'2'.repeat(24),'v.','录制']
+  ]){
+    sql.prepare(
+     'INSERT INTO global_dictionary_senses(sense_id,entry_id,pos,meaning_zh,example_en,example_zh,reviewed_by,reviewed_at,approved,active) VALUES(?,?,?,?,?,?,?,?,1,1)'
+    ).run(sense_id,'gdict_record',pos,meaning,
+     pos==='n.'?'Keep a record of this.':'They record the song.',
+     pos==='n.'?'把这件事记录下来。':'他们录制了这首歌。',
+     'publisher-test','2026-11-11');
+  }
+  const source={version:2,book:{
+   id:'novel-cet4-unmarked',category:'cet4',
+   title:'试验中文小说',description:'中文故事未标注目标词'},
+   chapters:[{number:1,paragraphs:[{
+    segments:[{text:'他准备 record 那段短视频。'}]
+   }]}]};
+  const before=JSON.stringify(source);
+  const result=await inspectStagingDictionaryAutoDiscovery(env,{package:source});
+  assert.equal(result.proposed_occurrences,0);
+  assert.equal(result.needs_review_occurrences,1);
+  assert.equal(result.review_queue[0].reason,'MULTIPLE_APPROVED_SENSES_REQUIRE_CONTEXT');
+  sql.prepare('UPDATE global_dictionary_senses SET active=0 WHERE pos=?').run('n.');
+  const only=await inspectStagingDictionaryAutoDiscovery(env,{package:source});
+  assert.equal(only.proposed_occurrences,1);
+  assert.equal(only.suggestions[0].gloss,'录制');
+  assert.equal(only.suggestions[0].action,
+   'PROPOSE_ONLY_REQUIRES_CONTEXT_EDITOR_CONFIRMATION');
+  assert.equal(only.production_d1_writes,0);
+  assert.equal(only.publisher_signed_off,false);
+  assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM books').get().n,0);
+  assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM user_words').get().n,0);
+  assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM review_events').get().n,0);
+  assert.equal(JSON.stringify(source),before);
+  await assert.rejects(()=>inspectStagingDictionaryAutoDiscovery(
+   {...env,APP_ENV:'production'},{package:source}),/DICTIONARY_V2_NOT_ENABLED/);
  }finally{sql.close()}
 });
