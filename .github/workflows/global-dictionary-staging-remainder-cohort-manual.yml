@@ -114,9 +114,12 @@ jobs:
           const rows=(Array.isArray(raw)?raw:[raw]).flatMap(x=>x?.results||x?.result?.results||[]);
           if(rows.length!==1)throw Error('INVALID_STAGING_COHORT_PRE_QUERY');
           const e={entries:plan.before_entries,forms:plan.before_forms,source_rows:1,valid_source:1,
-            unsafe_entries:0,unsafe_forms:0,lessons:0,senses:0,books:4,words:59,user_words:9,chapter_words:262};
+            unsafe_entries:0,unsafe_forms:0,lessons:0,senses:0};
           for(const [key,value] of Object.entries(e))if(Number(rows[0][key])!==value)
             throw Error('STAGING_PARTIAL_OR_WRONG_COHORT_STATE_'+key);
+          const historical=['books','words','user_words','chapter_words'];
+          for(const key of historical)if(!Number.isSafeInteger(Number(rows[0][key]))||Number(rows[0][key])<0)
+            throw Error('STAGING_INVALID_HISTORICAL_BASELINE_'+key);
           console.log('EXACT_PREVIOUS_COHORT_PREFIX_AND_STUDY_BASELINE_VERIFIED');
           NODE
       - name: Export complete D1 staging and verify encrypted recovery BEFORE mutation
@@ -209,10 +212,15 @@ jobs:
           if(rows.length!==1)throw Error('INVALID_STAGING_COHORT_POST_QUERY');
           const e={entries:plan.after_entries,forms:plan.after_forms,source_rows:1,
             source_entries:plan.source_after_entries,source_forms:plan.source_after_forms,
-            ready:0,reviewed:0,lessons:0,senses:0,
-            books:4,words:59,user_words:9,chapter_words:262};
+            ready:0,reviewed:0,lessons:0,senses:0};
           for(const [key,value] of Object.entries(e))if(Number(rows[0][key])!==value)
             throw Error('STAGING_COHORT_POSTCONDITION_FAILED_'+key);
+          const priorRaw=JSON.parse(readFileSync(dir+'/actual-cohort-pre.json','utf8'));
+          const priorRows=(Array.isArray(priorRaw)?priorRaw:[priorRaw]).flatMap(x=>x?.results||x?.result?.results||[]);
+          if(priorRows.length!==1)throw Error('STAGING_PRE_SNAPSHOT_MISSING');
+          for(const key of ['books','words','user_words','chapter_words'])
+            if(Number(rows[0][key])!==Number(priorRows[0][key]))
+              throw Error('STAGING_HISTORICAL_ROW_COUNT_CHANGED_'+key);
           console.log('STAGING_COHORT_NO_TEACHING_APPROVAL_NO_HISTORICAL_STUDY_WRITES');
           console.log('STAGING_COHORT_VERIFIED '+JSON.stringify({
             number:plan.cohort,entries:plan.after_entries,forms:plan.after_forms}));
