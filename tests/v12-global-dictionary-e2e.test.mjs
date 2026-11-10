@@ -92,16 +92,41 @@ function setup(){
     GLOBAL_DICTIONARY_BINDING_ATTACH_ENABLED:'true'}};
  }catch(e){sql.close();throw e}
 }
-function importDraft(sql,input){
- const valid=validatePackage(input),plan=planOpsBookImport(valid);
+// Test-only fixture in disposable SQLite. The production V1 import path
+// deliberately REFUSES dictionary entry IDs as per-sense learning identities.
+// This fixture allows binding/attach QA without adding a production bypass.
+function seedDisposableDictionaryDraft(sql,input){
+ assert.throws(()=>planOpsBookImport(validatePackage(input)),
+  /DICTIONARY_SENSE_BINDING_REQUIRED/);
  sql.exec('BEGIN TRANSACTION');
  try{
-  for(const query of plan.statements)
-   sql.prepare(query.sql).run(...query.params);
+  const b=input.book;
+  sql.prepare("INSERT INTO books(id,category_id,title,status) VALUES(?,?,?,'draft')")
+   .run(b.id,b.category,b.title);
+  for(const w of input.words){
+   sql.prepare('INSERT OR IGNORE INTO words '+
+    '(id,headword,phonetic_uk,phonetic_us,part_of_speech,meaning_zh,example_en,example_zh,collocations_json) '+
+    'VALUES(?,?,?,?,?,?,?,?,?)')
+    .run(w.id,w.headword,w.phoneticUk,w.phoneticUs,w.partOfSpeech,w.meaningZh,
+     w.exampleEn,w.exampleZh,JSON.stringify(w.collocations||[]));
+   sql.prepare("INSERT OR IGNORE INTO word_categories(word_id,category_id,proficiency_note) VALUES(?,?,'')")
+    .run(w.id,b.category);
+  }
+  for(const ch of input.chapters){
+   sql.prepare('INSERT INTO chapters(id,book_id,chapter_no,title,content_json,is_preview) VALUES(?,?,?,?,?,?)')
+    .run(ch.id,b.id,ch.number,ch.title,
+     JSON.stringify({version:1,paragraphs:ch.paragraphs}),ch.preview?1:0);
+   for(const [pi,p] of ch.paragraphs.entries()){
+    const context=p.segments.map(s=>s.wordId?s.surface:s.text).join('');
+    for(const [si,s] of p.segments.entries())if(s.wordId)
+     sql.prepare('INSERT INTO chapter_words(chapter_id,word_id,context_sentence,context_anchor) VALUES(?,?,?,?)')
+      .run(ch.id,s.wordId,context,'p'+pi+':s'+si);
+   }
+  }
   sql.exec('COMMIT');
  }catch(e){sql.exec('ROLLBACK');throw e}
 }
-test('E2E: CET4 and CET6 V2 novels reuse one approved global card, save verified manifests, and attach to drafts without touching users',async()=>{
+test('E2E: CET4 and CET6 V2 candidate manifests bind only to disposable draft fixtures while normal V1 importer blocks dictionary IDs',async()=>{
  const {sql,env}=setup();
  try{
   const a=sample('cet4'),b=sample('cet6');
@@ -146,7 +171,7 @@ test('E2E: CET4 and CET6 V2 novels reuse one approved global card, save verified
    const bundle=await exportVerifiedBindingBundle(env,payload,actor);
    const verified=await verifyGlobalDictionaryBindingBundle(bundle);
    assert.equal(verified.publication_allowed,false);
-   importDraft(sql,novel);
+   seedDisposableDictionaryDraft(sql,novel);
    const attached=await attachDictionaryBindingsToStagingDraft(env,payload,actor);
    assert.equal(attached.attached,true);
    assert.equal(attached.published,false);
