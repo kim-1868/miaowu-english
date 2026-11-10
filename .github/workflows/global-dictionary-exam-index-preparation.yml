@@ -6,6 +6,8 @@ on:
       - .github/workflows/global-dictionary-exam-index-preparation.yml
       - scripts/build-staging-exam-candidate-import.py
       - tests/test_staging_exam_candidate_import.py
+      - tests/test_staging_exam_candidate_import_workflow.py
+      - .github/workflows/global-dictionary-staging-exam-candidate-import-manual.yml
       - db/013_global_dictionary.sql
   workflow_dispatch:
 permissions:
@@ -24,7 +26,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Run candidate import protection and SQL rehearsal tests locally
-        run: python -m unittest discover -s tests -p 'test_staging_exam_candidate_import.py' -v
+        run: python -m unittest discover -s tests -p 'test_staging_exam_candidate_import*.py' -v
       - name: Download only the audited public upstream index artifact
         shell: bash
         env:
