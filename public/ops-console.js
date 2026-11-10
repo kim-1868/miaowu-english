@@ -6,7 +6,7 @@ const $=id=>document.getElementById(id);
 let key="",chosen=null,readiness=null,identity=null,busy=false;
 let liveEditorState=null,liveRevision=null,liveHistory=[];
 let globalMatchDecisions=[],globalManifestPreview=null,globalSavedManifestRequestId=null;
-let dictionaryV2Source=null,dictionaryV2Decisions=[];
+let dictionaryV2Source=null,dictionaryV2Decisions=[],dictionaryV2ModeConverted=false;
 let customerAdmin=null,claimAdmin=null,updatesAdmin=null;
 const byId=(tag,text,className)=>{
   const el=document.createElement(tag);
@@ -78,8 +78,15 @@ function syncButtons(){
   }
   $("importNovel").disabled=!(connected()&&pendingNovel&&$("uploadCoverWithNovel").files?.length&&
     pendingNovel.words?.every(w=>w.phoneticUk&&w.phoneticUs&&w.partOfSpeech&&w.meaningZh&&w.exampleEn&&w.exampleZh));
-  $("importNovel").textContent=identity?.environment==="staging"&&
-    globalSavedManifestRequestId?"上传并关联统一词典（仅保存草稿）":"确认上传并上架";
+  if(dictionaryV2ModeConverted&&(!globalSavedManifestRequestId||
+     !globalManifestPreview?.ready_to_stage||
+     !globalManifestPreview?.attach_available))
+    $("importNovel").disabled=true;
+  $("importNovel").textContent=dictionaryV2ModeConverted?
+    (globalSavedManifestRequestId&&globalManifestPreview?.attach_available?
+       "上传并关联统一词典（仅保存草稿）":"先完成词典审核并保存关联候选"):
+    (identity?.environment==="staging"&&globalSavedManifestRequestId?
+      "上传并关联统一词典（仅保存草稿）":"确认上传并上架");
   $("tagSave").disabled=!connected()||!chosen||!$("tagText").value.trim();
   $("applyStoryTags").disabled=!connected()||catalogBooks.length===0;
   $("suggestTags").disabled=!connected()||!chosen;
@@ -1288,7 +1295,7 @@ async function renderImportTagSuggestions(pkg){
 
 const uploadMsg=message=>{$("uploadStatus").textContent=message;};
 function resetNovel(){
- dictionaryV2Source=null;dictionaryV2Decisions=[];
+ dictionaryV2Source=null;dictionaryV2Decisions=[];dictionaryV2ModeConverted=false;
  globalMatchDecisions=[];globalManifestPreview=null;globalSavedManifestRequestId=null;
  const reviewChoices=$("globalMatchChoices");
  if(reviewChoices){reviewChoices.hidden=true;reviewChoices.replaceChildren();}
@@ -1406,6 +1413,7 @@ async function reviewDictionaryV2(result){
          if(r.ready_to_convert&&r.converted_package){
            container.hidden=true;container.replaceChildren();
            uploadMsg("词典主词卡已按句子确认，生成完整兼容小说包。");
+           dictionaryV2ModeConverted=true;
            await applyPreparedNovel(r.converted_package,
              localReport(r.converted_package,null));
          }else await reviewDictionaryV2(r);
@@ -1469,6 +1477,7 @@ async function examineNovel(){
       return;
     }
     pkg=result.converted_package;
+    dictionaryV2ModeConverted=true;
     uploadMsg("已从审核后的统一词典自动生成"+result.unique_main_cards+
       "张共享主词卡，保持原文与词义标注不变。下一步检查预览及封面。");
   }
