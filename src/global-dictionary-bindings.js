@@ -50,6 +50,7 @@ export function planNovelDictionaryBindings(packageData,index,{decisions=[]}={})
     const result=matchDictionaryWord(seg.surface,index);
     const pick=chosen.get(choiceKey);
     let entryId=null,headword=null,reason=result.reason;
+    let resolution='requires_editorial_review';
     if(pick!==undefined){
       seenDecisions.add(choiceKey);
       const option=result.candidates.find(x=>x.entry_id===pick);
@@ -61,17 +62,32 @@ export function planNovelDictionaryBindings(packageData,index,{decisions=[]}={})
       entryId=option.entry_id;
       headword=option.headword;
       reason='EDITOR_CONFIRMED_REVIEWED_CANDIDATE';
+      resolution='reviewed_selection';
     }else if(result.status==='matched'){
       entryId=result.entry_id;
       headword=result.headword;
+      resolution='unique_verified_match';
+    }else if(result.reason==='AMBIGUOUS_HEADWORD_OR_INFLECTION'){
+      // A V2-generated compatibility package already carries the canonical
+      // dictionary ID. Reuse this as an *auditable candidate hint* only if
+      // its source and form are independently approved; the manifest stage
+      // must still verify a real reviewed lesson matching this sentence's
+      // Chinese gloss. Unreviewed forms never qualify.
+      const hinted=result.candidates.find(x=>x.entry_id===seg.wordId&&
+        x.teaching_ready&&x.form_reviewed);
+      if(hinted){
+        entryId=hinted.entry_id;
+        headword=hinted.headword;
+        reason='CANONICAL_ID_REVIEWED_AMBIGUITY';
+        resolution='canonical_anchored_reviewed_form';
+      }
     }
     const base={...pos,surface:seg.surface,
       normalized_surface:normalizedLemma(seg.surface),
       legacy_word_id:seg.wordId,context:short(context),
       status:result.status,reason,candidates:result.candidates};
     if(entryId){
-      const candidate={...base,entry_id:entryId,headword,
-       resolution:pick!==undefined?'reviewed_selection':'unique_verified_match'};
+      const candidate={...base,entry_id:entryId,headword,resolution};
       accepted.push(candidate);
       if(!oldMapping.has(seg.wordId))oldMapping.set(seg.wordId,new Set());
       oldMapping.get(seg.wordId).add(entryId);
