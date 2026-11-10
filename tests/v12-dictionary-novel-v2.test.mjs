@@ -171,8 +171,13 @@ test('same form can resolve to different canonical entries in different contexts
       '[]','reviewer','2026-11-10');
   }
   const without=await inspectStagingDictionaryNovelV2(env,{package:source});
-  assert.equal(without.ready_to_convert,false);
-  assert.ok(without.review_queue.every(x=>x.reason==='AMBIGUOUS_HEADWORD_OR_INFLECTION'));
+  // Two approved candidates exist, but each sentence has a distinct,
+  // explicit Chinese teaching sense that uniquely selects one card.
+  assert.equal(without.ready_to_convert,true);
+  assert.equal(without.review_queue.length,0);
+  assert.deepEqual(without.converted_package.chapters[0].paragraphs.map(p=>
+    p.segments[1].wordId),['gdict_see','gdict_saw']);
+  assert.ok(without.resolved.every(x=>x.reason==='UNIQUE_REVIEWED_CONTEXT_SENSE'));
   const choices=[
    {chapter_number:1,paragraph_index:0,segment_index:1,
     entry_id:'gdict_see',confirmed:true},
