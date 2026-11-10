@@ -94,7 +94,7 @@ export function auditDictionaryLesson(row){
     !collocations.every(x=>x&&typeof x.en==='string'&&
       CJK.test(x.zh||'')))
     return {valid:false,reason:'INVALID_DICTIONARY_LESSON_SENSES'};
- return {valid:true,lesson:{
+ return {valid:true,senses,lesson:{
    id:row.entry_id,headword:normalizedLemma(row.headword),
    phoneticUk:row.phonetic_uk,phoneticUs:row.phonetic_us,
    partOfSpeech:row.part_of_speech,meaningZh:row.meaning_zh,
@@ -132,6 +132,24 @@ export function convertDictionaryNovelV2(source,index,lessons,{decisions=[]}={})
     throw Error('DICTIONARY_V2_DECISION_NOT_APPROVED');
   }else if(matching.status==='matched'){
    selected=matching.candidates.find(x=>x.entry_id===matching.entry_id);
+  }else if(matching.reason==='AMBIGUOUS_HEADWORD_OR_INFLECTION'){
+   // Full ECDICT contains many inflections as *separate* headwords.
+   // We may auto-select the real approved lemma only when EXACTLY ONE
+   // independently reviewed teaching sense has the author's explicit
+   // Chinese-in-context gloss. Do not infer synonyms or trust raw ECDICT
+   // translations. If two approved senses match, keep manual review.
+   const normalizedGloss=item.gloss.normalize('NFKC').replace(/\\s+/gu,'').trim();
+   const approved=matching.candidates.filter(candidate=>{
+     if(!candidate.teaching_ready||!candidate.form_reviewed)return false;
+     const record=lessons instanceof Map?lessons.get(candidate.entry_id):
+       lessons?.[candidate.entry_id];
+     const audited=auditDictionaryLesson(record);
+     if(!audited.valid||audited.lesson.headword!==candidate.headword)
+       return false;
+     return audited.senses.some(sense=>
+       sense.meaningZh.normalize('NFKC').replace(/\\s+/gu,'').trim()===normalizedGloss);
+   });
+   if(approved.length===1){selected=approved[0];reason='UNIQUE_REVIEWED_CONTEXT_SENSE';}
   }
   const base={...item,candidates:matching.candidates};
   if(!selected){
@@ -151,7 +169,9 @@ export function convertDictionaryNovelV2(source,index,lessons,{decisions=[]}={})
     throw Error('DICTIONARY_V2_LESSON_CONFLICT');
   byCard.set(selected.entry_id,audited.lesson);
   resolved.push({...base,entry_id:selected.entry_id,
-    headword:selected.headword,reason:decision?'EDITOR_SELECTED':'UNIQUE_VERIFIED'});
+    headword:selected.headword,
+    reason:decision?'EDITOR_SELECTED':reason==='UNIQUE_REVIEWED_CONTEXT_SENSE'?
+      'UNIQUE_REVIEWED_CONTEXT_SENSE':'UNIQUE_VERIFIED'});
   byPosition.set(k,selected.entry_id);
  }
  if(usedChoices.size!==choiceByKey.size)
