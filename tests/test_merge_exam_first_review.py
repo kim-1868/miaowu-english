@@ -1,5 +1,11 @@
-import json, pathlib, tempfile, unittest
-from merge_exam_first_review import plan, write_worklist
+import json, pathlib, tempfile, unittest, importlib.util
+script = pathlib.Path(__file__).resolve().parents[1] / 'scripts/merge-exam-first-review-candidates.py'
+if not script.exists():
+    script = pathlib.Path(__file__).with_name('merge_exam_first_review.py')
+spec = importlib.util.spec_from_file_location('review_join', script)
+review_join = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(review_join)
+plan, write_worklist = review_join.plan, review_join.write_worklist
 
 class MergeTest(unittest.TestCase):
     def setUp(self):
