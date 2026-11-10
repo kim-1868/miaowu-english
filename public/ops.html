@@ -230,7 +230,9 @@
       <h3>修改正文或追加章节</h3>
       <p class="hint">下载当前内容包，保留原有 book.id、章节 ID 和已有目标单词 ID。可以修改段落、章节标题或在末尾追加新章节。无法直接移除已有章节或该章节已使用的学习词汇。</p>
       <div class="row"><button id="liveDownloadSource" class="secondary" type="button" disabled>下载当前小说 JSON</button></div>
-      <div class="row"><button id="cet4ExportBatch" class="secondary" type="button" disabled>只读导出全部已上架四级小说（本地 JSON）</button></div>
+      <div class="row"><button id="cet4ExportBatch" class="secondary" type="button" disabled>只读导出全部已上架四级小说（本地 JSON）</button>
+      <button id="cet6ExportBatch" class="secondary" type="button" disabled>只读导出全部已上架六级小说（本地 JSON）</button></div>
+      <p id="cet6ExportStatus" class="hint" role="status" aria-live="polite">六级导出不修改任何数据，每本包含版本及 SHA-256；仅用于本机词卡审校。</p>
       <p id="cet4ExportStatus" class="hint" role="status" aria-live="polite">仅发布者可用，复用现有只读导出接口，不修改小说、学习记录或权益；包含售卖正文的文件请私下保存。</p>
       <label for="liveRevisionFile">选择已修改的小说 JSON 文件
         <input id="liveRevisionFile" type="file" accept=".json,application/json" disabled></label>

@@ -341,6 +341,9 @@ function syncLiveEditorButtons(){
   $("cet4ExportBatch").disabled=!connected()||busy||
     !["staging","production"].includes(identity?.environment)||
     !catalogBooks.some(b=>b.category_id==="cet4"&&b.status==="published");
+  $("cet6ExportBatch").disabled=!connected()||busy||
+    !["staging","production"].includes(identity?.environment)||
+    !catalogBooks.some(b=>b.category_id==="cet6"&&b.status==="published");
   $("liveEditTitle").disabled=!active||busy;
   $("liveEditDescription").disabled=!active||busy;
   $("liveRevisionFile").disabled=!active||busy;
@@ -491,6 +494,34 @@ button("liveSaveMetadata",async()=>{
   await loadBooks(id);
   $("liveEditorStatus").textContent="书名和简介已更新，旧版已保存到历史记录。";
   status("书籍资料修改成功。");
+});
+button("cet6ExportBatch",async()=>{
+ if(!connected()||!["production","staging"].includes(identity?.environment))
+   throw Error("请先验证运营发布者身份。");
+ if(!window.confirm("确认只读导出已上架六级小说的当前正文和词卡？内容可能涉及付费作品，仅保存在本地安全目录，不上传公共仓库或聊天。"))return;
+ const progress=$("cet6ExportStatus");
+ progress.textContent="正在读取六级已上架书籍并逐本校验版本……";
+ const {collectPublishedExamBatch}=await import("/ops-cet4-export.js?v=20261110-cet6");
+ try{
+  const data=await collectPublishedExamBatch({
+   category:"cet6",catalog:catalogBooks,
+   fetchExport:id=>api("/api/ops/books/"+encodeURIComponent(id)+"/live-editor/export"),
+   fetchOverview:id=>api("/api/ops/books/"+encodeURIComponent(id)+"/live-editor"),
+   refreshCatalog:async()=>{const fresh=await api("/api/ops/books");return fresh.books;},
+   onProgress:p=>{progress.textContent="只读导出六级 "+p.done+"/"+p.total+
+     (p.title?" · "+p.title:" · 完整性校验已完成");}
+  });
+  const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],
+    {type:"application/json;charset=utf-8"}));
+  const link=document.createElement("a");
+  link.href=url;link.download="miaowu-cet6-live-batch-"+data.capturedAt.slice(0,10)+".json";
+  document.body.append(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),10000);
+  progress.textContent="已本地导出 "+data.bookCount+" 本六级小说。无用户数据；请安全保管并在离线环境审核。";
+ }catch(e){
+  progress.textContent="已中止导出，不提供不完整的六级文件："+String(e.message||e);
+  throw e;
+ }
 });
 button("cet4ExportBatch",async()=>{
  if(!connected()||!["production","staging"].includes(identity?.environment))
