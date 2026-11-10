@@ -1,0 +1,24 @@
+# Default-branch registration only. NEVER writes any database.
+name: Manual guarded STAGING full dictionary candidate cohort (NO production)
+on:
+  workflow_dispatch:
+    inputs:
+      cohort_number:
+        description: Select the 1-9 cohort, only the feature branch can import
+        type: choice
+        required: true
+        options: ['1','2','3','4','5','6','7','8','9']
+      confirmation:
+        type: string
+        required: true
+        description: Enter STAGING_UNREVIEWED_COHORT_ADD_ONLY
+permissions:
+  contents: read
+jobs:
+  deny-default-branch-writes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail closed if not selecting explicitly reviewed feature ref
+        run: |
+          echo 'NO_DATABASE_WRITES_FROM_DEFAULT_BRANCH'
+          exit 1
