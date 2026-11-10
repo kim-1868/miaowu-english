@@ -37,6 +37,7 @@ jobs:
           curl -fSL --retry 3 "$url_ipa/LICENSE" -o "$tmp/IPA-LICENSE.txt"
           test -s "$tmp/ecdict.csv"
           test -s "$tmp/en_US.txt"
+          sha256sum "$tmp/ecdict.csv" "$tmp/en_US.txt" "$tmp/ECDICT-LICENSE.txt" "$tmp/IPA-LICENSE.txt"
           echo 'PINNED_PUBLIC_MIT_DATA_SOURCES_RETRIEVED_WITH_NOTICES'
       - name: Run real source join on only four PUBLIC fixture words
         shell: bash
