@@ -3,6 +3,7 @@
 import {validatePackage} from './editorial-content.js';
 import {inspectStagingNovelMatch} from './ops-import-preflight.js';
 import {authenticateOperator,hasOpsRole} from './ops-access.js';
+import {auditDictionaryLesson} from './global-dictionary-novel-v2.js';
 
 const HEAD={'content-type':'application/json; charset=utf-8',
   'cache-control':'private, no-store','x-content-type-options':'nosniff'};
@@ -43,6 +44,55 @@ export async function previewBindingManifest(env,payload){
     resolution:item.resolution
   })).sort((a,b)=>a.chapter_number-b.chapter_number||
     a.paragraph_index-b.paragraph_index||a.segment_index-b.segment_index);
+  // A publishing candidate must be supported by actual, independently
+  // signed-off *teaching material*, not merely a source record with a
+  // boolean teaching_ready flag. The author's per-sentence gloss must
+  // match one of that reviewed card's explicit Chinese senses.
+  // A guessed headword, raw ECDICT definition, or source licence flag alone
+  // can NEVER authorize a book-to-card association.
+  const gateFailures=[];
+  const lessonInfo=await env.DB.prepare(
+    'PRAGMA table_info(global_dictionary_lessons)').all();
+  if(!Array.isArray(lessonInfo.results)||!lessonInfo.results.length)
+    throw Error('GLOBAL_LESSON_SCHEMA_REQUIRED');
+  const approvedLessons=new Map();
+  const uniqueIds=[...new Set(resolved.map(x=>x.entry_id))];
+  for(let i=0;i<uniqueIds.length;i+=45){
+    const batch=uniqueIds.slice(i,i+45);
+    const rs=await env.DB.prepare(
+      'SELECT entry_id,headword,senses_json,phonetic_uk,phonetic_us,'+
+      'part_of_speech,meaning_zh,example_en,example_zh,collocations_json,'+
+      'reviewed_by,reviewed_at FROM global_dictionary_lessons WHERE entry_id IN ('+
+      batch.map(()=>'?').join(',')+')'
+    ).bind(...batch).all();
+    for(const row of rs.results||[]){
+      if(approvedLessons.has(row.entry_id))
+        throw Error('DUPLICATE_GLOBAL_DICTIONARY_LESSON');
+      approvedLessons.set(row.entry_id,auditDictionaryLesson(row));
+    }
+  }
+  const cleanGloss=s=>String(s||'').normalize('NFKC').replace(/\s+/gu,'').trim();
+  for(const binding of plan.resolved){
+    const checked=approvedLessons.get(binding.entry_id);
+    const content=valid.chapters.find(c=>c.number===binding.chapter_number)
+      ?.paragraphs?.[binding.paragraph_index]
+      ?.segments?.[binding.segment_index];
+    if(!checked?.valid||checked.lesson.headword!==binding.headword){
+      gateFailures.push({chapter_number:binding.chapter_number,
+        paragraph_index:binding.paragraph_index,
+        segment_index:binding.segment_index,surface:binding.surface,
+        reason:'REVIEWED_DICTIONARY_LESSON_MISSING_OR_INVALID'});
+      continue;
+    }
+    const gloss=cleanGloss(content?.gloss);
+    if(!gloss||!checked.senses.some(sense=>
+      cleanGloss(sense.meaningZh)===gloss)){
+      gateFailures.push({chapter_number:binding.chapter_number,
+        paragraph_index:binding.paragraph_index,
+        segment_index:binding.segment_index,surface:binding.surface,
+        reason:'CONTEXT_GLOSS_NOT_IN_REVIEWED_DICTIONARY_SENSES'});
+    }
+  }
   const manifest={
     version:1,book_id:valid.book.id,category_id:valid.book.category,
     target_count:plan.total_target_occurrences,bindings:resolved
@@ -57,11 +107,11 @@ export async function previewBindingManifest(env,payload){
     book_id:valid.book.id,category_id:valid.book.category,
     package_sha256:packageSha256,binding_sha256:bindingSha256,
     approved_count:resolved.length,total_targets:plan.total_target_occurrences,
-    blockers:plan.review_queue.map(x=>({
+    blockers:[...plan.review_queue.map(x=>({
       chapter_number:x.chapter_number,paragraph_index:x.paragraph_index,
       segment_index:x.segment_index,surface:x.surface,reason:x.reason
-    })),
-    ready_to_stage:plan.review_required_occurrences===0&&
+    })),...gateFailures],
+    ready_to_stage:plan.review_required_occurrences===0&&gateFailures.length===0&&
       resolved.length>0&&resolved.length===valid.mentionCount,
     save_available:env.GLOBAL_DICTIONARY_BINDING_SAVE_ENABLED==='true',
     attach_available:env.GLOBAL_DICTIONARY_BINDING_ATTACH_ENABLED==='true',
@@ -215,7 +265,8 @@ export async function handleOpsBindingManifest(req,env,path){
       return bad('INVALID_BINDING_INPUT',400);
     if(name==='GLOBAL_DICTIONARY_INDEX_NOT_ENABLED'||
        name==='GLOBAL_DICTIONARY_INDEX_NOT_READY'||
-       name==='GLOBAL_BINDING_SCHEMA_REQUIRED')
+       name==='GLOBAL_BINDING_SCHEMA_REQUIRED'||
+       name==='GLOBAL_LESSON_SCHEMA_REQUIRED')
       return bad(name,503);
     if(name==='GLOBAL_BINDING_SAVE_DISABLED'||name==='GLOBAL_BINDING_EXPORT_DISABLED'||
        name==='OPS_ROLE_FORBIDDEN')
