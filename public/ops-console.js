@@ -338,6 +338,9 @@ function syncLiveEditorButtons(){
   const active=connected()&&chosen?.status==="published"&&
     liveEditorState?.bookId===chosen?.id&&liveEditorState.editable;
   $("liveDownloadSource").disabled=!active||busy;
+  $("cet4ExportBatch").disabled=!connected()||busy||
+    !["staging","production"].includes(identity?.environment)||
+    !catalogBooks.some(b=>b.category_id==="cet4"&&b.status==="published");
   $("liveEditTitle").disabled=!active||busy;
   $("liveEditDescription").disabled=!active||busy;
   $("liveRevisionFile").disabled=!active||busy;
@@ -488,6 +491,33 @@ button("liveSaveMetadata",async()=>{
   await loadBooks(id);
   $("liveEditorStatus").textContent="书名和简介已更新，旧版已保存到历史记录。";
   status("书籍资料修改成功。");
+});
+button("cet4ExportBatch",async()=>{
+ if(!connected()||!["production","staging"].includes(identity?.environment))
+   throw Error("请先验证运营发布者身份。");
+ if(!window.confirm("确认只读下载四级已上架小说的正文和词卡？导出文件含付费小说内容，请只在本机保存，不上传公共仓库、聊天或网盘。"))return;
+ const progress=$("cet4ExportStatus");
+ progress.textContent="正在核对四级书架与内容版本……";
+ const {collectPublishedCET4Batch}=await import("/ops-cet4-export.js?v=20261110-batch1");
+ try{
+  const result=await collectPublishedCET4Batch({
+   catalog:catalogBooks,
+   fetchExport:id=>api("/api/ops/books/"+encodeURIComponent(id)+"/live-editor/export"),
+   fetchOverview:id=>api("/api/ops/books/"+encodeURIComponent(id)+"/live-editor"),
+   refreshCatalog:async()=>{const current=await api("/api/ops/books");return current.books;},
+   onProgress:s=>{progress.textContent="只读导出 "+s.done+"/"+s.total+(s.title?" · "+s.title:" · 正在验证完整性");}
+  });
+  const url=URL.createObjectURL(new Blob([JSON.stringify(result,null,2)],
+   {type:"application/json;charset=utf-8"}));
+  const link=document.createElement("a");
+  link.href=url;link.download="miaowu-cet4-live-batch-"+result.capturedAt.slice(0,10)+".json";
+  document.body.append(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),10000);
+  progress.textContent="已导出 "+result.bookCount+" 本。每本含原版 ID、版本、章节数和 SHA-256；请私下保存。";
+ }catch(e){
+  progress.textContent="导出中止，未生成不完整的审核文件："+String(e.message||e);
+  throw e;
+ }
 });
 button("liveDownloadSource",async()=>{
   if(!liveEditorState||!chosen)throw Error("请先选择已上架小说");

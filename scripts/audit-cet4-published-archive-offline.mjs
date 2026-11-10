@@ -2,6 +2,7 @@
 import {readFileSync,readdirSync,writeFileSync} from 'node:fs';
 import {resolve,join} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {createHash} from 'node:crypto';
 import {compileDictionaryDraftIndex} from './build-global-dictionary-index.mjs';
 import {buildGlobalDictionaryIndex,preflightNovelDictionaryMatches} from '../src/global-dictionary-matcher.js';
 const str=x=>String(x??'').normalize('NFKC').trim();
@@ -13,6 +14,29 @@ const cards=d=>Array.isArray(d?.words)?d.words:d?.package?.words??[];
 const chapters=d=>d?.chapters??d?.package?.chapters??[];
 const book=d=>d?.book??d?.package?.book;
 const states=['matched','dictionary_only','needs_review','missing'];
+// Accept only an explicitly read-only, locally verified publisher export.
+export function unpackAndVerifyCET4LiveBatch(bundle){
+ if(bundle?.format!=='miaowu-cet4-published-batch-v1'||
+   bundle.atomicSnapshot!==false||bundle.containsUserData!==false||
+   !Array.isArray(bundle.books)||bundle.books.length<1||bundle.books.length>50||
+   bundle.bookCount!==bundle.books.length)
+  throw Error('INVALID_PRIVATE_CET4_EXPORT_FORMAT');
+ const ids=new Set(),docs=[];
+ for(const b of bundle.books){
+  if(!b||typeof b.bookId!=='string'||!Number.isSafeInteger(b.version)||b.version<1||
+    !/^[a-f0-9]{64}$/.test(b.sha256||'')||
+    !Number.isSafeInteger(b.chapterCount)||b.chapterCount<1||
+    b.package?.book?.id!==b.bookId||b.package?.book?.title!==b.title||
+    b.package?.book?.category!=='cet4'||!Array.isArray(b.package.chapters)||
+    b.package.chapters.length!==b.chapterCount||ids.has(b.bookId))
+   throw Error('INVALID_PRIVATE_CET4_EXPORT_BOOK');
+  ids.add(b.bookId);
+  if(createHash('sha256').update(JSON.stringify(b.package)).digest('hex')!==b.sha256)
+   throw Error('PRIVATE_CET4_EXPORT_CHECKSUM_MISMATCH');
+  docs.push(b.package);
+ }
+ return docs;
+}
 export function auditCET4ArchivedBooks(documents,index,{catalog=null}={}){
  if(!Array.isArray(documents)||!documents.length)throw Error('EMPTY_ARCHIVED_CET4_BATCH');
  const bookIds=new Set(), seenHeads=new Map(), report=[];
@@ -89,16 +113,19 @@ const direct=process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.me
 if(direct){
  const args=process.argv.slice(2);
  const option=k=>{const i=args.indexOf(k);return i<0?null:args[i+1];};
- const source=option('--lexicon'),folder=option('--novels'),catalogPath=option('--catalog'),out=option('--out');
- if(!source||!folder){console.error('Usage: node scripts/audit-cet4-published-archive-offline.mjs --lexicon owner.csv --novels private-json-dir [--catalog public-books.json] [--out private-report.json]');process.exitCode=2;}
+ const source=option('--lexicon'),folder=option('--novels'),batchFile=option('--batch'),catalogPath=option('--catalog'),out=option('--out');
+ if(!source||Boolean(folder)===Boolean(batchFile)){console.error('Usage: node scripts/audit-cet4-published-archive-offline.mjs --lexicon owner.csv (--novels private-json-dir | --batch private-live-export.json) [--out private-report.json]');process.exitCode=2;}
  else try{
   const compiled=compileDictionaryDraftIndex(readFileSync(resolve(source),'utf8'));
   const index=buildGlobalDictionaryIndex({entries:compiled.entries,forms:compiled.forms});
-  const dir=resolve(folder);
-  const names=readdirSync(dir).filter(x=>x.toLowerCase().endsWith('.json')).sort();
-  const docs=names.map(name=>JSON.parse(readFileSync(join(dir,name),'utf8')));
+  const docs=batchFile?unpackAndVerifyCET4LiveBatch(JSON.parse(readFileSync(resolve(batchFile),'utf8'))):
+   readdirSync(resolve(folder)).filter(x=>x.toLowerCase().endsWith('.json')).sort()
+    .map(name=>JSON.parse(readFileSync(join(resolve(folder),name),'utf8')));
   const catalog=catalogPath?JSON.parse(readFileSync(resolve(catalogPath),'utf8')):null;
   const result=auditCET4ArchivedBooks(docs,index,{catalog});
+  result.source_kind=batchFile?'publisher-exported-read-only-manuscripts':'historical-candidate-archives';
+  result.live_export_sha_verified=Boolean(batchFile);
+  result.production_d1_realtime_verified=false;
   const summary=JSON.stringify(result,null,2)+'\n';
   if(out)writeFileSync(resolve(out),summary,'utf8');
   else process.stdout.write(summary);
