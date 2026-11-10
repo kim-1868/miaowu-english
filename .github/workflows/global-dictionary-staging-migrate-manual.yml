@@ -58,7 +58,7 @@ jobs:
           backup="$RUNNER_TEMP/miaowu-staging-pre-013-018.sql"
           restored="$RUNNER_TEMP/miaowu-staging-restore-test.sqlite"
           trap 'rm -f "$backup" "$restored" "$restored-wal" "$restored-shm"' EXIT
-          npx wrangler d1 export miaowu-english-test --remote --yes \
+          npx wrangler d1 export miaowu-english-test --remote --skip-confirmation \
             --config wrangler.jsonc --output "$backup" >/dev/null
           test -s "$backup"
           sqlite3 "$restored" < "$backup" >/dev/null
