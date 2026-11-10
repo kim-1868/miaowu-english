@@ -91,7 +91,7 @@ jobs:
             .status=="completed" and
             .conclusion=="success" and
             .head_branch=="feature/v11-smart-vocab-preflight-20261109" and
-            (.path | endswith("/.github/workflows/global-dictionary-staging-durable-encrypted-backup.yml"))
+            (.path==".github/workflows/global-dictionary-staging-durable-encrypted-backup.yml" or (.path | endswith("/.github/workflows/global-dictionary-staging-durable-encrypted-backup.yml")))
           ' "$run_json" >/dev/null || { echo 'BACKUP_WORKFLOW_NOT_VERIFIED'; exit 1; }
           jq -e '
             [.artifacts[] | select(.name=="miaowu-staging-d1-encrypted-backup" and .expired==false and .size_in_bytes>0)] | length > 0
