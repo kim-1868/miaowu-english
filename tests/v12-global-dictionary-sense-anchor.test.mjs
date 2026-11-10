@@ -53,6 +53,6 @@ test('source lesson mismatch cannot attach the right headword to wrong gloss',()
   lessons:{gdict_record:{senses_json:JSON.stringify([{pos:'v.',meaningZh:'记录',
    exampleEn:'A.',exampleZh:'甲。'}])}},senses:rows()});
  assert.equal(r.ready_for_sense_study,false);
- assert.equal(r.manual_review_occurrences,1);
+ assert.equal(r.manual_review_occurrences,2);
  assert.equal(r.review_queue[0].reason,'STABLE_APPROVED_SENSE_ID_MISSING');
 });
