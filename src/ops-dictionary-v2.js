@@ -6,6 +6,7 @@ import {globalDictionaryTablesReady,loadGlobalDictionaryCandidateIndex}
   from './global-dictionary-db.js';
 import {normalizeDictionaryNovelV2,convertDictionaryNovelV2}
   from './global-dictionary-novel-v2.js';
+import {planApprovedNovelSenseAnchors} from './global-dictionary-sense-anchor.js';
 
 const H={'content-type':'application/json; charset=utf-8',
  'cache-control':'private, no-store','x-content-type-options':'nosniff'};
@@ -38,11 +39,32 @@ export async function inspectStagingDictionaryNovelV2(env,payload){
    cardRows.set(row.entry_id,row);
   }
  }
- return {...convertDictionaryNovelV2(source,lookup.index,cardRows,{
+ const converted=convertDictionaryNovelV2(source,lookup.index,cardRows,{
   decisions:payload?.decisions??[]
- }),dictionary_index_status:'STAGING_GLOBAL_DICTIONARY_SOURCE_REVIEWED_ONLY',
+ });
+ // 018 is optional until separately backed-up STAGING migration. Fail
+ // closed for actual sense-level study if the table is missing or unreviewed.
+ const table=await env.DB.prepare('PRAGMA table_info(global_dictionary_senses)').all();
+ const senses=[];
+ if((table.results||[]).length&&converted.resolved.length){
+  const ids=[...new Set(converted.resolved.map(x=>x.entry_id))];
+  for(const group of groups(ids)){
+   const rows=await env.DB.prepare(
+    'SELECT sense_id,entry_id,pos,meaning_zh,reviewed_by,reviewed_at,approved,active '+
+    'FROM global_dictionary_senses WHERE entry_id IN ('+
+    group.map(()=>'?').join(',')+')'
+   ).bind(...group).all();
+   senses.push(...(rows.results||[]));
+  }
+ }
+ const senseAudit=planApprovedNovelSenseAnchors(converted.resolved,{
+  lessons:cardRows,senses
+ });
+ return {...converted,dictionary_index_status:'STAGING_GLOBAL_DICTIONARY_SOURCE_REVIEWED_ONLY',
    available_approved_lessons:cardRows.size,
-   next_step:'Download the compatible V1 draft or inspect review_queue. Do not publish before reading/review and version guards.'};
+   sense_preflight:senseAudit,
+   ready_for_sense_study:converted.ready_to_convert&&senseAudit.ready_for_sense_study,
+   next_step:'V1 package is a compatibility draft. Stable reviewed sense IDs and staging user-state tests are required before publication.'};
 }
 export async function handleOpsDictionaryNovelV2(req,env,path){
  if(path!=='/api/ops/import/dictionary-v2/preflight'||
