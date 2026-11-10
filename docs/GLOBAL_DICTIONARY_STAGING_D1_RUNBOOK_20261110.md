@@ -57,3 +57,12 @@
 - 用户提供 GitHub Actions 截图：`Dictionary staging D1 authorized READ ONLY baseline #1`，提交前缀 `75dca6c`，分支 `feature/v11-smart-vocab-preflight-20261109`；页面显示 `The deployments have been approved`、整体 `Success`、`readonly-test-d1` 绿色成功（job 15 秒）。
 - 这证明环境审批与只读工作流运行成功；**未在此确认具体 D1 表计数与 Time Travel 输出的逐行日志**，应在后续阶段保留脱敏检查结果。
 - 此次仍未操作 schema 013–018 远程迁移、完整 SQL 导出、持久备份、远程恢复演习、教学义项审核或 Worker 部署；上述项目持续未完成，禁止提前启动写库工作流。
+
+## 2026-11-10 · 真实测试 D1 只读日志验收（截图核对）
+用户提供的受保护 GitHub Actions 工作流 `Dictionary staging D1 authorized READ ONLY baseline #1` 详细日志显示：
+- `STAGING_TEST_D1_CORE_TABLES_4`
+- `STAGING_DICTIONARY_TABLE_COUNT_0`
+- `READ_ONLY_NO_CUSTOMER_ROWS_OR_SECRETS_EXPORTED`
+- `STAGING_D1_TIMETRAVEL_INFO_AVAILABLE_VALUE_REDACTED`
+- `NO_EXPORT_NO_RESTORE_NO_MIGRATION_NO_DEPLOYMENT`
+结论：隔离测试 D1 的四张核心表已确认、统一词典十表尚未迁移、Time Travel info 可读取，**无数据库写入**。检查结果符合预期。**尚未完成备份导出、持久化保存、独立恢复演练、词头导入、教学词卡审核或读者数据迁移；不可直接发布或绕过写入门禁。**
