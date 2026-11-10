@@ -135,3 +135,10 @@
 - 仅通过 SELECT 查询真实测试 D1：4 张历史核心表、10 张统一词典表、5 个约束触发器，记录历史 `books/words/user_words/chapter_words` 匿名行数；在正式导入之前，要求词典候选、词形、审核课卡、义项为空，并且 `teaching_ready=0`、启用词源为 0。
 - 任务绝不执行 INSERT/UPDATE/DELETE/DDL，不导出用户数据、密钥、不部署 Worker；若不一致主动失败并阻断下一阶段导入，等待核查。
 - **尚无本次新只读审计的执行结果**，需要查看 `Dictionary staging D1 post-migration READ ONLY integrity audit` 的 GitHub Actions 运行结果并审批。只有其通过后，才开始隔离候选词头索引导入与审核义项的读写方案。
+
+## 2026-11-10 · 测试 D1 迁移后只读验收通过（原始 GitHub 日志核实）
+- Run `https://github.com/kim-1868/miaowu-english/actions/runs/42843538233`，job `129924799260`，状态成功；源提交 `82a3396`。
+- 原始日志：`POSTMIGRATION_READONLY_TEST_D1_IDENTITY_OK`、`STAGING_POSTMIGRATION_CORE_TABLES_4_DICTIONARY_TABLES_10_GUARD_TRIGGERS_5`、`STAGING_POSTMIGRATION_PREIMPORT_DICTIONARY_EMPTY_AND_PUBLICATION_DISABLED`、`STAGING_POSTMIGRATION_READ_ONLY_NO_D1_WRITE_NO_DEPLOYMENT`。
+- 匿名表行数快照：`{"books":4,"words":59,"user_words":9,"chapter_words":262}`。此为**测试 D1 的运行后行数**，不能推断生产库中的小说总数、词汇覆盖率，也不能独立证明迁移前后表行数一致；程序内的旧表写入数为 0。
+- `global_dictionary_entries/forms/lessons/senses` 在导入前为空，`teaching_ready` / `enabled_sources` 未启用。结构迁移完成，但全量词条导入、义项审核、旧书/新书绑定均未完成。
+- 下一阶段先核对候选上游数据的来源许可、数据量和导入分块/幂等方案；不允许直接导入未经许可的词典字段为已审核教学词卡。
