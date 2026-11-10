@@ -61,6 +61,16 @@ class UpstreamDictionaryStreamTests(unittest.TestCase):
                          {(x["form"], x["headword"]) for x in forms})
         self.assertFalse((self.out / "index-workspace.sqlite").exists())
         self.assertFalse(report["imported_into_d1"])
+        rehearsal = report["sqlite_staging_schema_rehearsal"]
+        self.assertEqual(rehearsal["status"],
+                         "DISPOSABLE_SQLITE_D1_SCHEMA_REHEARSAL_PASSED")
+        self.assertEqual(rehearsal["entries"], 3)
+        self.assertEqual(rehearsal["forms"], report["index_statistics"]["candidate_forms"])
+        self.assertEqual(rehearsal["approved_entries"], 0)
+        self.assertEqual(rehearsal["reviewed_forms"], 0)
+        self.assertEqual(rehearsal["enabled_sources"], 0)
+        self.assertEqual(rehearsal["foreign_key_violations"], 0)
+        self.assertFalse(rehearsal["cloudflare_d1_migrated"])
 
     def test_unicode_quote_and_multiline_translation_are_safe(self):
         self.sample([
