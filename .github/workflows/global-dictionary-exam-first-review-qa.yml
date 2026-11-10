@@ -11,6 +11,7 @@ on:
       - src/ops-dictionary-v2.js
       - src/worker.js
       - tests/v12-global-dictionary-auto-discovery.test.mjs
+      - tests/v12-global-dictionary-e2e.test.mjs
   workflow_dispatch:
 permissions:
   contents: read
