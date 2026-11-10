@@ -62,5 +62,5 @@ jobs:
             ${{ runner.temp }}/full-ecdict/index/dictionary-unverified-forms.jsonl
             ${{ runner.temp }}/full-ecdict/index/audit-summary.json
             ${{ runner.temp }}/full-ecdict/index/LICENSE-ECDICT.txt
-          retention-days: 14
+          retention-days: 90
           if-no-files-found: error
