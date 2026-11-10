@@ -138,7 +138,7 @@ export function convertDictionaryNovelV2(source,index,lessons,{decisions=[]}={})
    // independently reviewed teaching sense has the author's explicit
    // Chinese-in-context gloss. Do not infer synonyms or trust raw ECDICT
    // translations. If two approved senses match, keep manual review.
-   const normalizedGloss=item.gloss.normalize('NFKC').replace(/\\s+/gu,'').trim();
+   const normalizedGloss=item.gloss.normalize('NFKC').replace(/\s+/gu,'').trim();
    const approved=matching.candidates.filter(candidate=>{
      if(!candidate.teaching_ready||!candidate.form_reviewed)return false;
      const record=lessons instanceof Map?lessons.get(candidate.entry_id):
@@ -147,7 +147,7 @@ export function convertDictionaryNovelV2(source,index,lessons,{decisions=[]}={})
      if(!audited.valid||audited.lesson.headword!==candidate.headword)
        return false;
      return audited.senses.some(sense=>
-       sense.meaningZh.normalize('NFKC').replace(/\\s+/gu,'').trim()===normalizedGloss);
+       sense.meaningZh.normalize('NFKC').replace(/\s+/gu,'').trim()===normalizedGloss);
    });
    if(approved.length===1){selected=approved[0];reason='UNIQUE_REVIEWED_CONTEXT_SENSE';}
   }
