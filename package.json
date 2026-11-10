@@ -43,7 +43,8 @@
     "dictionary:study:rehearse": "node --experimental-sqlite scripts/rehearse-global-dictionary-study-merge.mjs",
     "dictionary:study:tests": "node --experimental-sqlite --test --test-concurrency=1 tests/v12-global-dictionary-study-rehearsal.test.mjs",
     "dictionary:legacy:worklist": "node --experimental-sqlite scripts/build-global-dictionary-legacy-worklist.mjs",
-    "dictionary:legacy:tests": "node --experimental-sqlite --test --test-concurrency=1 tests/v12-global-dictionary-legacy-worklist.test.mjs"
+    "dictionary:legacy:tests": "node --experimental-sqlite --test --test-concurrency=1 tests/v12-global-dictionary-legacy-worklist.test.mjs",
+    "dictionary:e2e:tests": "node --experimental-sqlite --test --test-concurrency=1 tests/v12-global-dictionary-e2e.test.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"
