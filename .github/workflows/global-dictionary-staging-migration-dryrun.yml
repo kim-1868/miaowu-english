@@ -14,6 +14,8 @@ on:
       - scripts/rehearse-dictionary-staging-rollback.mjs
       - tests/v12-dictionary-staging-additive-plan.test.mjs
       - tests/v12-dictionary-staging-rollback.test.mjs
+      - tests/v12-dictionary-staging-export-gate.test.mjs
+      - .github/workflows/global-dictionary-staging-migrate-manual.yml
   workflow_dispatch:
 permissions:
   contents: read
@@ -33,5 +35,5 @@ jobs:
           set -euo pipefail
           node --experimental-sqlite scripts/rehearse-dictionary-staging-migration.mjs
           node --experimental-sqlite scripts/rehearse-dictionary-staging-rollback.mjs
-          node --experimental-sqlite --test tests/v12-dictionary-staging-additive-plan.test.mjs tests/v12-dictionary-staging-rollback.test.mjs
+          node --experimental-sqlite --test tests/v12-dictionary-staging-additive-plan.test.mjs tests/v12-dictionary-staging-rollback.test.mjs tests/v12-dictionary-staging-export-gate.test.mjs
           echo "NO_CLOUDFLARE_SECRETS_NO_REMOTE_MIGRATIONS_NO_DATA_WRITES"
