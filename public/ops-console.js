@@ -1428,6 +1428,9 @@ async function reviewDictionaryV2(result){
    "目标词出现："+result.source_target_occurrences,
    "自动匹配且教学合格："+result.approved_occurrences,
    "待人工处理："+blocked.length,
+   "稳定词义身份已匹配："+(result.sense_preflight?.approved_sense_occurrences??0),
+   "词义身份待审核："+(result.sense_preflight?.manual_review_occurrences??result.approved_occurrences),
+   "共享主词卡不等于不同词义可共用掌握记录；缺稳定义项 ID 时只能保存预览草稿。",
    ...blocked.slice(0,45).map(x=>
      "第"+x.chapter_number+"章·第"+(x.paragraph_index+1)+"段 · "+
      x.surface+"："+x.reason+"；候选："+(x.candidates||[])
@@ -1473,7 +1476,11 @@ async function reviewDictionaryV2(result){
          });
          if(r.ready_to_convert&&r.converted_package){
            container.hidden=true;container.replaceChildren();
-           uploadMsg("词典主词卡已按句子确认，生成完整兼容小说包。");
+           uploadMsg(r.ready_for_sense_study?
+             "主词卡与词义身份均已匹配，继续预览草稿。":
+             "主词卡已生成兼容草稿，但仍有"+
+             (r.sense_preflight?.manual_review_occurrences??0)+
+             "处稳定词义身份待审核，不能作为正式学习状态上线。");
            dictionaryV2ModeConverted=true;
            await applyPreparedNovel(r.converted_package,
              localReport(r.converted_package,null));
@@ -1539,8 +1546,11 @@ async function examineNovel(){
     }
     pkg=result.converted_package;
     dictionaryV2ModeConverted=true;
-    uploadMsg("已从审核后的统一词典自动生成"+result.unique_main_cards+
-      "张共享主词卡，保持原文与词义标注不变。下一步检查预览及封面。");
+    uploadMsg("已生成"+result.unique_main_cards+"张共享主词卡草稿；"+
+      (result.ready_for_sense_study?"各处具体词义身份均已核对。":
+       "仍有"+(result.sense_preflight?.manual_review_occurrences??0)+
+       "处稳定词义身份待审，不能合并已学状态。")+
+      " 继续预览、封面与草稿检查。");
   }
   report=localReport(pkg,null);
  }else if(/\.(md|markdown|txt)$/i.test(novel.name)){
