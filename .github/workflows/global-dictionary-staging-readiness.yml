@@ -94,6 +94,35 @@ jobs:
           console.log('NO_STORY_NO_ACCOUNT_NO_SECRET_DATA_EXPORTED');
           console.log('NO_CLOUDFLARE_DATABASE_WRITE_OR_DEPLOYMENT_EXECUTED');
           NODE
+      - name: Verify all ten dictionary schema tables are absent (D1 Read only)
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          SQL="SELECT COUNT(*) AS new_tables FROM sqlite_master WHERE type='table' AND name IN ('global_dictionary_entries','global_dictionary_forms','global_dictionary_sources','global_dictionary_binding_manifests','global_dictionary_book_bindings','global_dictionary_lessons','global_dictionary_legacy_links','global_dictionary_senses','global_dictionary_legacy_sense_links','global_dictionary_book_sense_bindings');"
+          if ! npx wrangler d1 execute miaowu-english-test --config wrangler.jsonc --remote --json --command "$SQL" >/tmp/d1-staging-empty-dictionary-schema 2>&1; then
+            echo 'D1_TEN_TABLE_BASELINE_QUERY_FAILED'
+            exit 1
+          fi
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const raw=readFileSync('/tmp/d1-staging-empty-dictionary-schema','utf8').trim();
+          let parsed;
+          try{parsed=JSON.parse(raw)}catch{
+            console.error('D1_TEN_TABLE_BASELINE_UNRECOGNIZED_JSON');
+            process.exit(1);
+          }
+          const batches=Array.isArray(parsed)?parsed:[parsed];
+          const rows=batches.flatMap(x=>x?.results||x?.result?.results||[]);
+          if(rows.length!==1||Number(rows[0]?.new_tables)!==0){
+            console.error('D1_TEN_TABLE_BASELINE_NONEMPTY_OR_UNCERTAIN');
+            process.exit(1);
+          }
+          console.log('DICTIONARY_STAGING_ALL_TEN_TABLES_ABSENT');
+          console.log('NO_D1_DATA_READ_OR_WRITE');
+          NODE
       - name: Verify D1 Time Travel bookmark is readable, never print its value
         shell: bash
         env:
