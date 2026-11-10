@@ -106,3 +106,10 @@
 - 真正的 013–018 测试库迁移实现仍然只位于 `feature/v11-smart-vocab-preflight-20261109`，须在 GitHub Actions 的 `Run workflow` 中**明确选择该开发分支**，填写目标、UUID、确认文字、真实加密备份的数字 run ID，之后通过 `staging-d1-schema-approval` 审批方可运行。
 - 修复 `encrypted_backup_run_id` 在 GitHub API 返回的 `path` 可能是 `owner/repo/.github/workflows/...` 时的校验兼容性，改为安全的指定文件路径后缀校验，继续要求成功状态、同分支、非过期非空备份 artifact。
 - 还未通过完整正式流水线验证入口是否在 GitHub UI 出现；默认分支注册并不等于远程测试 D1 已迁移。迁移前须确认关联 CI 红色检查的具体原因，且用户电脑备份和密码可恢复。
+
+## 2026-11-10 · 首次手动迁移失败诊断（未写库）
+- 手动运行 URL：`https://github.com/kim-1868/miaowu-english/actions/runs/42840559723`，job `129914345334`，整体 failure。
+- 已直接读取 GitHub Actions job 步骤与原始日志：本地迁移/回滚演练 success；测试 D1 完整导出与独立 SQLite 回放 success；备份身份校验步报 `BACKUP_WORKFLOW_NOT_VERIFIED`；**实际执行六份 SQL 文件的步骤状态为 skipped，未进行 schema 013–018 远程写入**。
+- 核实备份 run `42836917076` 的 GitHub API 真值：`status=completed`，`conclusion=success`，`head_branch=feature/v11-smart-vocab-preflight-20261109`，`path=.github/workflows/global-dictionary-staging-durable-encrypted-backup.yml`。旧门禁仅接受 `/.github/...` 后缀，拒绝了没有斜杠前缀的合法路径。此处是门禁误拒，不是备份失效。
+- 已修复为**精确匹配路径或仓库前缀路径**两种 GitHub API 合法形式，同时保持备份运行成功、分支一致、未过期非空 Artifact 的条件；提交 `64e9040`。增加回归测试，提交 `22f0dfb`。
+- 修复后的迁移 **尚未实际运行**，旧 run 仍然失败；下次必须从 `Run workflow` 发起**新运行**并选 feature 分支，不能点击旧失败 run 的 `Re-run jobs`（否则仍引用旧的 commit SHA）。
