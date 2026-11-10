@@ -1,0 +1,21 @@
+# UI registration only. Default branch NEVER imports vocabulary or touches Cloudflare.
+# Actual guarded workflow runs only when the approved feature branch is selected.
+name: Manual STAGING exam candidate dictionary import (never production)
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        type: string
+        required: true
+        description: Enter STAGING_EXAM_CANDIDATES_ADD_ONLY
+permissions:
+  contents: read
+jobs:
+  fail-closed-on-default-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Never write production or staging from main
+        run: |
+          echo 'NO_DATABASE_WRITES_FROM_DEFAULT_BRANCH'
+          echo 'Select feature/v11-smart-vocab-preflight-20261109'
+          exit 1
