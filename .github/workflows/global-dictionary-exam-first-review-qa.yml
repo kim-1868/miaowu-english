@@ -10,6 +10,7 @@ on:
       - src/global-dictionary-auto-discovery.js
       - src/ops-dictionary-v2.js
       - src/worker.js
+      - public/ops-console.js
       - tests/v12-global-dictionary-auto-discovery.test.mjs
       - tests/v12-global-dictionary-e2e.test.mjs
   workflow_dispatch:
@@ -34,6 +35,7 @@ jobs:
           node --check src/global-dictionary-auto-discovery.js
           node --check src/ops-dictionary-v2.js
           node --check src/worker.js
+          node --check public/ops-console.js
           node --experimental-sqlite --test --test-concurrency=1 \
             tests/v12-global-dictionary-exam-first-review.test.mjs \
             tests/v12-global-dictionary-auto-discovery.test.mjs \
