@@ -1419,6 +1419,99 @@ function previewNovelPackage(pkg){
  $("uploadPreview").hidden=false;
 }
 
+// Publisher-only staging discovery. Unmarked English is NEVER silently
+// promoted to a paid learning target; editors must confirm each suggestion.
+function draftAutoDiscoveredV2(source,suggestions){
+ if(source?.version!==2||source.words!==undefined||!Array.isArray(source.chapters))
+  throw Error("自动发现来源不是有效 V2 小说");
+ const copy=structuredClone(source);
+ const groups=new Map();
+ for(const hit of suggestions){
+  if(hit.action!=="PROPOSE_ONLY_REQUIRES_CONTEXT_EDITOR_CONFIRMATION"||
+     !hit.sense_id||typeof hit.gloss!=="string")throw Error("词义没有通过审核");
+  const key=[hit.chapter_number,hit.paragraph_index,hit.segment_index].join(":");
+  if(!groups.has(key))groups.set(key,[]);
+  groups.get(key).push(hit);
+ }
+ let seen=0;
+ for(const ch of copy.chapters){
+  for(const [pi,para] of ch.paragraphs.entries()){
+   para.segments=para.segments.flatMap((seg,si)=>{
+    const key=[ch.number,pi,si].join(":");
+    const targets=(groups.get(key)||[]).sort((a,b)=>a.start_offset-b.start_offset);
+    if(!targets.length)return [seg];
+    if(typeof seg.text!=="string"||seg.surface!==undefined)
+     throw Error("自动标注位置不是正文文本");
+    const chunks=[];let cursor=0;
+    for(const hit of targets){
+     if(hit.start_offset<cursor||hit.end_offset>seg.text.length||
+        hit.end_offset<=hit.start_offset||
+        seg.text.slice(hit.start_offset,hit.end_offset)!==hit.surface)
+       throw Error("正文已变化，请重新执行自动发现");
+     if(hit.start_offset>cursor)chunks.push({text:seg.text.slice(cursor,hit.start_offset)});
+     chunks.push({surface:hit.surface,gloss:hit.gloss});
+     cursor=hit.end_offset;seen++;
+    }
+    if(cursor<seg.text.length)chunks.push({text:seg.text.slice(cursor)});
+    return chunks;
+   });
+  }
+ }
+ if(seen!==suggestions.length)throw Error("部分自动标注位置不存在");
+ return copy;
+}
+async function reviewUnmarkedDictionaryV2(source,result){
+ const pending=result.review_queue||[],suggested=result.suggestions||[];
+ const lines=[
+   "V2 小说正文英文词自动发现（预览站，只读）",
+   "已扫描未标注英文出现："+(result.scanned_unmarked_tokens??0),
+   "找到唯一已审词义候选："+suggested.length,
+   "需要人工确认或补卡："+pending.length,
+   "词典候选词头不等于可售教学卡；该预检不会改写正文、用户收藏与复习状态。",
+   ...suggested.slice(0,25).map(x=>
+      "第"+x.chapter_number+"章第"+(x.paragraph_index+1)+
+      "段 · "+x.surface+" → "+x.gloss+"（编辑仍需核对上下文）"),
+   ...pending.slice(0,25).map(x=>
+      "待审：第"+x.chapter_number+"章第"+(x.paragraph_index+1)+
+      "段 · "+x.surface+"： "+x.reason)
+ ];
+ if(pending.length>25)lines.push("其余待审项目："+(pending.length-25)+"处");
+ const report=$("uploadReport");report.hidden=false;report.textContent=lines.join("\n");
+ const choices=$("globalMatchChoices");choices.replaceChildren();choices.hidden=false;
+ choices.append(byId("h3","自动发现结果 · 必须编辑确认"));
+ if(!suggested.length){
+  choices.append(byId("p","目前没有唯一已审核的教学义项。请先完成词卡审核，不会生成空白词卡包。"));
+ }else if(pending.length){
+  choices.append(byId("p","发现"+pending.length+
+   "处尚未解决的英文词。先补齐或明确审核异常词，不能悄悄丢弃后继续上架。"));
+ }else{
+  const confirm=byId("button","我已核对所有语境，生成待验收 V2 草稿","secondary");
+  confirm.type="button";
+  confirm.addEventListener("click",async()=>{
+   if(confirm.disabled||!connected()||identity?.environment!=="staging")return;
+   confirm.disabled=true;
+   try{
+    const draft=draftAutoDiscoveredV2(source,suggested);
+    const checked=await api("/api/ops/import/dictionary-v2/preflight","POST",{package:draft});
+    dictionaryV2Source=draft;dictionaryV2Decisions=[];
+    if(!checked.ready_to_convert||!checked.converted_package){
+      await reviewDictionaryV2(checked);
+      return;
+    }
+    dictionaryV2ModeConverted=true;
+    uploadMsg("自动词义标注草稿已生成；继续核对具体 sense_id 后才能发布。");
+    await applyPreparedNovel(checked.converted_package,
+      localReport(checked.converted_package,null));
+   }catch(error){
+    uploadMsg("自动发现草稿验证失败："+(error.message||"请稍后重试"));
+   }finally{confirm.disabled=false;syncButtons();}
+  });
+  choices.append(confirm);
+ }
+ uploadMsg("自动发现完成："+suggested.length+"处唯一已审候选、"+
+   pending.length+"处仍需人工核验。");
+ syncButtons();
+}
 async function reviewDictionaryV2(result){
  const blocked=result.review_queue||[];
  const panel=$("uploadReport");
@@ -1535,6 +1628,17 @@ async function examineNovel(){
   if(pkg?.version===2){
     if(identity?.environment!=="staging")
       throw Error("无需附带词卡的新版小说 JSON 暂只在预览站支持。");
+    const hasExplicitTargets=pkg.chapters?.some(ch=>
+      ch.paragraphs?.some(p=>p.segments?.some(seg=>
+        typeof seg?.surface==="string"&&typeof seg?.gloss==="string")));
+    if(!hasExplicitTargets){
+      dictionaryV2Source=pkg;dictionaryV2Decisions=[];
+      const discovery=await api("/api/ops/import/dictionary-v2/discover","POST",{
+        package:pkg
+      });
+      await reviewUnmarkedDictionaryV2(pkg,discovery);
+      return;
+    }
     const result=await api("/api/ops/import/dictionary-v2/preflight","POST",{
       package:pkg
     });
