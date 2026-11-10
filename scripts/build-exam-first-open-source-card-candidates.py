@@ -24,6 +24,26 @@ ABBR = re.compile(r"^[a-z]+(?:\.[a-z]+)*\.$")
 ENTRY = re.compile(r"^gdict_[0-9a-f]{24}$")
 IPA = re.compile(r"/[^/\r\n]+/")
 LEVELS = {"基础", "四级新增", "六级新增", "考研新增"}
+# Some ECDICT rows have an empty POS column but include n./vt./a. prefixes in translation.
+# These are ONLY candidates for the reviewer, not an approved grammatical/sense identity.
+POS_PREFIX = re.compile(r"^\s*(n|vt|vi|v|a|adj|adv|prep|pron|conj|interj|int|art|num|aux|abbr|pl)\.\s+(?=\S)", re.IGNORECASE)
+POS_CANONICAL = {"a": "adj", "int": "interj"}
+
+
+def extract_pos_candidates_from_translation(translation):
+    if not isinstance(translation, str):
+        return []
+    values = []
+    # ECDICT typically encodes line breaks as the literal two characters backslash-n.
+    for line in translation.replace("\\r\\n", "\n").replace("\\n", "\n").replace("\r", "\n").splitlines():
+        m = POS_PREFIX.match(line)
+        if not m:
+            continue
+        pos = POS_CANONICAL.get(m.group(1).lower(), m.group(1).lower()) + "."
+        if pos not in values:
+            values.append(pos)
+    return values
+
 
 
 def normalized(text):
@@ -108,6 +128,7 @@ def load_ecdict_candidates(path, targets):
             result[word] = {
                 "raw_chinese_meanings_unverified": (row.get("translation") or "").strip(),
                 "raw_pos_unverified": (row.get("pos") or "").strip(),
+                "pos_candidates_from_translation_unverified": extract_pos_candidates_from_translation(row.get("translation") or ""),
                 "raw_english_definition_unverified": (row.get("definition") or "").strip(),
                 "raw_phonetic_unspecified_accent": (row.get("phonetic") or "").strip()
             }
@@ -143,6 +164,7 @@ def build_private_candidates(targets_file, ecdict_file, ipa_us_file,
         "ecdict_chinese_candidate_matches": 0,
         "ecdict_chinese_candidate_missing": 0,
         "ecdict_pos_candidates": 0,
+        "ecdict_pos_prefix_extracted": 0,
         "abbreviation_special_review": 0,
         "teaching_senses_approved": 0,
         "production_writes": 0,
@@ -210,8 +232,10 @@ def build_private_candidates(targets_file, ecdict_file, ipa_us_file,
             t["ecdict_translation_matched"] += 1
         else:
             stats["ecdict_chinese_candidate_missing"] += 1
-        if ecdict.get("raw_pos_unverified"):
+        if ecdict.get("raw_pos_unverified") or ecdict.get("pos_candidates_from_translation_unverified"):
             stats["ecdict_pos_candidates"] += 1
+        if ecdict.get("pos_candidates_from_translation_unverified"):
+            stats["ecdict_pos_prefix_extracted"] += 1
         if row["entry_id"] is None:
             stats["abbreviation_special_review"] += 1
     private_jsonl = out / "exam-first-opensource-candidate-only.jsonl"
