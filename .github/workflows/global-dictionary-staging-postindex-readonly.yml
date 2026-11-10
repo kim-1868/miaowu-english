@@ -1,0 +1,87 @@
+name: Dictionary staging D1 post-index READ ONLY candidate audit
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths: [.github/workflows/global-dictionary-staging-postindex-readonly.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: dictionary-postindex-readonly-staging
+  cancel-in-progress: false
+jobs:
+  audit-candidate-index:
+    if: github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    runs-on: ubuntu-latest
+    environment:
+      name: staging-d1-schema-approval
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check literal staging target
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          import assert from 'node:assert/strict';
+          const config=JSON.parse(readFileSync('wrangler.jsonc','utf8'));
+          assert.equal(config.name,'miaowu-english-staging');
+          assert.equal(config.vars.APP_ENV,'staging');
+          assert.equal(config.d1_databases.length,1);
+          assert.equal(config.d1_databases[0].database_name,'miaowu-english-test');
+          assert.equal(config.d1_databases[0].database_id,'88a817cb-23bb-4ae4-bcb8-92286c4165d4');
+          console.log('STAGING_POSTINDEX_LITERAL_TEST_D1_ONLY');
+          NODE
+      - name: Install Wrangler
+        run: npm install --ignore-scripts --no-save wrangler@^4
+      - name: Read source SHA, counts, approved flags and historical baselines
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_STAGING_ONLY_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_ACCOUNT_ID}"
+          umask 077
+          result="$RUNNER_TEMP/postindex-private.json"
+          trap 'rm -f "$result"' EXIT
+          query="SELECT
+            (SELECT COUNT(*) FROM global_dictionary_entries) AS entries,
+            (SELECT COUNT(*) FROM global_dictionary_forms) AS forms,
+            (SELECT COUNT(*) FROM global_dictionary_sources) AS sources,
+            (SELECT COUNT(*) FROM global_dictionary_sources WHERE source_key='upstream_ecdict_unverified' AND source_sha256='d1ecbdf9ee2b920afb6f430ca6b6bb9f559588cf0dff86e04bd255f9390843cc' AND imported_entries=11422 AND imported_forms=16442 AND enabled=0 AND license_reviewed=0) AS exact_source,
+            (SELECT COUNT(*) FROM global_dictionary_entries WHERE source_name!='upstream_ecdict_unverified' OR teaching_ready!=0 OR reviewed_at IS NOT NULL) AS unsafe_entries,
+            (SELECT COUNT(*) FROM global_dictionary_forms WHERE source_name!='upstream_ecdict_unverified' OR reviewed!=0) AS unsafe_forms,
+            (SELECT COUNT(*) FROM global_dictionary_lessons) AS lessons,
+            (SELECT COUNT(*) FROM global_dictionary_senses) AS senses,
+            (SELECT COUNT(*) FROM global_dictionary_legacy_links) AS legacy_links,
+            (SELECT COUNT(*) FROM global_dictionary_legacy_sense_links) AS legacy_sense_links,
+            (SELECT COUNT(*) FROM global_dictionary_book_bindings) AS book_bindings,
+            (SELECT COUNT(*) FROM global_dictionary_book_sense_bindings) AS book_sense_bindings,
+            (SELECT COUNT(*) FROM books) AS books,
+            (SELECT COUNT(*) FROM words) AS words,
+            (SELECT COUNT(*) FROM user_words) AS user_words,
+            (SELECT COUNT(*) FROM chapter_words) AS chapter_words;"
+          npx wrangler d1 execute miaowu-english-test --remote --json --config wrangler.jsonc --command "$query" >"$result"
+          node --input-type=module - "$result" <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const x=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          const rows=(Array.isArray(x)?x:[x]).flatMap(v=>v?.results||v?.result?.results||[]);
+          if(rows.length!==1)throw Error('POSTINDEX_BAD_QUERY_RESULT');
+          const expected={entries:11422,forms:16442,sources:1,exact_source:1,
+            unsafe_entries:0,unsafe_forms:0,lessons:0,senses:0,
+            legacy_links:0,legacy_sense_links:0,book_bindings:0,book_sense_bindings:0,
+            books:4,words:59,user_words:9,chapter_words:262};
+          for(const [key,value] of Object.entries(expected)){
+            if(Number(rows[0][key])!==value)throw Error('STAGING_POSTINDEX_MISMATCH_'+key);
+          }
+          console.log('STAGING_POSTINDEX_11422_ENTRIES_16442_FORMS_ONE_DISABLED_SOURCE_VERIFIED');
+          console.log('STAGING_POSTINDEX_ZERO_APPROVED_SENSES_AND_ZERO_STUDY_BINDINGS');
+          console.log('STAGING_POSTINDEX_HISTORICAL_BASELINE_4_59_9_262_VERIFIED');
+          console.log('STAGING_POSTINDEX_READ_ONLY_NO_D1_MUTATION_NO_PRODUCTION_ACCESS');
+          NODE
