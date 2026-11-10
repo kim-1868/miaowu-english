@@ -142,3 +142,14 @@
 - 匿名表行数快照：`{"books":4,"words":59,"user_words":9,"chapter_words":262}`。此为**测试 D1 的运行后行数**，不能推断生产库中的小说总数、词汇覆盖率，也不能独立证明迁移前后表行数一致；程序内的旧表写入数为 0。
 - `global_dictionary_entries/forms/lessons/senses` 在导入前为空，`teaching_ready` / `enabled_sources` 未启用。结构迁移完成，但全量词条导入、义项审核、旧书/新书绑定均未完成。
 - 下一阶段先核对候选上游数据的来源许可、数据量和导入分块/幂等方案；不允许直接导入未经许可的词典字段为已审核教学词卡。
+
+## 2026-11-10 · 真实考试候选词头 SQL 编译通过（未写入 D1）
+- 上游 ECDICT 全量离线索引原始审核 artifact：run `42773007378` / artifact `13742288377`，上游 CSV SHA256 `d1ecbdf9ee2b920afb6f430ca6b6bb9f559588cf0dff86e04bd255f9390843cc`；离线词头来源 400,183、候选词形 56,898，均不是正式教学卡。
+- 编译器 `scripts/build-staging-exam-candidate-import.py` 从**上游已审计索引中筛选所有带考试标签的词头**，并保留这些词头对应的未审核词形。用户的历史四级/六级/考研/雅思官方覆盖率不能直接由 ECDICT 标签反推。
+- 已由 GitHub Actions `Dictionary exam-first candidate index SQL PREPARE (NO D1 writes)` [run 42846439845](https://github.com/kim-1868/miaowu-english/actions/runs/42846439845) 真实验收：**11,422 词头、16,442 条词形关系、37 个 SQL 文件**，10 项离线回归通过，实际 SQLite 建表/导入/外键与禁用态检查通过，Cloudflare D1 写入数 **0**。
+- 可重复下载的公开来源衍生 SQL artifact ID `13779510062`（名称 `exam-first-unverified-d1-sql-42846439845`），仅含候选词头、考试标记、词形关系、来源记录及 ECDICT LICENSE，**不含外部释义、第三方例句、音频、用户学习记录、收费小说**。代码在公有仓库，许可证尚未被正式签核。
+- 新增手动写入 workflow `.github/workflows/global-dictionary-staging-exam-candidate-import-manual.yml`（feature 分支）；`main` 只注册了会 fail-closed 的同名界面入口，不执行 D1。必须在 **GitHub Actions 选择 `feature/v11-smart-vocab-preflight-20261109`**，输入 `STAGING_EXAM_CANDIDATES_ADD_ONLY`，再人工审批 `staging-d1-schema-approval`。不存在任何 push 自动远程写入。
+- 导入工作流先核实固定 **11,422/16,442** 来源包、最新测试 D1 的空候选表及核心记录基线 `books=4, words=59, user_words=9, chapter_words=262`，再**执行加密的完整测试 D1 导出与离线恢复验证并保存 GitHub 加密 artifact**，最后才顺序执行 SQL，校验原表行数不变、所有教学状态/来源许可状态未启用。若中途失败应人工核查部分导入并决定恢复，**不能直接重跑覆盖/清库**。
+- 导入工作流关联的是上一个已实测无事务包裹的合格来源 artifact `13778216547`（run `42845777455`），内容同样为 **11,422/16,442/37**；最新版离线 CI 另产生 `13779510062`，二者都可作为审计参考，真正执行由固定 workflow manifest+sha 检查。
+- **尚未执行远程数据导入**，不得称为 11,422 张已审核教学卡、更不得称为 400,183 张完成。单日免费额度可用 100,000 rows written；4十万全量须后续分页且遵守免费额度和许可审核，或用户确认升级后再优化导入节奏。
+- 导入后才能继续：只读审计、按义项人审、选择正式出版小说受保护最新版本匹配、草稿 V2 上传测试及用户复习不丢失验收，正式站一直未部署此批变更。
