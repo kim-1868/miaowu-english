@@ -27,7 +27,7 @@ class RemainderWorkflowSafetyTests(unittest.TestCase):
         s=self.yml
         self.assertIn("88a817cb-23bb-4ae4-bcb8-92286c4165d4",s)
         self.assertIn("miaowu-english-test",s)
-        self.assertIn("/actions/artifacts/13778823874/zip",s)
+        self.assertIn("/actions/artifacts/13781435146/zip",s)
         self.assertIn("verify-staging-dictionary-remainder-cohort.py",s)
         self.assertIn("STAGING_PARTIAL_OR_WRONG_COHORT_STATE_",s)
         self.assertIn("STAGING_COHORT_POSTCONDITION_FAILED_",s)
