@@ -1,0 +1,34 @@
+# Entry registration only. This default-branch version NEVER migrates a database.
+# Select feature/v11-smart-vocab-preflight-20261109 in Run workflow to load
+# the guarded implementation from that ref. Production is never a target.
+name: Manual staging D1 dictionary schema 013-018 (never production)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_target:
+        type: string
+        required: true
+        description: Enter miaowu-english-test
+      confirm_uuid:
+        type: string
+        required: true
+        description: Enter exact test D1 UUID
+      confirmation:
+        type: string
+        required: true
+        description: Enter STAGING_013_018_ADD_ONLY
+      encrypted_backup_run_id:
+        type: string
+        required: true
+        description: Successful encrypted backup workflow run ID
+permissions:
+  contents: read
+jobs:
+  default-branch-is-never-a-database-writer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail closed on default branch
+        run: |
+          echo 'NO_DATABASE_WRITES_FROM_DEFAULT_BRANCH'
+          echo 'Select explicitly approved feature branch for staging-only migration'
+          exit 1
