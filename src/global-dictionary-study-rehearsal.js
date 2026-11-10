@@ -46,10 +46,16 @@ export function reconcileCanonicalStudyRows({links=[],progress=[]}={}){
  const counts={unmapped,records:progress.length,
   reviewed_links:validLinks.size,canonical_groups:canonical.size,
   duplicate_legacy_groups:0,mastery_conflicts:0,bookmark_unions:0,
-  pending_due_unknown:0,source_records_untouched:true};
+  pending_due_unknown:0,sense_identity_unverified_groups:0,
+  source_records_untouched:true};
  for(const group of canonical.values()){
   const rows=group.rows,ids=[...new Set(rows.map(x=>x.word_id))].sort();
-  if(rows.length>1)counts.duplicate_legacy_groups++;
+  if(rows.length>1){
+   counts.duplicate_legacy_groups++;
+   // A shared dictionary entry is not proof of the same teaching sense.
+   // A noun and a verb can share a main card but must not share mastery.
+   counts.sense_identity_unverified_groups++;
+  }
   const statuses=[...new Set(rows.map(x=>x.status))];
   const allMastered=statuses.length===1&&statuses[0]==='mastered';
   const someMastered=statuses.includes('mastered');
@@ -70,7 +76,8 @@ export function reconcileCanonicalStudyRows({links=[],progress=[]}={}){
   normalized.push({user_id:group.user_id,entry_id:group.entry_id,
     status,bookmarked,due_at,last_seen_at,
     source_legacy_word_ids:ids,
-    requires_manual_review:someMastered&&!allMastered||
+    requires_sense_identity_review:rows.length>1,
+    requires_manual_review:rows.length>1||someMastered&&!allMastered||
       status!=='mastered'&&notMastered.some(x=>!x.due_at)});
  }
  // No user records are written here; this is a reversible proposed projection.
@@ -79,6 +86,7 @@ export function reconcileCanonicalStudyRows({links=[],progress=[]}={}){
   proposed_rows:normalized.sort((a,b)=>
     a.user_id.localeCompare(b.user_id,'en')||
     a.entry_id.localeCompare(b.entry_id,'en')),
+  unsafe_to_apply_without_sense_mapping:counts.sense_identity_unverified_groups>0,
   migration_applied:false,review_events_modified:false,
   entitlement_state_modified:false};
 }

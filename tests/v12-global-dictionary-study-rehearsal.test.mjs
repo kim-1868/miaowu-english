@@ -29,6 +29,8 @@ test('B1 rehearses a single main word for different old senses without falsely m
  assert.equal(report.counts.records,4);
  assert.equal(report.counts.canonical_groups,2);
  assert.equal(report.counts.mastery_conflicts,1);
+ assert.equal(report.counts.sense_identity_unverified_groups,2);
+ assert.equal(report.unsafe_to_apply_without_sense_mapping,true);
  assert.equal(report.counts.bookmark_unions,1);
  const a=report.proposed_rows.find(x=>x.user_id==='user-a');
  const b=report.proposed_rows.find(x=>x.user_id==='user-b');
@@ -40,6 +42,10 @@ test('B1 rehearses a single main word for different old senses without falsely m
  assert.deepEqual(a.source_legacy_word_ids,['record-n','record-v']);
  assert.equal(b.status,'mastered');
  assert.equal(b.due_at,null);
+ // Even if both old senses were mastered, their meaning identities differ.
+ assert.equal(a.requires_sense_identity_review,true);
+ assert.equal(b.requires_sense_identity_review,true);
+ assert.equal(b.requires_manual_review,true);
  assert.deepEqual(progress,source);
  assert.equal(report.migration_applied,false);
 });
@@ -163,4 +169,20 @@ test('B1 audit refuses pre-migration backups without mapping schema',()=>{
   assert.throws(()=>rehearseCanonicalStateFromBackup(db),
     /BACKUP_SCHEMA_MISSING_user_words/);
  }finally{db.close()}
+});
+
+test('B1 single legacy sense can remain isolated; multiple old cards never auto-merge by headword alone',()=>{
+ const single=reconcileCanonicalStudyRows({
+  links:[link('record-n')],progress:[row('u','record-n','mastered',1)]
+ });
+ assert.equal(single.unsafe_to_apply_without_sense_mapping,false);
+ assert.equal(single.proposed_rows[0].requires_sense_identity_review,false);
+ const mixed=reconcileCanonicalStudyRows({
+  links:[link('record-n'),link('record-v')],
+  progress:[row('u','record-n','mastered',1),row('u','record-v','mastered',1)]
+ });
+ assert.equal(mixed.proposed_rows[0].status,'mastered');
+ assert.equal(mixed.proposed_rows[0].requires_manual_review,true);
+ assert.equal(mixed.unsafe_to_apply_without_sense_mapping,true);
+ assert.deepEqual(mixed.proposed_rows[0].source_legacy_word_ids,['record-n','record-v']);
 });
