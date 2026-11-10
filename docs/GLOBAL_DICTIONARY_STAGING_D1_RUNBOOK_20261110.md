@@ -153,3 +153,13 @@
 - 导入工作流关联的是上一个已实测无事务包裹的合格来源 artifact `13778216547`（run `42845777455`），内容同样为 **11,422/16,442/37**；最新版离线 CI 另产生 `13779510062`，二者都可作为审计参考，真正执行由固定 workflow manifest+sha 检查。
 - **尚未执行远程数据导入**，不得称为 11,422 张已审核教学卡、更不得称为 400,183 张完成。单日免费额度可用 100,000 rows written；4十万全量须后续分页且遵守免费额度和许可审核，或用户确认升级后再优化导入节奏。
 - 导入后才能继续：只读审计、按义项人审、选择正式出版小说受保护最新版本匹配、草稿 V2 上传测试及用户复习不丢失验收，正式站一直未部署此批变更。
+
+## 2026-11-10 · 考试优先候选索引**真实导入成功**（保留禁用和未审核状态）
+- GitHub Actions 手动审批运行 [42847388782](https://github.com/kim-1868/miaowu-english/actions/runs/42847388782)，job `129938463140`，`import-test-candidates-only` 任务最终 `completed/success`，源 commit `d41cb80`。
+- 运行页一度出现 `There was a problem approving one of the gates` 红色提醒，但任务实际已经进入 `in_progress`，经过独立 GitHub Actions Jobs API 复核最终成功。这条 UI 提醒并不代表本次任务未获批准，勿重复运行。
+- 原始日志依次确认：`STAGING_PREIMPORT_EMPTY_DICTIONARY_AND_HISTORICAL_COUNTS_OK`、`STAGING_EXAM_PREIMPORT_ENCRYPTED_BACKUP_RECOVERY_VERIFIED`、**37** 条 `STAGING_UNVERIFIED_INDEX_CHUNK_APPLIED_...`、`STAGING_EXAM_UNVERIFIED_CANDIDATES_IMPORTED_NEVER_APPROVED`。
+- 最终远程 D1 只读验收输出：`STAGING_EXAM_CANDIDATE_ENTRIES_11422_FORMS_16442_SOURCE_DISABLED`、`STAGING_ORIGINAL_BOOKS_WORDS_STUDY_ROWS_UNCHANGED`、`NO_TEACHING_CARDS_APPROVED_NO_PRODUCTION_ACCESS`。真实测试库现有 **11,422 个 ECDICT 考试标记候选词头**、**16,442 条未审核词形关系**、**1 个未审核/未启用来源**，已审教学词卡和义项仍为 **0**。
+- 导入前已重新生成并 SQLite 恢复核验加密测试 D1 备份，GitHub Actions 加密 Artifact `miaowu-staging-pre-exam-index-encrypted-backup`（artifact ID `13778877139`），需将此备份保存到站长离线安全存储，连同此前密码管理器中的解密密钥。
+- 受控测试 D1 原表计数在导入前后相同：`books=4`、`words=59`、`user_words=9`、`chapter_words=262`。该结论限于计数一致及工作流未写旧表，尚非逐行哈希/正式用户跨设备验收。
+- **禁止再次运行同一受控导入**，它的空表基线会阻断；切勿尝试绕过空表检查或在 SQL 不明状态下强行删除、回滚。生产 D1、Worker 及已上架小说仍未使用这批词典候选。
+- 下一阶段：另设独立只读验收核对词头样本、词形歧义、源 SHA 和数量；继而将已有 1150 个历史义项候选逐项审核并建立稳定 `sense_id`，仅审核通过的少量义项可用于测试草稿的自动配卡。完整 400,183 个上游词头仍为**离线已审计来源**，不等于全部已导入或教学卡已经制作完成。
