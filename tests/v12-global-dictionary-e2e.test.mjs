@@ -101,8 +101,8 @@ function seedDisposableDictionaryDraft(sql,input){
  sql.exec('BEGIN TRANSACTION');
  try{
   const b=input.book;
-  sql.prepare("INSERT INTO books(id,category_id,title,status) VALUES(?,?,?,'draft')")
-   .run(b.id,b.category,b.title);
+  sql.prepare("INSERT INTO books(id,category_id,title,description,status) VALUES(?,?,?,?,'draft')")
+   .run(b.id,b.category,b.title,b.description||'');
   for(const w of input.words){
    sql.prepare('INSERT OR IGNORE INTO words '+
     '(id,headword,phonetic_uk,phonetic_us,part_of_speech,meaning_zh,example_en,example_zh,collocations_json) '+
