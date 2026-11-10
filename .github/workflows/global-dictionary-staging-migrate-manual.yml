@@ -29,15 +29,26 @@ jobs:
     if: >-
       github.repository == 'kim-1868/miaowu-english' &&
       github.actor == 'kim-1868' &&
-      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109' &&
-      inputs.confirm_target == 'miaowu-english-test' &&
-      inputs.confirm_uuid == '88a817cb-23bb-4ae4-bcb8-92286c4165d4' &&
-      inputs.confirmation == 'STAGING_013_018_ADD_ONLY'
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
     environment:
       name: staging-d1-schema-approval
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
+      - name: Fail closed with clear diagnostics for all confirmation inputs
+        shell: bash
+        env:
+          CHECK_TARGET: ${{ inputs.confirm_target }}
+          CHECK_UUID: ${{ inputs.confirm_uuid }}
+          CHECK_CONFIRMATION: ${{ inputs.confirmation }}
+          BACKUP_RUN_ID: ${{ inputs.encrypted_backup_run_id }}
+        run: |
+          set -euo pipefail
+          test "$CHECK_TARGET" = 'miaowu-english-test' || { echo 'STAGING_TARGET_CONFIRMATION_MISMATCH'; exit 1; }
+          test "$CHECK_UUID" = '88a817cb-23bb-4ae4-bcb8-92286c4165d4' || { echo 'STAGING_UUID_CONFIRMATION_MISMATCH'; exit 1; }
+          test "$CHECK_CONFIRMATION" = 'STAGING_013_018_ADD_ONLY' || { echo 'STAGING_APPROVAL_TEXT_MISMATCH'; exit 1; }
+          [[ "$BACKUP_RUN_ID" =~ ^[0-9]+$ ]] || { echo 'BACKUP_RUN_ID_MUST_BE_NUMERIC'; exit 1; }
+          echo 'STAGING_INPUT_CONFIRMATIONS_VALIDATED_NO_DATABASE_WRITES'
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
