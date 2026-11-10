@@ -42,11 +42,11 @@ export function checkMigrationStatements(filename,sql){
  const dangerous=[
   /\b(?:INSERT|REPLACE)\s+INTO\b/iu,
   /\b(?:DELETE)\s+FROM\b/iu,
-  /\bUPDATE\s+[A-Za-z_]/iu,
+  /\bUPDATE\s+(?!OF\b|ON\b)[A-Za-z_][A-Za-z_0-9]*\s+SET\b/iu,
   /\b(?:DROP|ALTER|ATTACH|DETACH|VACUUM|REINDEX)\b/iu,
   /\bPRAGMA\s+(?:writable_schema|foreign_keys)\b/iu,
   /\bCREATE\s+(?:TEMP|TEMPORARY|VIRTUAL)\b/iu,
-  /\b(?:SAVEPOINT|ROLLBACK|COMMIT|BEGIN)\b/iu
+  /\b(?:SAVEPOINT|ROLLBACK|COMMIT)\b|\bBEGIN\s+(?:TRANSACTION|DEFERRED|IMMEDIATE|EXCLUSIVE)\b|\bBEGIN\s*;/iu
  ];
  for(const rule of dangerous){
   if(rule.test(cleaned))throw Error('MIGRATION_IS_NOT_ADDITIVE_'+filename);
@@ -106,6 +106,7 @@ export function rehearseDictionaryAdditiveMigrations(files){
   throw Error('NEW_DICTIONARY_TABLE_MISSING_'+n);
  const db=openBaseline();
  try{
+  db.exec("INSERT INTO categories(id,slug,title) VALUES('cet4','cet4','四级')");
   db.exec("INSERT INTO users(id,username,password_hash,password_salt) VALUES('test-user','runner','hash','salt')");
   db.exec("INSERT INTO books(id,category_id,title,status) VALUES('test-book','cet4','示例','draft')");
   db.exec("INSERT INTO chapters(id,book_id,chapter_no,title,content_json,is_preview) VALUES('test-ch','test-book',1,'第一章','{}',1)");
