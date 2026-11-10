@@ -1,0 +1,56 @@
+name: Manual staging D1 dictionary schema 013-018 (never production)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_target:
+        type: string
+        required: true
+        description: Enter miaowu-english-test
+      confirm_uuid:
+        type: string
+        required: true
+        description: Enter exact test D1 UUID
+      confirmation:
+        type: string
+        required: true
+        description: Enter STAGING_013_018_ADD_ONLY
+permissions:
+  contents: read
+concurrency:
+  group: staging-dictionary-schema-manual
+  cancel-in-progress: false
+jobs:
+  apply-on-test-only:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109' &&
+      inputs.confirm_target == 'miaowu-english-test' &&
+      inputs.confirm_uuid == '88a817cb-23bb-4ae4-bcb8-92286c4165d4' &&
+      inputs.confirmation == 'STAGING_013_018_ADD_ONLY'
+    environment:
+      name: staging-d1-schema-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate offline plan and local recovery before remote changes
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite scripts/execute-staging-dictionary-schema.mjs
+          node --experimental-sqlite scripts/rehearse-dictionary-staging-rollback.mjs
+      - name: Install Wrangler for staging D1 schema
+        run: npm install --ignore-scripts --no-save wrangler@^4
+      - name: Apply only six explicit additive schema files to test database after approval
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          MIAOWU_STAGING_SCHEMA_APPROVAL: ${{ inputs.confirmation }}
+          MIAOWU_STAGING_TARGET: ${{ inputs.confirm_target }}
+          MIAOWU_STAGING_UUID: ${{ inputs.confirm_uuid }}
+        run: node --experimental-sqlite scripts/execute-staging-dictionary-schema.mjs --execute-test-only
