@@ -1421,45 +1421,6 @@ function previewNovelPackage(pkg){
 
 // Publisher-only staging discovery. Unmarked English is NEVER silently
 // promoted to a paid learning target; editors must confirm each suggestion.
-function draftAutoDiscoveredV2(source,suggestions){
- if(source?.version!==2||source.words!==undefined||!Array.isArray(source.chapters))
-  throw Error("自动发现来源不是有效 V2 小说");
- const copy=structuredClone(source);
- const groups=new Map();
- for(const hit of suggestions){
-  if(hit.action!=="PROPOSE_ONLY_REQUIRES_CONTEXT_EDITOR_CONFIRMATION"||
-     !hit.sense_id||typeof hit.gloss!=="string")throw Error("词义没有通过审核");
-  const key=[hit.chapter_number,hit.paragraph_index,hit.segment_index].join(":");
-  if(!groups.has(key))groups.set(key,[]);
-  groups.get(key).push(hit);
- }
- let seen=0;
- for(const ch of copy.chapters){
-  for(const [pi,para] of ch.paragraphs.entries()){
-   para.segments=para.segments.flatMap((seg,si)=>{
-    const key=[ch.number,pi,si].join(":");
-    const targets=(groups.get(key)||[]).sort((a,b)=>a.start_offset-b.start_offset);
-    if(!targets.length)return [seg];
-    if(typeof seg.text!=="string"||seg.surface!==undefined)
-     throw Error("自动标注位置不是正文文本");
-    const chunks=[];let cursor=0;
-    for(const hit of targets){
-     if(hit.start_offset<cursor||hit.end_offset>seg.text.length||
-        hit.end_offset<=hit.start_offset||
-        seg.text.slice(hit.start_offset,hit.end_offset)!==hit.surface)
-       throw Error("正文已变化，请重新执行自动发现");
-     if(hit.start_offset>cursor)chunks.push({text:seg.text.slice(cursor,hit.start_offset)});
-     chunks.push({surface:hit.surface,gloss:hit.gloss});
-     cursor=hit.end_offset;seen++;
-    }
-    if(cursor<seg.text.length)chunks.push({text:seg.text.slice(cursor)});
-    return chunks;
-   });
-  }
- }
- if(seen!==suggestions.length)throw Error("部分自动标注位置不存在");
- return copy;
-}
 async function reviewUnmarkedDictionaryV2(source,result){
  const pending=result.review_queue||[],suggested=result.suggestions||[];
  const lines=[
@@ -1491,6 +1452,7 @@ async function reviewUnmarkedDictionaryV2(source,result){
    if(confirm.disabled||!connected()||identity?.environment!=="staging")return;
    confirm.disabled=true;
    try{
+    const {draftAutoDiscoveredV2}=await import("/auto-discovery-v2-draft.js");
     const draft=draftAutoDiscoveredV2(source,suggested);
     const checked=await api("/api/ops/import/dictionary-v2/preflight","POST",{package:draft});
     dictionaryV2Source=draft;dictionaryV2Decisions=[];
