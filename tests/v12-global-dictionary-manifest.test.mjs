@@ -320,3 +320,62 @@ test('A4 export route enforces real staging publisher authentication and returns
   assert.equal(forbidden.status,404);
  }finally{sql.close()}
 });
+
+
+test('safety: reviewed dictionary headword without lesson cannot stage a V1 novel binding',async()=>{
+ const {sql,env}=setup();
+ try{
+  sql.prepare('DELETE FROM global_dictionary_lessons WHERE entry_id=?')
+    .run('gdict_record');
+  const manuscript=novel();
+  const proposed=await previewBindingManifest(env,{package:manuscript});
+  assert.equal(proposed.ready_to_stage,false);
+  assert.equal(proposed.approved_count,1);
+  assert.deepEqual(proposed.blockers.map(b=>b.reason),
+    ['REVIEWED_DICTIONARY_LESSON_MISSING_OR_INVALID']);
+  await assert.rejects(()=>saveStagingBindingManifest(env,{
+    package:manuscript,requestId:'missing-lesson-001',confirmSave:true,
+    expectedPackageSha256:proposed.package_sha256,
+    expectedBindingSha256:proposed.binding_sha256
+  },actor),/BINDING_REVIEW_REQUIRED/);
+  assert.equal(sql.prepare('SELECT count(*) AS n FROM global_dictionary_binding_manifests')
+    .get().n,0);
+ }finally{sql.close()}
+});
+test('safety: exact English headword still needs independent review of novel contextual gloss',async()=>{
+ const {sql,env}=setup();
+ try{
+  const manuscript=novel();
+  manuscript.chapters[0].paragraphs[0].segments[1].gloss='机械设备';
+  const proposed=await previewBindingManifest(env,{package:manuscript});
+  assert.equal(proposed.ready_to_stage,false);
+  assert.equal(proposed.blockers.length,1);
+  assert.equal(proposed.blockers[0].reason,
+    'CONTEXT_GLOSS_NOT_IN_REVIEWED_DICTIONARY_SENSES');
+  assert.equal(proposed.manifest.bindings[0].entry_id,'gdict_record');
+  assert.equal(sql.prepare('SELECT count(*) AS n FROM global_dictionary_binding_manifests')
+    .get().n,0);
+ }finally{sql.close()}
+});
+test('safety: malformed or missing approved senses cannot authorize staging',async()=>{
+ const {sql,env}=setup();
+ try{
+  sql.prepare('UPDATE global_dictionary_lessons SET senses_json=? WHERE entry_id=?')
+    .run('[]','gdict_record');
+  const result=await previewBindingManifest(env,{package:novel()});
+  assert.equal(result.ready_to_stage,false);
+  assert.equal(result.blockers.length,1);
+  assert.equal(result.blockers[0].reason,
+    'REVIEWED_DICTIONARY_LESSON_MISSING_OR_INVALID');
+ }finally{sql.close()}
+});
+test('safety: deleting lesson schema entirely fails closed before any candidate write',async()=>{
+ const {sql,env}=setup();
+ try{
+  sql.exec('DROP TABLE global_dictionary_lessons');
+  await assert.rejects(()=>previewBindingManifest(env,{package:novel()}),
+    /GLOBAL_LESSON_SCHEMA_REQUIRED/);
+  assert.equal(sql.prepare('SELECT count(*) AS n FROM global_dictionary_binding_manifests')
+    .get().n,0);
+ }finally{sql.close()}
+});
