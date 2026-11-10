@@ -115,7 +115,7 @@ def compile_exam_candidates(entries_path, forms_path, audit_path, output, *, bat
     }
 
     def save(filename, statements, rowcount):
-        sql = "BEGIN TRANSACTION;\n" + "\n".join(statements) + "\nCOMMIT;\n"
+        sql = "-- D1 import file: intentionally no explicit BEGIN/COMMIT.\n" + "\n".join(statements) + "\n"
         dst = root / filename
         dst.write_text(sql, encoding="utf-8")
         manifest["files"].append({
