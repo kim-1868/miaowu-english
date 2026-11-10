@@ -100,3 +100,9 @@
 - 用户明确表示已经将 GitHub Actions 成功生成的加密备份下载并保存到个人电脑。此项为**用户确认**，不是工具对本机文件/备份密码的独立验证。
 - 已核对人工迁移工作流需要四个输入：测试数据库名、测试 D1 UUID、确认文字、之前成功加密备份的 **GitHub Actions 数字 run ID**，并在写库前校验同一分支的成功备份 Artifact。
 - 后续迁移仍需用户执行 GitHub 人工审批，不能将本地备份保存视作迁移已执行。
+
+## 2026-11-10 · GitHub 迁移工作流入口修复
+- 已在默认分支 `main` 注册同名 `.github/workflows/global-dictionary-staging-migrate-manual.yml`，提交 `a5aa549`。默认分支文件只会执行 `NO_DATABASE_WRITES_FROM_DEFAULT_BRANCH` 后失败关闭，**绝不修改数据库**。
+- 真正的 013–018 测试库迁移实现仍然只位于 `feature/v11-smart-vocab-preflight-20261109`，须在 GitHub Actions 的 `Run workflow` 中**明确选择该开发分支**，填写目标、UUID、确认文字、真实加密备份的数字 run ID，之后通过 `staging-d1-schema-approval` 审批方可运行。
+- 修复 `encrypted_backup_run_id` 在 GitHub API 返回的 `path` 可能是 `owner/repo/.github/workflows/...` 时的校验兼容性，改为安全的指定文件路径后缀校验，继续要求成功状态、同分支、非过期非空备份 artifact。
+- 还未通过完整正式流水线验证入口是否在 GitHub UI 出现；默认分支注册并不等于远程测试 D1 已迁移。迁移前须确认关联 CI 红色检查的具体原因，且用户电脑备份和密码可恢复。
