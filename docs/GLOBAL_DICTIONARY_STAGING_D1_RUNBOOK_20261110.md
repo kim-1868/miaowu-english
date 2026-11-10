@@ -46,3 +46,9 @@
 - 离线防回退测试 `tests/v12-dictionary-staging-export-gate.test.mjs` 已加入自动 dry-run 工作流；请以 GitHub Actions 实际结果为准，代码提交不等于 CI 已通过。
 - **重要限制**：Runner 中的导出文件只在当前 job 短暂保存并于结束删除，**不是持久备份**；即使回放成功也不能替代事先安全保存的独立备份和 D1 Time Travel 恢复保障。现有 workflow 仅核实 bookmark 存在，尚未实际对远程隔离副本进行恢复测试。未补齐持久恢复证明和保护环境人工批准前，不应启动 `apply-on-test-only`。
 - 本次没有使用 Cloudflare 密钥，没有触发远程导出/迁移，没有启动正式站部署。测试 D1 环境授权、实际备份保留、预览 Worker 验收依旧待完成。
+
+## 2026-11-10 GitHub 环境授权后只读检查入口
+- 用户已在会话中确认 `CLOUDFLARE_STAGING_D1_WRITE_TOKEN`、`CLOUDFLARE_ACCOUNT_ID` 保存于 `staging-d1-schema-approval` 环境；**此为用户操作确认，不等于工作流已成功读取、权限范围已证实**。
+- 新增 `.github/workflows/global-dictionary-staging-authorized-readonly.yml`（SHA `75dca6c`）：在受保护环境获批准后，只读取测试 D1 的核心表/词典表数量和 Time Travel 元数据，不导出用户记录、不输出书籍内容、不执行 SQL DDL/DML 或部署。
+- 此 workflow 通过对应文件变动的 feature 分支 push 触发；可在 Actions 找到 `Dictionary staging D1 authorized READ ONLY baseline`，若出现 `Review deployments`，由账户所有人审批。**勿启动** `Manual staging D1 dictionary schema 013-018 (never production)`，那是会写库的不同工作流。
+- 审批后必须根据 CI 实际结论继续。即使只读成功，仍未满足持久备份、独立恢复、正式教学义项审核等上线条件。
