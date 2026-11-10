@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "snapshot_date": "2026-11-10",
+  "repo_full_name": "kim-1868/miaowu-english",
+  "branch": "feature/v11-smart-vocab-preflight-20261109",
+  "source_rows_total": 343,
+  "unique_legacy_word_ids": 305,
+  "exact_duplicate_old_id_rows_collapsed": 38,
+  "standalone_draft_unique_cards": 238,
+  "historic_package_unique_cards": 67,
+  "field_complete_unique_cards": 67,
+  "missing_us_ipa_unique_cards": 238,
+  "independently_approved_global_lessons": 0,
+  "distinct_english_headwords": 272,
+  "distinct_candidate_sense_text_keys": 299,
+  "upstream_source_headword_candidates": 400183,
+  "upstream_source_form_candidates": 56898,
+  "official_exam_coverage_claimed": false,
+  "fully_approved_auto_publish_cards": 0,
+  "sources": [
+    {
+      "repo_path": "content/lexicon/smart-vocab-pilot-20-review.jsonl",
+      "git_blob_sha": "a58b35c525f907dc860689e29b5bfd2271f502cc",
+      "rows": 20,
+      "kind": "unreviewed_draft"
+    },
+    {
+      "repo_path": "content/lexicon/cet4-priority-draft-batch-20261110.jsonl",
+      "git_blob_sha": "585c03b5decf3dd61cbeeefed8c5a562a88ad4b8",
+      "rows": 98,
+      "kind": "unreviewed_draft"
+    },
+    {
+      "repo_path": "content/lexicon/cet4-priority-draft-batch-2-20261110.jsonl",
+      "git_blob_sha": "4d5d2bcea24293c1aae40efd48c932e39f15050b",
+      "rows": 76,
+      "kind": "unreviewed_draft"
+    },
+    {
+      "repo_path": "content/lexicon/cet4-polysemy-draft-batch-20261110.jsonl",
+      "git_blob_sha": "3cb4d2f28c763791223a9e8cad31580f67c6ff13",
+      "rows": 44,
+      "kind": "unreviewed_draft"
+    },
+    {
+      "repo_path": "content/release-packages/20261104-ex-husband-business-client-FIXED-LEXICON-IDS.json",
+      "git_blob_sha": "1a73a6ebac7fa75f458f29087872ae0dbb50e6cc",
+      "rows": 49,
+      "kind": "historical_novel_package"
+    },
+    {
+      "repo_path": "content/release-packages/20261104-substitute-bride-tears-contract-FIXED-LEXICON-IDS.json",
+      "git_blob_sha": "76e881f381a00b1c947cb62eab478d00701147d1",
+      "rows": 56,
+      "kind": "historical_novel_package"
+    }
+  ],
+  "no_production_mutation": true,
+  "caveats": [
+    "Only cards available in the connected project GitHub repository; 343 source rows across six files, 38 duplicate IDs identical and deduplicated to 305.",
+    "The historical release novel package cards are NOT an authenticated current production D1 snapshot.",
+    "Draft cards lack phonetic_us and have reviewed:false; all inventory cards have lesson_approved:false.",
+    "400183 ECDICT unreviewed dictionary headwords ARE NOT reviewed teaching cards.",
+    "Candidate sense_key is not a reviewed stable sense_id; never merge existing mastery based solely on headword or Chinese text.",
+    "Only approved teaching senses may be auto-attached for commercial publication. No legacy IDs or user data are overwritten."
+  ]
+}
