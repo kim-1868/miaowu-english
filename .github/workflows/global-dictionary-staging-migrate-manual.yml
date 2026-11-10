@@ -46,6 +46,29 @@ jobs:
           node --experimental-sqlite scripts/rehearse-dictionary-staging-rollback.mjs
       - name: Install Wrangler for staging D1 schema
         run: npm install --ignore-scripts --no-save wrangler@^4
+      - name: Verify full test D1 export and independent local SQLite replay before mutation
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}" && test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          umask 077
+          backup="$RUNNER_TEMP/miaowu-staging-pre-013-018.sql"
+          restored="$RUNNER_TEMP/miaowu-staging-restore-test.sqlite"
+          trap 'rm -f "$backup" "$restored" "$restored-wal" "$restored-shm"' EXIT
+          npx wrangler d1 export miaowu-english-test --remote --yes \
+            --config wrangler.jsonc --output "$backup" >/dev/null
+          test -s "$backup"
+          sqlite3 "$restored" < "$backup" >/dev/null
+          test "$(sqlite3 "$restored" 'PRAGMA integrity_check;')" = "ok"
+          test -z "$(sqlite3 "$restored" 'PRAGMA foreign_key_check;')"
+          for t in books words user_words chapter_words; do
+            test "$(sqlite3 "$restored" "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='$t';")" = "1"
+          done
+          echo 'STAGING_REMOTE_EXPORT_AND_DISPOSABLE_SQLITE_REPLAY_OK'
+          echo 'EPHEMERAL_RUNNER_BACKUP_IS_NOT_DURABLE_RECOVERY__TIMETRAVEL_STILL_REQUIRED'
       - name: Apply only six explicit additive schema files to test database after approval
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
