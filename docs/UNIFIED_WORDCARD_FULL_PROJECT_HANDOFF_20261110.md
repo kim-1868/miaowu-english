@@ -14,6 +14,17 @@
 
 公有可复用代码 `src/global-dictionary-historical-books-compare.js` 和 [审计说明](LEGACY_23_BOOK_SENSE_CANDIDATE_AUDIT_20261110.md)，均不触碰用户/权益/正式 D1，不包含收费正文。**已批准 stable sense_id 仍 0。**
 
+## B1.5 本轮新增：从词卡机器审核到正式签核的中间层（2026-11-10）
+
+**状态：开发分支可重复代码已提交，私有文件已真正生成；没有把任何未经许可审核的素材标成可售卡。**
+
+- `src/global-dictionary-editorial-signoff-gate.js` + `scripts/check-private-reviewer-decisions.mjs`：1150 条候选的专用“审核决议模板”，审核人须逐一说明 UK/US IPA、POS、词义、双语例句自然度、**商业来源/双语例句权利**、旧 ID 同义项身份等 8 类审核项目与依据；仅输出「可交运营台最终签核」候选。即使 JSON 所有勾选为 true，也 **不** 自动创建 `approved_sense_id`、`teaching_ready` 或用户掌握记录。具体见 [B1.5 审稿签核方案](GLOBAL_DICTIONARY_B15_EDITORIAL_SIGNOFF_GATE_20261110.md)。
+- 用户私人 Library **`/开发英语单词学习网站/统一词卡_待审工作区/全量1150义项_B15商用终审决议/`**：实际 1150 条逐义项空白签核 JSONL、独立机器建议 JSONL、源内容 SHA 和 ZIP。源 SHA256 = `54360cf47197b75ebe3a102f3abce99ba901b2bdb8dafb22f2f09e59b1759e21`。**不要把私人例句、旧 Word ID、收费内容上传公有 GitHub**。
+- `src/global-dictionary-fast-review-triage.js`：对 1150 条进行真实审核复杂度分流——**493 条**旧卡材料较少冲突（单一 IPA 英美候选、标准单词词性、无显式重复/多义冲突、例句含登记词形），另 **657 条**重点检查。原有 2206 个 old word ID 全部保留；**493 绝不代表已通过教学或许可审核**。真实分流文件在私人 Library `/开发英语单词学习网站/统一词卡_待审工作区/B15按审核难度分流/`。
+- 发现额外写入安全风险并修复：`src/ops-import.js` 现不仅拒绝未经审核的 `gdict_` 主词头和 `v2_tmp_` 临时 ID，还**拒绝伪造的 `gds_` 稳定义项 ID 通过普通 V1 上传接口写库**。未来真正的 V2 上传需经过独立、服务端审核和权限约束，不能绕过已有用户学习键。
+- **真正已批准教学义项依然 0**：人工及法务来源审阅、由认证 Publisher 最终签署的稳定 `sense_id` / 幂等 D1 写入仍待实施。真实测试 D1 schema 尚为 **0/10**，用户当前正式站未修改。
+- Cloudflare Time Travel 可以按 UTC 时间或 bookmark 恢复，属于有期限的恢复手段，不等于长期脱机备份，真实 staging migration 必须记录恢复点；D1 Write Secret `CLOUDFLARE_STAGING_D1_WRITE_TOKEN` **未新授权，保持旧 Read Secret 不变**。参见 [仅手动测试库迁移门禁](DICTIONARY_STAGING_MANUAL_MIGRATION_GATE_20261110.md)。
+
 ## 当前最靠前的项目结论：1150 历史义项全部分为十批（2026-11-10）
 
 **这一步已实际产生私人文件，不再只是工作计划。** 历史 2,206 个旧卡 ID 对应的 1,150 个严格义项候选已经完整编排成 **10 个不重不漏的离线审稿批次**：第 1–9 批各 120 条，第 10 批 70 条。第一批原有 120 个保留，另外 1,030 个已分别编排；覆盖旧卡 ID 关联总计正好 2,206。包含全部义项的独立 HTML 审稿工作台（搜索、分级、批次、风险过滤和本地初审）、Excel 审核总表、完整 JSONL、10 份分批 JSONL、质量统计和 ZIP。
