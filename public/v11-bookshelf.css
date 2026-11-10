@@ -1,5 +1,5 @@
-/* WordLetter V1.1 P2 personal story shelf */
-.v11-personal-shelf{margin:26px 0 4px;border:1px solid var(--line,#e7ddd4);border-radius:20px;background:var(--paper,#fffcf7);padding:23px}
+/* WordLetter V1.1 P2 personal story shelf: compact, paginated, responsive */
+.v11-personal-shelf{margin:26px 0 4px;border:1px solid var(--line,#e7ddd4);border-radius:20px;background:var(--paper,#fffcf7);padding:23px;min-width:0}
 .v11-personal-shelf[hidden]{display:none!important}
 .v11-my-shelf-header h2{font:normal 26px/1.4 'Songti SC',serif;color:var(--wine,#672b41);margin:7px 0 5px}
 .v11-my-shelf-header p{font-size:13px;line-height:1.7;color:var(--muted,#847675);margin:0 0 19px}
@@ -7,25 +7,52 @@
 .v11-my-shelf-tabs button{border:1px solid var(--line,#e7ddd4);border-radius:22px;min-height:38px;padding:7px 15px;background:transparent;color:var(--wine,#672b41);font-size:13px}
 .v11-my-shelf-tabs button.active,.v11-my-shelf-tabs button[aria-pressed="true"]{background:var(--wine,#672b41);border-color:var(--wine,#672b41);color:white}
 .v11-my-shelf-tabs button span{opacity:.7;font-size:12px;margin-left:3px}
-.v11-my-shelf-list{display:grid;gap:12px}
-.v11-my-shelf-card{display:grid;grid-template-columns:98px minmax(0,1fr);gap:17px;align-items:center;border:1px solid var(--line,#e7ddd4);background:var(--paper,#fffcf7);border-radius:15px;padding:13px}
-.v11-my-shelf-cover{width:98px;aspect-ratio:3/4;border-radius:8px;background:linear-gradient(135deg,#642e45,#bb908e);display:grid;place-items:center;color:#fff;font:28px Georgia,serif;overflow:hidden}
+.v11-my-shelf-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:stretch}
+.v11-my-shelf-card{display:grid;grid-template-columns:76px minmax(0,1fr);gap:12px;align-items:start;min-width:0;border:1px solid var(--line,#e7ddd4);background:var(--paper,#fffcf7);border-radius:15px;padding:13px}
+.v11-my-shelf-cover{width:76px;aspect-ratio:3/4;border-radius:8px;background:linear-gradient(135deg,#642e45,#bb908e);display:grid;place-items:center;color:#fff;font:28px Georgia,serif;overflow:hidden}
 .v11-my-shelf-cover img{width:100%;height:100%;object-fit:cover}
-.v11-my-shelf-info h3{font:normal 21px/1.4 'Songti SC',serif;color:var(--wine,#672b41);margin:0 0 4px;overflow-wrap:anywhere}
-.v11-my-shelf-info p{font-size:12px;color:var(--ink,#322a2b);margin:0 0 4px}
+.v11-my-shelf-info{min-width:0;display:flex;flex-direction:column;align-items:stretch;height:100%}
+.v11-my-shelf-info h3{font:normal 17px/1.4 'Songti SC',serif;color:var(--wine,#672b41);margin:0 0 5px;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.v11-my-shelf-info p{font-size:12px;color:var(--ink,#322a2b);margin:0 0 4px;line-height:1.5}
 .v11-my-shelf-info small,.v11-my-shelf-foot{font-size:11px;line-height:1.6;color:var(--muted,#847675)}
-.v11-my-shelf-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px}
-.v11-my-shelf-actions button{min-height:38px;padding:5px 13px;font-size:12px}
-.v11-my-shelf-empty{margin:0;padding:22px 10px;text-align:center;color:var(--muted,#847675);font-size:13px}
+.v11-my-shelf-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:auto;padding-top:11px}
+.v11-my-shelf-actions button{flex:0 1 auto;min-width:0;min-height:38px;padding:6px 11px;font-size:12px;white-space:normal}
+.v11-my-shelf-empty{grid-column:1/-1;margin:0;padding:22px 10px;text-align:center;color:var(--muted,#847675);font-size:13px}
+.v11-my-shelf-pagination{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-top:18px}
+.v11-my-shelf-page-summary{font-size:12px;color:var(--muted,#847675)}
+.v11-my-shelf-page-controls{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:7px}
+.v11-my-shelf-page-controls button{min-width:38px;min-height:38px;padding:7px 10px;border-radius:9px;border:1px solid var(--line,#e7ddd4);background:transparent;color:var(--wine,#672b41);font-size:12px}
+.v11-my-shelf-page-controls button[aria-current="page"]{background:var(--wine,#672b41);border-color:var(--wine,#672b41);color:#fff;opacity:1}
+.v11-my-shelf-page-controls button:disabled:not([aria-current="page"]){opacity:.42;cursor:not-allowed}
+.v11-my-shelf-page-ellipsis{color:var(--muted,#847675);padding:0 2px}
 .v11-my-shelf-foot{margin:16px 0 0}
 #view-library .book-actions .cloud-bookmark-button{width:auto;flex:1 1 115px;min-height:40px}
 #view-library .book-actions button.primary{flex:2 1 130px}
+@media(min-width:1024px) and (max-width:1199px){
+ .v11-my-shelf-card{grid-template-columns:64px minmax(0,1fr);gap:10px;padding:11px}
+ .v11-my-shelf-cover{width:64px}
+ .v11-my-shelf-info h3{font-size:16px}
+}
+@media(min-width:621px) and (max-width:1023px){
+ .v11-my-shelf-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 @media(max-width:620px){
  .v11-personal-shelf{padding:16px 13px}
+ .v11-my-shelf-list{grid-template-columns:minmax(0,1fr)}
  .v11-my-shelf-card{grid-template-columns:70px minmax(0,1fr);gap:10px;padding:10px}
  .v11-my-shelf-cover{width:70px}
- .v11-my-shelf-info h3{font-size:18px}
- .v11-my-shelf-actions button{flex:1 1 108px;padding:5px 9px}
+ .v11-my-shelf-info h3{font-size:17px}
+ .v11-my-shelf-actions button{padding:6px 10px}
+ .v11-my-shelf-pagination{align-items:flex-start;flex-direction:column}
+ .v11-my-shelf-page-controls{justify-content:flex-start}
+}
+@media(max-width:359px){
+ .v11-my-shelf-card{grid-template-columns:60px minmax(0,1fr);gap:9px}
+ .v11-my-shelf-cover{width:60px}
+ .v11-my-shelf-info h3{font-size:16px}
+ .v11-my-shelf-actions button{font-size:11px;padding:6px 8px}
 }
 html[data-theme="dark"] .v11-personal-shelf,
 html[data-theme="dark"] .v11-my-shelf-card{background:var(--paper,#302a30)}
+html[data-theme="dark"] .v11-my-shelf-page-controls button{color:var(--wine,#f4d5df)}
+html[data-theme="dark"] .v11-my-shelf-page-controls button[aria-current="page"]{color:#fff}

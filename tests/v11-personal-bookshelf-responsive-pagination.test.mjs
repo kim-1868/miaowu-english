@@ -1,0 +1,43 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const root=new URL('../',import.meta.url);
+const app=readFileSync(new URL('public/app.js',root),'utf8');
+const css=readFileSync(new URL('public/v11-bookshelf.css',root),'utf8');
+const render=app.slice(app.indexOf('function renderPersonalBookshelf(){'),app.indexOf('async function loadPersonalBookshelf(){'));
+test('personal bookshelf: independent per-category 9-book pagination with bounded page after updates',()=>{
+ assert.match(app,/personalShelfFilter='reading',personalShelfPage=1/);
+ assert.match(app,/PERSONAL_SHELF_PAGE_SIZE=9/);
+ assert.match(render,/Math\.ceil\(matches\.length\/PERSONAL_SHELF_PAGE_SIZE\)/);
+ assert.match(render,/Math\.max\(1,Math\.min\(personalShelfPage,totalPages\)\)/);
+ assert.match(render,/matches\.slice\(offset,offset\+PERSONAL_SHELF_PAGE_SIZE\)/);
+ assert.match(render,/personalShelfFilter=btn\.dataset\.personalFilter;personalShelfPage=1/);
+ assert.match(render,/data-personal-page="prev"/);
+ assert.match(render,/data-personal-page="next"/);
+ assert.match(render,/aria-current="page"/);
+ assert.match(render,/aria-label="我的书架分页"/);
+ assert.match(render,/page<1\|\|page>totalPages\|\|page===personalShelfPage/);
+ assert.ok(render.indexOf('personalShelfPage=page;renderPersonalBookshelf()')>0);
+});
+test('personal bookshelf: all existing learning/reading actions retained',()=>{
+ assert.match(render,/\/api\/covers\//);
+ assert.match(render,/data-my-shelf-read/);
+ assert.match(render,/data-my-shelf-save/);
+ assert.match(render,/setPersonalBookmark\(book\.book_id,!book\.bookmarked,btn\)/);
+ assert.match(render,/openCloudBook\(/);
+ assert.match(render,/移出书架不会删除阅读进度/);
+ assert.match(render,/role="group" aria-label="书架阅读状态"/);
+});
+test('personal bookshelf: responsive 3 desktop 2 tablet 1 mobile, no overflow and compact cards',()=>{
+ assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+ assert.match(css,/@media\(min-width:621px\) and \(max-width:1023px\)/);
+ assert.match(css,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+ assert.match(css,/@media\(max-width:620px\)/);
+ assert.match(css,/grid-template-columns:minmax\(0,1fr\)/);
+ assert.match(css,/@media\(max-width:359px\)/);
+ assert.match(css,/-webkit-line-clamp:2/);
+ assert.match(css,/\.v11-my-shelf-card\{[^}]*min-width:0/);
+ assert.match(css,/\.v11-my-shelf-page-controls button\{/);
+ assert.match(css,/min-height:38px/);
+ assert.match(css,/html\[data-theme="dark"\]/);
+});

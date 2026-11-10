@@ -1,0 +1,47 @@
+name: V1.1 personal bookshelf compact grid and pagination QA (NO DEPLOY)
+on:
+  push:
+    branches: [feature/v11-personal-bookshelf-grid-pagination-20261109]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bookshelf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Validate JS and responsive pagination contracts
+        run: |
+          set -euo pipefail
+          node --check public/app.js
+          node --test tests/v11-personal-bookshelf-responsive-pagination.test.mjs
+      - name: Full WordLetter regressions
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+      - name: Confirm 50 official resources and previews preserved
+        run: |
+          set -euo pipefail
+          node scripts/build-production-assets.mjs --approved-announcements
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';import fs from 'node:fs';
+          import {auditProductionAssets} from './scripts/build-production-assets.mjs';
+          assert.equal(auditProductionAssets({withAnnouncements:true}).assets.length,50);
+          const d=fs.readFileSync('dist-production/public/index.html','utf8');
+          for(const key of ['myBookshelf','mwWelcomeDialog','siteUpdateBanner'])assert.ok(d.includes(key));
+          const css=fs.readFileSync('dist-production/public/v11-bookshelf.css','utf8');
+          assert.match(css,/v11-my-shelf-pagination/);
+          assert.match(css,/repeat\(3,minmax\(0,1fr\)\)/);
+          console.log('RESPONSIVE_PAGINATION_INCLUDED_WITH_WAVE1_ANNOUNCEMENT_AND_WAVE2');
+          NODE
+      - name: Production Worker compilation only (no Cloudflare credentials)
+        run: |
+          set -euo pipefail
+          npm install --no-save --ignore-scripts 'wrangler@^4'
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          npx wrangler deploy --dry-run --config deploy/production.wrangler.jsonc --outdir .wrangler/qa-bookshelf-only
