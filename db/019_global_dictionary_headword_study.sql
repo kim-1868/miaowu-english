@@ -37,6 +37,8 @@ CREATE TABLE IF NOT EXISTS user_headword_review_events (
   action TEXT NOT NULL CHECK(action IN
     ('seen','remembered','forgotten','mark_mastered','unmark_mastered')),
   source_book_id TEXT REFERENCES books(id),
+  source_chapter_id TEXT REFERENCES chapters(id),
+  source_context_anchor TEXT NOT NULL CHECK(length(source_context_anchor) BETWEEN 1 AND 512),
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   state_revision INTEGER NOT NULL CHECK(state_revision>=1),
   UNIQUE(user_id,entry_id,state_revision)
