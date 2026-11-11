@@ -1,0 +1,34 @@
+name: V1.2 real owner exam 7391 review content reconciliation synthetic QA
+on:
+  pull_request:
+    paths:
+      - src/global-dictionary-owner-exam-content-reconciliation.js
+      - tests/v12-owner-exam-content-reconciliation.test.mjs
+      - .github/workflows/v12-owner-exam-content-reconciliation-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - src/global-dictionary-owner-exam-content-reconciliation.js
+      - tests/v12-owner-exam-content-reconciliation.test.mjs
+permissions:
+  contents: read
+jobs:
+  offline-synthetic-reconciliation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify deterministic counts and approval hold
+        run: |
+          set -euo pipefail
+          node --check src/global-dictionary-owner-exam-content-reconciliation.js
+          node --test tests/v12-owner-exam-content-reconciliation.test.mjs
+      - name: Protect private dictionary contents
+        run: |
+          echo 'SYNTHETIC_DATA_ONLY_NO_OWNER_WORDLIST_OR_NOVEL_UPLOAD'
+          echo 'NO_D1_NO_PUBLISHER_APPROVAL_NO_USER_STUDY_WRITES'
