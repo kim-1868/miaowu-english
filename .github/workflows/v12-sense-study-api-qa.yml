@@ -1,0 +1,36 @@
+name: V1.2 sense-level 020 staging API synthetic SQLite QA
+on:
+  pull_request:
+    paths:
+      - src/global-dictionary-sense-study-api.js
+      - src/worker.js
+      - tests/v12-sense-study-api.test.mjs
+      - .github/workflows/v12-sense-study-api-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - src/global-dictionary-sense-study-api.js
+      - src/worker.js
+      - tests/v12-sense-study-api.test.mjs
+permissions:
+  contents: read
+jobs:
+  isolated-sense-srs-api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run transactional 020 SQLite tests
+        run: |
+          set -euo pipefail
+          node --check src/global-dictionary-sense-study-api.js
+          node --check src/worker.js
+          node --experimental-sqlite --test tests/v12-sense-study-api.test.mjs
+          node --experimental-sqlite --test tests/v12-sense-020-srs-migration.test.mjs
+      - name: No remote D1, production deploy or customer data
+        run: echo 'STAGING_API_SYNTHETIC_ONLY__NO_REMOTE_D1_WRITES_NO_DEPLOY'
