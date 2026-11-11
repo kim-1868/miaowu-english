@@ -1,5 +1,9 @@
 name: Manual V1.2 published-only word identity aggregates READ ONLY
 on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-published-word-identity-aggregate-readonly.yml
   workflow_dispatch:
     inputs:
       confirm_scope:
@@ -21,13 +25,14 @@ jobs:
       github.repository == 'kim-1868/miaowu-english' &&
       github.actor == 'kim-1868' &&
       github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109' &&
-      github.event_name == 'workflow_dispatch'
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'push')
     environment:
       name: production-d1-readonly-approval
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - name: Owner-approved strictly published-only scope
+        if: github.event_name == 'workflow_dispatch'
         env:
           SCOPE: ${{ inputs.confirm_scope }}
           INTENT: ${{ inputs.confirm_intent }}
@@ -42,6 +47,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Explicit one-time protected push review or owner manual dispatch
+        run: echo 'OWNER_BRANCH_AND_PRODUCTION_D1_READONLY_APPROVAL_REQUIRED'
       - name: Exact production database UUID, fixed SQL and synthetic QA
         run: |
           set -euo pipefail
