@@ -65,7 +65,7 @@ test('fixed SQL cannot read drafts, mutate data or print dictionary contents',()
 
 test('protected push creates an approval gate without manual form or default-branch D1 access',()=>{
  const w=readFileSync('.github/workflows/v12-published-word-identity-aggregate-readonly.yml','utf8');
- assert.ok(w.includes('push:\\n    branches: [feature/v11-smart-vocab-preflight-20261109]'));
+ assert.ok(w.includes('  push:')); assert.ok(w.includes('branches: [feature/v11-smart-vocab-preflight-20261109]'));
  assert.ok(w.includes("(github.event_name == 'workflow_dispatch' || github.event_name == 'push')"));
  assert.ok(w.includes("if: github.event_name == 'workflow_dispatch'"));
  assert.ok(w.includes('production-d1-readonly-approval'));
