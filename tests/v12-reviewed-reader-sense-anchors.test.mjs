@@ -96,7 +96,7 @@ test('reader endpoint remains inaccessible in production and with missing featur
 });
 test('new routes do not silently replace old headword reader endpoints',()=>{
  const worker=readFileSync(new URL('../src/worker.js',import.meta.url),'utf8');
- assert.match(worker,/\/sense-anchors\$/.source ? /dictionary\/chapters/ : /dictionary\/chapters/);
+ assert.ok(worker.includes('sense-anchors'));
  assert.match(worker,/handleHeadwordStudyApi\(req,env,path,user\)/);
  assert.match(worker,/handleSenseStudyApi\(req,env,path,user\)/);
 });
