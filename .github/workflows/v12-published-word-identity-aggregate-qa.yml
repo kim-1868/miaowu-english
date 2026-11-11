@@ -1,0 +1,33 @@
+name: V1.2 published-only legacy word identity SELECT synthetic QA
+on:
+  pull_request:
+    paths:
+      - sql/published_word_identity_aggregate_readonly.sql
+      - scripts/verify-published-word-identity-aggregate.mjs
+      - tests/v12-published-word-identity-aggregate.test.mjs
+      - .github/workflows/v12-published-word-identity-aggregate-readonly.yml
+      - .github/workflows/v12-published-word-identity-aggregate-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - sql/published_word_identity_aggregate_readonly.sql
+      - scripts/verify-published-word-identity-aggregate.mjs
+      - tests/v12-published-word-identity-aggregate.test.mjs
+permissions:
+  contents: read
+jobs:
+  isolated-synthetic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          set -euo pipefail
+          node --check scripts/verify-published-word-identity-aggregate.mjs
+          node --experimental-sqlite --test tests/v12-published-word-identity-aggregate.test.mjs
+      - run: echo 'NO_REMOTE_PROD_D1_NO_CUSTOMER_DATA_NO_D1_WRITES'

@@ -1,0 +1,83 @@
+name: Manual V1.2 published-only word identity aggregates READ ONLY
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_scope:
+        description: Enter PUBLISHED_32_BOOKS_ONLY
+        type: string
+        required: true
+      confirm_intent:
+        description: Enter PRODUCTION_WORD_IDENTITY_AGGREGATE_SELECT_ONLY
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: v12-published-word-identity-aggregate-readonly
+  cancel-in-progress: false
+jobs:
+  strictly-published-aggregate:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109' &&
+      github.event_name == 'workflow_dispatch'
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Owner-approved strictly published-only scope
+        env:
+          SCOPE: ${{ inputs.confirm_scope }}
+          INTENT: ${{ inputs.confirm_intent }}
+        run: |
+          set -euo pipefail
+          test "$SCOPE" = 'PUBLISHED_32_BOOKS_ONLY'
+          test "$INTENT" = 'PRODUCTION_WORD_IDENTITY_AGGREGATE_SELECT_ONLY'
+          echo 'ONLY_ANONYMOUS_PUBLISHED_WORD_AGGREGATES_NO_USER_RECORDS'
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Exact production database UUID, fixed SQL and synthetic QA
+        run: |
+          set -euo pipefail
+          node --test tests/v12-published-word-identity-aggregate.test.mjs
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const x=JSON.parse(readFileSync('deploy/production.wrangler.jsonc','utf8'));
+          assert.equal(x.vars.APP_ENV,'production');
+          assert.equal(x.name,'miaowu-english-production');
+          assert.equal(x.d1_databases?.length,1);
+          assert.equal(x.d1_databases[0].database_name,'miaowu-english-prod');
+          assert.equal(x.d1_databases[0].database_id,'649c71b3-340c-49bf-b806-3d39256851d3');
+          NODE
+      - name: Install Wrangler CLI for one protected SELECT
+        run: npm install --ignore-scripts --no-save wrangler@^4
+      - name: Run one fixed aggregate SELECT on published books only
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PROD_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_DEDICATED_PROD_D1_READ_ONLY_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_ACCOUNT_ID}"
+          umask 077
+          private="$RUNNER_TEMP/private-published-word-identity"
+          mkdir -m 700 "$private"
+          trap 'rm -rf "$private"' EXIT
+          sql="$(cat sql/published_word_identity_aggregate_readonly.sql)"
+          if ! npx wrangler d1 execute miaowu-english-prod \
+            --remote --json --config deploy/production.wrangler.jsonc \
+            --command "$sql" >"$private/aggregate.json" 2>"$private/err"; then
+            echo 'PUBLISHED_WORD_READONLY_SELECT_FAILED_NO_MUTATION'
+            exit 1
+          fi
+          node scripts/verify-published-word-identity-aggregate.mjs "$private/aggregate.json"
+      - name: Confirm never changes books or study data
+        run: echo 'PUBLISHED_ONLY_ONE_SELECT_NO_PUBLISHER_MUTATION_NO_DEPLOY'
