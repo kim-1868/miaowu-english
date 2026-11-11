@@ -33,7 +33,8 @@ function approvedCard(id,headword,lesson,reviewedSenses){
   phoneticUs:a.lesson.phoneticUs,senses:[...matched.values()],
   // Approved parent lesson collocations, never copied from raw source glosses.
   collocations:a.lesson.collocations,
-  user_study_key:'entry_id',context_sense_id:null};
+  user_study_key:'sense_id',study_sense_ids:[...matched.values()].map(s=>s.sense_id),
+  context_sense_id:null};
 }
 export function planHeadwordReaderClicks(extracted,index,{lessons=new Map(),senses=[]}={}){
  if(extracted?.status!=='READ_ONLY_UNMARKED_ENGLISH_TOKENS'||
@@ -81,6 +82,8 @@ export function planHeadwordReaderClicks(extracted,index,{lessons=new Map(),sens
    // A clickable reference does not claim the author selected a sense.
    context_sense_id:null,requires_context_editor_confirmation:true,
    approved_sense_options:card.senses.map(s=>s.sense_id),
+   // Entry identifies the displayed card; a reviewed sense identifies learning.
+   study_identity:'sense_id',study_sense_confirmed:false,
    automatically_published:false});
  }
  return {status:'READ_ONLY_HEADWORD_CLICK_ANCHOR_PROPOSALS',
@@ -89,6 +92,7 @@ export function planHeadwordReaderClicks(extracted,index,{lessons=new Map(),sens
   withheld_tokens:review_queue.length,distinct_approved_cards:cards.size,
   cards:[...cards.values()],anchors,review_queue,
   chapter_or_book_modified:false,publisher_signed_off:false,
+  new_study_identity:'sense_id',headword_level_mastery_supported:false,
   automatic_publication_allowed:false,
   user_study_rows_written:0,d1_writes:0,
   warning:'Only server-verified lesson and approved active sense rows may be shown. Reader anchors require authorized editor confirmation, a separate safe render binding and actual staged deployment.'};
