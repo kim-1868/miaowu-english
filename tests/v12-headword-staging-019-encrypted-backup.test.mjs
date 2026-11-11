@@ -17,7 +17,7 @@ test('019 fresh backup is restricted to test D1 and human-protected branch',()=>
     'CLOUDFLARE_STAGING_D1_WRITE_TOKEN',
     'STAGING_D1_BACKUP_PASSPHRASE'
   ])assert.ok(workflow.includes(item),'missing backup guard: '+item);
-  assert.match(workflow,/test "\\$\{#BACKUP_PASSPHRASE\}" -ge 32/);
+  assert.ok(workflow.includes('test "${#BACKUP_PASSPHRASE}" -ge 32'));
 });
 
 test('backup is full, encrypted, restored independently and uploaded only encrypted',()=>{
@@ -53,7 +53,7 @@ test('restore must match actual 61,422 heads + prior schema, not old pre-013 che
 
 test('backup cannot remotely write, log private SQL or deploy',()=>{
   assert.doesNotMatch(workflow,/d1 execute|d1 migrations apply|wrangler deploy|wrangler publish|--execute-test-only/i);
-  assert.match(workflow,/NO_D1_WRITES_ZERO_DEPLOYMENTS/);
+  assert.match(workflow,/ZERO_D1_WRITES_ZERO_DEPLOYMENTS/);
   assert.match(workflow,/export-stdout" 2>"\$private\/export-stderr"/);
   assert.match(workflow,/Upload ONLY encrypted full snapshot/);
 });
