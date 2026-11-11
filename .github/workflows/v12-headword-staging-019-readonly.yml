@@ -54,15 +54,30 @@ jobs:
           result="$RUNNER_TEMP/headword-019-readonly-counts.json"
           fk="$RUNNER_TEMP/headword-019-readonly-fk.json"
           integrity="$RUNNER_TEMP/headword-019-readonly-integrity.json"
-          trap 'rm -f "$result" "$fk" "$integrity"' EXIT
+          private_error="$RUNNER_TEMP/headword-019-private-wrangler-stderr.log"
+          trap 'rm -f "$result" "$fk" "$integrity" "$private_error"' EXIT
           sql="SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name LIKE 'global_dictionary_%') AS dictionary_tables,(SELECT COUNT(*) FROM sqlite_master WHERE type='trigger' AND name IN ('global_dictionary_bindings_draft_guard','global_dictionary_sense_identity_guard','global_dictionary_legacy_sense_link_guard','global_dictionary_legacy_sense_link_no_repoint','global_dictionary_book_sense_guard')) AS dictionary_triggers,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('books','words','user_words','chapter_words')) AS core_tables,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('user_headword_study','user_headword_review_events')) AS headword_019_tables,(SELECT COUNT(*) FROM global_dictionary_entries) AS candidate_heads,(SELECT COUNT(*) FROM global_dictionary_forms) AS candidate_forms,(SELECT COUNT(*) FROM global_dictionary_lessons) AS lessons,(SELECT COUNT(*) FROM global_dictionary_senses WHERE approved=1) AS approved_senses,(SELECT COUNT(*) FROM global_dictionary_entries WHERE teaching_ready=1) AS teaching_ready,(SELECT COUNT(*) FROM global_dictionary_sources WHERE enabled=1) AS active_sources;"
-          npx wrangler d1 execute miaowu-english-test --remote --config wrangler.jsonc --json --command "$sql" > "$result"
-          npx wrangler d1 execute miaowu-english-test --remote --config wrangler.jsonc --json --command 'PRAGMA foreign_key_check;' > "$fk"
-          npx wrangler d1 execute miaowu-english-test --remote --config wrangler.jsonc --json --command 'PRAGMA integrity_check;' > "$integrity"
+          readonly_query(){
+            local step="$1"
+            local statement="$2"
+            local destination="$3"
+            if ! npx wrangler d1 execute miaowu-english-test --remote \
+              --config wrangler.jsonc --json --command "$statement" \
+              > "$destination" 2> "$private_error"; then
+              node scripts/staging-019-readonly-diagnostics.mjs \
+                "$step" "$destination" "$private_error"
+              exit 1
+            fi
+          }
+          readonly_query COUNTS "$sql" "$result"
+          readonly_query FK 'PRAGMA foreign_key_check;' "$fk"
+          readonly_query INTEGRITY 'PRAGMA integrity_check;' "$integrity"
           READ_COUNTS="$result" READ_FK="$fk" READ_INTEGRITY="$integrity" node --input-type=module <<'NODE'
           import {readFileSync} from 'node:fs';
           const read=name=>{
-           const raw=JSON.parse(readFileSync(process.env[name],'utf8'));
+           let raw;
+           try{raw=JSON.parse(readFileSync(process.env[name],'utf8'))}
+           catch{throw Error('STAGING_READONLY_RESPONSE_NOT_VALID_JSON_'+name)}
            const packets=Array.isArray(raw)?raw:[raw];
            if(!packets.length||packets.some(p=>p?.success===false))
              throw Error('STAGING_READONLY_SQL_RESULT_UNSUCCESSFUL');
