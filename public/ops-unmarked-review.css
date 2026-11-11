@@ -1,0 +1,14 @@
+/* Staging-only V1.2 publisher workspace. Compact and responsive; no changes to public reader. */
+#unmarkedReviewPanel[hidden]{display:none!important}
+#unmarkedReviewPanel .ops-unmarked-summary{margin:10px 0;padding:12px 14px;background:#fffaf7;border:1px solid #e7d9cc;border-radius:9px}
+#unmarkedReviewPanel .ops-unmarked-list{display:grid;gap:10px;margin:12px 0}
+#unmarkedReviewPanel .ops-unmarked-item{border:1px solid #e4d6c9;background:#fffaf5;padding:13px;border-radius:10px}
+#unmarkedReviewPanel .ops-unmarked-item-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;color:#63313d}
+#unmarkedReviewPanel .ops-unmarked-item-head small{color:#6c605d}
+#unmarkedReviewPanel .ops-unmarked-excerpt{overflow-wrap:anywhere;line-height:1.65;white-space:pre-wrap;margin:9px 0}
+#unmarkedReviewPanel .ops-unmarked-item select{min-width:220px;max-width:100%;flex:1;padding:10px;border:1px solid #dbc8bd;border-radius:8px;background:#fff}
+#unmarkedReviewPanel .ops-unmarked-item button{white-space:normal}
+#unmarkedReviewPanel .ops-unmarked-navigation{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+#unmarkedReviewPanel .ops-unmarked-notice{color:#715c50;font-size:13px;line-height:1.55}
+#unmarkedReviewPanel #unmarkedUnknown{max-height:140px;overflow-y:auto;overflow-wrap:anywhere;white-space:pre-wrap}
+@media (max-width:650px){#unmarkedReviewPanel .ops-unmarked-item .row{display:grid;grid-template-columns:1fr;gap:8px}#unmarkedReviewPanel .ops-unmarked-item select{width:100%;min-width:0}#unmarkedReviewPanel button{min-height:42px}}
