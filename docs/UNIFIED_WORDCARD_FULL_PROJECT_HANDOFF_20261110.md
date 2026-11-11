@@ -1,3 +1,15 @@
+## 2026-11-11 · 最新：61,422候选来源已完全查清并修复019只读基线（PR #225）
+
+> 本节最新，覆盖下方旧快照中“额外5万来源不明”的过时表述。真实 Cloudflare TEST D1数据没有在本轮被改动；原有历史真实导入属于计划内。
+
+- [原考试候选导入run #42847388782](https://github.com/kim-1868/miaowu-english/actions/runs/42847388782) 在2026-11-10T15:46Z后置验收 **11,422个未审词头、16,442词形**，旧学习/书籍计数不变。随后11月10日16:13–16:18Z，授权的 [50,000词头额外批次run #42852308915](https://github.com/kim-1868/miaowu-english/actions/runs/42852308915) 验证固定工件及前后状态，成功输出 `STAGING_COHORT_VERIFIED {"number":1,"entries":61422,"forms":16442}`，无教学审批和历史用户数据改写。这是正式的测试库增量候选源导入；无需清理或重复导入。
+- 最新只读 [run #42986081236](https://github.com/kim-1868/miaowu-english/actions/runs/42986081236) 实际返回 `candidate_heads=61422,upstream_heads=61422,other_heads=0,candidate_forms=16442,upstream_forms=16442,other_forms=0,original_import_source_intact=1`，远程FK和quick_check均成功；失败只是019验收脚本曾硬编码初始11422而忽略后一批合法50k。**不是GitHub/Cloudflare额度不足。**
+- 新 [PR #225](https://github.com/kim-1868/miaowu-english/pull/225) 已合入开发分支（squash commit `f9138da7adce32150a08bf2ecfdc836a72e1d23f`），把精确 `candidate_heads` 和 `upstream_heads` 断言更新为真实61422，不改原source登记元数据 `imported_entries=11422` 及16442表形、0其他来源、0已审/0已启用、10词典表5触发器、旧4核心表及019尚不存在、FK和quick_check。测试明确钉住历史50k成功任务，没有直接放宽验证。
+- [PR专项019离线run #42986990125](https://github.com/kim-1868/miaowu-english/actions/runs/42986990125) success；[全站S1 #42986990118](https://github.com/kim-1868/miaowu-english/actions/runs/42986990118) **872项/871通过/0失败/1跳过**。
+- **待环境审批的最新受保护只读任务** [run #42987114694](https://github.com/kim-1868/miaowu-english/actions/runs/42987114694)，点击 Review deployments→`staging-d1-schema-approval`→Approve。只读验证通过后才进入**针对当前61422候选TEST D1的新鲜加密完整备份、隔离恢复完整integrity_check、单独批准019远程迁移**。正式站与用户权限/收藏/学习未改，Publisher商用教学义项批准仍0。
+- 完整溯源文档 `docs/STAGING_019_61422_COHORT_PROVENANCE_20261111.md`。下方更旧记录中的数据量被后续导入覆盖，切勿按旧任务重复审批或迁移。
+
+---
 ## 2026-11-11 · 最新：测试D1候选词头数量与旧基线不同，非额度故障（PR #224）
 
 > 旧进度中早先D1远程SQL失败已解决；**最新真正失败的是历史词头数量严格核对**。013–018和考试索引此前已导入，不要重复操作。
