@@ -52,7 +52,7 @@ test('020 new backup and staging read-only actions require protected TEST-only e
   assert.match(s,/feature\/v11-smart-vocab-preflight-20261109/);
   assert.doesNotMatch(s,/wrangler deploy|wrangler publish|d1 migrations apply/i);
  }
- assert.match(read,/--command 'PRAGMA foreign_key_check;'/);
+ assert.match(read,/query 'PRAGMA foreign_key_check;' /);
  assert.match(read,/verify-staging-020-post019-baseline.mjs/);
  assert.match(backup,/require "SELECT COUNT\(\*\) FROM user_headword_study;" 0/);
  assert.match(backup,/require "SELECT COUNT\(\*\) FROM sqlite_master WHERE type='table' AND name IN \('user_dictionary_sense_study','user_dictionary_sense_review_events'\);" 0/);
