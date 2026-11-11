@@ -1,0 +1,32 @@
+name: V1.2 Publisher latest context read-only reconciliation synthetic QA
+on:
+  pull_request:
+    paths:
+      - src/global-dictionary-publisher-snapshot-reconciliation.js
+      - tests/v12-publisher-snapshot-reconciliation.test.mjs
+      - .github/workflows/v12-publisher-snapshot-reconciliation-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - src/global-dictionary-publisher-snapshot-reconciliation.js
+      - tests/v12-publisher-snapshot-reconciliation.test.mjs
+permissions:
+  contents: read
+jobs:
+  synthetic-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prove versioned context binding remains editorial review only
+        run: |
+          set -euo pipefail
+          node --check src/global-dictionary-publisher-snapshot-reconciliation.js
+          node --test tests/v12-publisher-snapshot-reconciliation.test.mjs
+      - name: No publisher content or database credentials used
+        run: echo 'SYNTHETIC_ONLY_NO_PUBLISHER_PROSE_NO_REMOTE_D1_WRITES'
