@@ -1,0 +1,34 @@
+name: Dictionary S0/P1 source and IPA audit synthetic QA
+on:
+  push:
+    paths:
+      - scripts/audit-exam-source-ipa-239.py
+      - tests/test_exam_source_ipa_239.py
+      - .github/workflows/global-dictionary-source-ipa-239-synthetic-qa.yml
+  pull_request:
+    paths:
+      - scripts/audit-exam-source-ipa-239.py
+      - tests/test_exam_source_ipa_239.py
+      - .github/workflows/global-dictionary-source-ipa-239-synthetic-qa.yml
+permissions:
+  contents: read
+jobs:
+  synthetic-source-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run synthetic offline tests including optimized python
+        run: |
+          python -m py_compile scripts/audit-exam-source-ipa-239.py
+          python -m unittest discover -s tests -p 'test_exam_source_ipa_239.py' -v
+          python -O -m unittest discover -s tests -p 'test_exam_source_ipa_239.py' -v
+      - name: No cloud side effects or publisher shortcuts
+        run: |
+          ! grep -Ei 'wrangler|CLOUDFLARE|https?://|requests\.get|urllib\.request|production_deploy' scripts/audit-exam-source-ipa-239.py
+          echo 'AUDIT_ONLY_NO_PRIVATE_WORDLIST_NO_STAGING_D1_NO_PUBLISH'
