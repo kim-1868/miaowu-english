@@ -1,3 +1,14 @@
+## 2026-11-11 · 当前阻塞：019只读审批后失败，诊断修复待新审批
+
+> 真实测试D1的013–018迁移及11422词头/16442未审词形导入均成功，不能重复。正式站未改变。
+
+- 旧只读 [run 42979766894](https://github.com/kim-1868/miaowu-english/actions/runs/42979766894) 获用户GitHub环境审批后**失败**。固定测试库UUID检查和Wrangler安装成功，匿名统计/外键/完整性的查询step退出1。因为旧脚本重定向并删除Wrangler输出，**无法确认实际错误类别**；不是已证实DB损坏。没有执行019迁移、D1写入或正式部署。
+- 新 [PR #222](https://github.com/kim-1868/miaowu-english/pull/222) 已合入开发分支（commit `c10dbfaa6df6d1bdf4c0b6843155d1b454c94cce`）：新只读查询按COUNTS、FK、INTEGRITY分别记录脱敏的固定错误码；不输出原始云端报错、Token或数据；离开Runner删除日志。不修改统计预期、不切换到D1写Token、更不绕过Publisher审核。S1 [42984243198](https://github.com/kim-1868/miaowu-english/actions/runs/42984243198) 865/864通过/0失败/1跳过。
+- **新等待审批的只读run**：[42984399791](https://github.com/kim-1868/miaowu-english/actions/runs/42984399791)。Owner需在其 Actions 页面 Review deployments，批准 `staging-d1-schema-approval`。**不要rerun旧失败的42979766894**。
+- 新运行若再次失败，按明确分类码修复测试库Read Token、CLI或查询；不猜根因、不自动写库。019真正远程写入仍必须先对**当前已导入候选的测试D1**重新加密完整备份、独立恢复和人工审批。真实Publisher approved senses=0、正式部署未开始。
+
+---
+
 ## 2026-11-11 · 最新阶段6：已有测试 D1 013–018 与考试索引已完成，019真实SQL完整预演
 
 > **本节修正下方旧快照中的错误表述**：测试 Cloudflare D1 **013–018 已部署成功**，不要再重复执行；旧记录中“等待013–018迁移”已经过时。正式生产库、Worker和旧客户数据仍未因第六阶段改动。
