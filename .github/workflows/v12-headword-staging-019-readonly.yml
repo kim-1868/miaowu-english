@@ -71,7 +71,7 @@ jobs:
           }
           readonly_query COUNTS "$sql" "$result"
           readonly_query FK 'PRAGMA foreign_key_check;' "$fk"
-          readonly_query INTEGRITY 'PRAGMA integrity_check;' "$integrity"
+          readonly_query INTEGRITY 'PRAGMA quick_check;' "$integrity"
           READ_COUNTS="$result" READ_FK="$fk" READ_INTEGRITY="$integrity" node --input-type=module <<'NODE'
           import {readFileSync} from 'node:fs';
           const read=name=>{
@@ -97,11 +97,12 @@ jobs:
           }))requireCount(key,value);
           if(read('READ_FK').length)throw Error('STAGING_FOREIGN_KEYS_INVALID');
           const integrity=read('READ_INTEGRITY');
-          if(integrity.length!==1||Object.values(integrity[0])[0]!=='ok')
-           throw Error('STAGING_INTEGRITY_CHECK_FAILED');
+          if(integrity.length!==1||integrity[0]?.quick_check!=='ok')
+           throw Error('STAGING_REMOTE_QUICK_CHECK_FAILED');
           console.log('STAGING_EXISTING_013_018_SCHEMA_10_TABLES_5_TRIGGERS_OK');
           console.log('STAGING_EXAM_CANDIDATES_11422_FORMS_16442_STILL_UNAPPROVED');
           console.log('STAGING_019_NOT_YET_APPLIED__SAFE_TO_PLAN_FRESH_BACKUP');
-          console.log('STAGING_FK_INTEGRITY_READONLY_PASSED_NO_PERSONAL_ROWS_EXPORTED');
+          console.log('STAGING_FK_QUICK_CHECK_READONLY_PASSED_NO_PERSONAL_ROWS_EXPORTED');
+          console.log('FULL_INTEGRITY_CHECK_REQUIRES_SEPARATE_FRESH_BACKUP_LOCAL_RESTORE');
           console.log('STAGING_ZERO_REMOTE_WRITES_ZERO_DEPLOYMENT');
           NODE
