@@ -15,7 +15,7 @@ test('read-only drift diagnosis separates original ECDICT cohort from later cand
 
 test('do not weaken the original fail-closed 019 migration readiness gate',()=>{
   for(const key of ['dictionary_tables:10','dictionary_triggers:5','core_tables:4','headword_019_tables:0',
-   'candidate_heads:11422','candidate_forms:16442','upstream_heads:11422','other_heads:0',
+   'candidate_heads:61422','candidate_forms:16442','upstream_heads:61422','other_heads:0',
    'upstream_forms:16442','other_forms:0','original_import_source_intact:1',
    'lessons:0','approved_senses:0','teaching_ready:0','active_sources:0'])
    assert.ok(workflow.includes(key),'missing strict invariant: '+key);
@@ -33,4 +33,12 @@ test('anonymous diagnostics never log token, identity, individual headword or ch
  assert.match(workflow,/JSON\.stringify\(observed\)/);
  assert.doesNotMatch(workflow,/console\.log\([^\n]*(?:headword|word_id|user_id|email|secret|token|stdout|stderr)/i);
  assert.doesNotMatch(workflow,/wrangler d1 migrations apply|wrangler d1 execute[^\n]*--file|CLOUDFLARE_STAGING_D1_WRITE_TOKEN/i);
+});
+
+test('new exact count is anchored in successful full-remainder cohort audit, not a guessed waiver',()=>{
+ assert.match(workflow,/42852308915/);
+ assert.match(workflow,/11422 pre-import heads \+ exactly 50000 add-only heads = 61422/);
+ assert.match(workflow,/STAGING_VERIFIED_11422_EXAM_PLUS_50000_EXTRA_CANDIDATE_HEADS_61422_FORMS_16442_STILL_UNAPPROVED/);
+ assert.match(workflow,/source_key='upstream_ecdict_unverified' AND license_reviewed=0 AND enabled=0 AND imported_entries=11422 AND imported_forms=16442/);
+ assert.match(workflow,/lessons:0,approved_senses:0,teaching_ready:0,active_sources:0/);
 });
