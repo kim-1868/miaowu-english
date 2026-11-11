@@ -104,7 +104,7 @@ export function rehearseSense020({sql=dbfile('020_global_dictionary_sense_study.
   assert.throws(()=>db.prepare('INSERT INTO user_dictionary_sense_review_events(event_id,user_id,sense_id,entry_id,action,source_context_anchor,state_revision) VALUES(?,?,?,?,?,?,?)')
     .run('event-c','sample-user',noun,entry,'remembered','p0:s0',1),/UNIQUE|constraint/i);
   assert.throws(()=>db.prepare('INSERT INTO user_dictionary_sense_review_events(event_id,user_id,sense_id,entry_id,action,source_context_anchor,state_revision) VALUES(?,?,?,?,?,?,?)')
-    .run('event-wrong-entry','sample-user',noun,'gdict_'+'e'.repeat(24),'remembered','p0:s0',2),/FOREIGN KEY|constraint/i);
+    .run('event-wrong-entry','sample-user',noun,'gdict_'+'e'.repeat(24),'remembered','p0:s0',2),/FOREIGN KEY|constraint|SENSE_EVENT_UNAPPROVED/i);
   assert.deepEqual(fingerprint(db),old,'legacy rows and 019 dormant rows unchanged');
   assert.equal(db.prepare('PRAGMA integrity_check').get().integrity_check,'ok');
   assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(),[]);
