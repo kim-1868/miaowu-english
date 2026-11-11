@@ -1,3 +1,14 @@
+## 2026-11-11 · 最新：测试D1候选词头数量与旧基线不同，非额度故障（PR #224）
+
+> 旧进度中早先D1远程SQL失败已解决；**最新真正失败的是历史词头数量严格核对**。013–018和考试索引此前已导入，不要重复操作。
+
+- 用户已批准最新受保护read-only [run #42985180326](https://github.com/kim-1868/miaowu-english/actions/runs/42985180326)，实际日志 `Error: STAGING_HEADWORD_BASELINE_DRIFT_candidate_heads`。Cloudflare远程SELECT、FK、quick_check均执行成功，失败于本地断言 `candidate_heads===11422`。**无API配额/Action额度报错，不是因为余额不够；也未执行019**。
+- 11月10日 [考试候选真实导入run #42847388782](https://github.com/kim-1868/miaowu-english/actions/runs/42847388782) success日志证明当时精确11422候选词头、16442未审词形、来源禁用和旧用户表完整。这次发生的差异需要查询当前匿名计数，日志未暴露目前实际多少。
+- [PR #224](https://github.com/kim-1868/miaowu-english/pull/224) 已合入Draft #206开发分支（`aa7041a05e51a666c26f72edd30f34541fb030f5`）。只读工作流新增7项**匿名汇总**：当前词头/原ECDICT来源/其他来源，当前词形/原来源/其他来源，以及原来源登记完整性。不打印词汇列表/用户数据/凭证，不因增量修改原11422/16442严查规则，仍fail-closed。
+- [专项019离线CI #42985960427](https://github.com/kim-1868/miaowu-english/actions/runs/42985960427) success，[S1 #42985960430](https://github.com/kim-1868/miaowu-english/actions/runs/42985960430) 871项/870通过/0失败/1跳过。新 [只读受保护run #42986081236](https://github.com/kim-1868/miaowu-english/actions/runs/42986081236) 等待用户环境审批，通过后即使有数量差异也安全打印7个数字并阻断，供溯源；**不要rerun旧失败任务**。
+- 后续根据实际匿名差异调查是否有合法来源新增或原导入部分缺失，未核对不能修改库/自动批准。019真实远程迁移还必须新鲜完整加密备份、独立恢复、人工批准。生产站和用户数据无变化，教学Publisher approved 0。
+
+---
 ## 2026-11-11 · 019只读失败根因已修复：使用D1支持的quick_check，等新审批
 
 - 二次环境审批后的真实 [D1 read-only #42984399791](https://github.com/kim-1868/miaowu-english/actions/runs/42984399791) 安全日志明确 `STAGING_019_READONLY_INTEGRITY_READ_TOKEN_PERMISSION_DENIED`。前面固定测试D1+COUNT匿名统计+外键检查没有失败，**最后远程 `PRAGMA integrity_check;` 被拒绝**。不能推论D1已损坏/既存数据丢失。没有D1写库和019迁移。
