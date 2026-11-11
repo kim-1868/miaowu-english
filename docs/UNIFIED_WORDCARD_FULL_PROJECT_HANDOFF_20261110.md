@@ -1,3 +1,18 @@
+## 2026-11-11 · 最新阶段4：未标记英文→编辑选义→V2上架候选，850项整站回归成功
+
+> **最新进度覆盖下方旧快照**。PR [#219](https://github.com/kim-1868/miaowu-english/pull/219) 已仅合入词典 Draft [#206](https://github.com/kim-1868/miaowu-english/pull/206) 的**开发分支**。没有部署 staging/production，没有对 Cloudflare D1 运行 019 或其他迁移，没有提交任何私人7391词表/收费小说/真实用户学习资料。真实 Publisher 已批准教学义项仍 **0**。
+
+- 之前已有 `global-dictionary-auto-discovery.js` 扫描 V2 未标记英文、`global-dictionary-matcher.js` 词形查词、`global-dictionary-headword-click-plan.js` 已审义项建议和 `global-dictionary-novel-v2.js` 的 V2→V1 转换；缺的是**按真实人类选义把纯文本切成可被现有上架管线识别的目标段落**。
+- 新 `src/global-dictionary-unmarked-editor-confirm.js` 对同一小说及审核方案逐次计算 SHA256；编辑须逐处确认 `chapter_number/paragraph_index/segment_index/start_offset/entry_id/sense_id`。只允许独立已批准、active 的义项，拒绝伪造批准/词形/身份或复用旧审核方案；对确认的英文局部替换为 V2 的 `{surface,gloss}` **目标段落**，原文章逐字符无损、未选中英文仍为普通原文、原有明示词卡目标完整保留、不提交重复主卡。比如两段 record 分别取 n.记录 / v.录制，但在 V1 兼容草稿 `words[]` 中仍只是一张 record 主卡。
+- 转换后继续通过现有 `normalizeDictionaryNovelV2`、`convertDictionaryNovelV2`、`planApprovedNovelSenseAnchors` 原审核与稳定义项校验，输出**待审核 V2 和 V1 兼容草稿**，不等于真正已发布；`user_headword_study`、legacy IDs、书库/订单/阅读均不改。
+- 新 `src/global-dictionary-unmarked-editor-ops.js` 从 **实际已授权 staging D1** 重查当前词典来源许可、lesson 与 approved/active sense。原 `src/ops-dictionary-v2.js` 和 `src/worker.js` 加入 Publisher 认证下两个**纯只读处理**端点 `POST /api/ops/import/dictionary-v2/plan-unmarked`（生成审稿位置及 SHA）和 `confirm-unmarked`（使用源数据+方案 SHA+逐条决策生成兼容草稿）。只有 staging + 原 lookup 明确读开关开启才有路由；生产拒绝。**仍必须通过原 OPS 真实上架、版本化修订及章节精确锚点绑定，不能把转换候选当可售书。**
+- 专项使用合成 `record` 名词/动词和 `decision` 测试；包括已明示词目标+新增纯文本混合场景、两个英文词同一text segment 的 UTF-16 精确拆分、哈希失效/伪造审批/旧ID 混入/禁用许可/无已审sense/zero D1 writes。第一轮 CI 发现旧目标与新增审核结果的数量混淆，现已修复并真实重跑。
+- GitHub [专项 #42975449106](https://github.com/kim-1868/miaowu-english/actions/runs/42975449106)、[阅读器 #42975449100](https://github.com/kim-1868/miaowu-english/actions/runs/42975449100)、[服务端 #42975449080](https://github.com/kim-1868/miaowu-english/actions/runs/42975449080)、[Production dry-run #42975449174](https://github.com/kim-1868/miaowu-english/actions/runs/42975449174) 全部 success；[全站 S1 #42975449305](https://github.com/kim-1868/miaowu-english/actions/runs/42975449305) **850测试/849通过/0失败/1跳过**。以上仅代码和合成 SQLite，不是线上。
+- 合并 commit `516548a06b77ff3bcd57ab8031d3ad9f4073568f`。工程文档 [第四阶段](https://github.com/kim-1868/miaowu-english/blob/feature/v11-smart-vocab-preflight-20261109/docs/UNMARKED_NOVEL_EDITOR_CONFIRM_PHASE4_20261111.md)；私有交付包 `/开发英语单词学习网站/统一词卡_待审工作区/开发脚本_V12_一词一卡第四阶段/妙屋英语_V12一词一卡_第四阶段未标记英文自动匹配审稿流程_20261111.zip` 共7个源码/合成测试/说明文件，SHA256 manifest 逐项验证，无owner原词/收费小说。
+- **下一优先**：运营台编辑词义审核选择 UI（批量选择/例外人工）、已确认 V2 包走真实 staging 正版导入/章节 `chapter_words` 和 018 绑定、旧书 latest revision 安全迁移；把快速刷词/剧情回声/云端收藏改成主词头状态共享；必须先完成 Staging D1 备份/授权迁移、Publisher 真人签核（目前0）和两本真实书/移动端/权益 E2E，才允许考虑发布。
+
+---
+
 ## 2026-11-11 · 最新阶段3：已审核一词一卡接入小说阅读器（PR #218）
 
 > 本节为最新工程事实。**PR #218 仅合入 Draft #206 的统一词典开发分支，未部署真实 staging/production，未运行 Cloudflare D1 013–019，真实 Publisher approved senses 仍为0。**
