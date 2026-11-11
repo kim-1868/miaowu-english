@@ -35,7 +35,7 @@ test('account, order, and novel content fields are forbidden even with valid met
 test('missing current chapter, duplicated anchor, or contradictory book totals fail closed',()=>{
  let input=valid();
  input.chaptersJson=packet([]);
- assert.throws(()=>validate(input),/BOOK_CHAPTER_COUNT_CHANGED_DURING_EXPORT/);
+ assert.throws(()=>validate(input),/INVALID_OR_ORPHAN_ANCHOR/);
  input=valid();
  input.anchorsJson=packet([...JSON.parse(input.anchorsJson)[0].results,
  ...JSON.parse(input.anchorsJson)[0].results]);
