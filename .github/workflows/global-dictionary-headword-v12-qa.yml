@@ -1,0 +1,40 @@
+name: Global dictionary V1.2 one-card crossbook SRS synthetic QA (no D1)
+on:
+  push:
+    paths:
+      - src/global-dictionary-headword-srs.js
+      - src/global-dictionary-headword-click-plan.js
+      - db/019_global_dictionary_headword_study.sql
+      - tests/v12-global-dictionary-headword-*.test.mjs
+      - .github/workflows/global-dictionary-headword-v12-qa.yml
+  pull_request:
+    paths:
+      - src/global-dictionary-headword-srs.js
+      - src/global-dictionary-headword-click-plan.js
+      - db/019_global_dictionary_headword_study.sql
+      - tests/v12-global-dictionary-headword-*.test.mjs
+      - .github/workflows/global-dictionary-headword-v12-qa.yml
+permissions:
+  contents: read
+jobs:
+  synthetic-crossbook:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate syntax
+        run: |
+          node --check src/global-dictionary-headword-srs.js
+          node --check src/global-dictionary-headword-click-plan.js
+      - name: Strict synthetic two-book and SRS regressions
+        run: node --experimental-sqlite --test tests/v12-global-dictionary-headword-*.test.mjs
+      - name: Confirm review-only, no production operations in this workflow
+        run: |
+          ! grep -Ei 'wrangler|CLOUDFLARE|production_deploy|d1 execute|d1 migrations apply' \
+            src/global-dictionary-headword-srs.js src/global-dictionary-headword-click-plan.js
+          echo 'SYNTHETIC_ONLY_NO_OWNER_DATA_NO_DB_WRITE_NO_REAL_PUBLISHER_APPROVAL'
