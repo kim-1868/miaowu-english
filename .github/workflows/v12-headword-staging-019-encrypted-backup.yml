@@ -59,7 +59,7 @@ jobs:
           private="$RUNNER_TEMP/v12-019-private-backup"
           mkdir -m 700 "$private"
           encrypted="$RUNNER_TEMP/v12-019-staging-d1-full-backup.gpg"
-          trap 'rm -rf "$private"; rm -f "$encrypted"' EXIT
+          trap 'rm -rf "$private"' EXIT
           printf '%s' "$BACKUP_PASSPHRASE" > "$private/passphrase"
           unset BACKUP_PASSPHRASE
           raw="$private/staging-20261111-snapshot.sql"
