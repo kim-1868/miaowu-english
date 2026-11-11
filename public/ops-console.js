@@ -7,7 +7,7 @@ let key="",chosen=null,readiness=null,identity=null,busy=false;
 let liveEditorState=null,liveRevision=null,liveHistory=[];
 let globalMatchDecisions=[],globalManifestPreview=null,globalSavedManifestRequestId=null;
 let dictionaryV2Source=null,dictionaryV2Decisions=[],dictionaryV2ModeConverted=false;
-let customerAdmin=null,claimAdmin=null,updatesAdmin=null;
+let customerAdmin=null,claimAdmin=null,updatesAdmin=null,unmarkedAdmin=null;
 const byId=(tag,text,className)=>{
   const el=document.createElement(tag);
   if(text!==undefined)el.textContent=String(text);
@@ -39,7 +39,7 @@ async function api(path,method="GET",body){
     if(result.status===401){
       key="";identity=null;catalogBooks=[];catalogPage=1;chosen=null;
       $("operatorIdentity").textContent="身份已失效";
-      clearActions();renderBookDirectory();customerAdmin?.reset();claimAdmin?.reset();updatesAdmin?.reset();
+      clearActions();renderBookDirectory();customerAdmin?.reset();claimAdmin?.reset();updatesAdmin?.reset();unmarkedAdmin?.reset();
     }
     throw Error("操作被拒绝："+(typeof data.error==="string"?data.error:"UNKNOWN")+
       "（HTTP "+result.status+"）。");
@@ -129,6 +129,10 @@ async function verify(){
   $("operatorIdentity").textContent=identity.displayName+" · "+identity.role+" · "+identity.environment;
   status("已通过运营身份校验。所有数据只从后台接口读取。");
   await loadBooks();
+  try{await mountUnmarkedReviewAdmin();}catch(e){
+    if($("unmarkedReviewPanel"))$("unmarkedReviewPanel").hidden=true;
+    status("自动识词审核面板暂不可用，其余运营功能不受影响。");
+  }
   try{await loadSaleCategories();}catch(e){saleStatus('发码功能暂不可用：'+e.message);}
   try{await mountCustomerAdmin();}catch(e){$("customerResult").textContent="查询暂不可用："+e.message;}
   try{await mountClaimAdmin();}catch(e){$("claimsStatus").textContent="对账功能暂不可用："+e.message;}
@@ -137,6 +141,20 @@ async function verify(){
       $("updatesAdminStatus").textContent="公告管理未启用或无法连接："+e.message+"。请先确认独立公告表与正式站启用开关。";
     }
   }
+}
+async function mountUnmarkedReviewAdmin(){
+  const panel=$("unmarkedReviewPanel");
+  if(!panel)return;
+  if(identity?.environment!=="staging"){
+    unmarkedAdmin?.reset();panel.hidden=true;return;
+  }
+  if(!unmarkedAdmin){
+    const mod=await import("/ops-unmarked-review.js?v=20261111-v12-phase5");
+    unmarkedAdmin=mod.initUnmarkedReviewAdmin({
+      api,connected,environment:()=>identity?.environment,root:panel
+    });
+  }
+  unmarkedAdmin.refresh();
 }
 async function mountUpdatesAdmin(){
   if(!updatesAdmin){
@@ -2079,7 +2097,7 @@ $("bookPageNext").addEventListener("click",()=>{
 button("connect",verify);button("refresh",()=>loadBooks());
 button("publish",doPublish);button("withdraw",doWithdraw);
 button("disconnect",async()=>{
-  key="";identity=null;chosen=null;clearActions();clearSaleReceipt();customerAdmin?.reset();claimAdmin?.reset();updatesAdmin?.reset();
+  key="";identity=null;chosen=null;clearActions();clearSaleReceipt();customerAdmin?.reset();claimAdmin?.reset();updatesAdmin?.reset();unmarkedAdmin?.reset();
   catalogBooks=[];catalogPage=1;
   $("bookSearch").value="";$("bookStatus").value="";updateBookCategoryOptions();
   renderBookDirectory();
@@ -2089,6 +2107,6 @@ button("disconnect",async()=>{
   $("audit").replaceChildren(byId("p","请先验证身份。","soft"));
   $("selected").textContent="请选择一本书";status("本页内存中的运营密钥已清除。");
 });
-window.addEventListener("pagehide",()=>{key="";identity=null;clearSaleReceipt();customerAdmin?.reset();claimAdmin?.reset();updatesAdmin?.reset();});
+window.addEventListener("pagehide",()=>{key="";identity=null;clearSaleReceipt();customerAdmin?.reset();claimAdmin?.reset();updatesAdmin?.reset();unmarkedAdmin?.reset();});
 syncButtons();
 })();
