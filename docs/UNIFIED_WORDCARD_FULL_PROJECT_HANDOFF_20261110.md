@@ -1,3 +1,19 @@
+## 2026-11-11 · 最新阶段2：登录/权限/审核的词头级SRS服务端已通过整站测试（PR #217）
+
+> **本节最新工程事实**，下方旧进度快照只为历史溯源。代码只在 [Draft #206](https://github.com/kim-1868/miaowu-english/pull/206) 的统一词典**开发分支**中；**没有部署预览站或生产站、没有执行 019 D1 迁移、没有 Publisher 真实词卡签核**。
+
+1. 已安全合入 [PR #217](https://github.com/kim-1868/miaowu-english/pull/217)（squash commit `fa65b849c4bd86361b7696105230f6deb641cc92`）。在上一轮 [PR #216](https://github.com/kim-1868/miaowu-english/pull/216) 纯函数统一词头 SRS / 点击锚点草案基础上，新增 `src/global-dictionary-headword-api.js` 与 `src/worker.js` **已登录用户路由**，不触碰旧阅读、词卡、用户订单或复习接口。
+2. **只限隔离 staging**：`APP_ENV==='staging'` 且 `GLOBAL_DICTIONARY_HEADWORD_SRS_ENABLED==='true'` 才能 GET 已审词卡；POST 还需 `GLOBAL_DICTIONARY_HEADWORD_SRS_WRITE_ENABLED==='true'`。生产任何条件都返回 404。上述 flag 不应未经迁移及真实验收就开启。
+3. `GET /api/me/dictionary/headwords/{entry_id}?chapterId=...&anchor=...` **只读**取含多词性、对应发音、英中例句及搭配的**同一张主词卡**，并返回服务器持有的 `user_id+entry_id` SRS 状态和 revision。**只返回已审核且active的sense**；若仍有未审sense则避免显示可能涉及未审语义的搭配；非审核源/伪造正文义项不能通过。
+4. `POST /api/me/dictionary/headwords/{entry_id}/feedback` 仅接受 `chapterId,anchor,kind,eventId,expectedRevision`。用户ID只取现有 Worker Cookie session，POST 原网站同源校验继续有效。**必须有精确已审批 chapter/context_anchor/sense 绑定且小说已上架、章节已发布、用户拥有该分类有效购买权益或公开预览**；兑换码作废或未购买直接拒绝，绝不因词库有同名词而越权展示付费课程。
+5. 使用服务端时间和此前 1/3/7/14/30 纯 SRS 规则；**D1.batch事务内用户+词头 revision 乐观锁 CAS + 审计事件唯一 revision**，UUID `eventId` 幂等。同日重复“认识”不无限延期；忘记缩短；独立「已掌握」不由认识自动触发；两小说 record 的 n./v. 共用1份计划。事件保留 book+chapter+context_anchor 供追溯。
+6. `db/019_global_dictionary_headword_study.sql` 是增量草案，给事件流水增加 `source_chapter_id` 和 `source_context_anchor`，**没有加入现有013–018远程迁移工具、未对 Cloudflare D1 写入**。修复因新增审计字段造成的上一轮合成测试兼容问题，保留所有 `user_words` / `review_events` / 2,206个历史词卡 ID 不变；真实旧用户需另行保守迁移审签。
+7. 验证：本地**19项新API合成测试 + 8项旧SRS测试**全通过；GitHub [专项 API 42971010243](https://github.com/kim-1868/miaowu-english/actions/runs/42971010243)、[旧SRS回归 42971010164](https://github.com/kim-1868/miaowu-english/actions/runs/42971010164)、[生产构建干运行 42971010631](https://github.com/kim-1868/miaowu-english/actions/runs/42971010631) 均 success；[全站S1 42971010130](https://github.com/kim-1868/miaowu-english/actions/runs/42971010130) **821测试 / 820通过 / 0失败 / 1跳过**。这些均是代码及合成SQLite验证，**不等于真实 Cloudflare D1 已运行**。
+8. 私有交付包已归档 Library：`/开发英语单词学习网站/统一词卡_待审工作区/开发脚本_V12_一词一卡第二阶段/妙屋英语_V12一词一卡_第二阶段服务端接口_19项专项测试与旧代码兼容修复_20261111.zip`，6个源码/脚本/测试文件逐一 SHA256 验证；不含私人7391 owner词表和收费小说。
+9. **下一阶段核心任务**：先接 `public/live-reader.js` / `public/chapter-words.js` 的点击、朗读、关闭卡与反馈动作；在未来已备份/获授权的真实 test D1 上执行013–019后仅启用 GET 验证，再单独启用写，验证真实已审义项、原旧书/新书、跨书状态和权限；当前实际 Publisher approved teaching senses仍**0**，无理由提前放行正式课程或生产。
+
+---
+
 ## 2026-11-11 · 已进入实际开发：一词一卡跨书SRS与点击词卡关联首轮实现（PR #216）
 
 > 本节为最新工程进度，旧资料保留供审计。**仅 Draft #206 开发分支；预览与生产 D1 均未实施 019 迁移；尚未上线用户功能。**
