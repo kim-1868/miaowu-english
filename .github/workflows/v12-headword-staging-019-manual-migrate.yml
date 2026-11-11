@@ -74,13 +74,20 @@ jobs:
           trap 'rm -f "$meta" "$artifacts"' EXIT
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID" > "$meta"
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID/artifacts" > "$artifacts"
-          jq -e --arg sha '8bfed1f0c21227008f3f42d9be5540bdbeea5b06' '
+          jq -e '
             .status=="completed" and .conclusion=="success" and
             .event=="push" and
             .head_branch=="feature/v11-smart-vocab-preflight-20261109" and
-            .head_sha==$sha and
+            (.head_sha|test("^[0-9a-f]{40}$")) and
             (.path|endswith("v12-headword-staging-019-encrypted-backup.yml"))
           ' "$meta" >/dev/null || { echo 'STAGING_019_BACKUP_RUN_NOT_VERIFIED'; exit 1; }
+          backup_sha="$(jq -r '.head_sha' "$meta")"
+          compare="$RUNNER_TEMP/v12-019-backup-ancestry-private.json"
+          gh api "repos/$GITHUB_REPOSITORY/compare/$backup_sha...$GITHUB_SHA" > "$compare"
+          jq -e '.status=="ahead" or .status=="identical"' "$compare" >/dev/null || {
+            echo 'STAGING_019_BACKUP_COMMIT_NOT_ANCESTOR'; exit 1;
+          }
+          rm -f "$compare"
           jq -e --argjson id "$BACKUP_ARTIFACT_ID" '
             [.artifacts[]|select(.id==$id and .name=="v12-staging-019-encrypted-full-backup"
             and .expired==false and .size_in_bytes>0)]|length==1
