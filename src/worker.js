@@ -21,6 +21,7 @@ import { handleOpsLiveEdit } from "./ops-live-edit.js";
 import { handleBookCover } from "./book-covers.js";
 import { handleBookCoverTags } from "./book-cover-tags.js";
 import { handleLearningState } from "./reading-library.js";
+import {handleHeadwordStudyApi} from "./global-dictionary-headword-api.js";
 import {handleSmartVocab} from "./smart-vocab-api.js";
 import {handleMyBookshelf} from "./my-bookshelf.js";
 import {handleExampleWordLookup} from "./example-word-lookup.js";
@@ -708,6 +709,11 @@ async function api(req, env) {
     return issueStagingVoucher(req, env);
   }
   const user = await atStage("api.session_lookup", () => currentUser(req, env.DB));
+  // V1.2 one-card study API; only staging + two explicit flags can access.
+  // Current user came from the authenticated cookie session above, and the
+  // existing origin check covers all feedback POSTs before this route.
+  if(path.startsWith("/api/me/dictionary/headwords/"))
+    return handleHeadwordStudyApi(req,env,path,user);
   if(path==="/api/me/onboarding")return handleOnboarding(req,env,user);
   if(path==="/api/me/smart-vocab"||path==="/api/me/smart-vocab/status"||path==="/api/me/smart-vocab/answer"||path==="/api/me/smart-vocab/bookmark")
     return handleSmartVocab(req,env,path,user);
