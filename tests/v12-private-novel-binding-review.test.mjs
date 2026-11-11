@@ -58,3 +58,15 @@ test('same exact book and duplicate historical identity fail closed',()=>{
   documents:[doc('book-a')],historicalCandidates:[old,{...old,entry_id:'gdict_'+'c'.repeat(24)}]
  }),/CONFLICTING_HISTORY_ID/);
 });
+
+test('historical typography variants are NOT semantic meaning or POS conflicts',()=>{
+ const original={...old,meaning_zh:'（摄影）底片;为......编目',part_of_speech:'n.(复数)'};
+ const real=doc('book-a');real.words[0].meaningZh='(摄影)底片；为……编目';
+ real.words[0].partOfSpeech='n.（复数）';
+ real.chapters[0].paragraphs[0].segments[1].gloss=real.words[0].meaningZh;
+ const x=createPrivateNovelBindingReview({documents:[real],historicalCandidates:[original]});
+ assert.equal(x.summary.mismatched_meaning,0);
+ assert.equal(x.summary.mismatched_pos,0);
+ assert.equal(x.summary.context_gloss_discrepancies,0);
+ assert.deepEqual(x.review_rows[0].issues,[]);
+});
