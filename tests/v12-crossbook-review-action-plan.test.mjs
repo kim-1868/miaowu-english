@@ -46,17 +46,20 @@ function combined(){
     strict_sense_candidate:true,source_book_ids:['cet4:a','cet4:b','postgrad:d'],
     exam_categories:['cet4','postgrad'],review_flags:['IPA_REVIEW_NEEDED'],
     dictionary_lookup_status:'dictionary_only',occurrences:3,
-    historical_card_count:3,other_sense_candidates_same_spelling:1,
+    historical_card_count:3,historical_card_ids:['cet4:a:a','cet4:b:a','postgrad:d:a'],
+    other_sense_candidates_same_spelling:1,
     approved_sense_id:null,commercially_approved:false,cross_book_mastery_merge_allowed:false},
   {headword:'record',part_of_speech:'v.',meaning_zh:'录制',
     strict_sense_candidate:true,source_book_ids:['cet4:a','cet6:c'],
     exam_categories:['cet4','cet6'],review_flags:['SAME_SPELLING_DIFFERENT_SENSES'],
     dictionary_lookup_status:'dictionary_only',occurrences:2,
-    historical_card_count:2,other_sense_candidates_same_spelling:1,
+    historical_card_count:2,historical_card_ids:['cet4:a:b','cet6:c:b'],
+    other_sense_candidates_same_spelling:1,
     approved_sense_id:null,commercially_approved:false,cross_book_mastery_merge_allowed:false}
  ];
  report.unmarked_discovery_queue=[{headword:'video',occurrences:1,
-   source_book_ids:['cet4:a'],exam_categories:['cet4'],dictionary_lookup_status:'missing',
+   source_book_ids:['cet4:a'],occurrences_by_book:{'cet4:a':1},
+   exam_categories:['cet4'],dictionary_lookup_status:'missing',
    approved_sense_id:null,automatically_bound:false,
    automatic_publication_allowed:false,requires_context_sense_review:true}];
  report.summary.approved_senses_created=0;
@@ -103,4 +106,37 @@ test('published story prose and customer personal state are never included',()=>
  assert.equal(x.publisher_authenticated_signoff,false);
  assert.equal(x.automatic_publication_allowed,false);
  assert.equal(JSON.stringify(x).includes('Record a video.'),false);
+});
+
+test('two incomplete senses with same spelling and missing POS remain distinct tasks',()=>{
+ const r=combined();
+ r.review_queue=[
+  {...r.review_queue[0],part_of_speech:null,strict_sense_candidate:false,
+   historical_card_count:1,historical_card_ids:['cet4:a:old-n'],source_book_ids:['cet4:a']},
+  {...r.review_queue[0],part_of_speech:null,strict_sense_candidate:false,
+   historical_card_count:1,historical_card_ids:['cet4:a:old-v'],source_book_ids:['cet4:a']}
+ ];
+ const result=planCrossbookEditorialActions(r);
+ const reviews=result.batches.cet4.filter(x=>x.lane==='EXISTING_SENSE_REVIEW');
+ assert.equal(reviews.length,2);
+ assert.notEqual(reviews[0].task_id,reviews[1].task_id);
+ assert.ok(reviews.every(x=>x.reasons.includes('SENSE_IDENTITY_INCOMPLETE')));
+ assert.equal(result.summary.customer_study_rows_written,0);
+});
+test('unmarked occurrence counts are partitioned across CET4 CET6 and postgrad',()=>{
+ const r=combined();
+ r.unmarked_discovery_queue=[{...r.unmarked_discovery_queue[0],
+   occurrences:9,source_book_ids:['cet4:a','cet6:c','postgrad:d'],
+   exam_categories:['cet4','cet6','postgrad'],
+   occurrences_by_book:{'cet4:a':2,'cet6:c':3,'postgrad:d':4}
+ }];
+ const result=planCrossbookEditorialActions(r);
+ assert.equal(result.batches.cet4.find(x=>x.lane==='UNMARKED_CONTEXT_REVIEW').issue_count,2);
+ assert.equal(result.batches.cet6.find(x=>x.lane==='UNMARKED_CONTEXT_REVIEW').issue_count,3);
+ assert.equal(result.batches.postgrad.find(x=>x.lane==='UNMARKED_CONTEXT_REVIEW').issue_count,4);
+});
+test('per-book occurrence totals cannot be forged or silently double-counted',()=>{
+ const r=combined();
+ r.unmarked_discovery_queue[0].occurrences_by_book={'cet4:a':2};
+ assert.throws(()=>planCrossbookEditorialActions(r),/REVIEW_PLAN_UNMARKED_ALREADY_BOUND_OR_INVALID/);
 });
