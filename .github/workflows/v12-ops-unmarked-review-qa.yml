@@ -1,0 +1,41 @@
+name: V1.2 staging OPS unmarked novel review UI synthetic QA
+on:
+  push:
+    paths:
+      - public/ops.html
+      - public/ops-console.js
+      - public/ops-unmarked-review.js
+      - public/ops-unmarked-review.css
+      - tests/v12-ops-unmarked-review.test.mjs
+      - tests/v12-ops-unmarked-integration.test.mjs
+      - .github/workflows/v12-ops-unmarked-review-qa.yml
+  pull_request:
+    paths:
+      - public/ops.html
+      - public/ops-console.js
+      - public/ops-unmarked-review.js
+      - public/ops-unmarked-review.css
+      - tests/v12-ops-unmarked-review.test.mjs
+      - tests/v12-ops-unmarked-integration.test.mjs
+      - .github/workflows/v12-ops-unmarked-review-qa.yml
+permissions:
+  contents: read
+jobs:
+  ui-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Check UI syntax and isolated staging OPS review tests
+        run: |
+          node --check public/ops-console.js
+          node --check public/ops-unmarked-review.js
+          node --test tests/v12-ops-unmarked-review.test.mjs tests/v12-ops-unmarked-integration.test.mjs
+      - name: Original dictionary content safety regressions
+        run: |
+          node --experimental-sqlite --test tests/v12-global-dictionary-unmarked-editor-ops.test.mjs tests/v12-global-dictionary-unmarked-editor-confirm.test.mjs
+      - name: No cloud database migration, deployment or owner lists
+        run: echo 'UI_ONLY_SYNTHETIC_STAGING_NO_D1_WRITES_NO_PUBLISH_NO_PRODUCTION'
