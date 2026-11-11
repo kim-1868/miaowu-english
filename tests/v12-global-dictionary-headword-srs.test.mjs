@@ -92,6 +92,7 @@ test('migration 019 is additive; foreign keys/unique key/event ledger preserve l
  try{
   db.exec('PRAGMA foreign_keys=ON; CREATE TABLE users(id TEXT PRIMARY KEY);'+
   'CREATE TABLE books(id TEXT PRIMARY KEY);'+
+  'CREATE TABLE chapters(id TEXT PRIMARY KEY);'+
   'CREATE TABLE global_dictionary_entries(entry_id TEXT PRIMARY KEY);'+
   'CREATE TABLE user_words(user_id TEXT,word_id TEXT);');
   db.prepare('INSERT INTO users(id) VALUES(?)').run('a');
@@ -104,9 +105,9 @@ test('migration 019 is additive; foreign keys/unique key/event ledger preserve l
   assert.throws(()=>db.prepare('INSERT INTO user_headword_study(user_id,entry_id) VALUES(?,?)').run('unknown',ENTRY));
   assert.equal(db.prepare('SELECT count(*) as n FROM user_words').get().n,1);
   assert.throws(()=>db.prepare("UPDATE user_headword_study SET status='mastered',due_at='2026-11-12' WHERE user_id='a'").run());
-  db.prepare('INSERT INTO user_headword_review_events(event_id,user_id,entry_id,action,state_revision) VALUES(?,?,?,?,?)')
-    .run('event1','a',ENTRY,'remembered',1);
-  assert.throws(()=>db.prepare('INSERT INTO user_headword_review_events(event_id,user_id,entry_id,action,state_revision) VALUES(?,?,?,?,?)').run('event2','a',ENTRY,'remembered',1));
+  db.prepare('INSERT INTO user_headword_review_events(event_id,user_id,entry_id,action,state_revision,source_context_anchor) VALUES(?,?,?,?,?,?)')
+    .run('event1','a',ENTRY,'remembered',1,'synthetic:test:anchor');
+  assert.throws(()=>db.prepare('INSERT INTO user_headword_review_events(event_id,user_id,entry_id,action,state_revision,source_context_anchor) VALUES(?,?,?,?,?,?)').run('event2','a',ENTRY,'remembered',1,'synthetic:test:anchor'));
   assert.equal(db.prepare('SELECT count(*) AS n FROM user_words').get().n,1);
  }finally{db.close()}
 });
