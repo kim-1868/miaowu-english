@@ -150,3 +150,9 @@ test('existing V2 explicit learning target retains its identity while additional
  assert.equal(r.verified_v1_package.words.length,2);
  assert.equal(validatePackage(r.verified_v1_package).mentionCount,2);
 });
+test('unmarked review refuses old forged word IDs and pre-supplied wordcards, preserving legacy tables',async()=>{
+ const first=fixture();first.source.chapters[0].paragraphs[0].segments[0].wordId='legacy-id';
+ await assert.rejects(()=>review(first),/INVALID_AUTO_DISCOVERY_SEGMENT/);
+ const second=fixture();second.source.words=[{id:'legacy-id',headword:'record'}];
+ await assert.rejects(()=>review(second),/INVALID_AUTO_DISCOVERY_V2_PACKAGE/);
+});
