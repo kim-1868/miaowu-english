@@ -5,6 +5,9 @@ import {unpackAndVerifyExamLiveBatch} from '../scripts/audit-cet4-published-arch
 import {matchDictionaryWord,normalizedLemma} from './global-dictionary-matcher.js';
 
 const GRADES=new Set(['cet4','cet6','postgrad']);
+const ENGLISH_WORDS=/[a-z]+(?:['’][a-z]+)*(?:-[a-z]+)*/giu;
+const URL_OR_EMAIL=/https?:\/\/\S+|[\w.-]+@[\w.-]+\.\w+/giu;
+const MAX_UNMARKED_TOKEN_OCCURRENCES=200000;
 const UNIQ='\u0000';
 const compact=x=>String(x??'').normalize('NFKC').replace(/\s+/gu,'').trim();
 const pos=x=>compact(x).toLowerCase().replace(/[.。]/gu,'');
@@ -50,6 +53,7 @@ export function planCrossbookDictionaryPreflight({
  if(index!==null&&(!(index.byWord instanceof Map)||!(index.byForm instanceof Map)))
    throw Error('CROSSBOOK_INDEX_INVALID');
  const docs=prepareBooks({bundles,postgradDrafts}),books=[],groups=new Map();
+ const unmarkedByHeadword=new Map();let unmarkedTotal=0;
  const spellings=new Map(),usedBookIDs=new Set(),allGrades=new Set();
  let totalOccurrences=0;
  for(const item of docs){
@@ -63,6 +67,7 @@ export function planCrossbookDictionaryPreflight({
    if(usedBookIDs.has(bookKey))throw Error('CROSSBOOK_DUPLICATE_BOOK_ID');
    usedBookIDs.add(bookKey);allGrades.add(grade);
    const byId=new Map(),used=new Set(),countById=new Map(),warnings=[];
+   const unmarkedHere=new Set();let unmarkedTokenOccurrences=0;
    for(const w of source.words){
      const id=wordId(w);
      if(!id||byId.has(id)||!head(w))throw Error('CROSSBOOK_INVALID_OR_DUPLICATE_WORDCARD');
@@ -92,7 +97,22 @@ export function planCrossbookDictionaryPreflight({
            if(typeof seg.gloss!=='string'||!compact(seg.gloss)||
               compact(seg.gloss)!==sense(card))differingGlosses++;
          }else if(typeof seg?.text==='string'){
-           if(/[a-z]{2,}/iu.test(seg.text))unmarkedEnglishSegments++;
+           const visible=seg.text.replace(URL_OR_EMAIL,' ');
+           let segmentHasEnglish=false;
+           for(const token of visible.matchAll(ENGLISH_WORDS)){
+             const lemma=en(token[0]);
+             if(!lemma||lemma.length<2)continue;
+             segmentHasEnglish=true;
+             unmarkedTokenOccurrences++;unmarkedTotal++;
+             if(unmarkedTotal>MAX_UNMARKED_TOKEN_OCCURRENCES)
+               throw Error('CROSSBOOK_UNMARKED_TOKEN_SCAN_LIMIT');
+             unmarkedHere.add(lemma);
+             if(!unmarkedByHeadword.has(lemma))
+               unmarkedByHeadword.set(lemma,{books:new Set(),grades:new Set(),occurrences:0});
+             const hit=unmarkedByHeadword.get(lemma);
+             hit.books.add(bookKey);hit.grades.add(grade);hit.occurrences++;
+           }
+           if(segmentHasEnglish)unmarkedEnglishSegments++;
          }else throw Error('CROSSBOOK_INVALID_SEGMENT');
        }
        if(here===0)paragraphsWithoutTargets++;
@@ -138,6 +158,8 @@ export function planCrossbookDictionaryPreflight({
      book_id:meta.id,title:meta.title,category:grade,source_kind:item.origin,
      chapters:source.chapters.length,paragraphs,paragraphs_without_targets:paragraphsWithoutTargets,
      unmarked_english_segments:unmarkedEnglishSegments,
+     unmarked_english_occurrences:unmarkedTokenOccurrences,
+     unique_unmarked_headwords:unmarkedHere.size,
      annotated_occurrences:markedOccurrences,referenced_cards:used.size,
      packaged_cards:byId.size,unused_cards:byId.size-used.size,
      missing_card_references:missingReferences,context_gloss_mismatches:differingGlosses,
@@ -146,6 +168,23 @@ export function planCrossbookDictionaryPreflight({
      review_flags:warnings
    });
  }
+ const unmarkedDiscovery=[...unmarkedByHeadword].map(([headword,item])=>{
+   const verdict=index?matchDictionaryWord(headword,index):null;
+   return {
+     headword,occurrences:item.occurrences,
+     source_book_ids:[...item.books].sort(sort),
+     exam_categories:[...item.grades].sort(sort),
+     dictionary_lookup_status:verdict?.status??'NOT_CHECKED',
+     dictionary_candidate_entry_ids:verdict?.candidates?.map(x=>x.entry_id)??[],
+     requires_context_sense_review:true,automatically_bound:false,
+     approved_sense_id:null,automatic_publication_allowed:false
+   };
+ }).sort((a,b)=>b.source_book_ids.length-a.source_book_ids.length||
+   b.occurrences-a.occurrences||sort(a.headword,b.headword));
+ const unmarkedStatuses=['matched','dictionary_only','needs_review','missing','NOT_CHECKED'];
+ const unmarkedCounts=Object.fromEntries(unmarkedStatuses.map(v=>[
+   v,unmarkedDiscovery.filter(row=>row.dictionary_lookup_status===v).length
+ ]));
  const report=[...groups.values()].map(g=>{
    const dictionary=index?matchDictionaryWord(g.headword,index):null;
    const issues=[];
@@ -195,6 +234,9 @@ export function planCrossbookDictionaryPreflight({
      cards_missing_ipa:books.reduce((v,x)=>v+x.cards_missing_ipa,0),
      cards_missing_examples:books.reduce((v,x)=>v+x.cards_missing_examples,0),
      context_gloss_mismatches:books.reduce((v,x)=>v+x.context_gloss_mismatches,0),
+     unmarked_english_occurrences:unmarkedTotal,
+     unmarked_unique_headwords:unmarkedDiscovery.length,
+     unmarked_dictionary_lookup_status:unmarkedCounts,
      approved_senses_created:0,user_study_rows_written:0,remote_d1_writes:0
    },
    books:books.sort((a,b)=>sort(a.category,b.category)||sort(a.book_id,b.book_id)),
@@ -204,10 +246,11 @@ export function planCrossbookDictionaryPreflight({
      approved_sense_id:null,study_merge_permitted:false
    })),
    polysemous_spelling_review:polysemous,
+   unmarked_discovery_queue:unmarkedDiscovery,
    review_queue:report,
    release_blocked:true,all_candidates_unapproved:true,
    paid_story_sentences_in_report:false,
    user_data_read:false,cloudflare_accessed:false,
-   warning:'Exact text-sense matching is a review CANDIDATE only. No approved sense ID, publisher signoff, source-license clearance, or live D1 state was inferred.'
+   warning:'Unmarked English may contain ordinary prose or words used in other senses. These are discovery suggestions, NOT automatic chapter anchors or approved commercial wordcards.'
  };
 }
