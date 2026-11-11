@@ -1,3 +1,16 @@
+## 2026-11-11 · 最新阶段5：运营台已接自动识词审核 UI（PR #220）
+
+> 本节是最新事实，下面旧快照仅供历史参考。**仅 Draft #206 所在开发分支，预览站/生产站均未部署；真实 Publisher-approved teaching senses=0，Cloudflare D1 013–019 仍未实际迁移**。
+
+- PR [#220](https://github.com/kim-1868/miaowu-english/pull/220) **已合入词典开发分支**（commit `8a60101166b64730c3900996e3a14eae44707bff`）。第四阶段 PR #219 的 `plan-unmarked` 和 `confirm-unmarked` 已有 Publisher 认证 API，本阶段在原 `public/ops.html` 增加仅 staging Publisher 显示的折叠工作台、`public/ops-unmarked-review.js` 和独立 `public/ops-unmarked-review.css`。**不重写/覆盖旧运营台上传、封面、订单、标签、公告和旧版修订**。
+- 操作流程：运营账号在预览站登录 → 选择 **不含 `words[]` 的 V2 小说JSON（1.9MB以内）** → 服务器用已批准词库查找英文候选、返回源文与方案 SHA256 → 在运营台按每处原文片段核对 `entry_id`、`sense_id`、词性和中文释义（20条/页）→ 可对**当前页且只有一个已审义项的候选，经二次“已经逐句确认”提示后手工批量确认**；多义词仍须逐处选义 → 服务端再次查源和审批状态后生成只读 `marked_v2_package` / `verified_v1_package` → 下载本地待上架草稿，之后仍须原有运营台预检及人工 Publisher 签核才可进入最终发布流程。两处record可选n.记录/v.录制，但始终1个主词头。
+- 身份/数据安全：面板HTML初始 hidden，`ops-console.js` 只有身份获认证为 staging Publisher 才动态 import 新模块，模块仅接受原OPS `api` 闭包（key依旧只存在原脚本内存）。401/退出/pagehide/改为production均清理上传源、确认状态和下载候选。JS无localStorage/sessionStorage/独立token，词句以textContent渲染。错误书ID/源原文offset/未审或改动senseID/已变更SHA全部 fail closed。**没有新上架按钮、云端D1写入或用户学习数据写入**。
+- 本地纯JS 5项词义和位置安全测试 + 3项静态运营台集成测试，合计8项；Chromium **1280px桌面/390px手机**用合成的record名/动双义运行：V2导入、扫描、逐处确认、服务器返回模拟草稿、下载、正式站隐藏与清空均通过、0JS异常。GitHub [专项CI #42977590218](https://github.com/kim-1868/miaowu-english/actions/runs/42977590218) success；[production build dry-run #42977590237](https://github.com/kim-1868/miaowu-english/actions/runs/42977590237) success（只是构建，**没有部署**）；[全站S1 #42977590284](https://github.com/kim-1868/miaowu-english/actions/runs/42977590284) **858测试/857成功/0失败/1跳过**。
+- 技术文档 `docs/OPS_UNMARKED_NOVEL_EDITOR_WORKSPACE_PHASE5_20261111.md`。完整安全测试交付ZIP在用户私有Library：`/开发英语单词学习网站/统一词卡_待审工作区/开发脚本_V12_一词一卡第五阶段/妙屋英语_V12一词一卡_第五阶段运营台自动识词审核与测试包_20261111.zip`；10成员文件及逐项SHA256实测全部一致，SHA256(zip)=`47d0f8fdadaf4913fc4fe709597e77b98b87e495aef0a661d1aa1f81aaccb17e`。公仓只有代码+合成测试，**没有 owner7391词头原资料、付费小说、655原创句草稿、客户数据**。
+- **下一阶段严格先决条件**：真实 staging Cloudflare D1 备份、013–019增量迁移、获得 Publisher 经授权的词义内容签核，使用真实当前已上架四级六级考研书审核双书共用词头的 E2E；未标记词的正式绑定、小说发布和跨书学习状态的真实跑通依赖这些。真实0 approved senses所以当前工作台对真实尚未签核新词会显示审核缺口，**不可声称可以直接用于线上售卖**。旧2,206 word IDs和所有用户进度/购买权益保持不动。
+
+---
+
 ## 2026-11-11 · 最新阶段4：未标记英文→编辑选义→V2上架候选，850项整站回归成功
 
 > **最新进度覆盖下方旧快照**。PR [#219](https://github.com/kim-1868/miaowu-english/pull/219) 已仅合入词典 Draft [#206](https://github.com/kim-1868/miaowu-english/pull/206) 的**开发分支**。没有部署 staging/production，没有对 Cloudflare D1 运行 019 或其他迁移，没有提交任何私人7391词表/收费小说/真实用户学习资料。真实 Publisher 已批准教学义项仍 **0**。
