@@ -1,0 +1,50 @@
+# SAFE UI REGISTRATION ONLY on default branch.
+# GitHub requires workflow_dispatch to exist on main for Run workflow to appear.
+# This default-branch implementation NEVER exports, migrates, deploys or accesses D1.
+# To run the real guarded 019 TEST-ONLY action, explicitly select
+# feature/v11-smart-vocab-preflight-20261109 in the branch dropdown.
+name: Manual V1.2 019 test D1 ADD-ONLY schema (human approval, never production)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_target:
+        type: string
+        required: true
+        description: Enter miaowu-english-test
+      confirm_uuid:
+        type: string
+        required: true
+        description: Exact test D1 UUID (from the reviewed workflow)
+      confirmation:
+        type: string
+        required: true
+        description: Enter STAGING_019_ADD_ONLY
+      encrypted_backup_run_id:
+        type: string
+        required: true
+        description: Successful fresh V1.2 full encrypted backup run ID
+      encrypted_artifact_id:
+        type: string
+        required: true
+        description: Matching unexpired encrypted backup artifact ID
+      offline_backup_saved:
+        type: string
+        required: true
+        description: Enter ENCRYPTED_BACKUP_SAVED_OFF_GITHUB only after saving privately
+      sense_policy_ack:
+        type: string
+        required: true
+        description: Enter SCHEMA_ONLY_SENSE_SRS_DISABLED (no headword-level mastery)
+permissions:
+  contents: read
+jobs:
+  default-branch-is-never-a-database-writer:
+    if: github.repository == 'kim-1868/miaowu-english'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail closed — choose exact development branch, never main
+        shell: bash
+        run: |
+          echo 'NO_DATABASE_WRITES_FROM_DEFAULT_BRANCH'
+          echo 'Select feature/v11-smart-vocab-preflight-20261109 to use protected test-only implementation'
+          exit 1
