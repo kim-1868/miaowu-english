@@ -3,6 +3,7 @@
 // or free published chapter, a licensed source, and an approved active sense.
 // The authenticated session user is injected by worker.js; never accept user_id
 // from a request body. Production is always off, even if a flag is accidentally set.
+import {listApprovedReaderChapterAnchors} from './global-dictionary-reader-anchors.js';
 import {createHeadwordStudyState,applyHeadwordStudyFeedback,
   previewHeadwordStudyDue} from './global-dictionary-headword-srs.js';
 
@@ -10,6 +11,7 @@ const ENTRY=/^gdict_[a-f0-9]{24}$/u;
 const CHAPTER=/^[a-zA-Z0-9_-]{1,80}$/u;
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iu;
 const ROUTE=/^\/api\/me\/dictionary\/headwords\/(gdict_[a-f0-9]{24})(\/feedback)?$/u;
+const CHAPTER_ANCHORS=/^\/api\/me\/dictionary\/chapters\/([a-zA-Z0-9_-]{1,80})\/anchors$/u;
 const ACTIONS=new Set(['seen','remembered','forgotten','mark_mastered','unmark_mastered']);
 const json=(x,status=200)=>new Response(JSON.stringify(x),{status,headers:{
   'content-type':'application/json; charset=utf-8',
@@ -140,6 +142,13 @@ export async function handleHeadwordStudyApi(req,env,path,user,{clock=()=>new Da
   if(env?.APP_ENV!=='staging')return error('NOT_FOUND',404);
   if(env[FLAGS.read]!=='true')return error('HEADWORD_SRS_DISABLED',503);
   if(!user||typeof user.id!=='string'||!user.id)return error('LOGIN_REQUIRED',401);
+  const chapter=CHAPTER_ANCHORS.exec(path||'');
+  if(chapter){
+    if(req.method!=='GET')return error('METHOD_NOT_ALLOWED',405);
+    try{return json(await listApprovedReaderChapterAnchors(env.DB,{
+      chapterId:chapter[1],userId:user.id}));}
+    catch{return error('HEADWORD_READER_ANCHORS_UNAVAILABLE',503);}
+  }
   const match=ROUTE.exec(path||'');
   if(!match)return error('NOT_FOUND',404);
   const entryId=match[1],feedback=Boolean(match[2]);
