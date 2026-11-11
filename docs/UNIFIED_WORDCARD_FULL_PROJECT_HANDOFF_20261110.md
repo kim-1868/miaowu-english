@@ -1,3 +1,13 @@
+## 2026-11-11 · 019只读失败根因已修复：使用D1支持的quick_check，等新审批
+
+- 二次环境审批后的真实 [D1 read-only #42984399791](https://github.com/kim-1868/miaowu-english/actions/runs/42984399791) 安全日志明确 `STAGING_019_READONLY_INTEGRITY_READ_TOKEN_PERMISSION_DENIED`。前面固定测试D1+COUNT匿名统计+外键检查没有失败，**最后远程 `PRAGMA integrity_check;` 被拒绝**。不能推论D1已损坏/既存数据丢失。没有D1写库和019迁移。
+- Cloudflare官方D1列出兼容的 `PRAGMA quick_check`。新 [PR #223](https://github.com/kim-1868/miaowu-english/pull/223) 已合并开发分支（`261074e69df60022ddf217b89399830c2ea21e05`）：**只替换这一条远程SQL为quick_check**，精确验证返回 `quick_check='ok'`。保持权限、授权人工审批、严格统计/FK、失败分类、19号未安装门禁完全不变。新3项安全测试，[专项CI #42985023265](https://github.com/kim-1868/miaowu-english/actions/runs/42985023265)通过；[S1 #42985023211](https://github.com/kim-1868/miaowu-english/actions/runs/42985023211) **868总/867通过/0失败/1跳过**。
+- **新受保护且仅只读任务** [#42985180326](https://github.com/kim-1868/miaowu-english/actions/runs/42985180326) 已生成（待用户环境审批）。Owner去新run `Review deployments→staging-d1-schema-approval→Approve`。**不要重跑两条旧失败run。**
+- `quick_check`不是完整`integrity_check`：执行019远程迁移前必须先对**当前已经导入11,422未审考试索引词头和16,442词形**的测试D1进行新鲜加密持久备份，隔离恢复后完整SQLite integrity_check和FK、源备份哈希验证、独立人工批准。013–018已成功，不可重复迁移。真实Publisher教学义项仍0、所有旧用户状态和生产站没动。
+- 详细诊断说明 `docs/STAGING_019_REMOTE_READONLY_QUICK_CHECK_FIX_20261111.md`。严禁误判新工作流的测试通过 = D1 019已上线。
+
+---
+
 ## 2026-11-11 · 当前阻塞：019只读审批后失败，诊断修复待新审批
 
 > 真实测试D1的013–018迁移及11422词头/16442未审词形导入均成功，不能重复。正式站未改变。
