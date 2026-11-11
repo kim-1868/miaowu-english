@@ -21,3 +21,11 @@
 4. 对正式版最新小说、受保护 staging D1、V2 上传 OPS 和跨设备购买/学习状态做真实闭环验收，未完成不得合并生产 Draft #206。
 
 **本次代码和私人产物都是离线候选质量加速，不是 6,550 张已完成售卖卡，也未部署任何线上 Worker。**
+
+## 新增私有离线初审台与浏览器 QA
+
+- 单文件纯离线 HTML `妙屋英语_565低冲突词卡_离线初审工作台_20261111.html` 已放至同一个私有 Library 文件夹，且也进入本轮增量 ZIP 的 `review/565_low_conflict_offline_workbench.html`。含全部 565 个低冲突词头及其中 100 个已起草的原创双语例句，仅编辑/初审，不写入 D1。
+- 支持等级/中文义项搜索、待初审筛选、编辑词性及中英例句、手写审核说明、本地保存、565 行完整 JSONL 导出、严格身份保护的 JSONL 再导入。所有导出含 `publisher_approved=false`、`approved_sense_id=null`、`production_publish_allowed=false`。
+- Chromium 桌面和 390px 手机视口真实浏览器测试：565 列表成功加载、原例句预填、词卡打开、初审本地记录、完整 565 行导出、全量 `publisher_approved=false`、无 JS 异常、移动端页面无横向溢出；篡改 JSONL 将 Publisher 字段设成 true 后被拒绝导入。
+- 最新私人 zip SHA256 `2ba5b47123a9851cc37abd70e643ce73d1f05c7eacdf9e5172e25d8078df17a4`，独立 HTML SHA256 `1b945b2b7132675b52c74c9a48398d0d09bbcf18274d5b7db46f6610b8608905`。ZIP 内容逐文件 SHA256 通过。
+- **最终界面安全边界未改变**：这个初审台的任何标记都不能作为商用许可、原词义身份、来源认证或 OPS Publisher 登录凭据；用户和生产数据库完全不在本流程中。
