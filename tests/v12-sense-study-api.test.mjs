@@ -144,3 +144,27 @@ test('disabled, production, wrong Origin and no transactional batch fail closed'
   assert.equal(sql.prepare('SELECT count(*) n FROM user_dictionary_sense_study').get().n,0);
  }finally{sql.close()}
 });
+
+test('concurrent revision advance never records a dangling audit event',async()=>{
+ const {env,sql}=fixture();try{
+  const original=env.DB;
+  const competing={prepare:original.prepare.bind(original),
+   batch:async operations=>{
+    // Another device successfully committed revision 1 before this transaction.
+    sql.prepare(`INSERT INTO user_dictionary_sense_study
+     (user_id,sense_id,status,stage,bookmarked,encounter_count,remembered_count,
+      forgotten_count,due_at,last_seen_at,last_feedback_at,last_advanced_day,
+      mastered_at,revision) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+     .run('alice',N,'learning',1,0,0,1,0,later(1),UTC,UTC,UTC.slice(0,10),null,1);
+    sql.prepare(`INSERT INTO user_dictionary_sense_review_events
+      (event_id,user_id,sense_id,entry_id,action,source_book_id,source_chapter_id,
+       source_context_anchor,state_revision) VALUES(?,?,?,?,?,?,?,?,?)`)
+     .run(uid(99),'alice',N,ENTRY,'remembered','book-a','ch-a','a:record:n',1);
+    return original.batch(operations);
+   }};
+  const result=await invoke({...env,DB:competing},{feedback:true,event:98});
+  assert.equal(result.code,503);
+  assert.equal(sql.prepare('SELECT count(*) n FROM user_dictionary_sense_review_events').get().n,1);
+  assert.equal(sql.prepare('SELECT revision FROM user_dictionary_sense_study').get().revision,1);
+ }finally{sql.close()}
+});
