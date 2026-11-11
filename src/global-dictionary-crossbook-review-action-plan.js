@@ -94,7 +94,7 @@ export function planCrossbookEditorialActions(report,{perGradeLimit=120}={}){
    add(tasks,{lane:'EXISTING_SENSE_REVIEW',grade,
      subject:[letters(row.headword),letters(row.part_of_speech),
        letters(row.meaning_zh),
-       ...(row.strict_sense_candidate?[]:[...row.historical_card_ids].sort().join('|')])].join('|'),
+       ...(row.strict_sense_candidate?[]:[[...row.historical_card_ids].sort().join('|')])].join('|'),
      books:relevant,
      priority,reasons:blockers.length?blockers:['REVIEW_RIGHTS_AND_CONFIRM_SENSE'],
      unitCount:row.historical_card_count});
