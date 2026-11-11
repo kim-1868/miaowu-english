@@ -1,3 +1,18 @@
+## 2026-11-11 · 最新阶段6：已有测试 D1 013–018 与考试索引已完成，019真实SQL完整预演
+
+> **本节修正下方旧快照中的错误表述**：测试 Cloudflare D1 **013–018 已部署成功**，不要再重复执行；旧记录中“等待013–018迁移”已经过时。正式生产库、Worker和旧客户数据仍未因第六阶段改动。
+
+1. **已独立核实 GitHub 真运行**：[013–018 migration run 42843020562](https://github.com/kim-1868/miaowu-english/actions/runs/42843020562) `completed/success`，后续受保护测试库只读 run 42843538233 验证 10词典表、5个审核触发器。**考试候选索引导入 run 42847388782** `completed/success`，测试 D1 已导入 ECDICT 11,422 考试标签候选词头与16,442未审词形、来源禁用/未审核；私有主人词表 7,391 范围是另一码，不能用11,422当正式全覆盖，也不能重复导入现存索引。正式教学义项 Publisher approved=0。
+2. 新[PR #221](https://github.com/kim-1868/miaowu-english/pull/221) **已合入词典开发分支**（squash `c6ebf2b5fc6262d4cb4233d349345910af00a245`）。新`scripts/rehearse-headword-019.mjs` 使用真实仓库 `db/001_schema.sql` 与 `db/013–018`、`db/019` 构建纯离线合成SQLite，原有19张业务/词典表全部逐表完整行SHA256及旧表schema SQL SHA256前后相同，019仅新增2表+2索引，重复执行无污染，`user_id+entry_id`同词头跨CET4/CET6两小说一条SRS计划、事件不同上下文保留且同revision重复会拦截、原旧user_words/mastered/bookmarked/购买/阅读进度和历史事件保留。**整个流程没连Cloudflare，没有旧用户数据或正式审核词义。**
+3. 专项 [019真实SQL离线CI 42979584912](https://github.com/kim-1868/miaowu-english/actions/runs/42979584912) `success`：4项新迁移测试+27项原一词一卡服务端/复习安全用例；[全站S1 42979584848](https://github.com/kim-1868/miaowu-english/actions/runs/42979584848) 862总/861通过/0失败/1跳过。此为 PR SHA 的验证；合并开发分支后 CI 正在另行回归。
+4. **只读远程测试 D1 检查已准备而尚未获环境批准**：[run 42979766894](https://github.com/kim-1868/miaowu-english/actions/runs/42979766894) 运行 `V1.2 test D1 019 readiness READ ONLY (requires approval)`，在2026-11-11T07:28Z为 `waiting`。用户如要推进真实现状验收，需要在该 GitHub Actions 运行页对受保护 environment `staging-d1-schema-approval` 点 Review deployments/Approve。**这是只读**：固定 `miaowu-english-test` UUID、仅用 `CLOUDFLARE_STAGING_D1_READ_TOKEN`，核实10表/5触发器、11422/16442原索引、019 2表缺失、0正式已审教学卡/启用来源、外键完整性，不导出任何顾客记录/备份，也不写任何D1。
+5. **下一步且仅下一步**：待只读实际结果通过后，针对**已经导入考试候选后的当前测试D1**创建**新一份加密持久备份**，独立解密恢复和审计；旧013–018迁移前、考试索引导入前备份不能替代。获取独立受保护环境人工审批后才能执行**单独019**，绝不可复跑013–018或绕过备份。再以真的Publisher已审核词卡+真实最新两本小说+真实客户权限和跨设备一词一卡学习验收。
+6. 私有项目 Library 已保存 `/开发英语单词学习网站/统一词卡_待审工作区/开发脚本_V12_一词一卡第六阶段/妙屋英语_V12一词一卡_第六阶段019安全迁移预演与只读验收包_20261111.zip`，6个源码/QA/文档+SHA256清单，共7成员，ZIP SHA256 `4bc7a13a8aab5147314b01f1d26f0806739a8f99e57728a01539f56396e70953`。公开GitHub只有程序与合成数据，没有Owner私有7391词单、收费小说或客户信息。
+
+**尚未完成/禁止宣称**：019真实Cloudflare D1迁移、预览Worker上线、真实Publisher终审、真正已上架最新小说的无损匹配、跨设备读/说/复习/掌握/收藏 E2E、生产批准。Draft #206不能合并生产。
+
+---
+
 ## 2026-11-11 · 最新阶段5：运营台已接自动识词审核 UI（PR #220）
 
 > 本节是最新事实，下面旧快照仅供历史参考。**仅 Draft #206 所在开发分支，预览站/生产站均未部署；真实 Publisher-approved teaching senses=0，Cloudflare D1 013–019 仍未实际迁移**。
