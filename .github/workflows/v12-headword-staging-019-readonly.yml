@@ -88,8 +88,13 @@ jobs:
           const x=count[0];
           // Only aggregate source totals: no word forms, headwords, book or
           // customer rows are logged. On drift, preserve fail-closed behavior
-          // but provide enough evidence to distinguish a later add-only import
           // from deletion/corruption of the Nov 10 pinned upstream cohort.
+          // The staging full-remainder cohort was explicitly imported and
+          // verified in GitHub Actions run 42852308915 at 2026-11-10T16:18Z:
+          // 11422 pre-import heads + exactly 50000 add-only heads = 61422,
+          // 16442 forms; prior books, words, progress and chapter links intact.
+          // Source registry imported_entries=11422 is deliberately kept as
+          // the ORIGINAL upstream ECDICT index size, not updated to 61422.
           const observedKeys=[
            'candidate_heads','upstream_heads','other_heads',
            'candidate_forms','upstream_forms','other_forms',
@@ -112,8 +117,8 @@ jobs:
           };
           for(const [key,value] of Object.entries({
            dictionary_tables:10,dictionary_triggers:5,core_tables:4,
-           headword_019_tables:0,candidate_heads:11422,candidate_forms:16442,
-           upstream_heads:11422,other_heads:0,
+           headword_019_tables:0,candidate_heads:61422,candidate_forms:16442,
+           upstream_heads:61422,other_heads:0,
            upstream_forms:16442,other_forms:0,original_import_source_intact:1,
            lessons:0,approved_senses:0,teaching_ready:0,active_sources:0
           }))requireCount(key,value);
@@ -122,7 +127,7 @@ jobs:
           if(integrity.length!==1||integrity[0]?.quick_check!=='ok')
            throw Error('STAGING_REMOTE_QUICK_CHECK_FAILED');
           console.log('STAGING_EXISTING_013_018_SCHEMA_10_TABLES_5_TRIGGERS_OK');
-          console.log('STAGING_EXAM_CANDIDATES_11422_FORMS_16442_STILL_UNAPPROVED');
+          console.log('STAGING_VERIFIED_11422_EXAM_PLUS_50000_EXTRA_CANDIDATE_HEADS_61422_FORMS_16442_STILL_UNAPPROVED');
           console.log('STAGING_019_NOT_YET_APPLIED__SAFE_TO_PLAN_FRESH_BACKUP');
           console.log('STAGING_FK_QUICK_CHECK_READONLY_PASSED_NO_PERSONAL_ROWS_EXPORTED');
           console.log('FULL_INTEGRITY_CHECK_REQUIRES_SEPARATE_FRESH_BACKUP_LOCAL_RESTORE');
