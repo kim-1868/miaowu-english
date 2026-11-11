@@ -7,6 +7,7 @@ on:
       - scripts/staging-019-readonly-diagnostics.mjs
       - tests/v12-staging-019-readonly-diagnostics.test.mjs
       - tests/v12-staging-019-readonly-supported-pragmas.test.mjs
+      - tests/v12-staging-019-anonymous-count-drift.test.mjs
       - .github/workflows/v12-headword-staging-019-readonly.yml
       - tests/v12-headword-019-migration-rehearsal.test.mjs
       - db/019_global_dictionary_headword_study.sql
@@ -17,6 +18,7 @@ on:
       - scripts/staging-019-readonly-diagnostics.mjs
       - tests/v12-staging-019-readonly-diagnostics.test.mjs
       - tests/v12-staging-019-readonly-supported-pragmas.test.mjs
+      - tests/v12-staging-019-anonymous-count-drift.test.mjs
       - .github/workflows/v12-headword-staging-019-readonly.yml
       - tests/v12-headword-019-migration-rehearsal.test.mjs
       - db/019_global_dictionary_headword_study.sql
@@ -43,6 +45,7 @@ jobs:
           node --check scripts/staging-019-readonly-diagnostics.mjs
           node --test tests/v12-staging-019-readonly-diagnostics.test.mjs
           node --test tests/v12-staging-019-readonly-supported-pragmas.test.mjs
+          node --test tests/v12-staging-019-anonymous-count-drift.test.mjs
           node --experimental-sqlite --test tests/v12-headword-019-migration-rehearsal.test.mjs
           node --experimental-sqlite --test tests/v12-global-dictionary-headword-api.test.mjs tests/v12-global-dictionary-headword-srs.test.mjs
       - name: No Cloudflare token, no remote DB, no deploy
