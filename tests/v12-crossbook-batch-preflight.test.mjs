@@ -123,3 +123,36 @@ test('offline CLI may accept verified bundles as in-memory data, never mark appr
  assert.equal(out.summary.approved_senses_created,0);
  assert.equal(out.release_blocked,true);
 });
+
+test('unmarked English discovery suggests dictionary candidates but never marks learning or publishes',()=>{
+ const r=planCrossbookDictionaryPreflight(input());
+ assert.ok(r.summary.unmarked_unique_headwords>=5);
+ assert.ok(r.summary.unmarked_english_occurrences>=5);
+ assert.equal(r.books.find(b=>b.book_id==='story-a').unmarked_english_segments,1);
+ assert.ok(r.unmarked_discovery_queue.some(row=>row.headword==='private'));
+ assert.equal(r.unmarked_discovery_queue.some(row=>row.headword==='record'),false);
+ assert.ok(r.unmarked_discovery_queue.every(row=>
+   row.requires_context_sense_review===true&&row.automatically_bound===false&&
+   row.approved_sense_id===null&&row.automatic_publication_allowed===false));
+ assert.ok(!JSON.stringify(r).includes('PRIVATE_SENTENCE_DO_NOT_EXPORT'));
+});
+test('URLs and emails in prose are excluded, while a real unmarked word is an unapproved match candidate',()=>{
+ const novelWithLink=novel('source-link','postgrad',[noun()],[
+  [{text:'Visit https://example.com and email cat@example.org. Record the talk.'}]
+ ]);
+ const ix=buildGlobalDictionaryIndex({entries:[{
+   entry_id:'gdict_'+'a'.repeat(24),headword:'record',teaching_ready:false
+ }],forms:[]});
+ const result=planCrossbookDictionaryPreflight({postgradDrafts:[novelWithLink],index:ix});
+ const words=result.unmarked_discovery_queue.map(x=>x.headword);
+ assert.ok(words.includes('record'));
+ assert.ok(words.includes('visit'));
+ for(const unexpected of ['example','com','org','cat'])
+   assert.ok(!words.includes(unexpected),'leaked URL/email component: '+unexpected);
+ const record=result.unmarked_discovery_queue.find(x=>x.headword==='record');
+ assert.equal(record.dictionary_lookup_status,'dictionary_only');
+ assert.equal(record.automatically_bound,false);
+ assert.equal(result.summary.unmarked_dictionary_lookup_status.dictionary_only,1);
+ assert.equal(result.summary.approved_senses_created,0);
+ assert.equal(result.release_blocked,true);
+});

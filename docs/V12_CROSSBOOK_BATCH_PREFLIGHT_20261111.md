@@ -20,6 +20,9 @@
 5. 每本输出旧词卡缺失、内文目标词释义不一致、缺 IPA、缺双语例句、纯中文无目标词段落、未标注英文片段等计数；
 6. 提供按跨书覆盖数和出现频次排序的优先审稿队列，以及跨级别复现统计；所有候选仍显示 `approved_sense_id:null`、`cross_book_mastery_merge_allowed:false`，不能用于直接写入学习表；
 7. 无需请求远端数据库，输出不包含小说正文句子、用户学习记录、订单或密钥。
+8. 扫描尚未标注词卡的 `segments[].text` 中的英文**单词候选**（跳过 HTTP/HTTPS URL 和 email），按照跨书出现数、频次排序输出 `unmarked_discovery_queue`；对每个词查询已有的离线字典索引（若提供），区分 `matched/dictionary_only/needs_review/missing/NOT_CHECKED`。这个阶段**绝不猜测语境义项**，不自动上架或改正文。
+9. `unmarked_discovery_queue` **仅包含单个英文词、出现次数和书籍归属**，不复制上下文句子。每个候选固定 `requires_context_sense_review:true`、`automatically_bound:false`；即使字典中存在也不算审核通过。
+
 
 `scripts/preflight-crossbook-dictionary-batches.mjs`：
 
