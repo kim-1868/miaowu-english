@@ -1,3 +1,19 @@
+## 2026-11-11 · 最新阶段3：已审核一词一卡接入小说阅读器（PR #218）
+
+> 本节为最新工程事实。**PR #218 仅合入 Draft #206 的统一词典开发分支，未部署真实 staging/production，未运行 Cloudflare D1 013–019，真实 Publisher approved senses 仍为0。**
+
+- 已合并 [PR #218](https://github.com/kim-1868/miaowu-english/pull/218)，commit `0217d1a319405c25363e153089474eaee2a76273`。基于已合并 PR #216（一词一卡纯SRS/点击定位草案）、PR #217（用户登录+付费权限+已审核词头的读写安全API）继续开发，**没有重新制作词库**。
+- 新 `src/global-dictionary-reader-anchors.js`：仅在**用户实际有权阅读的已发布章节**查询原 `chapter_words`、`global_dictionary_book_bindings` 和已审批/active 的 `global_dictionary_book_sense_bindings`，并交叉检验主卡审核/来源版权；`p段:s段` 精确锚点才返回 `entry_id`。未审词/订单撤销/未授权/章节下架都不给一词一卡锚点。
+- `src/global-dictionary-headword-api.js` 新增仅staging且开读开关可用的 `GET /api/me/dictionary/chapters/{chapterId}/anchors`。旧有 GET 主词卡、POST 反馈不改。若来源缺少正式审批，旧版阅读词卡保持原功能。
+- `public/app.js` 复用已有标记目标词的按钮、`wordPop` 桌面就地词卡与移动底部学习栏：渲染精确 pX:sY，获授权后才加载审核锚点列表。新 `public/headword-reader-bridge.js` 以 `entryId+chapterId+anchor` 获取同一张含n./v.多词性的主词卡，支持发音、例句朗读、认识/再记一次/独立已掌握通过 PR #217 服务端幂等CAS上报。点词暂停章节自动朗读，需手动继续；点阅读空白关闭词卡；异步过期请求无效。**尚未自动把所有普通未标记英文词发布成可点击词卡**。
+- 保留旧收藏/藏书票接口与原词卡版本，不自动合并旧收藏；**词头级统一收藏、快速刷词、剧情回声共享SRS仍未真正接新接口**，需后续处理。历史 2,206旧ID和 user_words/read progress/entitlements 未改。
+- 严格保留正式首页 `/app.js?v=20261109-favorites-wordbook12` 资源引用以保护既有UI发布基线，新增独立带版本的 bridge 脚本；在**未来真实staging部署**必须检查并刷新旧 `app.js` 缓存，必要时经发布基线评审升级版本号，否则可能载入旧app导致桥接代码不生效。此次开发未部署，不冒称此风险已验证。
+- 本地合成SQLite 5测试 + JS桥5测试 + 静态整合4测试，Chromium **1280px桌面/390px手机**均模拟打开原词卡→获审多义主卡→认识POST→关闭，**0 JS异常**。GitHub [专项reader #42973628429](https://github.com/kim-1868/miaowu-english/actions/runs/42973628429)、[现有API #42973628471](https://github.com/kim-1868/miaowu-english/actions/runs/42973628471)、[production dry-run #42973628473](https://github.com/kim-1868/miaowu-english/actions/runs/42973628473) success；[S1 #42973628430](https://github.com/kim-1868/miaowu-english/actions/runs/42973628430) **835 total / 834 pass / 0 fail / 1 skipped**，CI没有真实D1写入。
+- 详细 [阶段3说明](https://github.com/kim-1868/miaowu-english/blob/feature/v11-smart-vocab-preflight-20261109/docs/HEADWORD_ONE_CARD_ENGINEERING_PHASE3_20261111.md)；私有 Library `/开发英语单词学习网站/统一词卡_待审工作区/开发脚本_V12_一词一卡第三阶段/妙屋英语_V12一词一卡_第三阶段阅读器接入与验证_20261111.zip` 包含新增前端/后端/合成测试/浏览器测试及SHA256 manifest；**公仓只放通用代码，真实7391、655未审句、付费小说留私人工作区**。
+- **下一阶段**：实现带编辑确认的“未标记英文 token→已审核主词卡→小说正文安全绑定与可点击呈现”，以及保守的旧书真实上下文重映射；获得权限、加密备份/回滚后才可以在staging实际迁移 019 并验证两本真实小说的跨书SRS、词卡朗读、收藏和购买权限。最终正式 Publisher 审批和商用内容覆盖才是真正上线硬门槛。
+
+---
+
 ## 2026-11-11 · 最新阶段2：登录/权限/审核的词头级SRS服务端已通过整站测试（PR #217）
 
 > **本节最新工程事实**，下方旧进度快照只为历史溯源。代码只在 [Draft #206](https://github.com/kim-1868/miaowu-english/pull/206) 的统一词典**开发分支**中；**没有部署预览站或生产站、没有执行 019 D1 迁移、没有 Publisher 真实词卡签核**。
