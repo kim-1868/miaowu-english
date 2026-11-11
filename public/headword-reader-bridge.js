@@ -61,7 +61,11 @@
      if(token!==sequence||!api.user())return;
      for(const id of ['v12Remember','v12Forgot','v12Master'])button(id).disabled=true;
      const eventId=root.crypto?.randomUUID?.();
-     if(!eventId){api.toast('当前环境暂不支持安全学习记录');return;}
+     if(!eventId){
+       api.toast('当前环境暂不支持安全学习记录');
+       for(const id of ['v12Remember','v12Forgot','v12Master'])button(id).disabled=false;
+       return;
+     }
      try{
        const next=await api.request('/api/me/dictionary/headwords/'+
          encodeURIComponent(ctx.entryId)+'/feedback','POST',{
