@@ -9,6 +9,8 @@ import {normalizeDictionaryNovelV2,convertDictionaryNovelV2}
 import {planApprovedNovelSenseAnchors} from './global-dictionary-sense-anchor.js';
 import {extractUnmarkedV2EnglishTokens,planApprovedNovelAutoDiscovery}
  from './global-dictionary-auto-discovery.js';
+import {inspectStagingUnmarkedEditorWorkflow}
+ from './global-dictionary-unmarked-editor-ops.js';
 
 const H={'content-type':'application/json; charset=utf-8',
  'cache-control':'private, no-store','x-content-type-options':'nosniff'};
@@ -108,7 +110,9 @@ export async function inspectStagingDictionaryAutoDiscovery(env,payload){
 }
 export async function handleOpsDictionaryNovelV2(req,env,path){
  if(!['/api/ops/import/dictionary-v2/preflight',
-       '/api/ops/import/dictionary-v2/discover'].includes(path)||
+       '/api/ops/import/dictionary-v2/discover',
+       '/api/ops/import/dictionary-v2/plan-unmarked',
+       '/api/ops/import/dictionary-v2/confirm-unmarked'].includes(path)||
     req.method!=='POST'||env.APP_ENV!=='staging')
    return json({error:'NOT_FOUND'},404);
  const auth=await authenticateOperator(req,env);
@@ -131,6 +135,9 @@ export async function handleOpsDictionaryNovelV2(req,env,path){
    return json({error:'INVALID_NOVEL_PACKAGE'},400);
  }catch{return json({error:'INVALID_JSON'},400)}
  try{
+  if(path.endsWith('/plan-unmarked')||path.endsWith('/confirm-unmarked'))
+    return json(await inspectStagingUnmarkedEditorWorkflow(env,payload,{
+      confirm:path.endsWith('/confirm-unmarked')}));
   return json(path.endsWith('/discover')?
     await inspectStagingDictionaryAutoDiscovery(env,payload):
     await inspectStagingDictionaryNovelV2(env,payload));
@@ -140,7 +147,14 @@ export async function handleOpsDictionaryNovelV2(req,env,path){
      /^(INVALID_DICTIONARY_V2|V2_|DICTIONARY_V2_|DUPLICATE_DICTIONARY_V2|INVALID_AUTO_DISCOVERY|AUTO_DISCOVERY_)/.test(code) &&
        code!=='DICTIONARY_V2_NOT_ENABLED')
    return json({error:'INVALID_DICTIONARY_V2_PACKAGE',detail:code.slice(0,180)},400);
-  if(code==='DICTIONARY_SCHEMA_REQUIRED'||code==='DICTIONARY_V2_NOT_ENABLED')
+  if(code==='STALE_NOVEL_OR_APPROVED_DICTIONARY_REVIEW'||
+     code==='EDITOR_CONTEXT_STABLE_SENSE_REVIEW_REQUIRED'||
+     code==='EDITOR_CONTEXT_V2_CONVERSION_NOT_READY')
+   return json({error:code},409);
+  if(/^(INVALID_EDITOR_|DUPLICATE_EDITOR_|UNREVIEWED_|EDITOR_TOKEN_|V2_WORDS_ARRAY_FORBIDDEN)/u.test(code))
+   return json({error:code},400);
+  if(code==='DICTIONARY_SCHEMA_REQUIRED'||code==='DICTIONARY_V2_NOT_ENABLED'||
+     code==='REVIEWED_SENSE_SCHEMA_REQUIRED')
    return json({error:code},503);
   console.error('OPS_DICTIONARY_V2_PREFLIGHT_FAILED');
   return json({error:'DICTIONARY_V2_PREFLIGHT_UNAVAILABLE'},503);
