@@ -4,6 +4,8 @@ on:
     branches: [feature/v11-smart-vocab-preflight-20261109]
     paths:
       - scripts/summarize-private-production-publisher-artifact.mjs
+      - scripts/audit-production-publisher-anchor-structure.mjs
+      - tests/v12-production-publisher-anchor-structure.test.mjs
       - tests/v12-production-publisher-artifact-summary.test.mjs
       - .github/workflows/v12-production-publisher-artifact-summary.yml
   workflow_dispatch:
@@ -32,8 +34,9 @@ jobs:
       - name: Verify local aggregate reporter before accessing any protected secrets
         run: |
           set -euo pipefail
-          node --test tests/v12-production-publisher-artifact-summary.test.mjs
+          node --test tests/v12-production-publisher-artifact-summary.test.mjs tests/v12-production-publisher-anchor-structure.test.mjs
           node --check scripts/summarize-private-production-publisher-artifact.mjs
+          node --check scripts/audit-production-publisher-anchor-structure.mjs
       - name: Download existing verified encrypted artifact, decrypt in protected runner, print ONLY aggregates
         shell: bash
         env:
@@ -70,5 +73,6 @@ jobs:
           fi
           # Never print manuscript titles/IDs, private JSON, passphrase, or key.
           node scripts/summarize-private-production-publisher-artifact.mjs "$private/recovered-private.json"
+          node scripts/audit-production-publisher-anchor-structure.mjs "$private/recovered-private.json"
       - name: No new D1 request, mutation or Publisher deploy
         run: echo 'EXISTING_ENCRYPTED_ARTIFACT_ONLY_NO_CLOUDFLARE_TOKEN_NO_DB_ACCESS_NO_DEPLOY'
