@@ -1,0 +1,26 @@
+# GitHub workflow_dispatch UI registration only. Main cannot read D1 or run SQL.
+name: Manual V1.2 published-only word identity aggregates READ ONLY
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_scope:
+        description: Enter PUBLISHED_32_BOOKS_ONLY
+        type: string
+        required: true
+      confirm_intent:
+        description: Enter PRODUCTION_WORD_IDENTITY_AGGREGATE_SELECT_ONLY
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  safe-main-no-query:
+    if: github.repository == 'kim-1868/miaowu-english'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Stop and require explicitly selecting protected development branch
+        run: |
+          echo 'NO_PRODUCTION_DATABASE_ACCESS_FROM_MAIN'
+          echo 'Use feature/v11-smart-vocab-preflight-20261109 on Run workflow'
+          exit 1
