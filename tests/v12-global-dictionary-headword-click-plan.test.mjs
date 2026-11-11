@@ -27,10 +27,14 @@ test('two books share one approved card containing noun and verb, not duplicate 
  assert.equal(a.cards.length,1);assert.equal(a.cards[0].senses.length,2);
  assert.equal(a.cards[0].entry_id,b.cards[0].entry_id);
  assert.equal(a.anchors[0].entry_id,b.anchors[0].entry_id);
- assert.equal(a.cards[0].user_study_key,'entry_id');
+ assert.equal(a.cards[0].user_study_key,'sense_id');
+ assert.deepEqual(a.cards[0].study_sense_ids,[N,V]);
+ assert.equal(a.anchors[0].study_identity,'sense_id');
+ assert.equal(a.anchors[0].study_sense_confirmed,false);
  assert.equal(a.anchors[0].context_sense_id,null);
  assert.equal(a.automatic_publication_allowed,false);
  assert.equal(a.user_study_rows_written,0);
+ assert.equal(a.headword_level_mastery_supported,false);
 });
 test('reviewed inflection can propose the same main card',()=>{
  const a=planHeadwordReaderClicks(tokens('recorded'),idx(),options());
