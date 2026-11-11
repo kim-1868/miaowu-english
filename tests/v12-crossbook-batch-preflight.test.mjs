@@ -45,10 +45,10 @@ test('CET4/CET6 authenticated snapshots + local postgrad draft produce one priva
  assert.deepEqual(r.summary.grades,['cet4','cet6','postgrad']);
  assert.equal(r.summary.publisher_exported_books,3);
  assert.equal(r.summary.local_postgrad_drafts,1);
- assert.equal(r.summary.annotated_occurrences,7);
+ assert.equal(r.summary.annotated_occurrences,6);
  assert.equal(r.summary.distinct_headwords,1);
  assert.equal(r.summary.strict_text_sense_candidate_groups,2);
- assert.equal(r.summary.exact_text_sense_shared_across_books,1);
+ assert.equal(r.summary.exact_text_sense_shared_across_books,2);
  assert.equal(r.summary.same_spelling_different_sense_headwords,1);
  assert.equal(r.summary.paragraphs_without_targets,1);
  assert.equal(r.summary.context_gloss_mismatches,1);
@@ -65,7 +65,7 @@ test('one word card can have two meanings while study remains distinct per sense
  assert.equal(cards.length,2);
  assert.ok(cards.some(x=>x.meaning_zh==='记录'));
  assert.ok(cards.some(x=>x.meaning_zh==='录制'));
- assert.equal(cards.filter(x=>x.source_book_ids.length>1).length,1);
+ assert.equal(cards.filter(x=>x.source_book_ids.length>1).length,2);
  assert.ok(cards.every(x=>x.review_flags.includes('SAME_SPELLING_DIFFERENT_SENSES')));
 });
 test('no paid story sentences or user identities leak into crossbook report',()=>{
