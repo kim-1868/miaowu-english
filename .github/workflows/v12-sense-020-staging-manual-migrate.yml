@@ -1,0 +1,48 @@
+# SAFE DEFAULT-BRANCH UI REGISTRATION ONLY; NEVER WRITES D1.
+# Select feature/v11-smart-vocab-preflight-20261109 for the real, independently
+# reviewed TEST-only workflow. Main always fails closed by design.
+name: Manual V1.2 020 TEST D1 SENSE-ONLY schema (human approval, never production)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_target:
+        type: string
+        required: true
+        description: Enter miaowu-english-test
+      confirm_uuid:
+        type: string
+        required: true
+        description: Exact staging DB UUID
+      confirmation:
+        type: string
+        required: true
+        description: Enter STAGING_020_SENSE_ADD_ONLY
+      encrypted_backup_run_id:
+        type: string
+        required: true
+        description: Successful recent post-019 encrypted backup run ID
+      encrypted_artifact_id:
+        type: string
+        required: true
+        description: Matching post-019 encrypted backup artifact ID
+      offline_backup_saved:
+        type: string
+        required: true
+        description: Enter ENCRYPTED_BACKUP_SAVED_OFF_GITHUB after private copy
+      sense_policy_ack:
+        type: string
+        required: true
+        description: Enter SCHEMA_ONLY_020_SENSE_SRS_DISABLED
+permissions:
+  contents: read
+jobs:
+  safe-default-branch-no-write:
+    if: github.repository == 'kim-1868/miaowu-english'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Stop, select the exact TEST-only protected development branch
+        shell: bash
+        run: |
+          echo '020_NO_DATABASE_WRITES_FROM_DEFAULT_BRANCH'
+          echo 'Choose feature/v11-smart-vocab-preflight-20261109 on Run workflow'
+          exit 1
