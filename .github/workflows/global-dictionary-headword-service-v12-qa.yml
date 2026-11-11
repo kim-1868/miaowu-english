@@ -1,0 +1,45 @@
+name: Dictionary V1.2 guarded headword study API QA (staging only)
+on:
+  push:
+    paths:
+      - src/global-dictionary-headword-api.js
+      - src/worker.js
+      - db/019_global_dictionary_headword_study.sql
+      - tests/v12-global-dictionary-headword-api.test.mjs
+      - .github/workflows/global-dictionary-headword-service-v12-qa.yml
+  pull_request:
+    paths:
+      - src/global-dictionary-headword-api.js
+      - src/worker.js
+      - db/019_global_dictionary_headword_study.sql
+      - tests/v12-global-dictionary-headword-api.test.mjs
+      - .github/workflows/global-dictionary-headword-service-v12-qa.yml
+permissions:
+  contents: read
+jobs:
+  synthetic-server-and-db:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate API and Worker syntax
+        run: |
+          node --check src/global-dictionary-headword-api.js
+          node --check src/worker.js
+      - name: Run staging-only identity entitlement event and SRS tests
+        run: |
+          node --test tests/v12-global-dictionary-headword-api.test.mjs
+          node --test tests/v12-global-dictionary-headword-srs.test.mjs
+          node --test tests/v12-global-dictionary-headword-click-plan.test.mjs
+          node --test tests/v12-global-dictionary-headword-crossbook-e2e.test.mjs
+      - name: Ensure new SQL is additive and gated endpoint never writes production
+        run: |
+          ! grep -Eiq 'DROP[[:space:]]+TABLE|DELETE[[:space:]]+FROM|UPDATE[[:space:]]+user_words' db/019_global_dictionary_headword_study.sql
+          grep -q "APP_ENV!=='staging'" src/global-dictionary-headword-api.js
+          grep -q "GLOBAL_DICTIONARY_HEADWORD_SRS_WRITE_ENABLED" src/global-dictionary-headword-api.js
+          echo 'STAGING_ONLY_SYNTHETIC_TESTS_NO_D1_DEPLOYMENT_NO_OWNER_DATA'
