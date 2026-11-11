@@ -1,0 +1,32 @@
+name: V1.2 Publisher current-snapshot sense reconciliation synthetic QA
+on:
+  pull_request:
+    paths:
+      - src/global-dictionary-publisher-snapshot-reconcile.js
+      - tests/v12-publisher-snapshot-reconcile.test.mjs
+      - .github/workflows/v12-publisher-snapshot-reconcile-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - src/global-dictionary-publisher-snapshot-reconcile.js
+      - tests/v12-publisher-snapshot-reconcile.test.mjs
+permissions:
+  contents: read
+jobs:
+  synthetic-no-remote-d1:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify fail-closed stale/absent Publisher book snapshots
+        run: |
+          set -euo pipefail
+          node --check src/global-dictionary-publisher-snapshot-reconcile.js
+          node --test tests/v12-publisher-snapshot-reconcile.test.mjs
+      - name: No Publisher access or learning state writes
+        run: echo 'SYNTHETIC_LOCAL_ONLY_NO_PUBLISHER_SECRET_NO_D1_WRITES'
