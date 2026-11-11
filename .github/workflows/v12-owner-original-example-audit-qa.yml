@@ -1,0 +1,32 @@
+name: V1.2 original example editorial triage synthetic QA
+on:
+  pull_request:
+    paths:
+      - src/global-dictionary-owner-original-example-audit.js
+      - tests/v12-owner-original-example-audit.test.mjs
+      - .github/workflows/v12-owner-original-example-audit-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - src/global-dictionary-owner-original-example-audit.js
+      - tests/v12-owner-original-example-audit.test.mjs
+permissions:
+  contents: read
+jobs:
+  local-content-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: QA lexical metadata/wordform hints and approval barriers
+        run: |
+          set -euo pipefail
+          node --check src/global-dictionary-owner-original-example-audit.js
+          node --test tests/v12-owner-original-example-audit.test.mjs
+      - name: Verify no private story or dictionary dump
+        run: echo 'SYNTHETIC_CONTENT_ONLY_NO_PRIVATE_EXAMPLES_NO_D1_NO_DEPLOY'
