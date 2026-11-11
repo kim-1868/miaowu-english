@@ -4,7 +4,7 @@
 import {createHash} from 'node:crypto';
 const sum=s=>createHash('sha256').update(s).digest('hex');
 const lemma=s=>String(s??'').normalize('NFKC').trim().toLowerCase().replaceAll('’',"'");
-const zh=s=>String(s??'').normalize('NFKC').replace(/\s+/gu,'').replace(/[；;]/gu,';').trim();
+const zh=s=>String(s??'').normalize('NFKC').replace(/\s+/gu,'')\n .replace(/[；;]/gu,';').replace(/(?:…{2,}|\\.{2,})/gu,'…').trim();
 const part=s=>lemma(s).replace(/[。.]/gu,'');
 const entry=/^gdict_[0-9a-f]{24}$/u;
 const hash=/^[0-9a-f]{64}$/u;
