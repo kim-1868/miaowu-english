@@ -1,0 +1,33 @@
+# Safe default-branch UI registration for the production metadata-only workflow.
+# The real reviewed workflow exists ONLY on the feature branch, and main has
+# no Cloudflare credentials, no SQL, no database activity, and no deployment.
+name: Manual V1.2 production Publisher metadata encrypted READ ONLY (no content)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_database:
+        type: string
+        required: true
+        description: Enter miaowu-english-prod
+      confirm_intent:
+        type: string
+        required: true
+        description: Enter PRODUCTION_PUBLISHER_METADATA_READ_ONLY
+      offline_encryption_ack:
+        type: string
+        required: true
+        description: Enter ENCRYPTED_PRIVATE_METADATA_ONLY
+permissions:
+  contents: read
+jobs:
+  safe-default-branch-no-write:
+    if: github.repository == 'kim-1868/miaowu-english'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Do not access database from default branch
+        shell: bash
+        run: |
+          echo 'PRODUCTION_PUBLISHER_DEFAULT_BRANCH_BLOCKED_NO_D1_ACCESS'
+          echo 'Choose feature/v11-smart-vocab-preflight-20261109 when running the manual workflow'
+          exit 1
