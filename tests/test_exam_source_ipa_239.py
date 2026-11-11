@@ -1,6 +1,6 @@
 import hashlib,importlib.util,tempfile,unittest
 from pathlib import Path
-spec=importlib.util.spec_from_file_location('audit_239',Path(__file__).with_name('audit_239.py'))
+spec=importlib.util.spec_from_file_location('audit_239',Path(__file__).resolve().parents[1]/'scripts'/'audit-exam-source-ipa-239.py')
 mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod)
 
 def row(n,cohort,flags,ipa,translation='n. 测试'):
