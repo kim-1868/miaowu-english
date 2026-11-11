@@ -1,0 +1,36 @@
+name: Dictionary exam-first missing-sense triage synthetic QA (no publisher or D1)
+on:
+  push:
+    paths:
+      - scripts/triage-exam-missing-senses.py
+      - scripts/compile-exam-original-review-drafts.py
+      - tests/test_exam_missing_sense_triage.py
+      - .github/workflows/global-dictionary-missing-sense-triage-qa.yml
+  pull_request:
+    paths:
+      - scripts/triage-exam-missing-senses.py
+      - scripts/compile-exam-original-review-drafts.py
+      - tests/test_exam_missing_sense_triage.py
+      - .github/workflows/global-dictionary-missing-sense-triage-qa.yml
+permissions:
+  contents: read
+jobs:
+  synthetic-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile and test without owner wordlist or external access
+        run: |
+          python -m py_compile scripts/triage-exam-missing-senses.py scripts/compile-exam-original-review-drafts.py
+          python -m unittest discover -s tests -p 'test_exam_missing_sense_triage.py' -v
+      - name: Verify no database writes, signoff or upstream calls
+        run: |
+          ! grep -Ei 'wrangler|CLOUDFLARE|https?://|requests\.get|urllib\.request|production_deploy' \
+             scripts/triage-exam-missing-senses.py scripts/compile-exam-original-review-drafts.py
+          echo 'SYNTHETIC_ONLY_NO_OWNER_DATA_NO_REMOTE_D1_NO_PUBLISHER_APPROVAL'
