@@ -15,8 +15,8 @@ def import_script(name,path):
     spec.loader.exec_module(mod)
     return mod
 
-triage=import_script('missing_sense_triage',ROOT/'scripts/triage_exam_missing_senses.py')
-examples=import_script('curated_examples',ROOT/'scripts/compile_curated_examples.py')
+triage=import_script('missing_sense_triage',ROOT/'scripts/triage-exam-missing-senses.py')
+examples=import_script('curated_examples',ROOT/'scripts/compile-exam-original-review-drafts.py')
 
 def row(word,tier='四级新增',historical=None,translation='n. 一个地方',ipa=None):
     return {'headword':word,'entry_id':'gdict_'+hashlib.sha256(word.encode()).hexdigest()[:24],
