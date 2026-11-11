@@ -1,3 +1,16 @@
+## 2026-11-11 · 已进入实际开发：一词一卡跨书SRS与点击词卡关联首轮实现（PR #216）
+
+> 本节为最新工程进度，旧资料保留供审计。**仅 Draft #206 开发分支；预览与生产 D1 均未实施 019 迁移；尚未上线用户功能。**
+
+- 用户最终确认：**一规范英文词头对应一张可见主词卡**，其中包含多词性/释义/英美音标/原创新例句/合适搭配；不因record是n./v.生成两个必须学习的卡。内部sense_id仍保留作词义上下文/审核追溯，但SRS唯一键为`user_id + entry_id`，小说跨书复用。
+- 新文件 `src/global-dictionary-headword-srs.js`：纯函数按1/3/7/14/30天推进；只有真正到期才升级；同UTC日反复点击认识不重复延长；忘记则缩短并提示5张后重现，点击“已掌握”为独立动作，可撤销；打开词卡只增加接触次数，不改变due，用户之间隔离。
+- 新文件 `src/global-dictionary-headword-click-plan.js`：直接复用`global-dictionary-matcher.js`+`global-dictionary-novel-v2.js`审校与`global-dictionary-auto-discovery.js`英文分词输出，对已批准主卡的**已批准且active**名/动等sense只生成**一张主卡**，产生章节字符位置供后续读者点击；不猜小说中文语义、不展示未批准sense，不触碰收费小说和用户数据。**仍为只读锚点草案，未绑定真阅读UI。**
+- 增量 `db/019_global_dictionary_headword_study.sql` 仅提出 `user_headword_study`+新事件流水表；`(user_id,entry_id)`复合主键，保存state/due/revision等，不删除`user_words`、`review_events`、旧wordID或购买记录。**该SQL仅在本地SQLite测试，没有添加到已有013–018远程迁移工作流。**
+- `tests/v12-global-dictionary-headword-*` 三套**合成**单测包含两本小说record n./v.共用卡与复习计划、词形/未审内容阻断、跨用户隔离、不可通过同日刷认识跳期、独立已掌握、D1 019加法模拟/历史表保留。8项SRS/DB本地全通过，GitHub [专项CI 42968619751](https://github.com/kim-1868/miaowu-english/actions/runs/42968619751)、[全站S1 42968619927](https://github.com/kim-1868/miaowu-english/actions/runs/42968619927)、[Production dry-run 42968619722](https://github.com/kim-1868/miaowu-english/actions/runs/42968619722) 全为 success，**dry-run并非真实生产部署**。
+- PR [#216](https://github.com/kim-1868/miaowu-english/pull/216) 已安全合入词典开发分支，新增完整文档 `docs/HEADWORD_ONE_CARD_ENGINEERING_PHASE1_20261111.md`。原7391 owner来源/655待审原创新句/2206旧ID/5985复杂审稿/OPS审稿门禁继续保留不重做。
+- **下一工程任务**：真实授权服务端SRS API（session、权益、已批准词卡、服务端时间、并发revision和事件幂等校验）；从点击锚点草稿生成安全的已审主卡小说绑定并接回阅读UI/朗读/关闭卡交互；在隔离预览站备份、批准后进行013–019数据库迁移，并用最新版旧书/新书真机账户验收；当前正式Publisher批准教学sense=0，**禁止上线**。
+
+---
 ## 2026-11-11 · 最新：92 缺美音来源/13 个低冲突括号释义风险已实测
 
 > 本节最新，覆盖下方旧快照。全部为**来源候选和离线人工审核准备**；正式已批准 teaching senses = 0，云端 D1/用户数据没有变化。
