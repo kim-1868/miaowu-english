@@ -136,14 +136,17 @@ export async function materializeEditorConfirmedUnmarkedV2(
   const reviewed=planApprovedNovelSenseAnchors(converted.resolved,{lessons,senses});
   if(!reviewed.ready_for_sense_study||reviewed.reviewed_anchor_candidates.length!==
      selected.length+existingTargets)throw Error('EDITOR_CONTEXT_STABLE_SENSE_REVIEW_REQUIRED');
-  for(const r of reviewed.reviewed_anchor_candidates){
-    const found=selected.find(s=>s.chapter_number===r.chapter_number&&
-      s.paragraph_index===r.paragraph_index&&
-      // Segment offsets shift after the split, so compare against
-      // the generated V2 learning segment's immutable exact location.
-      s.entry_id===r.entry_id&&s.sense_id===r.sense_id&&s.gloss===r.meaning_zh);
-    if(!found)throw Error('EDITOR_CONTEXT_SENSE_ID_DRIFT');
+  // Existing explicit targets stay intact and were validated above. Only
+  // the newly inserted positions must match this confirmation request.
+  const unmatched=[...reviewed.reviewed_anchor_candidates];
+  for(const s of selected){
+    const i=unmatched.findIndex(r=>r.entry_id===s.entry_id&&
+      r.sense_id===s.sense_id&&r.meaning_zh===s.gloss);
+    if(i<0)throw Error('EDITOR_CONTEXT_SENSE_ID_DRIFT');
+    unmatched.splice(i,1);
   }
+  if(unmatched.length!==existingTargets)
+    throw Error('EDITOR_EXISTING_CONTEXT_COUNT_DRIFT');
   return {status:'EDITOR_CONFIRMED_V2_DRAFT_NOT_PUBLISHED',
     book_id:manuscript.book.id,source_sha256:request.source_sha256,
     selected_occurrences:selected.length,
