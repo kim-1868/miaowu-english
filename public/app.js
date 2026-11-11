@@ -590,10 +590,11 @@
     function renderD1Paragraph(paragraph,index){
       if(typeof paragraph==='string')return '<p data-audio-paragraph="'+index+'">'+safe(paragraph)+'</p>';
       const segments=Array.isArray(paragraph?.segments)?paragraph.segments:[];
-      const html=segments.map(segment=>{
+      const html=segments.map((segment,segmentIndex)=>{
         if(typeof segment?.text==='string')return safe(segment.text);
         if(typeof segment?.wordId==='string' && typeof segment.surface==='string'){
-          return '<button class="word cloud-word" data-cloud-word="'+safe(segment.wordId)+'">'+
+          return '<button class="word cloud-word" data-cloud-word="'+safe(segment.wordId)+'" '+
+            'data-dictionary-anchor="p'+index+':s'+segmentIndex+'">'+
             safe(segment.surface)+'</button><span class="gloss">（'+safe(segment.gloss||'')+'）</span>';
         }
         return '';
@@ -608,6 +609,12 @@
     // The bottom study tray is stable across re-rendered chapters. It is not a
     // blocking mobile modal: readers can tap another highlighted word in place.
     let selectedStudyWordId=null,studyRequestSequence=0,studyAnchorEl=null;
+    function pauseNarrationForWord(){
+      if(speaking&&!paused&&'speechSynthesis' in window){
+        window.speechSynthesis.pause();paused=true;
+        $('playerPause').textContent='▶';$('playerState').textContent='点击词卡后已暂停 · 手动继续';
+      }
+    }
     const studyMissingWordIds=new Set();
     function chapterStudyWordIds(){
       return [...new Set(Array.from($('storyText').querySelectorAll('[data-cloud-word]'))
@@ -626,6 +633,8 @@
       speakWord(word);
     }
     function showCloudWord(wordId,anchorEl=null){
+      window.MiaowuHeadwordReaderBridge?.invalidate();
+      pauseNarrationForWord();
       if(!activeCloud?.chapterId)return;
       if(anchorEl?.isConnected)studyAnchorEl=anchorEl;
       else if(!studyAnchorEl?.isConnected||studyAnchorEl.dataset.cloudWord!==wordId)
@@ -851,7 +860,23 @@
       const rawParts=Array.isArray(page.content?.paragraphs)?page.content.paragraphs:[];
       const parts=rawParts.filter(x=>typeof x==='string' || (x && Array.isArray(x.segments))).slice(0,300);
       book.chapterId=id;book.parts=parts.map(cloudPlainText);book.rawParagraphs=parts;
-      book.words=new Map();
+      book.words=new Map();book.reviewedAnchors=new Map();
+      // Only staging explicitly exposes this feature. Missing/disabled flags
+      // keep the original reader without an additional production API request.
+      if(page.headwordReaderReady&&user){
+        void serverRequest('/api/me/dictionary/chapters/'+encodeURIComponent(id)+'/anchors')
+          .then(data=>{
+            if(activeCloud!==book||book.chapterId!==id||chosen!==cloudChapterSequence||
+              data?.chapterId!==id||!Array.isArray(data.anchors)||data.anchors.length>2000)return;
+            const anchors=new Map();
+            for(const row of data.anchors){
+              if(!/^p(?:0|[1-9][0-9]*):s(?:0|[1-9][0-9]*)$/.test(row?.anchor||'')||
+                 !/^gdict_[a-f0-9]{24}$/.test(row?.entry_id||'')||anchors.has(row.anchor))return;
+              anchors.set(row.anchor,row.entry_id);
+            }
+            book.reviewedAnchors=anchors;
+          }).catch(()=>{}); // Fail closed to the existing legacy reader.
+      }
       // The paid/free chapter is displayed first. Optional vocabulary loads
       // after rendering and is never allowed to keep the dialog open.
       const thisChapter=book.chapters.find(ch=>ch.id===id);
@@ -951,6 +976,7 @@
     function openChapter(num){resetDemoReadingUI();if(num>0&&!has('cet4')){showRegister({intent:'locked'});return}if(num<0||num>=CHAPTERS.length)return;chapter=num;VISITED.add(num);CHAPTER_WORDS[num].forEach(touchWord);saveReview();navigate('reader');$('chapterNo').textContent=`CHAPTER ${String(num+1).padStart(2,'0')} · ${num===0?'FREE PREVIEW':'MEMBER PREVIEW'}`;$('chapterTitle').textContent=CHAPTERS[num].title;$('storyText').innerHTML=CHAPTERS[num].parts.map(p=>`<p>${splitPart(p)}</p>`).join('');$('storyText').style.fontSize=fontSize+'px';$('readerCrumb').textContent='四级故事馆 / '+(num===0?'免费试读':'已购演示');$('chapterList').innerHTML=CHAPTERS.map((ch,i)=>`<button class="chapter-btn ${i===num?'current':''}" data-chapter="${i}">${String(i+1).padStart(2,'0')} · ${ch.title} ${i===1&&!has('cet4')?'🔒':''}</button>`).join('')+'<button class="chapter-btn" disabled>后续章节 · 内容筹备中</button>';document.querySelectorAll('[data-chapter]').forEach(b=>b.onclick=()=>openChapter(Number(b.dataset.chapter)));document.querySelectorAll('.word').forEach(b=>b.onclick=()=>openWord(b.dataset.word));$('readingStatus').textContent=has('cet4')?'四级已解锁 · 演示内容':'免费试读 · 章节02需激活';$('progressBar').style.width=(VISITED.size/CHAPTERS.length*100)+'%';$('readingChapter').textContent=`第${String(num+1).padStart(2,'0')}章`;$('savedCount').textContent=saved.size;$('nextChapter').textContent=num===0?'下一章 →':'返回书架 →';$('readerLayout').classList.toggle('night',night);$('storyText').classList.toggle('no-gloss',!gloss);$('toggleGloss').classList.toggle('pressed',!gloss);$('toggleNight').classList.toggle('pressed',night);$('toggleNight').textContent=night?'☀ 日间':'☾ 夜间';$('nextChapter').onclick=()=>num===0?openChapter(1):navigate('library');let side=$('readingStatus').closest('.side-panel');let extra=side.querySelector('#readerLearningStats');if(!extra){extra=document.createElement('div');extra.id='readerLearningStats';side.appendChild(extra)}extra.innerHTML=`<div class="metric"><span>待学习词汇（演示）</span><strong>${Object.keys(WORDS).length-touchedWords().length}</strong></div><div class="metric"><span>今天待复习</span><strong>${dueList().length}</strong></div>`;try{localStorage.setItem('miaowu_demo_lastchapter',String(num))}catch(e){} }
     function openWord(w){if(!WORDS[w])return;popWord=w;touchWord(w);const info=WORDS[w];$('wordPop').innerHTML=`<button class="modal-close" id="wordClose" aria-label="关闭">×</button><div class="eyebrow">MIAOWU · WORD IN STORY</div><h3>${safe(w)}</h3><div class="pron">${safe(info.phonetic)} · ${safe(info.part)}</div><div class="meaning">${safe(info.meaning)}</div><div class="context">故事原句：<br>${safe(info.context)}</div><div class="word-extra"><strong>额外例句</strong><br>${safe(info.example)}<br><span style="color:var(--muted)">${safe(info.translation)}</span></div><div class="word-extra"><strong>常用搭配</strong><br>${info.collocations.map(x=>safe(x[0])+' · '+safe(x[1])).join('<br>')}</div><div class="word-actions"><button id="wordSpeak">♫ 听发音</button><button id="wordSave">${saved.has(w)?'✓ 已收藏':'♡ 收藏藏书票'}</button></div>`;$('wordPop').classList.add('on');$('wordBackdrop').classList.add('on');$('wordClose').onclick=closeWord;$('wordSpeak').onclick=()=>speakWord(w);$('wordSave').onclick=()=>toggleWord(w)}
     function closeWord(){
+      window.MiaowuHeadwordReaderBridge?.invalidate();
       ++studyRequestSequence;selectedStudyWordId=null;studyAnchorEl=null;
       const tray=$('wordPop'),backdrop=$('wordBackdrop');
       tray.classList.remove('on');backdrop.classList.remove('on');
@@ -1670,8 +1696,19 @@
     });
     $('storyText').addEventListener('click',e=>{
       const word=e.target.closest('[data-cloud-word]');
-      if(word){e.preventDefault();e.stopPropagation();showCloudWord(word.dataset.cloudWord,word);window.MiaowuOnboarding?.wordTapped();return;}
+      if(word){
+        e.preventDefault();e.stopPropagation();
+        const anchor=word.dataset.dictionaryAnchor;
+        const entryId=anchor&&activeCloud?.reviewedAnchors?.get(anchor);
+        if(entryId&&window.MiaowuHeadwordReaderBridge){
+          void window.MiaowuHeadwordReaderBridge.open({
+            entryId,chapterId:activeCloud.chapterId,anchor,
+            legacyWordId:word.dataset.cloudWord,element:word});
+        }else showCloudWord(word.dataset.cloudWord,word);
+        window.MiaowuOnboarding?.wordTapped();return;
+      }
       if(e.target.closest('button,a,[role=button]'))return;
+      if($('wordPop').classList.contains('on'))closeWord();
       const p=e.target.closest('[data-audio-paragraph]');
       // Hovering or clicking ordinary text never starts narration.
       // Only the explicit 朗读 control starts speech; while playing, a click may seek.
@@ -1683,6 +1720,12 @@
     });
 $('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;wordbookPage=1;wordbookData=null;renderWords()});
     // Cloud reading progress is saved automatically on scroll and chapter navigation.
+    window.MiaowuHeadwordReaderBridge?.configure({
+      user:()=>!!user,request:serverRequest,speak:speakWord,
+      pause:pauseNarrationForWord,close:closeWord,openLegacy:showCloudWord,
+      supersedeLegacy:()=>{++studyRequestSequence},
+      saveLegacy:id=>saveCloudWord(id,false),toast
+    });
     window.MiaowuChapterWords?.configure({
       request:serverRequest,refresh:refreshCloudLearning,
       user:()=>!!user,login:showLogin,toast,speak:speakWord,showWord:showCloudWord

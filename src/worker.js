@@ -415,7 +415,9 @@ async function chapterAccess(req, env, id, user) {
   let content;
   try { content = JSON.parse(row.content_json); }
   catch { return reject("CONTENT_UNAVAILABLE", 503); }
-  return json({ id: row.id, chapterNo: row.chapter_no, title: row.title, content });
+  return json({ id: row.id, chapterNo: row.chapter_no, title: row.title, content,
+    headwordReaderReady:env.APP_ENV==='staging'&&
+      env.GLOBAL_DICTIONARY_HEADWORD_SRS_ENABLED==='true' });
 }
 async function chapterVocabulary(req, env, id, user) {
   // Authorize by the same D1 check used for paid body. Word contexts are paid
@@ -712,7 +714,8 @@ async function api(req, env) {
   // V1.2 one-card study API; only staging + two explicit flags can access.
   // Current user came from the authenticated cookie session above, and the
   // existing origin check covers all feedback POSTs before this route.
-  if(path.startsWith("/api/me/dictionary/headwords/"))
+  if(path.startsWith("/api/me/dictionary/headwords/")||
+     path.startsWith("/api/me/dictionary/chapters/"))
     return handleHeadwordStudyApi(req,env,path,user);
   if(path==="/api/me/onboarding")return handleOnboarding(req,env,user);
   if(path==="/api/me/smart-vocab"||path==="/api/me/smart-vocab/status"||path==="/api/me/smart-vocab/answer"||path==="/api/me/smart-vocab/bookmark")
