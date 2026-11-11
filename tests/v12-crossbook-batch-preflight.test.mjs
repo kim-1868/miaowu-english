@@ -156,3 +156,21 @@ test('URLs and emails in prose are excluded, while a real unmarked word is an un
  assert.equal(result.summary.approved_senses_created,0);
  assert.equal(result.release_blocked,true);
 });
+
+test('unmarked token frequencies are auditable by book without copying paid text',()=>{
+ const a=novel('freq-a','postgrad',[noun()],[[
+   {text:'Record record and record.'}
+ ]]);
+ const b=novel('freq-b','postgrad',[noun()],[[
+   {text:'record was recorded.'}
+ ]]);
+ const r=planCrossbookDictionaryPreflight({postgradDrafts:[a,b]});
+ const record=r.unmarked_discovery_queue.find(x=>x.headword==='record');
+ assert.equal(record.occurrences,4);
+ assert.deepEqual(record.occurrences_by_book,{
+   'postgrad:freq-a':3,'postgrad:freq-b':1});
+ assert.equal(Object.values(record.occurrences_by_book).reduce((s,n)=>s+n,0),
+   record.occurrences);
+ assert.equal(r.summary.unmarked_english_occurrences,7);
+ assert.equal(JSON.stringify(r).includes('Record record and record.'),false);
+});

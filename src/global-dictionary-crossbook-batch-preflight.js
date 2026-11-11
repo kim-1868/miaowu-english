@@ -108,9 +108,10 @@ export function planCrossbookDictionaryPreflight({
                throw Error('CROSSBOOK_UNMARKED_TOKEN_SCAN_LIMIT');
              unmarkedHere.add(lemma);
              if(!unmarkedByHeadword.has(lemma))
-               unmarkedByHeadword.set(lemma,{books:new Set(),grades:new Set(),occurrences:0});
+               unmarkedByHeadword.set(lemma,{books:new Set(),grades:new Set(),occurrences:0,byBook:new Map()});
              const hit=unmarkedByHeadword.get(lemma);
              hit.books.add(bookKey);hit.grades.add(grade);hit.occurrences++;
+             hit.byBook.set(bookKey,(hit.byBook.get(bookKey)||0)+1);
            }
            if(segmentHasEnglish)unmarkedEnglishSegments++;
          }else throw Error('CROSSBOOK_INVALID_SEGMENT');
@@ -173,6 +174,7 @@ export function planCrossbookDictionaryPreflight({
    return {
      headword,occurrences:item.occurrences,
      source_book_ids:[...item.books].sort(sort),
+     occurrences_by_book:Object.fromEntries([...item.byBook].sort(([a],[b])=>sort(a,b))),
      exam_categories:[...item.grades].sort(sort),
      dictionary_lookup_status:verdict?.status??'NOT_CHECKED',
      dictionary_candidate_entry_ids:verdict?.candidates?.map(x=>x.entry_id)??[],

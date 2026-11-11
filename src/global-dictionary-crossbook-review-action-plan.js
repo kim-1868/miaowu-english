@@ -37,7 +37,10 @@ function assertReview(report){
      row.approved_sense_id!==null||row.cross_book_mastery_merge_allowed!==false||
      row.commercially_approved!==false||!integer(row.occurrences)||
      !integer(row.historical_card_count)||
-     row.exam_categories.some(x=>!GRADES.includes(x)))
+     row.exam_categories.some(x=>!GRADES.includes(x))||
+     !Array.isArray(row.historical_card_ids)||
+     row.historical_card_ids.length!==row.historical_card_count)
+   
    throw Error('REVIEW_PLAN_SENSE_ALREADY_APPROVED_OR_INVALID');
  }
  for(const row of report.unmarked_discovery_queue){
@@ -45,7 +48,14 @@ function assertReview(report){
      !Array.isArray(row.exam_categories)||!integer(row.occurrences)||
      row.approved_sense_id!==null||row.automatically_bound!==false||
      row.automatic_publication_allowed!==false||
-     row.requires_context_sense_review!==true)
+     row.requires_context_sense_review!==true||
+     !row.occurrences_by_book||typeof row.occurrences_by_book!=='object'||
+     Array.isArray(row.occurrences_by_book)||
+     Object.keys(row.occurrences_by_book).length!==row.source_book_ids.length||
+     row.source_book_ids.some(id=>!integer(row.occurrences_by_book[id])||
+       row.occurrences_by_book[id]<1)||
+     Object.values(row.occurrences_by_book).reduce((n,v)=>n+v,0)!==row.occurrences)
+   
    throw Error('REVIEW_PLAN_UNMARKED_ALREADY_BOUND_OR_INVALID');
  }
 }
@@ -83,7 +93,9 @@ export function planCrossbookEditorialActions(report,{perGradeLimit=120}={}){
      20*Number(row.other_sense_candidates_same_spelling>0);
    add(tasks,{lane:'EXISTING_SENSE_REVIEW',grade,
      subject:[letters(row.headword),letters(row.part_of_speech),
-       letters(row.meaning_zh)].join('|'),books:relevant,
+       letters(row.meaning_zh),
+       ...(row.strict_sense_candidate?[]:[[...row.historical_card_ids].sort().join('|')])].join('|'),
+     books:relevant,
      priority,reasons:blockers.length?blockers:['REVIEW_RIGHTS_AND_CONFIRM_SENSE'],
      unitCount:row.historical_card_count});
   }
@@ -92,12 +104,13 @@ export function planCrossbookEditorialActions(report,{perGradeLimit=120}={}){
   for(const grade of [...new Set(row.exam_categories)]){
    const relevant=row.source_book_ids.filter(b=>gradeBooks[grade].has(b));
    if(!relevant.length)continue;
+   const gradeCount=relevant.reduce((n,id)=>n+row.occurrences_by_book[id],0);
    add(tasks,{lane:'UNMARKED_CONTEXT_REVIEW',grade,subject:letters(row.headword),
      books:relevant,priority:30*relevant.length+
-       Math.min(100,row.occurrences)+
+       Math.min(100,gradeCount)+
        15*Number(row.dictionary_lookup_status!=='matched'),
      reasons:['UNMARKED_ENGLISH_NEEDS_CONTEXT_CONFIRMATION',
-       'DICTIONARY_'+row.dictionary_lookup_status],unitCount:row.occurrences});
+       'DICTIONARY_'+row.dictionary_lookup_status],unitCount:gradeCount});
   }
  }
  for(const b of report.books){
