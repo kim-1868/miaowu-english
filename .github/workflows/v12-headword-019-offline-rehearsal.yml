@@ -4,12 +4,18 @@ on:
     branches: [feature/v11-smart-vocab-preflight-20261109]
     paths:
       - scripts/rehearse-headword-019.mjs
+      - scripts/staging-019-readonly-diagnostics.mjs
+      - tests/v12-staging-019-readonly-diagnostics.test.mjs
+      - .github/workflows/v12-headword-staging-019-readonly.yml
       - tests/v12-headword-019-migration-rehearsal.test.mjs
       - db/019_global_dictionary_headword_study.sql
       - .github/workflows/v12-headword-019-offline-rehearsal.yml
   pull_request:
     paths:
       - scripts/rehearse-headword-019.mjs
+      - scripts/staging-019-readonly-diagnostics.mjs
+      - tests/v12-staging-019-readonly-diagnostics.test.mjs
+      - .github/workflows/v12-headword-staging-019-readonly.yml
       - tests/v12-headword-019-migration-rehearsal.test.mjs
       - db/019_global_dictionary_headword_study.sql
       - .github/workflows/v12-headword-019-offline-rehearsal.yml
@@ -32,6 +38,8 @@ jobs:
           set -euo pipefail
           node --check scripts/rehearse-headword-019.mjs
           node --experimental-sqlite scripts/rehearse-headword-019.mjs
+          node --check scripts/staging-019-readonly-diagnostics.mjs
+          node --test tests/v12-staging-019-readonly-diagnostics.test.mjs
           node --experimental-sqlite --test tests/v12-headword-019-migration-rehearsal.test.mjs
           node --experimental-sqlite --test tests/v12-global-dictionary-headword-api.test.mjs tests/v12-global-dictionary-headword-srs.test.mjs
       - name: No Cloudflare token, no remote DB, no deploy
