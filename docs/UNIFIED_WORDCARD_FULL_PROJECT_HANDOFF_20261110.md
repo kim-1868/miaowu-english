@@ -1,3 +1,18 @@
+## 2026-11-11 · 最新：565 原创例句全覆盖 + 新义项零旧卡 ID 安全门禁
+
+> 本节覆盖下方 6550 分流/100 例句的**旧进度快照**。当前仅在词典 Draft [#206](https://github.com/kim-1868/miaowu-english/pull/206) 开发分支，**仍未真实 Publisher 签核、staging D1 验收或生产部署**。
+
+- 7,391 owner 词头 / 原 1,150 历史候选义项 / **2,206 个旧卡 ID** 保持不变；历史 23 本快照仍非最新线上导出。
+- 原有 **6,550** 无历史教学义项的词头：**565 单词性低冲突、5,863 多义多读音、122 来源异常**。565 个低冲突词头均补完独立原创英中例句草稿，按基础320 / 四级新增98 / 六级新增122 / 考研新增25；连同旧历史 80 条原创草稿合计 **645 不同词头/645 不同英文例句**，全为未审候选。
+- 565 低冲突原始译义并非安全可用义项，**135 个语义/语用高风险**需优先审查（commence、supersonic、headmaster、calculus 等）。低冲突不等于来源释义正确。剩余 5,985 个词头仍需开展语境化拆义及例句创作，其中纯机器“多美音候选”风险的 **117 个**可单列音标优先复核，仍不得直接签核。
+- 565 词离线初审台已填满原创新句，支持等级/135 风险筛选/修订/JSONL 导出，浏览器 1365px 桌面和 390px 手机验证。**初审不等于有权发布的最终 Publisher 审核**。
+- 补齐 **零历史旧卡 ID 新义项的门禁**：`src/global-dictionary-new-sense-editorial-gate.js`、`src/global-dictionary-new-sense-initial-review-adapter.js`、`scripts/check-private-new-sense-editorial.mjs`。其结果只可转为 `HOLD` 审稿模板，拒绝冒充商用许可/审核人、携带旧卡 ID、跨词义混用。真实 565 初审空白源全量读入→565 HOLD→565 BLOCKED→0 approved→0 D1/用户数据写入；历史 80 义项仍使用原历史门禁。浏览器测试时模拟勾选过1条，正式模板**已经全部恢复未勾选**。
+- GitHub [#211](https://github.com/kim-1868/miaowu-english/pull/211) 和 [#212](https://github.com/kim-1868/miaowu-english/pull/212) 已安全合入 Draft **开发分支**。#211 17 项 Python 合成测试+全站 S1 通过；#212 16 项 Node 合成测试+[专项 CI 42959894540](https://github.com/kim-1868/miaowu-english/actions/runs/42959894540)、[S1 42959894413](https://github.com/kim-1868/miaowu-english/actions/runs/42959894413)、[Production dry-run 42959894535](https://github.com/kim-1868/miaowu-english/actions/runs/42959894535) 全通过，**dry-run 不是上线**。
+- 私有交付包（完整 7,391 + 565 原创 + 私人审稿台）在 Library 同文件夹 `妙屋英语_四级六级考研_7391统一词头_565低冲突词卡例句全覆盖待审包_20261111.zip`；新增 `妙屋英语_565新增义项_离线审稿衔接与安全门禁_20261111.zip` 含 565 无人工审核的 HOLD 模板/整批 blocker/合成测试与 SHA256。均不可推送到公共 GitHub。
+- 下一优先：人工审 135 重点风险与 430 一般低冲突项、合法 UK IPA/商用权利；加速 117 个只有多读音风险的词和剩余 5,985 复杂词；实现有身份的真实 OPS Publisher 签核及 staging D1 备份/回滚后，才验证最新版旧书+新书自动配卡、付费/复习/收藏并申请生产发布。
+
+---
+
 ## 2026-11-11 · CET4/CET6/考研 6550 缺卡批次与180原创例句最新交接
 
 > **本节覆盖下方尚标记“公开来源未完成”的旧交接内容。** 最新代码位于 Draft PR #206 开发分支（非正式站）；[本轮 QA 文档](EXAM_FIRST_6550_TRIAGE_AND_100_ORIGINAL_EXAMPLES_20261111.md) / [首次 7391 实测报告](EXAM_FIRST_7391_REAL_SOURCE_AND_LEGACY_QA_20261111.md)。
