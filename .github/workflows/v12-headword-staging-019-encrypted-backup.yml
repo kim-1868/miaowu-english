@@ -1,0 +1,123 @@
+name: V1.2 test D1 019 fresh encrypted backup and independent restore (NO writes)
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-headword-staging-019-encrypted-backup.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: v12-staging-019-fresh-backup
+  cancel-in-progress: false
+jobs:
+  export-encrypt-independent-restore:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    environment:
+      name: staging-d1-schema-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Hard-lock only the existing TEST D1 identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const cfg=JSON.parse(readFileSync('wrangler.jsonc','utf8'));
+          assert.equal(cfg.name,'miaowu-english-staging');
+          assert.equal(cfg.vars.APP_ENV,'staging');
+          assert.equal(cfg.d1_databases.length,1);
+          assert.equal(cfg.d1_databases[0].database_name,'miaowu-english-test');
+          assert.equal(cfg.d1_databases[0].database_id,'88a817cb-23bb-4ae4-bcb8-92286c4165d4');
+          console.log('V12_019_BACKUP_EXACT_STAGING_D1_ONLY');
+          NODE
+      - name: Install isolated Wrangler CLI (export command only)
+        run: npm install --ignore-scripts --no-save wrangler@^4
+      - name: Fresh full export, AES256 encryption, decrypt and separate SQLite restore
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          BACKUP_PASSPHRASE: ${{ secrets.STAGING_D1_BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_STAGING_D1_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_ACCOUNT_ID}"
+          : "${BACKUP_PASSPHRASE:?MISSING_BACKUP_PASSPHRASE}"
+          test "${#BACKUP_PASSPHRASE}" -ge 32 || { echo 'BACKUP_PASSPHRASE_TOO_SHORT'; exit 1; }
+          umask 077
+          private="$RUNNER_TEMP/v12-019-private-backup"
+          mkdir -m 700 "$private"
+          encrypted="$RUNNER_TEMP/v12-019-staging-d1-full-backup.gpg"
+          trap 'rm -rf "$private"; rm -f "$encrypted"' EXIT
+          printf '%s' "$BACKUP_PASSPHRASE" > "$private/passphrase"
+          unset BACKUP_PASSPHRASE
+          raw="$private/staging-20261111-snapshot.sql"
+          replay="$private/independent-replay.sql"
+          restored="$private/independent-replay.sqlite"
+          # Nothing from the database is printed to the CI logs.
+          if ! npx wrangler d1 export miaowu-english-test --remote --skip-confirmation \
+              --config wrangler.jsonc --output "$raw" >"$private/export-stdout" 2>"$private/export-stderr"; then
+            echo 'STAGING_FULL_EXPORT_FAILED_PRIVATE_LOGS_NOT_PUBLISHED'
+            exit 1
+          fi
+          test -s "$raw" || { echo 'STAGING_BACKUP_EMPTY'; exit 1; }
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$private/passphrase" --symmetric --cipher-algo AES256 \
+            --output "$encrypted" "$raw" >"$private/gpg-stdout" 2>"$private/gpg-stderr" || {
+              echo 'STAGING_ENCRYPTION_FAILED'; exit 1;
+            }
+          test -s "$encrypted"
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$private/passphrase" --decrypt \
+            --output "$replay" "$encrypted" >"$private/dec-stdout" 2>"$private/dec-stderr" || {
+              echo 'STAGING_DECRYPTION_FAILED'; exit 1;
+            }
+          cmp -s "$raw" "$replay" || { echo 'STAGING_ENCRYPTED_ROUNDTRIP_MISMATCH'; exit 1; }
+          if ! sqlite3 "$restored" < "$replay" >"$private/sqlite-stdout" 2>"$private/sqlite-stderr"; then
+            echo 'STAGING_BACKUP_SQLITE_RESTORE_FAILED'; exit 1;
+          fi
+          q(){ sqlite3 -batch -noheader "$restored" "$1"; }
+          require(){ local got; got="$(q "$1")"; test "$got" = "$2" || { echo "BACKUP_RESTORE_BASELINE_DRIFT_$3"; exit 1; }; }
+          require "PRAGMA integrity_check;" ok INTEGRITY
+          require "PRAGMA foreign_key_check;" "" FK
+          require "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name LIKE 'global_dictionary_%';" 10 DICTIONARY_TABLES
+          require "SELECT COUNT(*) FROM sqlite_master WHERE type='trigger' AND name IN ('global_dictionary_bindings_draft_guard','global_dictionary_sense_identity_guard','global_dictionary_legacy_sense_link_guard','global_dictionary_legacy_sense_link_no_repoint','global_dictionary_book_sense_guard');" 5 DICTIONARY_TRIGGERS
+          require "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('books','words','user_words','chapter_words');" 4 OLD_CORE_TABLES
+          require "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('user_headword_study','user_headword_review_events');" 0 HEADWORD_019_NOT_APPLIED
+          require "SELECT COUNT(*) FROM global_dictionary_entries;" 61422 CANDIDATE_HEADS
+          require "SELECT COUNT(*) FROM global_dictionary_forms;" 16442 CANDIDATE_FORMS
+          require "SELECT COUNT(*) FROM global_dictionary_entries WHERE source_name='upstream_ecdict_unverified';" 61422 CANDIDATE_SOURCE
+          require "SELECT COUNT(*) FROM global_dictionary_entries WHERE source_name!='upstream_ecdict_unverified';" 0 UNEXPECTED_SOURCES
+          require "SELECT COUNT(*) FROM global_dictionary_forms WHERE source_name!='upstream_ecdict_unverified';" 0 UNEXPECTED_FORMS
+          require "SELECT COUNT(*) FROM global_dictionary_sources WHERE source_key='upstream_ecdict_unverified' AND license_reviewed=0 AND enabled=0 AND imported_entries=11422 AND imported_forms=16442;" 1 ORIGINAL_SOURCE_REGISTRY
+          require "SELECT COUNT(*) FROM global_dictionary_lessons;" 0 APPROVED_LESSONS
+          require "SELECT COUNT(*) FROM global_dictionary_senses WHERE approved=1;" 0 APPROVED_SENSES
+          require "SELECT COUNT(*) FROM global_dictionary_entries WHERE teaching_ready=1;" 0 READY_WORDS
+          require "SELECT COUNT(*) FROM global_dictionary_sources WHERE enabled=1;" 0 PUBLISHABLE_SOURCES
+          echo 'STAGING_V12_019_FULL_BACKUP_ENCRYPTED_RESTORED_VERIFIED_61422_16442'
+          echo 'INDEPENDENT_SQLITE_INTEGRITY_FK_AND_LEGACY_TABLES_PRESERVED'
+          echo 'STAGING_019_NOT_APPLIED_ZERO_D1_WRITES_ZERO_DEPLOYMENTS'
+          echo 'ENCRYPTED_ARTIFACT_ONLY__OWNER_MUST_KEEP_OFFLINE_COPY_BEFORE_MIGRATION'
+      - name: Upload ONLY encrypted full snapshot (30-day expiry; owner must save offline copy)
+        uses: actions/upload-artifact@v4
+        with:
+          name: v12-staging-019-encrypted-full-backup
+          path: ${{ runner.temp }}/v12-019-staging-d1-full-backup.gpg
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
+      - name: Purge encrypted runner copy
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/v12-019-staging-d1-full-backup.gpg"
