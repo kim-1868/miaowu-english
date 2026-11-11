@@ -1,7 +1,7 @@
 import hashlib,importlib.util,json,tempfile,unittest,zipfile
 from pathlib import Path
-ROOT=Path(__file__).resolve().parent
-spec=importlib.util.spec_from_file_location('audit',ROOT/'review_92_aliases.py')
+ROOT=Path(__file__).resolve().parents[1]
+spec=importlib.util.spec_from_file_location('audit',ROOT/'scripts/review-exam-us-ipa-source-variants.py')
 audit=importlib.util.module_from_spec(spec);spec.loader.exec_module(audit)
 
 def sample(head,missing=True):
