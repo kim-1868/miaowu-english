@@ -57,7 +57,11 @@ const upsertSql=`INSERT INTO user_dictionary_sense_study
  WHERE user_dictionary_sense_study.revision=?`;
 const eventInsert=`INSERT INTO user_dictionary_sense_review_events
  (event_id,user_id,sense_id,entry_id,action,source_book_id,source_chapter_id,
- source_context_anchor,state_revision) VALUES(?,?,?,?,?,?,?,?,?)`;
+ source_context_anchor,state_revision)
+ SELECT ?,?,?,?,?,?,?,?,? WHERE EXISTS (
+ SELECT 1 FROM user_dictionary_sense_study
+ WHERE user_id=? AND sense_id=? AND revision=?
+ )`;
 const norm=x=>String(x??'').normalize('NFKC').replace(/\s+/gu,'').trim();
 const pos=x=>norm(x).toLowerCase().replace(/[.。]/gu,'');
 function decode(context){
@@ -159,7 +163,7 @@ export async function handleSenseStudyApi(req,env,path,user,{clock=()=>new Date(
     next.forgotten_count,next.due_at,next.last_seen_at,next.last_feedback_at,
     next.last_advanced_day,next.mastered_at,newRevision,revision),
    query(env.DB,eventInsert,eventId,user.id,senseId,card.entry_id,kind,row.book_id,
-    chapterId,anchor,newRevision)
+    chapterId,anchor,newRevision,user.id,senseId,newRevision)
   ];
   // DB batch is the atomic transaction; 020 approval triggers also reject
   // senses removed from an approved/active commercial lexicon at commit.
