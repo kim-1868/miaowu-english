@@ -22,9 +22,9 @@ const a=novel('story-a','cet4',[noun(),verb()],[
   [mark('r-n'),{text:'PRIVATE_SENTENCE_DO_NOT_EXPORT. 他走了。'}],
   [mark('r-v','录制')], [{text:'纯中文段落'}]
 ]);
-const b=novel('story-b','cet4',[noun()],[mark('r-n')]);
-const c=novel('story-c','cet6',[noun(),verb()],[mark('r-n'),mark('r-v','播放')]);
-const d=novel('draft-d','postgrad',[noun()],[mark('r-n')]);
+const b=novel('story-b','cet4',[noun()],[[mark('r-n')]]);
+const c=novel('story-c','cet6',[noun(),verb()],[[mark('r-n'),mark('r-v','播放')]]);
+const d=novel('draft-d','postgrad',[noun()],[[mark('r-n')]]);
 const exported=(category,books)=>({
  format:'miaowu-'+category+'-published-batch-v1',category,bookCount:books.length,
  atomicSnapshot:false,containsUserData:false,containsPaidStoryContent:true,
