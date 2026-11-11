@@ -1,0 +1,45 @@
+name: V1.2 unmarked novel words editor-confirm safe conversion QA
+on:
+  push:
+    paths:
+      - src/global-dictionary-unmarked-editor-confirm.js
+      - src/global-dictionary-unmarked-editor-ops.js
+      - src/ops-dictionary-v2.js
+      - tests/v12-global-dictionary-unmarked-editor-*.test.mjs
+      - .github/workflows/v12-unmarked-novel-editor-confirm-qa.yml
+  pull_request:
+    paths:
+      - src/global-dictionary-unmarked-editor-confirm.js
+      - src/global-dictionary-unmarked-editor-ops.js
+      - src/ops-dictionary-v2.js
+      - tests/v12-global-dictionary-unmarked-editor-*.test.mjs
+      - .github/workflows/v12-unmarked-novel-editor-confirm-qa.yml
+permissions:
+  contents: read
+jobs:
+  synthetic-editor-confirm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check signed editorial modules and existing V2 routes
+        run: |
+          node --check src/global-dictionary-unmarked-editor-confirm.js
+          node --check src/global-dictionary-unmarked-editor-ops.js
+          node --check src/ops-dictionary-v2.js
+      - name: Editor-confirmed unmarked V2 to V1 compatibility tests (synthetic only)
+        run: |
+          node --experimental-sqlite --test --test-concurrency=1 \
+            tests/v12-global-dictionary-unmarked-editor-confirm.test.mjs \
+            tests/v12-global-dictionary-unmarked-editor-ops.test.mjs \
+            tests/v12-global-dictionary-auto-discovery.test.mjs \
+            tests/v12-dictionary-novel-v2.test.mjs
+      - name: No actual D1 writes, secrets, private owner data or deployment
+        run: |
+          echo 'SOURCE_SHA_AND_APPROVED_SENSE_RECOMPUTED_NO_CLIENT_TRUST'
+          echo 'NO_D1_WRITE_NO_PUBLISH_NO_PRODUCTION_DEPLOY'
