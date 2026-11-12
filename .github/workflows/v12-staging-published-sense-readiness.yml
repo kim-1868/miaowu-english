@@ -1,0 +1,68 @@
+name: V1.2 staging published sense integration real D1 aggregate readiness (read-only)
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-staging-published-sense-readiness.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: v12-staging-published-sense-readiness
+  cancel-in-progress: false
+jobs:
+  staging-readonly-aggregate:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate isolated staging target and parser
+        run: |
+          set -euo pipefail
+          node --test tests/v12-staging-published-sense-readiness.test.mjs
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const cfg=JSON.parse(readFileSync('wrangler.jsonc','utf8'));
+          assert.equal(cfg.name,'miaowu-english-staging');
+          assert.equal(cfg.vars.APP_ENV,'staging');
+          assert.equal(cfg.d1_databases?.length,1);
+          assert.equal(cfg.d1_databases[0].database_name,'miaowu-english-test');
+          assert.equal(cfg.d1_databases[0].database_id,'88a817cb-23bb-4ae4-bcb8-92286c4165d4');
+          NODE
+      - name: Install staging D1 CLI (read-only)
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Read only table metadata and aggregated approved links in TEST D1
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_STAGING_D1_READ_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_ACCOUNT_ID}"
+          umask 077
+          private="$RUNNER_TEMP/staging-sense-readiness"
+          mkdir -m 700 "$private"
+          trap 'rm -rf "$private"' EXIT
+          schema="SELECT name FROM sqlite_master WHERE type='table' AND name IN ('books','chapters','words','chapter_words','global_dictionary_entries','global_dictionary_senses','global_dictionary_lessons','global_dictionary_sources','global_dictionary_legacy_sense_links','global_dictionary_book_bindings','global_dictionary_book_sense_bindings','user_dictionary_sense_study','user_dictionary_sense_review_events') ORDER BY name;"
+          if ! npx wrangler d1 execute miaowu-english-test --remote --json --config wrangler.jsonc --command "$schema" >"$private/schema.json" 2>"$private/error"; then
+            echo 'STAGING_READONLY_SCHEMA_SELECT_FAILED_NO_PRODUCTION_ACCESS'
+            exit 1
+          fi
+          node scripts/verify-staging-published-sense-readiness.mjs schema "$private/schema.json"
+          aggregate="SELECT (SELECT count(*) FROM books WHERE status='published') published_books,(SELECT count(*) FROM chapters ch JOIN books b ON b.id=ch.book_id WHERE b.status='published' AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP) published_chapters,(SELECT count(*) FROM global_dictionary_senses WHERE approved=1 AND active=1) approved_active_senses,(SELECT count(*) FROM global_dictionary_entries e JOIN global_dictionary_sources src ON src.source_key=e.source_name WHERE e.teaching_ready=1 AND src.enabled=1 AND src.license_reviewed=1) licensed_teaching_entries,(SELECT count(*) FROM global_dictionary_legacy_sense_links) approved_legacy_sense_links,(SELECT count(*) FROM chapter_words cw JOIN chapters ch ON ch.id=cw.chapter_id JOIN books b ON b.id=ch.book_id JOIN global_dictionary_legacy_sense_links l ON l.legacy_word_id=cw.word_id WHERE b.status='published' AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP) linked_published_anchors,(SELECT count(*) FROM user_dictionary_sense_study) sense_study_rows;"
+          if ! npx wrangler d1 execute miaowu-english-test --remote --json --config wrangler.jsonc --command "$aggregate" >"$private/aggregate.json" 2>"$private/error"; then
+            echo 'STAGING_READONLY_AGGREGATE_SELECT_FAILED_NO_PRODUCTION_ACCESS'
+            exit 1
+          fi
+          node scripts/verify-staging-published-sense-readiness.mjs counts "$private/aggregate.json"
+          echo 'STAGING_READONLY_AGGREGATE_DONE_NO_CUSTOMER_VALUES_NO_D1_WRITES'
