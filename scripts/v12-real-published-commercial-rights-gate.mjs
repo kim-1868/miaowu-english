@@ -281,6 +281,19 @@ if(process.argv[1]&&fileURLToPath(import.meta.url)===process.argv[1]){
     signed_ops:false,database_writes:0,
     blocker_count:result.content_and_rights_blockers.length
    }));
+  }else if(mode==='verify'&&args.length===4){
+   const attestation=JSON.parse(readFileSync(args[0],'utf8'));
+   const receipt=JSON.parse(readFileSync(args[1],'utf8'));
+   // The OPS public key MUST be provisioned independently from source
+   // materials by an authenticated deployment, not user-supplied JSON.
+   const trustedOpsPublicKeyPem=readFileSync(args[2],'utf8');
+   const result=evaluateRealPublisherClearance({packet,attestation,receipt,
+    trustedOpsPublicKeyPem});
+   if(result.status!==
+     'AUTHENTICATED_PUBLISHER_ATTESTATION_PRESENT_STAGING_PREFLIGHT_ONLY')
+    throw Error('REAL_PUBLISHER_CLEARANCE_NOT_SIGNED_OR_NOT_LICENSED');
+   writeFileSync(args[3],JSON.stringify(result),{flag:'wx',mode:0o600});
+   console.log('REAL_PUBLISHER_SIGNED_PREFLIGHT_PRESENT_NOT_DATABASE_APPROVED');
   }else throw Error('REAL_PUBLISHER_REVIEW_CLI_USAGE');
  }catch(e){
   console.error('REAL_PUBLISHER_RIGHTS_GATE_BLOCKED',
