@@ -132,7 +132,7 @@ export async function rehearseActualPublishedTwoBookSenseOverlay(packet){
   const entryId='gdict_'+sha('in-memory-qa-entry:'+LOWER(candidate.headword)).slice(0,24);
   const senseId='gds_'+sha('in-memory-qa-sense:'+LOWER(candidate.headword)+
    '\0'+POS(candidate.part_of_speech)+'\0'+N(candidate.meaning_zh)).slice(0,24);
-  const now='2026-11-13T00:00:00Z';
+  const now='2020-01-01 00:00:00'; // Past SQLite timestamp, strictly local fixture
   const s=db.prepare('INSERT INTO global_dictionary_sources'+
    ' (source_key,license_name,license_reviewed,source_sha256,imported_at,enabled)'+
    ' VALUES(?,?,?,?,?,?)');
