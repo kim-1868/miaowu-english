@@ -28,7 +28,7 @@ test('exact approved sense opens in staging read-only view, preserves old learni
  const x=load();
  assert.equal(await x.bridge.open(x.ctx),true);
  assert.match(x.get('wordPop').innerHTML,/本章词义/);
- assert.match(x.get('wordPop').innerHTML,/学习记录仍使用原版词卡/);
+ assert.match(x.get('wordPop').innerHTML,/复习记录仍使用原版词卡/);
  assert.doesNotMatch(x.get('wordPop').innerHTML,/id="v12Remember"|id="v12Master"/);
  assert.equal(x.events.filter(e=>e[0]==='request').length,1);
  assert.match(x.events.find(e=>e[0]==='request')[1],/\/api\/me\/dictionary\/senses\/gds_/);
