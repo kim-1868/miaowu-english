@@ -141,6 +141,25 @@ export function createRealPublisherClearanceTemplate(packet){
   source_proof_sha256:packet.source_proof_sha256,
   candidate_sha256:candidateHash(packet),
   reviewer_id:'',reviewed_at:'',
+  // PRIVATE. The renderer/reviewer needs to see actual cards/paragraphs,
+  // not merely abstract hashes. Encrypt this template before any upload.
+  review_material_private:{
+   headword:packet.candidate.headword,
+   part_of_speech:packet.candidate.part_of_speech,
+   meaning_zh:packet.candidate.meaning_zh,
+   original_textual_fingerprint_sha256:packet.candidate.original_textual_fingerprint_sha256,
+   cards:packet.candidate.real_cards.map(c=>({
+    book_title:c.book_title,chapter_title:c.chapter_title,
+    chapter_no:c.chapter_no,book_id:c.book_id,chapter_id:c.chapter_id,
+    anchor:c.anchor,legacy_word_id:c.legacy_word_id,
+    old_card_sha256:c.old_card_sha256,
+    original_paragraph_sha256:c.context_paragraph_sha256,
+    original_paragraph_json:c.paragraph_json,
+    phonetic_uk:c.phonetic_uk,phonetic_us:c.phonetic_us,
+    example_en:c.example_en,example_zh:c.example_zh,
+    collocations_json:c.collocations_json,context_gloss:c.context_gloss
+   }))
+  },
   rights:rightsDefault(),
   checks:checksDefault(),
   dictionary:{entry_id:null,source_key:null,source_registry_sha256:null,
