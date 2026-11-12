@@ -1,0 +1,34 @@
+name: V1.2 real A/B publisher TEST import preview, no remote DB writes
+on:
+  pull_request:
+    paths:
+      - .github/workflows/v12-real-two-book-test-import-preflight.yml
+      - scripts/v12-real-two-book-test-import-preflight.mjs
+      - tests/v12-real-two-book-test-import-preflight.test.mjs
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-real-two-book-test-import-preflight.yml
+      - scripts/v12-real-two-book-test-import-preflight.mjs
+      - tests/v12-real-two-book-test-import-preflight.test.mjs
+permissions:
+  contents: read
+concurrency:
+  group: real-two-book-test-import-preview-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  synthetic-test-import-preview-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify private original story import stays draft, hidden, nonexecutable and immutable
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite --test tests/v12-real-two-book-test-import-preflight.test.mjs
+          echo 'REAL_TWO_BOOK_TEST_IMPORT_PREVIEW_REHEARSAL_ONLY_NOT_DEPLOYED'
