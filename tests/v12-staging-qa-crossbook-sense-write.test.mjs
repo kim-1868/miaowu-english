@@ -20,7 +20,7 @@ function liveSchemaMirror(){
  db.exec(compileStagingCrossbookPilot().sql);
  return db;
 }
-function parseRow(db,sql){const rows=db.prepare(sql).all();assert.equal(rows.length,1);return rows[0]}
+function parseRow(db,sql){const rows=db.prepare(sql).all();assert.equal(rows.length,1);return {...rows[0]}}
 test('test-only D1 study write persists one sense across two distinct REAL STORY excerpts and removes only QA rows',()=>{
  const db=liveSchemaMirror();
  try{
