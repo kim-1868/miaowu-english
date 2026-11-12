@@ -78,10 +78,16 @@ jobs:
           private="$RUNNER_TEMP/private-published-word-identity"
           mkdir -m 700 "$private"
           trap 'rm -rf "$private"' EXIT
-          sql="$(cat sql/published_word_identity_aggregate_readonly.sql)"
+          # Wrangler may split command input on semicolons even in SQL comments.
+          # Strip static line comments before sending the single SELECT.
+          sql="$(sed '/^[[:space:]]*--/d' sql/published_word_identity_aggregate_readonly.sql)"
+          # Exactly one trailing terminator; reject multi-statement SQL.
+          terminators="$(printf '%s' "$sql" | tr -cd ';' | wc -c | tr -d ' ')"
+          test "$terminators" = 1
           if ! npx wrangler d1 execute miaowu-english-prod \
             --remote --json --config deploy/production.wrangler.jsonc \
             --command "$sql" >"$private/aggregate.json" 2>"$private/err"; then
+            node scripts/classify-published-word-aggregate-error.mjs "$private/err"
             echo 'PUBLISHED_WORD_READONLY_SELECT_FAILED_NO_MUTATION'
             exit 1
           fi
