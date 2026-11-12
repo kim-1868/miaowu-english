@@ -125,6 +125,6 @@ test('protected real audit workflow only decrypts existing encrypted material, n
  assert.match(wf,/13967615571/);
  assert.match(wf,/PRODUCTION_D1_METADATA_PASSPHRASE/);
  assert.match(wf,/actions\/upload-artifact@v4/);
- assert.match(wf,/FIRST_REAL_TWO_CARD_CONTENT_QA_SAFE_COUNTS/);
+ assert.ok(wf.includes('scripts/v12-first-real-two-card-private-content-audit.mjs'));
  assert.doesNotMatch(wf,/CLOUDFLARE_API_TOKEN|CLOUDFLARE_PROD_D1_WRITE_TOKEN|wrangler d1|wrangler deploy/i);
 });
