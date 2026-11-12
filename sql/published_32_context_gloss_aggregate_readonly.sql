@@ -21,9 +21,9 @@ WITH published AS (
 ),
 parsed AS (
  SELECT *,
-    json_extract(segment_json,'$.wordId') AS segment_word_id,
-    json_extract(segment_json,'$.surface') AS segment_surface,
-    json_extract(segment_json,'$.gloss') AS segment_gloss
+    CASE WHEN json_valid(segment_json)=1 THEN json_extract(segment_json,'$.wordId') ELSE NULL END AS segment_word_id,
+    CASE WHEN json_valid(segment_json)=1 THEN json_extract(segment_json,'$.surface') ELSE NULL END AS segment_surface,
+    CASE WHEN json_valid(segment_json)=1 THEN json_extract(segment_json,'$.gloss') ELSE NULL END AS segment_gloss
  FROM published
 ),
 textual_duplicate AS (
