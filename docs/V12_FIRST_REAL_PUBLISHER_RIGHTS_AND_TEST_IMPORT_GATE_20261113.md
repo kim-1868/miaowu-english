@@ -25,6 +25,16 @@
 
 任何未经签名的填表、以`qa-`或`wordletter-internal-qa`命名的来源、改动原卡/章SHA、要求跳过冲突检查的方案一律拒绝。**用户关于AI原创的口头确认只能帮助准备来源证据，不能自动标记逐卡rights verified=true。**
 
+## 2026-11-13 实书两旧卡来源结果与英国音标替代源
+
+最新真实[完整32书来源核对 #43274965913](https://github.com/kim-1868/miaowu-english/actions/runs/43274965913)成功：**2/2**正式旧卡在真正的32书出版快照中按书/旧词ID/例句/UK-US IPA/义项逐项匹配；旧305卡登记册没有覆盖这两个ID，不是出版卡错漏。2/2 有单一共同英文例句“长度预审”机器标记；2/2 的旧卡美式IPA与开源固定源的候选文本不同；**同一个跨书词义候选只需审核一次独立教学lesson**，而不是把相同内容误算2次。旧卡美式IPA差异不等于错误，也不能直接覆盖已售小说旧词卡。原资料密文artifact 13971555687（2026-11-19到期）。
+
+**新增独立英国IPA参考候选：**
+- [JoseLlarena/Britfone](https://github.com/JoseLlarena/Britfone) 固定commit \`1062be14adc96c358f2087ac5449d72130c7a6f4\`，版本3.0.1，文件 \`britfone.main.3.0.1.csv\` Git blob \`51a54c553812b06a8f464f5aa85f4df2e6edb645\`，LICENSE Git blob \`bf1fa2c81fd2585be0c9304fb9eaf56fdf549c41\`，仓库**声明MIT**，Copyright 2017 Jose Llarena。约1.6万词、英式RP/Standard Southern British音标。此源不是之前 \`ipa-dict/en_UK.txt\` 的GPL-3.0派生数据；上游README引用词典/百科作为人工核查来源，独立编辑仍需审查上游数据链及实际词义/音标对应。
+- 新US候选仍使用 \`open-dict-data/ipa-dict\` 固定 \`972cd67dd5f96bc5660e28070cde26e3928abcd7\` 的 \`data/en_US.txt\`（MIT源候选），拒绝使用UK GPL派生文件。
+
+新增审核方式：把已验证的2张旧卡、同1词义、相同英中例句、UK/US原音标、两组来源候选、来源commit/文件sha与署名集中为**一份私密审稿单**。可人工选用、审校后的新统一教学卡使用新的IPA和例句，但**不能修改旧小说的历史卡SHA、原文段落、已经学过的记录**。同一来源的候选文本匹配不等于例句语言/中译、版权授权或OPS签核通过。首次商用sense仍需独立词义审核和真正OPS签名，第2步TEST入库仍不得提前执行。
+
 ## 第1步：必须取得的7项权利来源（逐项保存证据）
 
 1. 中文词义、释义和翻译：来源、权利人、可商用依据。
