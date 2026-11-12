@@ -76,3 +76,23 @@ test('protected query is single SELECT restricted to published, no raw text or w
   assert.ok(wf.includes(flag),'missing '+flag);
  assert.doesNotMatch(wf,/wrangler deploy|d1 migrations apply/i);
 });
+
+test('malformed segment JSON or absent context produces a safe count not leaked text',()=>{
+ const db=new DatabaseSync(':memory:');
+ try{
+  db.exec(`CREATE TABLE books(id TEXT,status TEXT);
+   CREATE TABLE chapters(id TEXT,book_id TEXT,published_at TEXT,content_json TEXT);
+   CREATE TABLE chapter_words(chapter_id TEXT,word_id TEXT,context_anchor TEXT);
+   CREATE TABLE words(id TEXT,headword TEXT,part_of_speech TEXT,meaning_zh TEXT);
+   INSERT INTO books VALUES('a','published'),('b','published');
+   INSERT INTO chapters VALUES('a1','a','2026-11-01','{"paragraphs":[{"segments":["not a segment object"]}]}'),
+   ('b1','b','2026-11-01','{"paragraphs":[{"segments":[{"wordId":"w2","surface":"record","gloss":"记录"}]}]}');
+   INSERT INTO words VALUES('w1','record','n.','记录'),('w2','record','n.','记录');
+   INSERT INTO chapter_words VALUES('a1','w1','p0:s0'),('b1','w2','p0:s0');`);
+  const result=db.prepare(sql).get();
+  assert.equal(result.published_anchors,2);
+  assert.equal(result.duplicate_candidate_groups,1);
+  assert.equal(result.mismatched_wordid_anchors,1);
+  assert.equal(result.confirmed_matching_wordid_anchors,1);
+ }finally{db.close()}
+});
