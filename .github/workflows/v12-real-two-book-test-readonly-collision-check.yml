@@ -1,0 +1,31 @@
+name: V1.2 real two-book TEST D1 read-only collision preflight QA
+on:
+  pull_request:
+    paths:
+      - .github/workflows/v12-real-two-book-test-readonly-collision-check.yml
+      - scripts/v12-real-two-book-test-readonly-collision-check.mjs
+      - tests/v12-real-two-book-test-readonly-collision-check.test.mjs
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-real-two-book-test-readonly-collision-check.yml
+      - scripts/v12-real-two-book-test-readonly-collision-check.mjs
+      - tests/v12-real-two-book-test-readonly-collision-check.test.mjs
+permissions:
+  contents: read
+jobs:
+  offline-real-test-target-readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test real schema collision-only SQL on disposable SQLite, no DB secrets or writes
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite --test tests/v12-real-two-book-test-readonly-collision-check.test.mjs
+          echo 'REAL_TEST_TWO_BOOK_TARGET_PRECHECK_SYNTHETIC_NO_REMOTE_D1_WRITES'
