@@ -12,7 +12,7 @@ export const DIAGNOSTIC_SQL=`WITH used AS (
  WHERE b.status='published' AND ch.published_at IS NOT NULL
   AND ch.published_at<=CURRENT_TIMESTAMP
 ), flagged AS (
- SELECT *,
+ SELECT book_id,entry_id,source_name,sense_id,
  CASE WHEN book_id LIKE 'mw-v12-pilot-%' OR book_id LIKE 'qa-%'
   OR book_id LIKE 'draft-%' OR book_id LIKE 'internal-%'
   THEN 1 ELSE 0 END qa_book,
