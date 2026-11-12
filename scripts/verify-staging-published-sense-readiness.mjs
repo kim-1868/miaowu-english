@@ -38,7 +38,8 @@ export function verifyStagingPublishedCounters(json){
   'STAGING_COUNTS_UNEXPECTED_FIELDS');
  for(const k of KEYS)assert.ok(Number.isSafeInteger(row[k])&&row[k]>=0,
   'STAGING_COUNTS_INVALID_'+k);
- return {status:row.approved_active_senses>0&&row.approved_legacy_sense_links>0?
+ return {status:row.approved_active_senses>0&&row.licensed_teaching_entries>0&&
+  row.approved_legacy_sense_links>0&&row.linked_published_anchors>0?
   'STAGING_APPROVED_PUBLISHED_LEGACY_LINKS_AVAILABLE':'STAGING_APPROVED_LINK_DATA_NOT_READY',
   counts:Object.fromEntries(KEYS.map(k=>[k,row[k]])),
   private_rows_exported:0,
