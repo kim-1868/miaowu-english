@@ -1,0 +1,127 @@
+name: V1.2 published32 private 772-context-gloss mismatch review encrypted
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-published-772-private-review-protected.yml
+permissions:
+  contents: read
+concurrency:
+  group: v12-private-published-772-context-gloss-review
+  cancel-in-progress: false
+jobs:
+  owner-protected-real-production-readonly:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify SQL scope and synthetic SQLite BEFORE accessing secrets
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite --test tests/v12-published-772-private-review.test.mjs tests/v12-published-context-gloss-readonly.test.mjs
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const cfg=JSON.parse(readFileSync('deploy/production.wrangler.jsonc','utf8'));
+          assert.equal(cfg.vars.APP_ENV,'production');
+          assert.equal(cfg.d1_databases?.length,1);
+          assert.equal(cfg.d1_databases[0].database_name,'miaowu-english-prod');
+          assert.equal(cfg.d1_databases[0].database_id,'649c71b3-340c-49bf-b806-3d39256851d3');
+          for(const file of ['sql/published_32_context_gloss_aggregate_readonly.sql',
+            'sql/published_32_private_772_context_gloss_mismatch_readonly.sql']){
+            const source=readFileSync(file,'utf8');
+            const sql=source.split('\n').filter(s=>!s.trim().startsWith('--')).join('\n');
+            assert.match(sql,/^\s*WITH\b/i);
+            assert.match(sql,/b\.status='published'/);
+            assert.match(sql,/ch\.published_at IS NOT NULL/);
+            assert.equal((sql.match(/;/g)||[]).length,1);
+            assert.doesNotMatch(sql,/\b(?:UPDATE|INSERT|DELETE|DROP|ALTER|PRAGMA|users|orders|entitlements|context_sentence)\b/i);
+          }
+          NODE
+      - name: Install pinned major Wrangler for protected read-only SELECT
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Verify real published 32/8444/772 then encrypt PRIVATE reviewer queue
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PROD_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          METADATA_PASSPHRASE: ${{ secrets.PRODUCTION_D1_METADATA_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_READONLY_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_ACCOUNT_ID}"
+          : "${METADATA_PASSPHRASE:?MISSING_ENCRYPTION_PASSPHRASE}"
+          test "${#METADATA_PASSPHRASE}" -ge 32
+          umask 077
+          private="$RUNNER_TEMP/miaowu-published-772-private"
+          mkdir -m 700 "$private"
+          artifact="$RUNNER_TEMP/v12-published-772-context-gloss-private.gpg"
+          trap 'rm -rf "$private"' EXIT
+          printf '%s' "$METADATA_PASSPHRASE" >"$private/passphrase"
+          unset METADATA_PASSPHRASE
+          aggregate_sql="$(sed '/^[[:space:]]*--/d' sql/published_32_context_gloss_aggregate_readonly.sql)"
+          if ! npx wrangler d1 execute miaowu-english-prod --remote --json \
+            --config deploy/production.wrangler.jsonc --command "$aggregate_sql" \
+            >"$private/aggregate.json" 2>"$private/error"; then
+            node scripts/classify-published-word-aggregate-error.mjs "$private/error"
+            echo 'REAL_772_PRECHECK_SELECT_FAILED_NO_DATA_EXPORT'
+            exit 1
+          fi
+          node scripts/verify-published-context-gloss-aggregate.mjs "$private/aggregate.json"
+          node --input-type=module "$private/aggregate.json" <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const x=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          const rows=(Array.isArray(x)?x:[x]).flatMap(p=>p.results??[]);
+          assert.equal(rows.length,1);
+          assert.equal(rows[0].duplicate_gloss_mismatch_anchors,772);
+          assert.equal(rows[0].duplicate_gloss_equal_anchors,4735);
+          assert.equal(rows[0].confirmed_matching_wordid_anchors,8444);
+          console.log('REAL_772_CONTEXT_GLOSS_AGGREGATE_STRICT_BASELINE_PASS');
+          NODE
+          select_sql="$(sed '/^[[:space:]]*--/d' sql/published_32_private_772_context_gloss_mismatch_readonly.sql)"
+          if ! npx wrangler d1 execute miaowu-english-prod --remote --json \
+            --config deploy/production.wrangler.jsonc --command "$select_sql" \
+            >"$private/mismatches.json" 2>"$private/error"; then
+            node scripts/classify-published-word-aggregate-error.mjs "$private/error"
+            echo 'REAL_772_PRIVATE_SELECT_FAILED_NO_DATA_EXPORT'
+            exit 1
+          fi
+          PRIVATE_GLOSS_REVIEW_OUTPUT="$private/queue.json" \
+            node scripts/build-private-published-gloss-mismatch-review.mjs "$private/mismatches.json"
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$private/passphrase" \
+            --symmetric --cipher-algo AES256 \
+            --output "$artifact" "$private/queue.json" \
+            >/dev/null 2>"$private/gpg.stderr"
+          test -s "$artifact"
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$private/passphrase" \
+            --decrypt "$artifact" >"$private/verified.json" 2>"$private/verify.stderr"
+          cmp -s "$private/queue.json" "$private/verified.json"
+          rm -rf "$private"
+          echo 'REAL_772_PRIVATE_REVIEW_ENCRYPTED_AND_RECOVERED_HOLD_ONLY'
+          echo 'NO_MANUSCRIPT_PARAGRAPHS_OR_CUSTOMER_DATA_EXPORTED_NO_D1_WRITES'
+      - name: Upload ONLY encrypted 772-case private review material
+        uses: actions/upload-artifact@v4
+        with:
+          name: v12-published-32-772-context-gloss-HOLD-encrypted
+          path: ${{ runner.temp }}/v12-published-772-context-gloss-private.gpg
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+      - name: Purge encrypted copy
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/v12-published-772-context-gloss-private.gpg"
