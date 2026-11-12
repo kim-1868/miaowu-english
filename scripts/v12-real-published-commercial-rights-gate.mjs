@@ -184,8 +184,12 @@ export function createRealPublisherClearanceTemplate(packet){
   },
   rights:rightsDefault(),
   checks:checksDefault(),
-  dictionary:{entry_id:null,source_key:null,source_registry_sha256:null,
-   verified_existing_enabled_licensed_entry:false},
+  dictionary:{
+   registration_mode:'unselected',
+   entry_id:null,source_key:null,source_registry_sha256:null,
+   verified_existing_enabled_licensed_entry:false,
+   new_source_proposal:null
+  },
   publisher_rights_confirmation:{commercial_teaching_rights:false,
    rights_authority:'',supporting_contract_or_creation_record_sha256:null},
   ops_signature_required:true,
@@ -208,6 +212,53 @@ function verifyChecks(a,blockers){
    !norm(v.reviewer_note))
    blockers.push('MISSING_EDITORIAL_EVIDENCE_'+k.toUpperCase());
  }
+}
+export function canonicalOwnerSourceRegistrationPlan({entry_id,source_key,
+ source_registry_sha256,proposal,headword}={}){
+ // Intentionally excludes source_registry_sha256: source hash must be the
+ // independently reproducible SHA of the *exact* proposed registration.
+ return JSON.stringify({
+  schema:'wordletter-owner-original-new-test-source-plan-v1',
+  target_database_id:TEST_DB_ID,
+  entry_id,source_key,headword,
+  license_name:proposal?.license_name,
+  origin_claim:proposal?.origin_claim,
+  creation_rights_evidence_sha256:proposal?.creation_rights_evidence_sha256,
+  legal_editorial_review_sha256:proposal?.legal_editorial_review_sha256,
+  reviewed_by:proposal?.reviewed_by,
+  requires_live_test_collision_check:proposal?.requires_live_test_collision_check,
+  allows_direct_production_activation:proposal?.allows_direct_production_activation
+ });
+}
+function verifyDictionarySourcePlan(a,packet,blockers){
+ const d=a?.dictionary,c=packet.candidate;
+ const source=String(d?.source_key??'');
+ if(!ENTRY.test(d?.entry_id??'')||
+  !/^[a-z0-9][a-z0-9_-]{3,90}$/u.test(source)||
+  /^(?:wordletter-internal-qa|qa-|test-|internal-)/iu.test(source)||
+  !H.test(d?.source_registry_sha256??'')){
+  blockers.push('APPROVED_DICTIONARY_ENTRY_AND_LICENSE_REGISTRY_UNVERIFIED');
+  return;
+ }
+ if(d.registration_mode==='existing_licensed'){
+  if(d.verified_existing_enabled_licensed_entry!==true||
+   d.new_source_proposal!==null)
+   blockers.push('EXISTING_LICENSED_TEST_SOURCE_NOT_VERIFIED');
+ }else if(d.registration_mode==='new_owner_original_source'){
+  const p=d.new_source_proposal;
+  if(d.verified_existing_enabled_licensed_entry!==false||
+   p?.license_name!=='MIAOWU_OWNER_ORIGINAL_COMMERCIAL_TEACHING'||
+   p.origin_claim!=='PUBLISHER_AI_ASSISTED_ORIGINAL_TEXT'||
+   !H.test(p.creation_rights_evidence_sha256??'')||
+   !H.test(p.legal_editorial_review_sha256??'')||
+   p.reviewed_by!==a.reviewer_id||
+   p.requires_live_test_collision_check!==true||
+   p.allows_direct_production_activation!==false||
+   d.source_registry_sha256!==hash(canonicalOwnerSourceRegistrationPlan({
+    entry_id:d.entry_id,source_key:source,
+    proposal:p,headword:c.headword})))
+   blockers.push('NEW_OWNER_SOURCE_PROPOSAL_INCOMPLETE_OR_UNPINNED');
+ }else blockers.push('DICTIONARY_SOURCE_REGISTRATION_MODE_UNSELECTED');
 }
 function verifyPublisherReceipt({attestation,packet,receipt,trustedOpsPublicKeyPem},blockers){
  if(receipt?.schema!=='wordletter-ops-publisher-clearance-receipt-v1'||
@@ -248,11 +299,7 @@ export function evaluateRealPublisherClearance({packet,attestation=null,receipt=
    blockers.push('REVIEW_SOURCE_FINGERPRINT_OR_EDITOR_IDENTITY_INVALID');
   verifyRights(attestation,blockers);
   verifyChecks(attestation,blockers);
-  if(attestation.dictionary?.verified_existing_enabled_licensed_entry!==true||
-    !ENTRY.test(attestation.dictionary.entry_id||'')||
-    !norm(attestation.dictionary.source_key)||
-    !H.test(attestation.dictionary.source_registry_sha256||''))
-   blockers.push('APPROVED_DICTIONARY_ENTRY_AND_LICENSE_REGISTRY_UNVERIFIED');
+  verifyDictionarySourcePlan(attestation,packet,blockers);
   const c=attestation.publisher_rights_confirmation;
   if(c?.commercial_teaching_rights!==true||
    !norm(c.rights_authority)||!H.test(c.supporting_contract_or_creation_record_sha256||''))
@@ -281,6 +328,10 @@ export function evaluateRealPublisherClearance({packet,attestation=null,receipt=
   editorial_evidence_count:attestation?
    CHECK_KINDS.filter(k=>attestation.checks?.[k]?.verified===true).length:0,
   ops_signature_valid:blockers.length===0,
+  dictionary_registration_mode:attestation?.dictionary?.registration_mode??'unselected',
+  new_test_source_registration_still_required:
+   attestation?.dictionary?.registration_mode==='new_owner_original_source',
+  live_test_dictionary_source_or_entry_verified:false,
   target_database_id:TEST_DB_ID,
   production_database_read_or_write:false,
   staging_database_writes:0,commercial_senses_approved_in_database:0,
