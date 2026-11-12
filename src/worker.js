@@ -23,6 +23,7 @@ import { handleBookCoverTags } from "./book-cover-tags.js";
 import { handleLearningState } from "./reading-library.js";
 import {handleHeadwordStudyApi} from "./global-dictionary-headword-api.js";
 import {handleSenseStudyApi} from "./global-dictionary-sense-study-api.js";
+import {handlePublishedLegacySensePreview} from "./global-dictionary-published-approved-legacy-overlay.js";
 import {handleSmartVocab} from "./smart-vocab-api.js";
 import {handleMyBookshelf} from "./my-bookshelf.js";
 import {handleExampleWordLookup} from "./example-word-lookup.js";
@@ -714,6 +715,10 @@ async function api(req, env) {
     return issueStagingVoucher(req, env);
   }
   const user = await atStage("api.session_lookup", () => currentUser(req, env.DB));
+  // V1.2: published legacy books can preview independently approved sense
+  // overlays without changing chapters, customer SRS, or draft-only bindings.
+  if(/^\/api\/me\/dictionary\/chapters\/[A-Za-z0-9_-]{1,80}\/published-legacy-sense-preview$/.test(path))
+    return handlePublishedLegacySensePreview(req,env,path,user);
   // V1.2 sense-level progress: independent per sense, staging-only, off by default.
   if(path.startsWith("/api/me/dictionary/senses/")||
      /^\/api\/me\/dictionary\/chapters\/[A-Za-z0-9_-]{1,80}\/sense-anchors$/.test(path))
