@@ -67,4 +67,60 @@ jobs:
             exit 1
           fi
           node scripts/verify-staging-published-sense-readiness.mjs counts "$private/aggregate.json"
+          # Real published TEST-book crossbook pilot discovery. Counts ONLY;
+          # never export actual word text, book/chapter IDs or user rows.
+          pilot="WITH used AS (
+            SELECT b.id AS book_id,cw.word_id AS old_id,ch.id AS chapter_id,
+              lower(trim(w.headword)) AS lemma,
+              lower(trim(coalesce(w.part_of_speech,''))) AS pos,
+              trim(coalesce(w.meaning_zh,'')) AS gloss
+            FROM chapter_words cw JOIN chapters ch ON ch.id=cw.chapter_id
+            JOIN books b ON b.id=ch.book_id JOIN words w ON w.id=cw.word_id
+            WHERE b.status='published' AND ch.published_at IS NOT NULL
+              AND ch.published_at<=CURRENT_TIMESTAMP
+          ), same_id AS (
+            SELECT old_id FROM used GROUP BY old_id
+            HAVING count(DISTINCT book_id)>1
+          ), same_text AS (
+            SELECT lemma,pos,gloss FROM used
+            WHERE lemma<>'' AND pos<>'' AND gloss<>''
+            GROUP BY lemma,pos,gloss HAVING count(DISTINCT book_id)>1
+          ), two_card_text AS (
+            SELECT lemma,pos,gloss FROM used
+            WHERE lemma<>'' AND pos<>'' AND gloss<>''
+            GROUP BY lemma,pos,gloss
+            HAVING count(DISTINCT book_id)>1 AND count(DISTINCT old_id)>1
+          )
+          SELECT
+            (SELECT count(*) FROM used) published_anchor_occurrences,
+            (SELECT count(DISTINCT old_id) FROM used) distinct_legacy_word_ids,
+            (SELECT count(*) FROM same_id) crossbook_identical_old_id_groups,
+            (SELECT count(*) FROM same_text) crossbook_identical_textual_sense_groups,
+            (SELECT count(*) FROM two_card_text) crossbook_distinct_old_id_same_text_groups,
+            (SELECT count(*) FROM used u JOIN two_card_text t
+             ON u.lemma=t.lemma AND u.pos=t.pos AND u.gloss=t.gloss)
+             crossbook_distinct_old_id_same_text_anchors;"
+          if ! npx wrangler d1 execute miaowu-english-test --remote --json --config wrangler.jsonc --command "$pilot" >"$private/pilot.json" 2>"$private/error"; then
+            echo 'STAGING_PUBLISHED_CROSSBOOK_PILOT_SELECT_FAILED_NO_WRITES'
+            exit 1
+          fi
+          node --input-type=module - "$private/pilot.json" <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const payload=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          const rows=(Array.isArray(payload)?payload:[payload]).flatMap(x=>x.results??[]);
+          assert.equal(rows.length,1,'PUBLISHED_CROSSBOOK_PILOT_ONE_ROW_ONLY');
+          const keys=['published_anchor_occurrences','distinct_legacy_word_ids',
+            'crossbook_identical_old_id_groups',
+            'crossbook_identical_textual_sense_groups',
+            'crossbook_distinct_old_id_same_text_groups',
+            'crossbook_distinct_old_id_same_text_anchors'];
+          assert.deepEqual(Object.keys(rows[0]).sort(),[...keys].sort());
+          for(const key of keys)assert.ok(Number.isSafeInteger(rows[0][key])&&
+            rows[0][key]>=0,'PUBLISHED_CROSSBOOK_PILOT_INVALID_AGGREGATE');
+          assert.ok(rows[0].crossbook_distinct_old_id_same_text_groups<=
+            rows[0].crossbook_identical_textual_sense_groups);
+          console.log('STAGING_REAL_CROSSBOOK_PILOT_AGGREGATE='+JSON.stringify(rows[0]));
+          console.log('STAGING_CROSSBOOK_PILOT_CANDIDATES_NOT_REVIEWED_SENSES');
+          NODE
           echo 'STAGING_READONLY_AGGREGATE_DONE_NO_CUSTOMER_VALUES_NO_D1_WRITES'
