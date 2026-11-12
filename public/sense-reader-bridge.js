@@ -27,6 +27,12 @@
     if(!validCard(result,ctx))throw Error('INVALID_APPROVED_SENSE_CARD');
     const c=result.card,tray=document.getElementById('wordPop');
     if(!tray)throw Error('SENSE_READER_TRAY_MISSING');
+    const writable=result.write_enabled===true&&result.read_only===false&&
+      Number.isSafeInteger(result.revision);
+    const study=result.study;
+    const stage=Number.isSafeInteger(study?.stage)&&study.stage>=0&&study.stage<=5?
+      study.stage:0;
+    const mastered=study?.status==='mastered';
     tray.innerHTML='<button type="button" class="modal-close" id="wordClose" aria-label="关闭词卡">×</button>'+
       '<span class="eyebrow">MIAOWU · 统一词义预览（测试环境）</span><h3>'+html(c.headword)+'</h3>'+
       '<div class="pron">美 '+html(c.phoneticUs||'')+' · 英 '+html(c.phoneticUk||'')+
@@ -35,7 +41,12 @@
       html(c.pos)+' · '+html(c.meaningZh)+'</strong><small> · 本章词义</small>'+
       '<div class="v11-example-heading"><span>例句</span> <button type="button" id="senseExampleSpeak">♫ 朗读例句</button></div>'+
       '<p>'+html(c.exampleEn)+'</p><span class="study-translation">'+html(c.exampleZh)+'</span></section>'+
-      '<p class="study-loading">统一义项仅供预览 · 复习记录仍使用原版词卡</p>'+
+      (writable?
+        '<p class="study-loading">跨书统一复习 · 第 '+stage+' 阶段'+(mastered?' · 已掌握':'')+'</p>'+
+        '<div class="word-actions"><button type="button" id="senseRemember">记得</button>'+
+        '<button type="button" id="senseForget">再记一次</button>'+
+        '<button type="button" id="senseMaster">'+(mastered?'取消已掌握':'标记已掌握')+'</button></div>':
+        '<p class="study-loading">统一义项仅供预览 · 复习记录仍使用原版词卡</p>')+
       '<div class="word-actions"><button type="button" id="senseLegacyCard">查看原词卡与学习操作</button></div>';
     document.getElementById('wordClose').onclick=api.close;
     document.getElementById('senseWordSpeak').onclick=()=>api.speak(c.headword);
@@ -43,6 +54,46 @@
     document.getElementById('senseLegacyCard').onclick=()=>{
       api.openLegacy(ctx.legacyWordId,ctx.element);
     };
+    if(writable){
+      const buttons=['senseRemember','senseForget','senseMaster']
+        .map(id=>document.getElementById(id)).filter(Boolean);
+      let busy=false;
+      const submit=async kind=>{
+        if(busy||token!==sequence)return;
+        const eventId=root.crypto?.randomUUID?.();
+        if(!eventId){api.toast('此浏览器无法安全生成复习记录，请使用原版词卡');return}
+        busy=true;
+        buttons.forEach(button=>{button.disabled=true});
+        try{
+          const posted=await api.request('/api/me/dictionary/senses/'+
+            encodeURIComponent(ctx.senseId)+'/feedback','POST',{
+            chapterId:ctx.chapterId,anchor:ctx.anchor,kind,eventId,
+            expectedRevision:result.revision});
+          if(token!==sequence)return;
+          if(!Number.isSafeInteger(posted?.revision)||
+            posted.revision<=result.revision)throw Error('SENSE_REVISION_INVALID');
+          const updated=await api.request('/api/me/dictionary/senses/'+
+            encodeURIComponent(ctx.senseId)+'?chapterId='+
+            encodeURIComponent(ctx.chapterId)+'&anchor='+encodeURIComponent(ctx.anchor));
+          if(token!==sequence)return;
+          if(updated?.revision!==posted.revision||
+            updated?.card?.sense_id!==ctx.senseId)
+            throw Error('SENSE_FEEDBACK_REFRESH_MISMATCH');
+          render(ctx,updated,token);
+        }catch{
+          if(token!==sequence)return;
+          api.toast('本次复习未能确认，已恢复原词卡；请检查网络后重试');
+          api.openLegacy(ctx.legacyWordId,ctx.element);
+        }finally{
+          busy=false;
+          if(token===sequence)buttons.forEach(button=>{button.disabled=false});
+        }
+      };
+      document.getElementById('senseRemember').onclick=()=>submit('remembered');
+      document.getElementById('senseForget').onclick=()=>submit('forgotten');
+      document.getElementById('senseMaster').onclick=()=>submit(
+        mastered?'unmark_mastered':'mark_mastered');
+    }
   }
   async function open(ctx){
     if(!api||!api.user()||!SENSE.test(ctx?.senseId||'')||
