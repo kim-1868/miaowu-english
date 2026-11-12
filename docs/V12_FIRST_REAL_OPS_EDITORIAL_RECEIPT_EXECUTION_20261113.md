@@ -19,6 +19,7 @@
 从受保护的、未提交到Git的本地文件夹运行：
 
     export MIAOWU_OPS_ED25519_TRUST_ANCHOR_REGISTERED=true
+    export MIAOWU_TRUSTED_OPS_PUBLISHER_PUBKEY_SHA256=【可信OPS服务独立登记的SPKI-DER公钥SHA256】
     node scripts/v12-first-real-ops-receipt-issuer.mjs sign \
       /private/real-source-packet.json \
       /private/completed-attestation.json \
@@ -43,3 +44,7 @@
 真实词义权利与人工审校仍处于 HOLD。原32本加密来源与两卡精确核验、US IPA候选核验已完成。UK Britfone候选已经通过固定源码和MIT文件验证，但首批真实私密UK/US合并审稿作业仍在 #43278046192 的受保护环境等待；不要把公开合成数据通过当成实际私密词卡完成终审。
 
 从现在起只需要 **一条商用词义内容审核与一个真正的OPS签核**（对应两本小说的2个旧卡链接），不必重复审两本小说相同例句。步骤1真正通过后才执行步骤2真实TEST D1导入，正式库不受影响。
+
+### 必须核对独立信任锚
+
+签发与验证均要求额外的 MIAOWU_TRUSTED_OPS_PUBLISHER_PUBKEY_SHA256 环境配置。该SHA256应取自受信任的OPS权限管理记录（公钥SPKI DER的SHA256），不能从审稿文件、可编辑JSON或签名者自行提供的公钥中直接认定为已登记。签名验证只能证明持有对应私钥；真实OPS服务必须独立核验操作者Publisher角色与真实审计ID后才能把结果用于数据库写前审批。
