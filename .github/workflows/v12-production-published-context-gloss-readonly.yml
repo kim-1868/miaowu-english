@@ -1,0 +1,73 @@
+name: V1.2 published32 8444 anchor contextual gloss consistency READ ONLY
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-production-published-context-gloss-readonly.yml
+permissions:
+  contents: read
+concurrency:
+  group: v12-production-published32-context-gloss-only
+  cancel-in-progress: false
+jobs:
+  protected-aggregate:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify one read-only SELECT and exact production D1 UUID
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite --test tests/v12-published-context-gloss-readonly.test.mjs
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const x=JSON.parse(readFileSync('deploy/production.wrangler.jsonc','utf8'));
+          assert.equal(x.name,'miaowu-english-production');
+          assert.equal(x.vars.APP_ENV,'production');
+          assert.equal(x.d1_databases?.length,1);
+          assert.equal(x.d1_databases[0].database_name,'miaowu-english-prod');
+          assert.equal(x.d1_databases[0].database_id,'649c71b3-340c-49bf-b806-3d39256851d3');
+          const sql=readFileSync('sql/published_32_context_gloss_aggregate_readonly.sql','utf8')
+           .split('\n').filter(s=>!s.trim().startsWith('--')).join('\n');
+          assert.ok(/^\s*WITH\b/i.test(sql));
+          assert.match(sql,/b\.status='published'/);
+          assert.equal((sql.match(/;/g)||[]).length,1);
+          assert.doesNotMatch(sql,/\b(?:UPDATE|INSERT|DELETE|DROP|ALTER|PRAGMA)\b/i);
+          NODE
+      - name: Install Wrangler for one read-only production SELECT
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Count actual context wordId/gloss differences without exporting text
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PROD_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_DEDICATED_PRODUCTION_READ_ONLY_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_ACCOUNT_ID}"
+          umask 077
+          private="$RUNNER_TEMP/miaowu-published-context-aggregate"
+          mkdir -m 700 "$private"
+          trap 'rm -rf "$private"' EXIT
+          sql="$(sed '/^[[:space:]]*--/d' sql/published_32_context_gloss_aggregate_readonly.sql)"
+          if ! npx wrangler d1 execute miaowu-english-prod --remote --json \
+            --config deploy/production.wrangler.jsonc --command "$sql" \
+            >"$private/aggregate.json" 2>"$private/wrangler.stderr"; then
+            node scripts/classify-published-word-aggregate-error.mjs "$private/wrangler.stderr"
+            echo 'PUBLISHED_CONTEXT_AGGREGATE_FAILED_NO_PRODUCTION_WRITES'
+            exit 1
+          fi
+          node scripts/verify-published-context-gloss-aggregate.mjs "$private/aggregate.json"
+          echo 'PUBLISHED_CONTEXT_SINGLE_SELECT_NO_MANUSCRIPT_TEXT_EXPORTED_NO_WRITES'
