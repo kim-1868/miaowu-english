@@ -45,7 +45,7 @@ function fixture(){
  return {review,queue,usIpaText:US};
 }
 test('2 real old cards absent from 305 register match full 32-book encrypted source',()=>{
- const f=fixture(),r=reconcileTwoRealPublishedCards({
+ const f=fixture(),r=reconcile({
   privateReview:f.review,publisherQueue:f.queue,usIpaText:f.usIpaText});
  assert.equal(r.status,'FULL_PUBLISHER_SOURCE_VERIFIED_US_IPA_CANDIDATE_CHECKED_EDITORIAL_HOLD');
  assert.equal(r.counts.verified_against_full_32_book_publisher_snapshot,2);
@@ -65,7 +65,7 @@ test('2 real old cards absent from 305 register match full 32-book encrypted sou
 });
 test('two card source or IPA variants disagreement never auto approves',()=>{
  const f=fixture();f.usIpaText=f.usIpaText.replace('/ˈrɛkɚd/','/ˈrəkoʊrd/');
- const r=reconcileTwoRealPublishedCards({
+ const r=reconcile({
   privateReview:f.review,publisherQueue:f.queue,usIpaText:f.usIpaText});
  assert.equal(r.counts.us_ipa_candidate_text_match,0);
  assert.equal(r.counts.us_ipa_candidates_differ,2);
@@ -85,7 +85,7 @@ test('forged origin, source change or signoff blocks audit',()=>{
   f=>{f.queue.production_writes=1}
  ];
  for(const mutate of change){const f=fixture();mutate(f);
-  assert.throws(()=>reconcileTwoRealPublishedCards({
+  assert.throws(()=>reconcile({
    privateReview:f.review,publisherQueue:f.queue,usIpaText:f.usIpaText}));
  }
 });
