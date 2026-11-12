@@ -1,3 +1,17 @@
+
+## 已验证的生产审稿导出结果（2026-11-12）
+
+**最新结果覆盖此前的“待审批”描述。** 用户已取消旧任务 [#43168579747](https://github.com/kim-1868/miaowu-english/actions/runs/43168579747)；修复版受保护只读任务 [#43168618991](https://github.com/kim-1868/miaowu-english/actions/runs/43168618991) 已完成，所有步骤成功，含固定生产 SQL、严格基线校验、772 行审核队列创建、GPG 对称加密、解密后内容一致性核验和加密 artifact 上传。
+
+- Artifact ID **13922285839**，名称 `v12-published-32-772-context-gloss-HOLD-encrypted`，约 **100,994 bytes**；GitHub 的失效时间为 **2026-11-19T06:45:21Z**（按 GitHub 服务端时间，具体展示可能因时区不同）。
+- 与此前 #43158107860 完全一致的基线：32 本/8444 个锚点/532 个重复候选组，其中 5507 处相关位置、4735 处原卡释义文字相同、772 处不同。
+- 真实 772 条校验：`gloss_mismatch_positions=772`、`different_after_punctuation_removal=772`、`form_variant_candidates=0`、`missing_uk_or_us_ipa=0`、`missing_bilingual_example=0`。
+- **全部 HOLD，0 条人工/OPS 正式义项批准、0 条链接写入、0 次生产数据写入**。这些数字不是新增可售词卡数量。
+- 付费内容片段仅在受保护 runner 内的私密文件中处理；公开项目只记录匿名数量、源文件合同及流水线。解密需要对应受保护的 GitHub Secret，不能在公共 issue、聊天或代码中公开密码。
+- 须在 Artifact 过期前由具有权限的负责人将**加密文件及解密凭证分别安全保管**。若无法安全取回或重放，则必须重新经保护性审批导出，不能用缓存的旧审核材料充数。
+- 下一阶段应在同等保护边界下复核真实逐行的 `context_gloss` 与 `old_card_meaning_zh`，区分同义改写、义项不同、上下文不充分与数据错误，并独立核验来源商用许可，形成签核建议。**未经验证的候选不能转成 sense_id，也不能写入 TEST D1。**
+
+
 # V1.2 · 772 处正式小说上下文差异：受保护只读审稿包
 
 ## 真实证据
