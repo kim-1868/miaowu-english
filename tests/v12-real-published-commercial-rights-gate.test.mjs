@@ -6,7 +6,7 @@ import {buildRealPublishedTwoBookEditorialIntake} from
  '../scripts/v12-real-published-two-book-editorial-intake.mjs';
 import {createRealPublisherClearanceTemplate,evaluateRealPublisherClearance,
  canonicalPublisherReviewAttestation,canonicalPublisherReceipt,
- RIGHTS_KINDS,CHECK_KINDS} from
+ canonicalOwnerSourceRegistrationPlan,RIGHTS_KINDS,CHECK_KINDS} from
  '../scripts/v12-real-published-commercial-rights-gate.mjs';
 const sha=x=>createHash('sha256').update(x).digest('hex');
 const now='2026-11-13T04:00:00Z',digest='d'.repeat(64);
@@ -55,9 +55,10 @@ function signed(){
  for(const k of CHECK_KINDS)a.checks[k]={
   verified:true,evidence_sha256:digest,
   reviewer_note:'Independent reviewer checked evidence in this synthetic test'};
- a.dictionary={entry_id:'gdict_'+'a'.repeat(24),
+ a.dictionary={registration_mode:'existing_licensed',
+  entry_id:'gdict_'+'a'.repeat(24),
   source_key:'owner-original',source_registry_sha256:digest,
-  verified_existing_enabled_licensed_entry:true};
+  verified_existing_enabled_licensed_entry:true,new_source_proposal:null};
  a.publisher_rights_confirmation={
   commercial_teaching_rights:true,
   rights_authority:'published-content-rights-owner',
@@ -73,7 +74,7 @@ function signed(){
   target_database_id:'88a817cb-23bb-4ae4-bcb8-92286c4165d4'};
  receipt.signature_b64=sign(null,Buffer.from(canonicalPublisherReceipt(receipt)),
   privateKey).toString('base64');
- return {packet:p,attestation:a,receipt,
+ return {packet:p,attestation:a,receipt,privateKey,
   trustedOpsPublicKeyPem:publicKey.export({format:'pem',type:'spki'})};
 }
 test('first real publisher clearance always starts HOLD: 7 rights + 10 checkmarks absent',()=>{
@@ -117,7 +118,7 @@ test('untrusted checkbox edits or unverifiable license provenance NEVER pass',()
  const z=signed();
  z.attestation.dictionary.verified_existing_enabled_licensed_entry=false;
  assert.match(evaluateRealPublisherClearance(z).content_and_rights_blockers.join(' '),
-  /APPROVED_DICTIONARY_ENTRY/);
+  /EXISTING_LICENSED_TEST_SOURCE_NOT_VERIFIED/);
  const notOwner=signed();
  notOwner.attestation.publisher_rights_confirmation.commercial_teaching_rights=false;
  assert.match(evaluateRealPublisherClearance(notOwner).content_and_rights_blockers.join(' '),
@@ -173,4 +174,76 @@ test('only private template is possible, no Cloudflare write/real automatic appr
  assert.match(workflow,/PRODUCTION_D1_METADATA_PASSPHRASE/);
  assert.match(workflow,/actions\/upload-artifact@v4/);
  assert.doesNotMatch(workflow,/CLOUDFLARE_API_TOKEN|wrangler d1|wrangler deploy|d1 migrations apply/);
+});
+
+function signedNewSource(){
+ const x=signed();
+ const a=x.attestation;
+ const proposal={
+  license_name:'MIAOWU_OWNER_ORIGINAL_COMMERCIAL_TEACHING',
+  origin_claim:'PUBLISHER_AI_ASSISTED_ORIGINAL_TEXT',
+  creation_rights_evidence_sha256:sha('protected-original-ai-content-evidence'),
+  legal_editorial_review_sha256:sha('protected-real-editorial-review'),
+  reviewed_by:a.reviewer_id,
+  requires_live_test_collision_check:true,
+  allows_direct_production_activation:false
+ };
+ const dictionary={
+  registration_mode:'new_owner_original_source',
+  entry_id:'gdict_'+'b'.repeat(24),
+  source_key:'miaowu-owner-original-curated-v1',
+  verified_existing_enabled_licensed_entry:false,
+  new_source_proposal:proposal
+ };
+ dictionary.source_registry_sha256=sha(canonicalOwnerSourceRegistrationPlan({
+  entry_id:dictionary.entry_id,source_key:dictionary.source_key,
+  headword:x.packet.candidate.headword,proposal
+ }));
+ a.dictionary=dictionary;
+ x.receipt.publisher_review_sha256=sha(canonicalPublisherReviewAttestation(a));
+ x.receipt.signature_b64=sign(null,Buffer.from(canonicalPublisherReceipt(x.receipt)),
+  x.privateKey).toString('base64');
+ return x;
+}
+test('new owner-original TEST source may be signed before it exists but NEVER claimed activated',()=>{
+ const x=signedNewSource();
+ const result=evaluateRealPublisherClearance(x);
+ assert.equal(result.status,'AUTHENTICATED_PUBLISHER_ATTESTATION_PRESENT_STAGING_PREFLIGHT_ONLY');
+ assert.equal(result.dictionary_registration_mode,'new_owner_original_source');
+ assert.equal(result.new_test_source_registration_still_required,true);
+ assert.equal(result.live_test_dictionary_source_or_entry_verified,false);
+ assert.equal(result.commercial_senses_approved_in_database,0);
+ assert.equal(result.staging_database_writes,0);
+ assert.equal(result.ops_signature_valid,true);
+});
+test('new source must bind original creation proof, exact headword, source hash and independent reviewer',()=>{
+ const mutations=[
+  x=>{x.attestation.dictionary.new_source_proposal.creation_rights_evidence_sha256='bad'},
+  x=>{x.attestation.dictionary.new_source_proposal.legal_editorial_review_sha256='bad'},
+  x=>{x.attestation.dictionary.new_source_proposal.reviewed_by='forged-editor'},
+  x=>{x.attestation.dictionary.new_source_proposal.allows_direct_production_activation=true},
+  x=>{x.attestation.dictionary.new_source_proposal.requires_live_test_collision_check=false},
+  x=>{x.attestation.dictionary.source_key='qa-mismatched-source'},
+  x=>{x.attestation.dictionary.source_registry_sha256='a'.repeat(64)},
+  x=>{x.attestation.dictionary.verified_existing_enabled_licensed_entry=true},
+  x=>{x.attestation.dictionary.new_source_proposal.license_name='UNLICENSED'},
+  x=>{x.attestation.dictionary.new_source_proposal.origin_claim='UNTRUSTED_EXTERNAL'}
+ ];
+ for(const mutate of mutations){
+  const x=signedNewSource();mutate(x);
+  const r=evaluateRealPublisherClearance(x);
+  assert.equal(r.status,'HOLD_REQUIRE_VERIFIED_EDITOR_AND_RIGHTS');
+  assert.equal(r.ops_signature_valid,false);
+  assert.ok(r.content_and_rights_blockers.some(b=>/NEW_OWNER|APPROVED_DICTIONARY/.test(b)));
+ }
+});
+test('publisher-reviewed new dictionary source requires real OPS signature and TEST database scope',()=>{
+ const x=signedNewSource();
+ x.receipt.target_database_id='649c71b3-340c-49bf-b806-3d39256851d3';
+ const r=evaluateRealPublisherClearance(x);
+ assert.equal(r.ops_signature_valid,false);
+ assert.match(r.content_and_rights_blockers.join(' '),/AUTHENTICATED_OPS/);
+ const unsigned=signedNewSource();
+ unsigned.receipt.signature_b64='';
+ assert.equal(evaluateRealPublisherClearance(unsigned).ops_signature_valid,false);
 });
