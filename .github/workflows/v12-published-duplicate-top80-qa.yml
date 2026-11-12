@@ -1,0 +1,31 @@
+name: V1.2 published duplicate top80 triage synthetic QA
+on:
+  pull_request:
+    paths:
+      - scripts/triage-private-published-duplicate-senses-top80.mjs
+      - tests/v12-published-duplicate-top80.test.mjs
+      - .github/workflows/v12-published-duplicate-top80-artifact.yml
+      - .github/workflows/v12-published-duplicate-top80-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - scripts/triage-private-published-duplicate-senses-top80.mjs
+      - tests/v12-published-duplicate-top80.test.mjs
+permissions:
+  contents: read
+jobs:
+  synthetic-no-real-books:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          set -euo pipefail
+          node --check scripts/triage-private-published-duplicate-senses-top80.mjs
+          node --test tests/v12-published-duplicate-top80.test.mjs
+      - run: echo 'SYNTHETIC_ONLY_NO_PRODUCTION_SELECT_NO_USER_RECORDS'
