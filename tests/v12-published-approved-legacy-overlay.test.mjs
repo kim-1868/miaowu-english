@@ -5,7 +5,8 @@ import {fingerprintLegacyWordCard,listPublishedApprovedLegacySenseAnchors,
  handlePublishedLegacySensePreview} from '../src/global-dictionary-published-approved-legacy-overlay.js';
 const E='gdict_'+'a'.repeat(24),S='gds_'+'b'.repeat(24);
 const record=(anchor,word)=>({
- anchor,legacy_word_id:word,old_headword:'record',old_uk:'/rek/',
+ anchor,legacy_word_id:word,stored_segment_word_id:word,
+ stored_segment_gloss:'记录',old_headword:'record',old_uk:'/rek/',
  old_us:'/rek/',old_pos:'n.',old_meaning:'记录',
  old_en:'Keep a record of the event.',old_zh:'记录这次事件。',
  old_collocations:'[]',old_card_sha256:'',
@@ -52,6 +53,19 @@ test('old card version changes and unreviewed meanings never grant a sense ID',a
  assert.equal(r.anchors.length,0);
  assert.equal(r.blockedCounts.mismatched_or_missing_lesson,1);
  assert.equal(r.blockedCounts.legacy_card_digest_mismatch,1);
+});
+test('real published sentence wordId or gloss mismatch must not surface approved sense',async()=>{
+ const approved=record('p0:s0','word-A');approved.old_card_sha256=await fingerprintLegacyWordCard(approved);
+ const wrongGloss={...approved,anchor:'p0:s1',stored_segment_gloss:'唱片'};
+ const wrongId={...approved,anchor:'p0:s2',stored_segment_word_id:'another-id'};
+ const missingGloss={...approved,anchor:'p0:s3',stored_segment_gloss:null};
+ const x=await run(db([approved,wrongGloss,wrongId,missingGloss]));
+ assert.deepEqual(x.anchors,[{anchor:'p0:s0',entry_id:E,sense_id:S}]);
+ assert.equal(x.blockedCounts.published_context_mismatch,3);
+ const sql=db([]);await run(sql);
+ assert.match(sql.lastSql,/stored_segment_word_id/);
+ assert.match(sql.lastSql,/stored_segment_gloss/);
+ assert.match(sql.lastSql,/json_valid\(ch\.content_json\)/);
 });
 test('duplicate anchors fail closed and no ambiguous approved identity is leaked',async()=>{
  const a=record('p0:s0','word-A');a.old_card_sha256=await fingerprintLegacyWordCard(a);
