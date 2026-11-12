@@ -48,6 +48,9 @@ jobs:
           set -euo pipefail
           npm run check
           npm test
+          # The new feedback controls only render when the server enables
+          # stage-only writes; this deployment MUST keep them disabled.
+          node --test tests/v12-sense-reader-readonly-ui.test.mjs tests/v12-sense-reader-authorized-feedback-ui.test.mjs
           node --experimental-sqlite --test tests/v12-staging-published-legacy-sense-srs-bridge.test.mjs
           node --test tests/v12-auto-draft-target-planner.test.mjs
       - name: Build preview-only runtime flags without changing checked-in config
