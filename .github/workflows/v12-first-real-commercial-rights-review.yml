@@ -15,7 +15,7 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: v12-first-real-commercial-rights-review
+  group: v12-first-real-commercial-rights-review-${{ github.ref }}
   cancel-in-progress: false
 jobs:
   synthetic-commercial-rights-gate:
