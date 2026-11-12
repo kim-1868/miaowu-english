@@ -110,7 +110,7 @@ export async function handlePublishedLegacySensePreview(req,env,path,user){
   return json({error:'PUBLISHED_LEGACY_PREVIEW_DISABLED'},503);
  if(!user?.id)return json({error:'LOGIN_REQUIRED'},401);
  if(req.method!=='GET')return json({error:'METHOD_NOT_ALLOWED'},405);
- const match=/^\\/api\\/me\\/dictionary\\/chapters\\/([A-Za-z0-9_-]{1,80})\\/published-legacy-sense-preview$/u.exec(path||'');
+ const match=new RegExp('^/api/me/dictionary/chapters/([A-Za-z0-9_-]{1,80})/published-legacy-sense-preview$','u').exec(path||'');
  if(!match)return json({error:'NOT_FOUND'},404);
  try{
   return json(await listPublishedApprovedLegacySenseAnchors(env.DB,{
