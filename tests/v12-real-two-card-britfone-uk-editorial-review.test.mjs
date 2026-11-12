@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,existsSync} from 'node:fs';
+const pinnedReady=existsSync('/tmp/britfone.main.3.0.1.csv')&&
+ existsSync('/tmp/britfone.LICENSE.txt');
 import {buildOneSenseTwoBookBritfoneReview as review,
  privateHumanReviewText} from '../scripts/v12-real-two-card-britfone-uk-editorial-review.mjs';
 function fixtures(){
@@ -37,7 +39,7 @@ function sources(){
  const license=readFileSync('/tmp/britfone.LICENSE.txt','utf8');
  return {britfoneCSV:csv,licenseText:license};
 }
-test('locked MIT Britfone UK pronunciation source is real and creates ONE private review for TWO actual old cards',()=>{
+test('locked MIT Britfone UK pronunciation source is real and creates ONE private review for TWO actual old cards',{skip:!pinnedReady},()=>{
  const r=review({prior:fixtures(),...sources()});
  assert.equal(r.status,'ONE_REAL_SENSE_UK_US_SOURCE_CANDIDATES_EDITORIAL_HOLD');
  assert.equal(r.counts.real_books,2);
@@ -59,7 +61,7 @@ test('locked MIT Britfone UK pronunciation source is real and creates ONE privat
  assert.match(txt,/双书同义项/);
  assert.match(txt,/HOLD/);
 });
-test('history card or claimed commercial approval must fail closed',()=>{
+test('history card or claimed commercial approval must fail closed',{skip:!pinnedReady},()=>{
  const alterations=[
   x=>x.reviewer_material_private[0].editor_pronunciation_approved=true,
   x=>x.reviewer_material_private[0].decision='APPROVED',
@@ -77,7 +79,7 @@ test('history card or claimed commercial approval must fail closed',()=>{
    'MUTATION_MUST_FAIL_CLOSED_INDEX_'+i);
  }
 });
-test('tampered Britfone data or fake MIT license cannot become approved source candidate',()=>{
+test('tampered Britfone data or fake MIT license cannot become approved source candidate',{skip:!pinnedReady},()=>{
  const {britfoneCSV,licenseText}=sources(),base=fixtures();
  assert.throws(()=>review({prior:base,britfoneCSV:britfoneCSV+'x',licenseText}),
   /BRITFONE_(MAIN_GIT_BLOB_SHA_CHANGED|DICTIONARY_CSV_STRUCTURE_INVALID)/);
