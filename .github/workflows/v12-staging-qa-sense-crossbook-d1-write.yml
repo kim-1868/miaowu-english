@@ -1,0 +1,263 @@
+name: V1.2 one-time TEST D1 isolated QA user crossbook SRS write/read/cleanup
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-staging-qa-sense-crossbook-d1-write.yml
+permissions:
+  contents: read
+concurrency:
+  group: v12-staging-qa-sense-crossbook-single-owner
+  cancel-in-progress: false
+jobs:
+  isolated-real-TEST-D1-crossbook:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    environment:
+      name: staging-d1-schema-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm TEST D1 only, fully tested QA identity and immutable production
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite --test tests/v12-staging-qa-crossbook-sense-write.test.mjs
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const cfg=JSON.parse(readFileSync('wrangler.jsonc','utf8'));
+          assert.equal(cfg.name,'miaowu-english-staging');
+          assert.equal(cfg.vars.APP_ENV,'staging');
+          assert.equal(cfg.d1_databases?.length,1);
+          assert.equal(cfg.d1_databases[0].database_name,'miaowu-english-test');
+          assert.equal(cfg.d1_databases[0].database_id,'88a817cb-23bb-4ae4-bcb8-92286c4165d4');
+          assert.notEqual(cfg.vars.GLOBAL_DICTIONARY_SENSE_SRS_WRITE_ENABLED,'true');
+          const prod=JSON.parse(readFileSync('deploy/production.wrangler.jsonc','utf8'));
+          assert.notEqual(prod.d1_databases?.[0]?.database_name,cfg.d1_databases[0].database_name);
+          console.log('TEST_D1_QA_SRS_SCOPE_CONFIRMED_NO_PRODUCTION');
+          NODE
+      - name: Install Wrangler and prepare private fixed SQL
+        run: |
+          set -euo pipefail
+          npm install --no-save --ignore-scripts wrangler@^4
+          umask 077
+          mkdir -m 700 "$RUNNER_TEMP/v12-sense-crossbook-private"
+          node scripts/staging-qa-crossbook-sense-write.mjs --out "$RUNNER_TEMP/v12-sense-crossbook-private"
+      - name: Verify isolated identity absent and real two-book same-sense source
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_STAGING_D1_WRITE_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_ACCOUNT_ID}"
+          umask 077
+          private="$RUNNER_TEMP/v12-sense-crossbook-private"
+          sql="$(cat "$private/preflight.sql")"
+          if ! npx wrangler d1 execute miaowu-english-test --remote --json \
+            --config wrangler.jsonc --command "$sql" >"$private/preflight.json" \
+            2>"$private/preflight.error"; then
+            echo 'QA_CROSSBOOK_REAL_TEST_D1_PREFLIGHT_SELECT_FAILED';exit 1
+          fi
+          node --input-type=module - "$private/preflight.json" <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const x=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          const a=(Array.isArray(x)?x:[x]).flatMap(p=>p.results??[]);
+          assert.equal(a.length,1);
+          assert.deepEqual({...a[0]},{
+            qa_user_collisions:0,qa_study_collisions:0,qa_event_collisions:0,
+            source_a:1,source_b:1,same_qa_sense:1,source_anchors:2
+          },'QA_CROSSBOOK_REAL_TEST_D1_SOURCE_DRIFT');
+          console.log('QA_CROSSBOOK_TWO_REAL_TEST_BOOKS_ONE_SENSE_NO_COLLISIONS');
+          NODE
+          baseline="SELECT
+            (SELECT count(*) FROM users) users,
+            (SELECT count(*) FROM user_words) user_words,
+            (SELECT count(*) FROM review_events) legacy_events,
+            (SELECT count(*) FROM activation_codes) activation_codes,
+            (SELECT count(*) FROM entitlements) entitlements,
+            (SELECT count(*) FROM reading_progress) reading_progress,
+            (SELECT count(*) FROM user_dictionary_sense_study) sense_study,
+            (SELECT count(*) FROM user_dictionary_sense_review_events) sense_events,
+            (SELECT count(*) FROM global_dictionary_legacy_sense_links) legacy_links,
+            (SELECT count(*) FROM books) books,
+            (SELECT count(*) FROM chapters) chapters;"
+          if ! npx wrangler d1 execute miaowu-english-test --remote --json \
+            --config wrangler.jsonc --command "$baseline" >"$private/before.json" \
+            2>"$private/before.error"; then
+            echo 'QA_CROSSBOOK_BASELINE_MISSING_NO_WRITES';exit 1
+          fi
+          echo 'QA_CROSSBOOK_REAL_TEST_D1_BASELINE_RECORDED_PRIVATE'
+      - name: Full TEST D1 encrypted prewrite backup, decrypt and restore verify
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          BACKUP_PASSPHRASE: ${{ secrets.STAGING_D1_BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${BACKUP_PASSPHRASE:?MISSING_TEST_D1_BACKUP_SECRET}"
+          test "${#BACKUP_PASSPHRASE}" -ge 32
+          umask 077
+          p="$RUNNER_TEMP/v12-sense-crossbook-private"
+          printf '%s' "$BACKUP_PASSPHRASE" > "$p/passphrase"
+          unset BACKUP_PASSPHRASE
+          if ! npx wrangler d1 export miaowu-english-test --remote --skip-confirmation \
+            --config wrangler.jsonc --output "$p/backup.sql" >"$p/export.log" 2>&1; then
+            echo 'QA_CROSSBOOK_FULL_BACKUP_FAILED_NO_WRITES';exit 1
+          fi
+          test -s "$p/backup.sql"
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$p/passphrase" --symmetric --cipher-algo AES256 \
+            --output "$RUNNER_TEMP/v12-sense-crossbook-test-prewrite.gpg" \
+            "$p/backup.sql" >/dev/null 2>"$p/gpg.err"
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$p/passphrase" \
+            --decrypt "$RUNNER_TEMP/v12-sense-crossbook-test-prewrite.gpg" \
+            >"$p/recovered.sql" 2>"$p/restore-gpg.err"
+          cmp -s "$p/backup.sql" "$p/recovered.sql"
+          sqlite3 "$p/recovery.sqlite" < "$p/recovered.sql" >/dev/null
+          test "$(sqlite3 "$p/recovery.sqlite" 'PRAGMA integrity_check;')" = 'ok'
+          test -z "$(sqlite3 "$p/recovery.sqlite" 'PRAGMA foreign_key_check;')"
+          echo 'QA_CROSSBOOK_FULL_TEST_D1_ENCRYPTED_BACKUP_AND_RESTORE_VERIFIED'
+      - name: Upload only AES256 encrypted entire TEST D1 BEFORE any write
+        uses: actions/upload-artifact@v4
+        with:
+          name: v12-sense-crossbook-test-D1-prewrite-backup-encrypted
+          path: ${{ runner.temp }}/v12-sense-crossbook-test-prewrite.gpg
+          retention-days: 30
+          compression-level: 0
+          if-no-files-found: error
+      - name: Insert QA-only remembered feedback in A, then seen in B, verify genuine TEST D1 persistence
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_STAGING_D1_WRITE_TOKEN}"
+          p="$RUNNER_TEMP/v12-sense-crossbook-private"
+          touch "$p/write-attempted.marker"
+          query(){
+            npx wrangler d1 execute miaowu-english-test --remote --json \
+              --config wrangler.jsonc --command "$(cat "$p/check.sql")" \
+              >"$p/check.json" 2>"$p/check.err" || {
+              echo 'QA_CROSSBOOK_REAL_D1_CHECK_FAILED';exit 1;
+            }
+          }
+          verify(){
+            node --input-type=module - "$p/check.json" "$1" <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const raw=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          const v=(Array.isArray(raw)?raw:[raw]).flatMap(x=>x.results??[]);
+          assert.equal(v.length,1);
+          const rev=Number(process.argv[3]);
+          assert.deepEqual({...v[0]},{
+           qa_users:1,study_rows:1,revision:rev,remembered:1,
+           seen:rev-1,events:rev,source_books:rev,
+           distinct_event_senses:1,expected_events:rev,username_conflicts:0
+          },'QA_CROSSBOOK_REAL_D1_FEEDBACK_MISMATCH');
+          console.log('QA_REAL_TEST_D1_SRS_REVISION_'+rev+'_ONE_SHARED_SENSE_PASS');
+          NODE
+          }
+          if ! npx wrangler d1 execute miaowu-english-test --remote \
+            --config wrangler.jsonc --file "$p/first.sql" >"$p/first.log" 2>&1; then
+            echo 'QA_CROSSBOOK_FIRST_BOOK_WRITE_FAILED_CLEANUP_REQUIRED';exit 1
+          fi
+          query
+          verify 1
+          if ! npx wrangler d1 execute miaowu-english-test --remote \
+            --config wrangler.jsonc --file "$p/second.sql" >"$p/second.log" 2>&1; then
+            echo 'QA_CROSSBOOK_SECOND_BOOK_WRITE_FAILED_CLEANUP_REQUIRED';exit 1
+          fi
+          query
+          verify 2
+          echo 'QA_REAL_TEST_D1_BOOK_A_REMEMBERED_BOOK_B_SEEN_ONE_SENSE_STUDY_PROVEN'
+      - name: Always clean ONLY the isolated QA user, study state and two events
+        if: always()
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          p="$RUNNER_TEMP/v12-sense-crossbook-private"
+          if [ ! -f "$p/write-attempted.marker" ]; then
+            echo 'QA_CROSSBOOK_NO_WRITE_ATTEMPT_CLEANUP_SKIPPED';exit 0
+          fi
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_STAGING_D1_WRITE_TOKEN}"
+          if ! npx wrangler d1 execute miaowu-english-test --remote \
+            --config wrangler.jsonc --file "$p/cleanup.sql" >"$p/cleanup.log" 2>&1; then
+            echo 'QA_CROSSBOOK_CLEANUP_FAILED_MANUAL_RECOVERY_REQUIRED';exit 1
+          fi
+          if ! npx wrangler d1 execute miaowu-english-test --remote --json \
+             --config wrangler.jsonc --command "$(cat "$p/check.sql")" \
+             >"$p/clean-check.json" 2>"$p/clean-check.err"; then
+            echo 'QA_CROSSBOOK_CLEANUP_VERIFY_QUERY_FAILED';exit 1
+          fi
+          node --input-type=module - "$p/clean-check.json" <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const raw=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          const r=(Array.isArray(raw)?raw:[raw]).flatMap(x=>x.results??[]);
+          assert.equal(r.length,1);
+          for(const [k,v] of Object.entries(r[0]))assert.equal(v,0,
+            'QA_CROSSBOOK_CLEANUP_NONZERO_'+k);
+          console.log('QA_CROSSBOOK_QA_USER_SENSE_STUDY_EVENTS_CLEANED_UP_ZERO');
+          NODE
+          rm -f "$p/write-attempted.marker"
+      - name: Verify original TEST D1 customer aggregates unchanged after cleanup
+        if: always()
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          p="$RUNNER_TEMP/v12-sense-crossbook-private"
+          if [ ! -f "$p/before.json" ]; then
+            echo 'QA_CROSSBOOK_NO_BASELINE_NOT_APPLIED';exit 0
+          fi
+          sql="SELECT
+            (SELECT count(*) FROM users) users,
+            (SELECT count(*) FROM user_words) user_words,
+            (SELECT count(*) FROM review_events) legacy_events,
+            (SELECT count(*) FROM activation_codes) activation_codes,
+            (SELECT count(*) FROM entitlements) entitlements,
+            (SELECT count(*) FROM reading_progress) reading_progress,
+            (SELECT count(*) FROM user_dictionary_sense_study) sense_study,
+            (SELECT count(*) FROM user_dictionary_sense_review_events) sense_events,
+            (SELECT count(*) FROM global_dictionary_legacy_sense_links) legacy_links,
+            (SELECT count(*) FROM books) books,
+            (SELECT count(*) FROM chapters) chapters;"
+          npx wrangler d1 execute miaowu-english-test --remote --json \
+            --config wrangler.jsonc --command "$sql" >"$p/after.json" 2>"$p/after.err"
+          node --input-type=module - "$p/before.json" "$p/after.json" <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const read=file=>{
+            const payload=JSON.parse(readFileSync(file,'utf8'));
+            const rows=(Array.isArray(payload)?payload:[payload]).flatMap(p=>p.results??[]);
+            assert.equal(rows.length,1);return {...rows[0]};
+          };
+          assert.deepEqual(read(process.argv[2]),read(process.argv[3]),
+            'QA_CROSSBOOK_TEST_D1_BASELINE_NOT_RESTORED');
+          console.log('QA_CROSSBOOK_ALL_OLD_USER_BOOK_ORDER_COUNTS_UNCHANGED');
+          NODE
+      - name: Purge runner plaintext and encrypted backup copy
+        if: always()
+        run: |
+          rm -rf "$RUNNER_TEMP/v12-sense-crossbook-private"
+          rm -f "$RUNNER_TEMP/v12-sense-crossbook-test-prewrite.gpg"
