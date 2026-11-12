@@ -94,4 +94,8 @@ jobs:
             --write-out '%{http_code}' --max-time 25 "$url")"
           test "$code" = '401'
           grep -Fq 'Staging preview: credentials required' /tmp/miaowu-staging-root
-          echo 'STAGING_ANONYMOUS_401_GUARD_VERIFIED__PUBLISHED_SENSE_PREVIEW_OFF_BY_DEFAULT'
+          protected_url='https://miaowu-english-staging.kim10086a.workers.dev/api/me/dictionary/chapters/mw-v12-pilot-ex-20261112-ch01/sense-anchors'
+          protected_code="$(curl --silent --show-error --output /tmp/miaowu-staging-protected-api \
+            --write-out '%{http_code}' --max-time 25 "$protected_url")"
+          test "$protected_code" = '401'
+          echo 'STAGING_ANONYMOUS_401_GUARD_VERIFIED__READONLY_SENSE_PREVIEW_REQUIRES_AUTH'
