@@ -1,0 +1,31 @@
+name: V1.2 real publisher OPS Ed25519 receipt issue and verify offline QA
+on:
+  pull_request:
+    paths:
+      - .github/workflows/v12-first-real-ops-receipt-issuer.yml
+      - scripts/v12-first-real-ops-receipt-issuer.mjs
+      - tests/v12-first-real-ops-receipt-issuer.test.mjs
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-first-real-ops-receipt-issuer.yml
+      - scripts/v12-first-real-ops-receipt-issuer.mjs
+      - tests/v12-first-real-ops-receipt-issuer.test.mjs
+permissions:
+  contents: read
+jobs:
+  synthetic-ops-receipt-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prove actual review rights checks and pinned-OPS-key requirement cannot be bypassed
+        run: |
+          set -euo pipefail
+          node --test tests/v12-first-real-ops-receipt-issuer.test.mjs
+          echo 'FIRST_REAL_OPS_RECEIPT_SYNTHETIC_QA_PASSED_NO_REAL_SIGNOFF_NO_DATABASE_ACCESS'
