@@ -5,12 +5,16 @@ on:
       - src/global-dictionary-published-approved-legacy-overlay.js
       - src/worker.js
       - tests/v12-published-approved-legacy-overlay.test.mjs
+      - scripts/assess-published-readonly-pilot.mjs
+      - tests/v12-published-readonly-pilot-gate.test.mjs
       - .github/workflows/v12-published-approved-legacy-overlay-qa.yml
   push:
     branches: [feature/v11-smart-vocab-preflight-20261109]
     paths:
       - src/global-dictionary-published-approved-legacy-overlay.js
       - tests/v12-published-approved-legacy-overlay.test.mjs
+      - scripts/assess-published-readonly-pilot.mjs
+      - tests/v12-published-readonly-pilot-gate.test.mjs
 permissions:
   contents: read
 jobs:
@@ -29,4 +33,5 @@ jobs:
           node --check src/global-dictionary-published-approved-legacy-overlay.js
           node --check src/worker.js
           node --test tests/v12-published-approved-legacy-overlay.test.mjs
+          node --test tests/v12-published-readonly-pilot-gate.test.mjs
       - run: echo 'STAGING_PREVIEW_ONLY_NO_SCHEMA_CHANGE_NO_PROD_DEPLOY_NO_STUDY_WRITE'
