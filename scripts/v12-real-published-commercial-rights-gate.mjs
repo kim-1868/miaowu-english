@@ -160,6 +160,28 @@ export function createRealPublisherClearanceTemplate(packet){
     collocations_json:c.collocations_json,context_gloss:c.context_gloss
    }))
   },
+  // Source context from user and earlier production logs. These claims
+  // assist the editor; they are NOT a per-card license or permission grant.
+  authorship_context:{
+   story:{
+    reported_origin:'USER_AI_GENERATED_FOR_MIAOWU',
+    basis:'PUBLISHER_USER_SELF_REPORT',
+    scope_verified_for_this_exact_paragraph:false
+   },
+   bilingual_examples:{
+    reported_origin:'CHATGPT_ASSISTED_DRAFTS_PREPARED_FOR_MIAOWU',
+    basis:'PRIOR_MIAOWU_CHAT_DRAFTING_AND_USER_CONFIRMATION',
+    historical_mixed_sources_may_exist:true,
+    per_old_card_creation_provenance_verified:false,
+    language_quality_checked:false,
+    third_party_overlap_checked:false
+   },
+   phonetics:{
+    uk_ipa_source:'NOT_CONFIRMED',
+    us_ipa_source:'NOT_CONFIRMED'
+   },
+   note:'Do not ask publisher to reconfirm already known general origin. Verify each selected old card against editable draft/version history; only unresolved third-party rights or accuracy need specific review.'
+  },
   rights:rightsDefault(),
   checks:checksDefault(),
   dictionary:{entry_id:null,source_key:null,source_registry_sha256:null,
