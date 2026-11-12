@@ -30,7 +30,7 @@ const validTime=x=>typeof x==='string'&&
  /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z$/u.test(x)&&
  !Number.isNaN(Date.parse(x));
 const unique=x=>new Set(x).size===x.length;
-function signedContentAttestation(a){
+export function canonicalPublisherReviewAttestation(a){
  return JSON.stringify({
   schema:a.schema,
   source_proof_sha256:a.source_proof_sha256,
@@ -174,7 +174,7 @@ function verifyPublisherReceipt({attestation,packet,receipt,trustedOpsPublicKeyP
   receipt.target_database_id!==TEST_DB_ID||
   receipt.source_proof_sha256!==packet.source_proof_sha256||
   receipt.candidate_sha256!==candidateHash(packet)||
-  receipt.publisher_review_sha256!==hash(signedContentAttestation(attestation))||
+  receipt.publisher_review_sha256!==hash(canonicalPublisherReviewAttestation(attestation))||
   receipt.reviewer_id!==attestation.reviewer_id||
   !norm(receipt.ops_audit_id)||!validTime(receipt.signed_at)){
   blockers.push('AUTHENTICATED_OPS_TEST_SCOPE_RECEIPT_MISSING_OR_CHANGED');
