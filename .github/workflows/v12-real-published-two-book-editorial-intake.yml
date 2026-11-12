@@ -1,0 +1,111 @@
+name: V1.2 real published two-book context evidence -> private editorial HOLD packet
+on:
+  pull_request:
+    paths:
+      - .github/workflows/v12-real-published-two-book-editorial-intake.yml
+      - scripts/v12-real-published-two-book-editorial-intake.mjs
+      - tests/v12-real-published-two-book-editorial-intake.test.mjs
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-real-published-two-book-editorial-intake.yml
+      - scripts/v12-real-published-two-book-editorial-intake.mjs
+      - tests/v12-real-published-two-book-editorial-intake.test.mjs
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: v12-real-published-editorial-hold-proof
+  cancel-in-progress: false
+jobs:
+  synthetic-review-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify full source card SHA and read-only review fail-closed rules
+        run: |
+          set -euo pipefail
+          node --test tests/v12-real-published-two-book-editorial-intake.test.mjs
+  protected-real-evidence-review-intake:
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    needs: synthetic-review-qa
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Decrypt existing exact two-book evidence, convert to HOLD review, seal
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROOF_PASSPHRASE: ${{ secrets.PRODUCTION_D1_METADATA_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${GH_TOKEN:?GITHUB_ARTIFACT_READ_REQUIRED}"
+          : "${PROOF_PASSPHRASE:?EXISTING_EVIDENCE_ENCRYPTION_SECRET_REQUIRED}"
+          test "${#PROOF_PASSPHRASE}" -ge 32
+          umask 077
+          p="$RUNNER_TEMP/real-published-intake-private"
+          mkdir -m 700 "$p"
+          trap 'rm -rf "$p"' EXIT
+          printf '%s' "$PROOF_PASSPHRASE" > "$p/pass"
+          unset PROOF_PASSPHRASE
+          curl --fail --location --silent --show-error --retry 2 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/kim-1868/miaowu-english/actions/artifacts/13963540716/zip" \
+            --output "$p/source.zip"
+          test "$(unzip -Z1 "$p/source.zip" | wc -l | tr -d ' ')" = 1
+          unzip -Z1 "$p/source.zip" | grep -Fxq \
+            'v12-real-published-two-book-context-evidence.gpg'
+          unzip -p "$p/source.zip" \
+            'v12-real-published-two-book-context-evidence.gpg' > "$p/source.gpg"
+          test -s "$p/source.gpg"
+          if ! gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$p/pass" --decrypt "$p/source.gpg" \
+            > "$p/actual-evidence.json" 2> "$p/gpg-decrypt.err"; then
+            echo 'REAL_PUBLISHED_EDITORIAL_INTAKE_SOURCE_DECRYPT_FAILED'
+            exit 1
+          fi
+          node scripts/v12-real-published-two-book-editorial-intake.mjs \
+            "$p/actual-evidence.json" "$p/editorial-hold.json"
+          # Script logs REAL_PUBLISHED_EDITORIAL_INTAKE_SAFE_COUNTS= with counts only.
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$p/pass" --symmetric --cipher-algo AES256 \
+            --output "$RUNNER_TEMP/v12-real-published-two-book-editorial-hold.gpg" \
+            "$p/editorial-hold.json" > "$p/gpg-encrypt.log" 2>&1
+          test -s "$RUNNER_TEMP/v12-real-published-two-book-editorial-hold.gpg"
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$p/pass" \
+            --decrypt "$RUNNER_TEMP/v12-real-published-two-book-editorial-hold.gpg" \
+            > "$p/recovered.json" 2> "$p/gpg-check.err"
+          cmp -s "$p/editorial-hold.json" "$p/recovered.json"
+          rm -rf "$p"
+          echo 'REAL_PUBLISHED_EDITORIAL_HOLD_ARTIFACT_ENCRYPTED_VERIFIED_NO_DATABASE_ACCESS'
+      - name: Upload only authenticated-source AES256 encrypted HOLD review packet
+        uses: actions/upload-artifact@v4
+        with:
+          name: v12-real-published-two-book-editorial-hold-encrypted
+          path: ${{ runner.temp }}/v12-real-published-two-book-editorial-hold.gpg
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+      - name: Purge remaining encrypted runner copy
+        if: always()
+        run: rm -f "$RUNNER_TEMP/v12-real-published-two-book-editorial-hold.gpg"
