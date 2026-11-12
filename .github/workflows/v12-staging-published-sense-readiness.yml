@@ -4,6 +4,8 @@ on:
     branches: [feature/v11-smart-vocab-preflight-20261109]
     paths:
       - .github/workflows/v12-staging-published-sense-readiness.yml
+      - scripts/verify-staging-published-sense-readiness.mjs
+      - tests/v12-staging-published-sense-readiness.test.mjs
   workflow_dispatch:
 permissions:
   contents: read
