@@ -1,0 +1,32 @@
+name: V1.2 published legacy approved sense overlay staging-only QA
+on:
+  pull_request:
+    paths:
+      - src/global-dictionary-published-approved-legacy-overlay.js
+      - src/worker.js
+      - tests/v12-published-approved-legacy-overlay.test.mjs
+      - .github/workflows/v12-published-approved-legacy-overlay-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - src/global-dictionary-published-approved-legacy-overlay.js
+      - tests/v12-published-approved-legacy-overlay.test.mjs
+permissions:
+  contents: read
+jobs:
+  synthetic-approved-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          set -euo pipefail
+          node --check src/global-dictionary-published-approved-legacy-overlay.js
+          node --check src/worker.js
+          node --test tests/v12-published-approved-legacy-overlay.test.mjs
+      - run: echo 'STAGING_PREVIEW_ONLY_NO_SCHEMA_CHANGE_NO_PROD_DEPLOY_NO_STUDY_WRITE'
