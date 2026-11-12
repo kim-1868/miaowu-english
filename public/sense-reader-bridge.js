@@ -28,14 +28,14 @@
     const c=result.card,tray=document.getElementById('wordPop');
     if(!tray)throw Error('SENSE_READER_TRAY_MISSING');
     tray.innerHTML='<button type="button" class="modal-close" id="wordClose" aria-label="关闭词卡">×</button>'+
-      '<span class="eyebrow">MIAOWU · 已审核词义</span><h3>'+html(c.headword)+'</h3>'+
+      '<span class="eyebrow">MIAOWU · 统一词义预览（测试环境）</span><h3>'+html(c.headword)+'</h3>'+
       '<div class="pron">美 '+html(c.phoneticUs||'')+' · 英 '+html(c.phoneticUk||'')+
       ' <button type="button" id="senseWordSpeak">♫ 朗读</button></div>'+
       '<section class="word-extra" data-reviewed-sense="'+html(c.sense_id)+'"><strong>'+
       html(c.pos)+' · '+html(c.meaningZh)+'</strong><small> · 本章词义</small>'+
       '<div class="v11-example-heading"><span>例句</span> <button type="button" id="senseExampleSpeak">♫ 朗读例句</button></div>'+
       '<p>'+html(c.exampleEn)+'</p><span class="study-translation">'+html(c.exampleZh)+'</span></section>'+
-      '<p class="study-loading">统一义项预览 · 学习记录仍使用原版词卡</p>'+
+      '<p class="study-loading">统一义项仅供预览 · 复习记录仍使用原版词卡</p>'+
       '<div class="word-actions"><button type="button" id="senseLegacyCard">查看原词卡与学习操作</button></div>';
     document.getElementById('wordClose').onclick=api.close;
     document.getElementById('senseWordSpeak').onclick=()=>api.speak(c.headword);
