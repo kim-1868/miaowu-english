@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {buildGlobalDictionaryIndex} from '../src/global-dictionary-matcher.js';
 import {planDraftNovelAutomaticTargets as plan} from '../src/global-dictionary-auto-draft-target-planner.js';
 const E='gdict_'+'a'.repeat(24),S='gds_'+'b'.repeat(24);
@@ -64,4 +65,15 @@ test('bounded result count never auto modifies or auto publishes',()=>{
 test('invalid packages and unsupported category refuse',()=>{
  const broken=novel();broken.book.category='invalid category';
  assert.throws(()=>plan(broken,index(),{[E]:lesson()},{approvedSenses:approved()}));
+});
+
+test('existing staging OPS discover endpoint can expose safer candidate patch plan only with opt-in flag',()=>{
+ const ops=readFileSync('src/ops-dictionary-v2.js','utf8');
+ assert.ok(ops.includes('GLOBAL_DICTIONARY_AUTO_DRAFT_PLANNER_V12_ENABLED'));
+ assert.ok(ops.includes('planDraftNovelAutomaticTargets(source,lookup.index,lessons'));
+ assert.ok(ops.includes('auto_target_patch_proposal:autoTargetPatch'));
+ assert.ok(ops.includes('src.license_reviewed=1'));
+ assert.ok(ops.includes("src.enabled=1"));
+ assert.ok(ops.includes("env.APP_ENV!=='staging'"));
+ assert.doesNotMatch(ops,/wrangler deploy|d1 migrations apply/i);
 });
