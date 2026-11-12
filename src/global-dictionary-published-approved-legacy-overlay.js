@@ -99,3 +99,21 @@ export async function listPublishedApprovedLegacySenseAnchors(db,{chapterId,user
   user_study_rows_written:0,d1_writes:0,
   blockedCounts};
 }
+
+const json=(body,status=200)=>new Response(JSON.stringify(body),{
+ status,headers:{'content-type':'application/json; charset=utf-8',
+  'cache-control':'private, no-store','x-content-type-options':'nosniff',
+  'referrer-policy':'no-referrer'}});
+export async function handlePublishedLegacySensePreview(req,env,path,user){
+ if(env?.APP_ENV!=='staging')return json({error:'NOT_FOUND'},404);
+ if(env?.GLOBAL_DICTIONARY_PUBLISHED_LEGACY_PREVIEW_ENABLED!=='true')
+  return json({error:'PUBLISHED_LEGACY_PREVIEW_DISABLED'},503);
+ if(!user?.id)return json({error:'LOGIN_REQUIRED'},401);
+ if(req.method!=='GET')return json({error:'METHOD_NOT_ALLOWED'},405);
+ const match=/^\\/api\\/me\\/dictionary\\/chapters\\/([A-Za-z0-9_-]{1,80})\\/published-legacy-sense-preview$/u.exec(path||'');
+ if(!match)return json({error:'NOT_FOUND'},404);
+ try{
+  return json(await listPublishedApprovedLegacySenseAnchors(env.DB,{
+   chapterId:match[1],userId:user.id}));
+ }catch{return json({error:'PUBLISHED_LEGACY_PREVIEW_UNAVAILABLE'},503)}
+}
