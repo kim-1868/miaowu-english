@@ -419,7 +419,9 @@ async function chapterAccess(req, env, id, user) {
   catch { return reject("CONTENT_UNAVAILABLE", 503); }
   return json({ id: row.id, chapterNo: row.chapter_no, title: row.title, content,
     headwordReaderReady:env.APP_ENV==='staging'&&
-      env.GLOBAL_DICTIONARY_HEADWORD_SRS_ENABLED==='true' });
+      env.GLOBAL_DICTIONARY_HEADWORD_SRS_ENABLED==='true',
+    senseReaderReady:env.APP_ENV==='staging'&&
+      env.GLOBAL_DICTIONARY_SENSE_SRS_ENABLED==='true' });
 }
 async function chapterVocabulary(req, env, id, user) {
   // Authorize by the same D1 check used for paid body. Word contexts are paid
