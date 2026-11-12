@@ -1,0 +1,35 @@
+name: V1.2 private published duplicate-sense editorial queue synthetic QA
+on:
+  pull_request:
+    paths:
+      - sql/published_32_private_editorial_wordcards_readonly.sql
+      - scripts/build-private-published-editorial-review-queue.mjs
+      - tests/v12-private-published-sense-editorial-queue.test.mjs
+      - .github/workflows/v12-published-private-sense-editorial-queue.yml
+      - .github/workflows/v12-published-private-sense-editorial-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - sql/published_32_private_editorial_wordcards_readonly.sql
+      - scripts/build-private-published-editorial-review-queue.mjs
+      - tests/v12-private-published-sense-editorial-queue.test.mjs
+permissions:
+  contents: read
+jobs:
+  synthetic-no-cloudflare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test private editorial HOLD evidence with synthetic published data
+        run: |
+          set -euo pipefail
+          node --check scripts/build-private-published-editorial-review-queue.mjs
+          node --experimental-sqlite --test tests/v12-private-published-sense-editorial-queue.test.mjs
+      - name: No remote read, no raw user manuscript in CI
+        run: echo 'SYNTHETIC_ONLY_NO_PRODUCTION_DB_ACCESS_NO_REAL_LEXICAL_DATA'
