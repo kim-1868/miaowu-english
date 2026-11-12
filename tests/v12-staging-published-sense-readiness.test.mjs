@@ -11,7 +11,9 @@ const tables=['books','chapters','words','chapter_words','global_dictionary_entr
 const packet=rows=>[{success:true,results:rows}];
 const sourceCounts={published_books:32,published_chapters:276,approved_active_senses:0,
  licensed_teaching_entries:0,approved_legacy_sense_links:0,
- linked_published_anchors:0,sense_study_rows:0};
+ linked_published_anchors:0,sense_study_rows:0,
+ staging_fixture_senses:0,staging_fixture_legacy_links:0,
+ staging_fixture_published_anchors:0};
 test('full staging schema and no approved links is accurately reported NOT ready',()=>{
  assert.equal(schema(packet(tables.map(name=>({name})))).status,'SCHEMA_READY');
  const report=counts(packet([sourceCounts]));
@@ -38,6 +40,16 @@ test('unlicensed or unbound published card candidates are NOT real bound anchors
   assert.equal(x.status,'STAGING_APPROVED_LINK_DATA_NOT_READY',field);
   assert.equal(x.d1_writes,0);
  }
+});
+test('two staging fixture links never count as commercially signed-off bindings',()=>{
+ const x=counts(packet([{...sourceCounts,published_books:4,published_chapters:7,
+  staging_fixture_senses:1,staging_fixture_legacy_links:2,
+  staging_fixture_published_anchors:2}]));
+ assert.equal(x.status,'STAGING_INTERNAL_QA_FIXTURE_ONLY_NOT_RELEASE_READY');
+ assert.equal(x.counts.approved_active_senses,0);
+ assert.equal(x.counts.linked_published_anchors,0);
+ assert.equal(x.counts.staging_fixture_published_anchors,2);
+ assert.equal(x.d1_writes,0);
 });
 test('missing 020 schema, failed query and sensitive extra columns are blocked',()=>{
  const x=schema(packet(tables.filter(t=>t!=='global_dictionary_senses').map(name=>({name}))));
