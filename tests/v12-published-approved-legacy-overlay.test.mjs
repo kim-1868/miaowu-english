@@ -47,7 +47,7 @@ test('two distinct approved old IDs can safely resolve to identical sense in rea
 test('old card version changes and unreviewed meanings never grant a sense ID',async()=>{
  const a=record('p0:s0','word-A');
  a.old_card_sha256=await fingerprintLegacyWordCard(a);
- const changed={...a,old_meaning:'另一个意思'};
+ const changed={...a,old_meaning:'另一个意思',stored_segment_gloss:'另一个意思'};
  const invalid={...a,anchor:'p0:s1',old_card_sha256:'0'.repeat(64)};
  const r=await run(db([changed,invalid]));
  assert.equal(r.anchors.length,0);
