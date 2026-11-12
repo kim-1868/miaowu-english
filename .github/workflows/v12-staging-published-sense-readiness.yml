@@ -61,7 +61,48 @@ jobs:
             exit 1
           fi
           node scripts/verify-staging-published-sense-readiness.mjs schema "$private/schema.json"
-          aggregate="SELECT (SELECT count(*) FROM books WHERE status='published') published_books,(SELECT count(*) FROM chapters ch JOIN books b ON b.id=ch.book_id WHERE b.status='published' AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP) published_chapters,(SELECT count(*) FROM global_dictionary_senses WHERE approved=1 AND active=1) approved_active_senses,(SELECT count(*) FROM global_dictionary_entries e JOIN global_dictionary_sources src ON src.source_key=e.source_name WHERE e.teaching_ready=1 AND src.enabled=1 AND src.license_reviewed=1) licensed_teaching_entries,(SELECT count(*) FROM global_dictionary_legacy_sense_links) approved_legacy_sense_links,(SELECT count(*) FROM chapter_words cw JOIN chapters ch ON ch.id=cw.chapter_id JOIN books b ON b.id=ch.book_id JOIN global_dictionary_legacy_sense_links l ON l.legacy_word_id=cw.word_id WHERE b.status='published' AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP) linked_published_anchors,(SELECT count(*) FROM user_dictionary_sense_study) sense_study_rows;"
+          aggregate="SELECT
+            (SELECT count(*) FROM books WHERE status='published') published_books,
+            (SELECT count(*) FROM chapters ch JOIN books b ON b.id=ch.book_id
+              WHERE b.status='published' AND ch.published_at IS NOT NULL
+                AND ch.published_at<=CURRENT_TIMESTAMP) published_chapters,
+            (SELECT count(*) FROM global_dictionary_senses s
+              JOIN global_dictionary_entries e ON e.entry_id=s.entry_id
+              WHERE s.approved=1 AND s.active=1 AND e.source_name!='wordletter-internal-qa-choice-v12-20261112') approved_active_senses,
+            (SELECT count(*) FROM global_dictionary_entries e
+              JOIN global_dictionary_sources src ON src.source_key=e.source_name
+              WHERE e.teaching_ready=1 AND src.enabled=1 AND src.license_reviewed=1
+                AND src.source_key!='wordletter-internal-qa-choice-v12-20261112') licensed_teaching_entries,
+            (SELECT count(*) FROM global_dictionary_legacy_sense_links l
+              JOIN global_dictionary_senses s ON s.sense_id=l.sense_id
+              JOIN global_dictionary_entries e ON e.entry_id=s.entry_id
+              WHERE e.source_name!='wordletter-internal-qa-choice-v12-20261112') approved_legacy_sense_links,
+            (SELECT count(*) FROM chapter_words cw
+              JOIN chapters ch ON ch.id=cw.chapter_id
+              JOIN books b ON b.id=ch.book_id
+              JOIN global_dictionary_legacy_sense_links l ON l.legacy_word_id=cw.word_id
+              JOIN global_dictionary_senses s ON s.sense_id=l.sense_id
+              JOIN global_dictionary_entries e ON e.entry_id=s.entry_id
+              WHERE b.status='published' AND ch.published_at IS NOT NULL
+                AND ch.published_at<=CURRENT_TIMESTAMP
+                AND e.source_name!='wordletter-internal-qa-choice-v12-20261112') linked_published_anchors,
+            (SELECT count(*) FROM user_dictionary_sense_study) sense_study_rows,
+            (SELECT count(*) FROM global_dictionary_senses s
+              JOIN global_dictionary_entries e ON e.entry_id=s.entry_id
+              WHERE e.source_name='wordletter-internal-qa-choice-v12-20261112') staging_fixture_senses,
+            (SELECT count(*) FROM global_dictionary_legacy_sense_links l
+              JOIN global_dictionary_senses s ON s.sense_id=l.sense_id
+              JOIN global_dictionary_entries e ON e.entry_id=s.entry_id
+              WHERE e.source_name='wordletter-internal-qa-choice-v12-20261112') staging_fixture_legacy_links,
+            (SELECT count(*) FROM chapter_words cw
+              JOIN chapters ch ON ch.id=cw.chapter_id
+              JOIN books b ON b.id=ch.book_id
+              JOIN global_dictionary_legacy_sense_links l ON l.legacy_word_id=cw.word_id
+              JOIN global_dictionary_senses s ON s.sense_id=l.sense_id
+              JOIN global_dictionary_entries e ON e.entry_id=s.entry_id
+              WHERE b.status='published' AND ch.published_at IS NOT NULL
+                AND ch.published_at<=CURRENT_TIMESTAMP
+                AND e.source_name='wordletter-internal-qa-choice-v12-20261112') staging_fixture_published_anchors;"
           if ! npx wrangler d1 execute miaowu-english-test --remote --json --config wrangler.jsonc --command "$aggregate" >"$private/aggregate.json" 2>"$private/error"; then
             echo 'STAGING_READONLY_AGGREGATE_SELECT_FAILED_NO_PRODUCTION_ACCESS'
             exit 1
