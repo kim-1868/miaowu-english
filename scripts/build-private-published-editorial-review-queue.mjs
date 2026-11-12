@@ -20,7 +20,7 @@ function decode(data){
   'EDITOR_QUEUE_QUERY_FAILED');
  return packets.flatMap(p=>p?.results??p?.result?.results??[]);
 }
-export function buildPublishedPrivateEditorialQueue(payload){
+export function buildPublishedPrivateEditorialQueue(payload,{expected={books:32,anchors:8444,oldCards:3433,headwords:1585,textualGroups:1981,duplicateGroups:532,excessDuplicateIds:1452}}={}){
  const rows=decode(payload);
  assert.ok(rows.length>0&&rows.length<=MAX_ROWS,'EDITOR_QUEUE_INVALID_ROW_COUNT');
  const unique=new Set(),books=new Set(),wordIds=new Set(),headwordIds=new Set();
@@ -69,10 +69,10 @@ export function buildPublishedPrivateEditorialQueue(payload){
  }
  // Compare source counts to the latest protected production SELECT; stop
  // completely on snapshot drift instead of mixing different book editions.
- assert.equal(books.size,32,'EDITOR_QUEUE_PUBLISHED_SCOPE_DRIFT');
- assert.equal(anchorOccurrences,8444,'EDITOR_QUEUE_ANCHOR_SNAPSHOT_DRIFT');
- assert.equal(wordIds.size,3433,'EDITOR_QUEUE_OLD_CARD_SNAPSHOT_DRIFT');
- assert.equal(headwordIds.size,1585,'EDITOR_QUEUE_HEADWORD_SNAPSHOT_DRIFT');
+ assert.equal(books.size,expected.books,'EDITOR_QUEUE_PUBLISHED_SCOPE_DRIFT');
+ assert.equal(anchorOccurrences,expected.anchors,'EDITOR_QUEUE_ANCHOR_SNAPSHOT_DRIFT');
+ assert.equal(wordIds.size,expected.oldCards,'EDITOR_QUEUE_OLD_CARD_SNAPSHOT_DRIFT');
+ assert.equal(headwordIds.size,expected.headwords,'EDITOR_QUEUE_HEADWORD_SNAPSHOT_DRIFT');
  const groupRecords=[...groups.values()].map(g=>{
   const duplicate=g.wordIds.size>1;
   const ambiguous=!text(g.pos)||!text(g.meaning_zh);
@@ -113,9 +113,9 @@ export function buildPublishedPrivateEditorialQueue(payload){
   missing_example_book_card_rows:missingExamples,
   missing_pos_book_card_rows:missingPOS,missing_gloss_book_card_rows:missingGloss
  };
- assert.equal(counts.textual_sense_candidates,1981,'EDITOR_QUEUE_TEXTUAL_SENSE_DRIFT');
- assert.equal(counts.duplicate_textual_sense_groups,532,'EDITOR_QUEUE_DUPLICATE_GROUP_DRIFT');
- assert.equal(counts.duplicate_excess_old_ids,1452,'EDITOR_QUEUE_DUPLICATE_ID_DRIFT');
+ assert.equal(counts.textual_sense_candidates,expected.textualGroups,'EDITOR_QUEUE_TEXTUAL_SENSE_DRIFT');
+ assert.equal(counts.duplicate_textual_sense_groups,expected.duplicateGroups,'EDITOR_QUEUE_DUPLICATE_GROUP_DRIFT');
+ assert.equal(counts.duplicate_excess_old_ids,expected.excessDuplicateIds,'EDITOR_QUEUE_DUPLICATE_ID_DRIFT');
  return {
   status:'PRIVATE_PUBLISHED_EDITORIAL_CANDIDATES_UNAPPROVED',
   source:'production published 32 novels only',
