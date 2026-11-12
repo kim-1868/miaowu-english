@@ -3,6 +3,7 @@
 // Disabled unless both explicit staging flags are enabled. No production routes.
 import {createSenseStudyState,applySenseStudyFeedback,previewSenseStudyDue} from './global-dictionary-sense-srs.js';
 import {listReviewedReaderSenseAnchors} from './global-dictionary-reader-sense-anchors.js';
+import {listPublishedApprovedLegacySenseAnchors,lookupPublishedApprovedLegacySenseContext} from './global-dictionary-published-approved-legacy-overlay.js';
 const SENSE=/^gds_[a-f0-9]{24}$/u;
 const CHAPTER=/^[A-Za-z0-9_-]{1,80}$/u;
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iu;
@@ -116,9 +117,28 @@ export async function handleSenseStudyApi(req,env,path,user,{clock=()=>new Date(
  if(reader){
   if(req.method!=='GET')return reject('METHOD_NOT_ALLOWED',405);
   if(!env.DB?.prepare)return reject('SENSE_SCHEMA_UNAVAILABLE',503);
-  try{return json(await listReviewedReaderSenseAnchors(env.DB,{
-   chapterId:reader[1],userId:user.id}));}
-  catch{return reject('SENSE_READER_ANCHORS_UNAVAILABLE',503)}
+  try{
+   const normal=await listReviewedReaderSenseAnchors(env.DB,{
+    chapterId:reader[1],userId:user.id});
+   if(env.GLOBAL_DICTIONARY_PUBLISHED_LEGACY_PREVIEW_ENABLED!=='true')
+    return json(normal);
+   const legacy=await listPublishedApprovedLegacySenseAnchors(env.DB,{
+    chapterId:reader[1],userId:user.id});
+   const mapped=new Map(normal.anchors.map(x=>[x.anchor,x]));
+   for(const candidate of legacy.anchors){
+    const existing=mapped.get(candidate.anchor);
+    if(existing){
+     // Two independent mappings may never silently compete for a learner.
+     if(existing.sense_id!==candidate.sense_id||
+        existing.entry_id!==candidate.entry_id)
+      throw Error('PUBLISHED_LEGACY_SENSE_ANCHOR_CONFLICT');
+    }else mapped.set(candidate.anchor,candidate);
+   }
+   return json({...normal,anchors:[...mapped.values()].sort((a,b)=>
+    a.anchor.localeCompare(b.anchor,'en')),
+    verified_published_legacy_overlays:legacy.anchors.length,
+    user_study_rows_written:0,d1_writes:0});
+  }catch{return reject('SENSE_READER_ANCHORS_UNAVAILABLE',503)}
  }
  const route=ROUTE.exec(path||'');
  if(!route)return reject('NOT_FOUND',404);
@@ -144,7 +164,12 @@ export async function handleSenseStudyApi(req,env,path,user,{clock=()=>new Date(
     anchor.length<1||anchor.length>512||/[\u0000-\u001f]/u.test(anchor))
   return reject('SENSE_INVALID_CONTEXT',400);
  try{
-  const row=await query(env.DB,CONTEXT_SQL,senseId,chapterId,anchor,user.id).first();
+  let row=await query(env.DB,CONTEXT_SQL,senseId,chapterId,anchor,user.id).first();
+  if(!row&&env.GLOBAL_DICTIONARY_PUBLISHED_LEGACY_PREVIEW_ENABLED==='true'&&
+     /^p(?:0|[1-9]\d*):s(?:0|[1-9]\d*)$/u.test(anchor)){
+   row=await lookupPublishedApprovedLegacySenseContext(env.DB,{
+    chapterId,userId:user.id,anchor,senseId});
+  }
   const card=row&&decode(row);
   if(!card)return reject('SENSE_NOT_AVAILABLE',403);
   const {state,revision}=stateFromDb(

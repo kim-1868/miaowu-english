@@ -9,7 +9,7 @@ const SENSE=/^gds_[a-f0-9]{24}$/u;
 const ENTRY=/^gdict_[a-f0-9]{24}$/u;
 const DIGEST=/^[a-f0-9]{64}$/u;
 const MAX=2000;
-const SQL=`SELECT cw.context_anchor AS anchor,cw.word_id AS legacy_word_id,
+const SQL=`SELECT b.id AS book_id,cw.context_anchor AS anchor,cw.word_id AS legacy_word_id,
  w.headword AS old_headword,w.phonetic_uk AS old_uk,w.phonetic_us AS old_us,
  w.part_of_speech AS old_pos,w.meaning_zh AS old_meaning,
  w.example_en AS old_en,w.example_zh AS old_zh,
@@ -17,7 +17,8 @@ const SQL=`SELECT cw.context_anchor AS anchor,cw.word_id AS legacy_word_id,
  link.old_card_sha256,link.reviewed_by AS link_reviewed_by,
  link.reviewed_at AS link_reviewed_at,
  s.sense_id,s.entry_id,s.pos,s.meaning_zh,s.example_en,s.example_zh,
- l.senses_json,l.phonetic_uk AS lesson_uk,l.phonetic_us AS lesson_us,
+ l.senses_json,l.phonetic_uk AS phonetic_uk,l.phonetic_us AS phonetic_us,
+ l.phonetic_uk AS lesson_uk,l.phonetic_us AS lesson_us,
  e.headword AS dictionary_headword
  FROM chapter_words cw
  JOIN chapters ch ON ch.id=cw.chapter_id AND ch.published_at IS NOT NULL
@@ -71,14 +72,14 @@ function lessonIdentityMatches(row){
   trim(s?.exampleEn)===trim(row.example_en)&&
   trim(s?.exampleZh)===trim(row.example_zh)).length===1;
 }
-export async function listPublishedApprovedLegacySenseAnchors(db,{chapterId,userId}={}){
+async function loadValidatedPublishedSenseRows(db,{chapterId,userId}={}){
  if(typeof db?.prepare!=='function'||!ID.test(chapterId||'')||
   typeof userId!=='string'||!userId||userId.length>128)
   throw Error('PUBLISHED_LEGACY_SENSE_INVALID_AUTHORIZED_REQUEST');
  const data=await db.prepare(SQL).bind(chapterId,userId).all();
  if(!Array.isArray(data?.results)||data.results.length>MAX)
   throw Error('PUBLISHED_LEGACY_SENSE_INVALID_RESULT_SIZE');
- const seen=new Set(),anchors=[],blockedCounts={
+ const seen=new Set(),approvedRows=[],blockedCounts={
   mismatched_or_missing_lesson:0,legacy_card_digest_mismatch:0};
  for(const row of data.results){
   if(!ANCHOR.test(row.anchor||'')||seen.has(row.anchor))
@@ -91,13 +92,36 @@ export async function listPublishedApprovedLegacySenseAnchors(db,{chapterId,user
     await fingerprintLegacyWordCard(row)!==row.old_card_sha256){
    blockedCounts.legacy_card_digest_mismatch++;continue;
   }
-  anchors.push({anchor:row.anchor,entry_id:row.entry_id,sense_id:row.sense_id});
+  approvedRows.push(row);
  }
+ return {chapterId,approvedRows,blockedCounts};
+}
+export async function listPublishedApprovedLegacySenseAnchors(db,{chapterId,userId}={}){
+ const {approvedRows,blockedCounts}=await loadValidatedPublishedSenseRows(db,{chapterId,userId});
+ const anchors=approvedRows.map(row=>({anchor:row.anchor,entry_id:row.entry_id,sense_id:row.sense_id}));
  return {chapterId,anchors,study_identity:'sense_id',
   source:'reviewed_published_legacy_links',approved_only:true,
   read_only:true,book_content_changed:false,
   user_study_rows_written:0,d1_writes:0,
   blockedCounts};
+}
+
+// Full request-time context lookup for existing published books. The same
+// entitlement and old-card SHA guard applies to feedback as to reader anchors.
+export async function lookupPublishedApprovedLegacySenseContext(db,{chapterId,userId,anchor,senseId}={}){
+ if(!ANCHOR.test(anchor||'')||!SENSE.test(senseId||''))
+  throw Error('PUBLISHED_LEGACY_SENSE_INVALID_CONTEXT');
+ const {approvedRows}=await loadValidatedPublishedSenseRows(db,{chapterId,userId});
+ const selected=approvedRows.filter(row=>row.anchor===anchor&&row.sense_id===senseId);
+ if(selected.length>1)throw Error('PUBLISHED_LEGACY_SENSE_DUPLICATE_CONTEXT');
+ const row=selected[0];
+ return row?{
+  book_id:row.book_id,sense_id:row.sense_id,entry_id:row.entry_id,
+  headword:row.dictionary_headword,pos:row.pos,meaning_zh:row.meaning_zh,
+  example_en:row.example_en,example_zh:row.example_zh,
+  phonetic_uk:row.phonetic_uk,phonetic_us:row.phonetic_us,
+  senses_json:row.senses_json
+ }:null;
 }
 
 const json=(body,status=200)=>new Response(JSON.stringify(body),{
