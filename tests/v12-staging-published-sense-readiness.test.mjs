@@ -28,6 +28,17 @@ test('approved links availability is reported without exporting any user rows',(
  assert.equal(x.counts.linked_published_anchors,8);
  assert.equal(x.private_rows_exported,0);
 });
+test('unlicensed or unbound published card candidates are NOT real bound anchors',()=>{
+ for(const field of ['approved_active_senses','licensed_teaching_entries',
+   'approved_legacy_sense_links','linked_published_anchors']){
+  const row={...sourceCounts,approved_active_senses:5,
+    licensed_teaching_entries:5,approved_legacy_sense_links:5,
+    linked_published_anchors:7,[field]:0};
+  const x=counts(packet([row]));
+  assert.equal(x.status,'STAGING_APPROVED_LINK_DATA_NOT_READY',field);
+  assert.equal(x.d1_writes,0);
+ }
+});
 test('missing 020 schema, failed query and sensitive extra columns are blocked',()=>{
  const x=schema(packet(tables.filter(t=>t!=='global_dictionary_senses').map(name=>({name}))));
  assert.equal(x.status,'SCHEMA_MISSING');
