@@ -28,6 +28,8 @@ function fixtures(){
   reviewer_material_private:[
    {...row,book_id:'real-a',legacy_word_id:'old-a'},
    {...row,book_id:'real-b',legacy_word_id:'old-b',
+    ipa_uk:{...row.ipa_uk},ipa_us:{...row.ipa_us,
+     candidates:[...row.ipa_us.candidates]},flags:[...row.flags],
     old_card_sha256:'c'.repeat(64),original_paragraph_sha256:'7'.repeat(64)}]};
 }
 function sources(){
