@@ -4,6 +4,9 @@ on:
     branches: [feature/v11-smart-vocab-preflight-20261109]
     paths:
       - .github/workflows/v12-production-published-context-gloss-readonly.yml
+      - sql/published_32_context_gloss_aggregate_readonly.sql
+      - scripts/verify-published-context-gloss-aggregate.mjs
+      - tests/v12-published-context-gloss-readonly.test.mjs
 permissions:
   contents: read
 concurrency:
@@ -48,6 +51,8 @@ jobs:
           NODE
       - name: Install Wrangler for one read-only production SELECT
         run: npm install --no-save --ignore-scripts wrangler@^4
+      # Only the original protected production environment may authorize this
+      # single fixed SELECT. No novel text, user rows, or mutable SQL exported.
       - name: Count actual context wordId/gloss differences without exporting text
         shell: bash
         env:
