@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createHash,generateKeyPairSync} from 'node:crypto';
+import {createHash,createPublicKey,generateKeyPairSync} from 'node:crypto';
 import {buildRealPublishedTwoBookEditorialIntake} from
  '../scripts/v12-real-published-two-book-editorial-intake.mjs';
 import {
@@ -85,7 +85,10 @@ function caseData(){
  const {privateKey,publicKey}=generateKeyPairSync('ed25519');
  const privateKeyPem=privateKey.export({type:'pkcs8',format:'pem'});
  const trustedOpsPublicKeyPem=publicKey.export({type:'spki',format:'pem'});
+ const registeredOpsPublicKeySha256=sha(createPublicKey(trustedOpsPublicKeyPem)
+  .export({format:'der',type:'spki'}));
  return {packet,attestation,privateKeyPem,trustedOpsPublicKeyPem,
+  registeredOpsPublicKeySha256,
   opsAuditId:'ops_real_editorial_owner_20261113',
   signedAt:UTC,authenticatedReviewerId:reviewer,
   trustAnchorRegisteredInOps:true};
@@ -97,7 +100,9 @@ test('trusted OPS key issues one source-locked real-style two-book receipt, no D
  assert.equal(r.receipt.source_proof_sha256,data.packet.source_proof_sha256);
  assert.equal(r.receipt.reviewer_id,data.attestation.reviewer_id);
  assert.ok(r.receipt.signature_b64.length>=86);
- assert.equal(r.verification.authenticated_ops_signature,true);
+ assert.equal(r.verification.ops_ed25519_signature_verified,true);
+ assert.equal(r.verification.registered_ops_trust_anchor_fingerprint_matched,true);
+ assert.equal(r.verification.independent_ops_role_and_audit_service_check_still_required,true);
  assert.equal(r.verification.real_test_senses_activated,0);
  assert.equal(r.verification.production_or_test_d1_writes,0);
  const verified=verify({...data,receipt:r.receipt});
@@ -123,6 +128,10 @@ test('private signing key alone is not permission: actual registered OPS trust a
  assert.throws(()=>issue(mismatch),/OPS_SIGNOFF_PRIVATE_KEY_NOT_REGISTERED_TO_TRUSTED_PUBKEY/);
  const claimed=caseData();claimed.authenticatedReviewerId='pretend_other_person';
  assert.throws(()=>issue(claimed),/OPS_SIGNOFF_REVIEWER_MISMATCH/);
+ const badFingerprint=caseData();
+ badFingerprint.registeredOpsPublicKeySha256='f'.repeat(64);
+ assert.throws(()=>issue(badFingerprint),
+  /OPS_SIGNOFF_PUBLIC_KEY_NOT_IN_INDEPENDENT_REGISTRY/);
  const missing=caseData();missing.opsAuditId='ops_fake';
  assert.throws(()=>issue(missing),/OPS_SIGNOFF_REAL_AUDIT_ID_REQUIRED/);
 });
@@ -145,5 +154,6 @@ test('both sign and verify keep original books, all previous word-study records 
  assert.equal(JSON.stringify(source.packet),before);
  assert.equal(check.prod_d1_writes,0);
  assert.equal(check.created_legacy_links_in_database,0);
- assert.equal(check.registered_ops_key_must_be_verified_out_of_band,true);
+ assert.equal(check.registered_ops_key_fingerprint_matched,true);
+ assert.equal(check.ops_role_and_audit_event_must_be_verified_against_server,true);
 });
