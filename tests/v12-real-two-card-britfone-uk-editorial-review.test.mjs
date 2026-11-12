@@ -69,9 +69,10 @@ test('history card or claimed commercial approval must fail closed',()=>{
   x=>x.counts.test_d1_writes=1,
   x=>x.actual_test_d1_import_allowed=true
  ];
- for(const a of alterations){
+ for(const [i,a] of alterations.entries()){
   const x=fixtures();a(x);
-  assert.throws(()=>review({prior:x,...sources()}),'MUTATION_MUST_FAIL_CLOSED');
+  assert.throws(()=>review({prior:x,...sources()}),
+   'MUTATION_MUST_FAIL_CLOSED_INDEX_'+i);
  }
 });
 test('tampered Britfone data or fake MIT license cannot become approved source candidate',()=>{
