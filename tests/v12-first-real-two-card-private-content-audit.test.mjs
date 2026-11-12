@@ -66,7 +66,7 @@ test('real two-book chapter anchors remain crypto checked, separate old IDs, his
  const s=md(r);
  assert.match(s,/record/);
  assert.match(s,/私人作品0/);
- assert.match(s,/\\[ \\] independent_rights_and_creation_evidence/);
+ assert.ok(s.includes('- [ ] independent_rights_and_creation_evidence'));
  assert.match(s,/不是 OPS 签名/);
 });
 test('missing exact historical old ID is a traceability HOLD, never guessed approval',()=>{
