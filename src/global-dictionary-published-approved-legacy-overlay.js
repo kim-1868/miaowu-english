@@ -14,6 +14,25 @@ const SQL=`SELECT b.id AS book_id,cw.context_anchor AS anchor,cw.word_id AS lega
  w.part_of_speech AS old_pos,w.meaning_zh AS old_meaning,
  w.example_en AS old_en,w.example_zh AS old_zh,
  w.collocations_json AS old_collocations,
+ -- These two scalar values are extracted inside the authorized chapter query.
+ -- The chapter prose is NEVER returned to the client. Legacy card identity
+ -- alone is not sufficient when the published sentence gloss disagrees.
+ CASE WHEN json_valid(ch.content_json)=1 THEN
+  json_extract(ch.content_json,
+   '$.paragraphs['||
+   CAST(substr(cw.context_anchor,2,instr(cw.context_anchor,':')-2) AS INTEGER)||
+   '].segments['||
+   CAST(substr(cw.context_anchor,instr(cw.context_anchor,':s')+2) AS INTEGER)||
+   '].wordId')
+ ELSE NULL END AS stored_segment_word_id,
+ CASE WHEN json_valid(ch.content_json)=1 THEN
+  json_extract(ch.content_json,
+   '$.paragraphs['||
+   CAST(substr(cw.context_anchor,2,instr(cw.context_anchor,':')-2) AS INTEGER)||
+   '].segments['||
+   CAST(substr(cw.context_anchor,instr(cw.context_anchor,':s')+2) AS INTEGER)||
+   '].gloss')
+ ELSE NULL END AS stored_segment_gloss,
  link.old_card_sha256,link.reviewed_by AS link_reviewed_by,
  link.reviewed_at AS link_reviewed_at,
  s.sense_id,s.entry_id,s.pos,s.meaning_zh,s.example_en,s.example_zh,
@@ -80,11 +99,18 @@ async function loadValidatedPublishedSenseRows(db,{chapterId,userId}={}){
  if(!Array.isArray(data?.results)||data.results.length>MAX)
   throw Error('PUBLISHED_LEGACY_SENSE_INVALID_RESULT_SIZE');
  const seen=new Set(),approvedRows=[],blockedCounts={
-  mismatched_or_missing_lesson:0,legacy_card_digest_mismatch:0};
+  mismatched_or_missing_lesson:0,legacy_card_digest_mismatch:0,
+  published_context_mismatch:0};
  for(const row of data.results){
   if(!ANCHOR.test(row.anchor||'')||seen.has(row.anchor))
    throw Error('PUBLISHED_LEGACY_SENSE_ANCHOR_CONFLICT');
   seen.add(row.anchor);
+  if(typeof row.stored_segment_word_id!=='string'||
+    row.stored_segment_word_id!==row.legacy_word_id||
+    !trim(row.stored_segment_gloss)||
+    norm(row.stored_segment_gloss)!==norm(row.old_meaning)){
+   blockedCounts.published_context_mismatch++;continue;
+  }
   if(!lessonIdentityMatches(row)){
    blockedCounts.mismatched_or_missing_lesson++;continue;
   }
