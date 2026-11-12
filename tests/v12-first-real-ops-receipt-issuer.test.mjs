@@ -124,8 +124,13 @@ test('private signing key alone is not permission: actual registered OPS trust a
  const x=caseData();x.trustAnchorRegisteredInOps=false;
  assert.throws(()=>issue(x),/OPS_SIGNOFF_TRUST_ANCHOR_NOT_CONFIRMED_REGISTERED/);
  const mismatch=caseData();
- mismatch.trustedOpsPublicKeyPem=caseData().trustedOpsPublicKeyPem;
- assert.throws(()=>issue(mismatch),/OPS_SIGNOFF_PRIVATE_KEY_NOT_REGISTERED_TO_TRUSTED_PUBKEY/);
+ const foreign=caseData();
+ mismatch.trustedOpsPublicKeyPem=foreign.trustedOpsPublicKeyPem;
+ assert.throws(()=>issue(mismatch),
+  /OPS_SIGNOFF_PUBLIC_KEY_NOT_IN_INDEPENDENT_REGISTRY/);
+ mismatch.registeredOpsPublicKeySha256=foreign.registeredOpsPublicKeySha256;
+ assert.throws(()=>issue(mismatch),
+  /OPS_SIGNOFF_PRIVATE_KEY_NOT_REGISTERED_TO_TRUSTED_PUBKEY/);
  const claimed=caseData();claimed.authenticatedReviewerId='pretend_other_person';
  assert.throws(()=>issue(claimed),/OPS_SIGNOFF_REVIEWER_MISMATCH/);
  const badFingerprint=caseData();
