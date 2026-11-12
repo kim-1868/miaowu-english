@@ -68,3 +68,24 @@ test('real workflow uses isolated staging read token, no write or production rou
  assert.ok(!w.includes('CLOUDFLARE_PROD_D1_READ_TOKEN'));
  assert.doesNotMatch(w,/wrangler deploy|d1 migrations apply|INSERT INTO|UPDATE user_/i);
 });
+
+
+test('real TEST D1 approved-link counters require complete commercial gates, not merely a link row',()=>{
+ const w=readFileSync('.github/workflows/v12-staging-published-sense-readiness.yml','utf8');
+ for(const marker of [') approved_legacy_sense_links,',') linked_published_anchors,']){
+  const end=w.indexOf(marker);
+  assert.ok(end>0,'MISSING_COUNTER_'+marker);
+  const start=w.lastIndexOf('(SELECT count(*)',end);
+  assert.ok(start>=0);
+  const query=w.slice(start,end);
+  for(const gate of ['s.approved=1','s.active=1','e.teaching_ready=1',
+   'src.enabled=1','src.license_reviewed=1',
+   'EXISTS (SELECT 1 FROM global_dictionary_lessons lesson',
+   "length(trim(coalesce(lesson.reviewed_by,'')))>0",
+   "e.source_name!='wordletter-internal-qa-choice-v12-20261112'"]){
+   assert.ok(query.includes(gate),'MISSING_APPROVED_LINK_GATE_'+gate);
+  }
+  assert.ok(query.includes('JOIN global_dictionary_sources src'));
+ }
+ assert.doesNotMatch(w,/wrangler deploy|d1 migrations apply|INSERT INTO|UPDATE user_/i);
+});

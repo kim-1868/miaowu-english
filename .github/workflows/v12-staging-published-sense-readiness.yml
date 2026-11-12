@@ -76,15 +76,27 @@ jobs:
             (SELECT count(*) FROM global_dictionary_legacy_sense_links l
               JOIN global_dictionary_senses s ON s.sense_id=l.sense_id
               JOIN global_dictionary_entries e ON e.entry_id=s.entry_id
-              WHERE e.source_name!='wordletter-internal-qa-choice-v12-20261112') approved_legacy_sense_links,
+              JOIN global_dictionary_sources src ON src.source_key=e.source_name
+              WHERE s.approved=1 AND s.active=1 AND e.teaching_ready=1
+                AND src.enabled=1 AND src.license_reviewed=1
+                AND EXISTS (SELECT 1 FROM global_dictionary_lessons lesson
+                  WHERE lesson.entry_id=e.entry_id
+                    AND length(trim(coalesce(lesson.reviewed_by,'')))>0)
+                AND e.source_name!='wordletter-internal-qa-choice-v12-20261112') approved_legacy_sense_links,
             (SELECT count(*) FROM chapter_words cw
               JOIN chapters ch ON ch.id=cw.chapter_id
               JOIN books b ON b.id=ch.book_id
               JOIN global_dictionary_legacy_sense_links l ON l.legacy_word_id=cw.word_id
               JOIN global_dictionary_senses s ON s.sense_id=l.sense_id
               JOIN global_dictionary_entries e ON e.entry_id=s.entry_id
+              JOIN global_dictionary_sources src ON src.source_key=e.source_name
               WHERE b.status='published' AND ch.published_at IS NOT NULL
                 AND ch.published_at<=CURRENT_TIMESTAMP
+                AND s.approved=1 AND s.active=1 AND e.teaching_ready=1
+                AND src.enabled=1 AND src.license_reviewed=1
+                AND EXISTS (SELECT 1 FROM global_dictionary_lessons lesson
+                  WHERE lesson.entry_id=e.entry_id
+                    AND length(trim(coalesce(lesson.reviewed_by,'')))>0)
                 AND e.source_name!='wordletter-internal-qa-choice-v12-20261112') linked_published_anchors,
             (SELECT count(*) FROM user_dictionary_sense_study) sense_study_rows,
             (SELECT count(*) FROM global_dictionary_senses s
