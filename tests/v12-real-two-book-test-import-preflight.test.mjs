@@ -116,5 +116,5 @@ test('source does not contain remote DB mutations or leak user data to output',(
  const script=readFileSync(new URL('../scripts/v12-real-two-book-test-import-preflight.mjs',
   import.meta.url),'utf8');
  assert.doesNotMatch(script,/wrangler d1|CLOUDFLARE_API_TOKEN|fetch\(|d1 migrations apply/iu);
- assert.doesNotMatch(script,/exec\(["'\`]\s*INSERT INTO|new D1Database/iu);
+ assert.doesNotMatch(script,/new D1Database|\bINSERT\s+INTO\b/iu);
 });
