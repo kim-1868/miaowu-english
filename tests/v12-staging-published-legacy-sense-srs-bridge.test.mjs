@@ -147,5 +147,5 @@ test('original SRS routes remain staging-only with explicit two write gates',()=
  assert.match(api,/if\(env\?\.APP_ENV!=='staging'\)/);
  const overlay=readFileSync('src/global-dictionary-published-approved-legacy-overlay.js','utf8');
  assert.match(overlay,/old_card_sha256/);
- assert.match(overlay,/source\.license_reviewed=1/);
+ assert.ok(overlay.includes('src.license_reviewed=1'));
 });
