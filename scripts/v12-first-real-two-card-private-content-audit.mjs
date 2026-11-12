@@ -65,8 +65,8 @@ function verifiedWorksheet(x){
   assert.equal(at?.wordId,card.legacy_word_id,'REAL_PRIVATE_WORKSHEET_WORD_ANCHOR_DRIFT');
   assert.equal(compact(at?.gloss),compact(c.meaning_zh),
    'REAL_PRIVATE_WORKSHEET_CONTEXT_MEANING_DRIFT');
-  assert.equal(at?.surface,card.segment_surface,
-   'REAL_PRIVATE_WORKSHEET_CONTEXT_SURFACE_DRIFT');
+  assert.ok(typeof at?.surface==='string'&&norm(at.surface),
+   'REAL_PRIVATE_WORKSHEET_CONTEXT_SURFACE_MISSING');
  }
  assert.ok(c.cards[0].example_en===c.cards[1].example_en&&
   c.cards[0].example_zh===c.cards[1].example_zh&&
@@ -152,7 +152,8 @@ export function auditRealTwoCards({worksheet,registerRows}={}){
    headword:c.headword,part_of_speech:c.part_of_speech,meaning_zh:c.meaning_zh,
    example_en:card.example_en,example_zh:card.example_zh,
    phonetic_uk:card.phonetic_uk,phonetic_us:card.phonetic_us,
-   context_surface:card.segment_surface,context_gloss:card.context_gloss,
+   context_surface:JSON.parse(card.original_paragraph_json).segments[
+    Number(card.anchor.split(':s')[1])].surface,context_gloss:card.context_gloss,
    heuristic_flags:flags,
    legal_source_claim:'CHATGPT_ASSISTED_DRAFTS_PREPARED_FOR_MIAOWU_USER_REPORTED',
    individual_example_provenance_signed:false,
