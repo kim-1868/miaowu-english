@@ -17,7 +17,8 @@ const SQL=`SELECT b.id AS book_id,cw.context_anchor AS anchor,cw.word_id AS lega
  link.old_card_sha256,link.reviewed_by AS link_reviewed_by,
  link.reviewed_at AS link_reviewed_at,
  s.sense_id,s.entry_id,s.pos,s.meaning_zh,s.example_en,s.example_zh,
- l.senses_json,l.phonetic_uk AS phonetic_uk,l.phonetic_us AS phonetic_us,\n l.phonetic_uk AS lesson_uk,l.phonetic_us AS lesson_us,
+ l.senses_json,l.phonetic_uk AS phonetic_uk,l.phonetic_us AS phonetic_us,
+ l.phonetic_uk AS lesson_uk,l.phonetic_us AS lesson_us,
  e.headword AS dictionary_headword
  FROM chapter_words cw
  JOIN chapters ch ON ch.id=cw.chapter_id AND ch.published_at IS NOT NULL
@@ -93,7 +94,12 @@ async function loadValidatedPublishedSenseRows(db,{chapterId,userId}={}){
   }
   approvedRows.push(row);
  }
- return {chapterId,approvedRows,blockedCounts};\n}\nexport async function listPublishedApprovedLegacySenseAnchors(db,{chapterId,userId}={}){\n const {approvedRows,blockedCounts}=await loadValidatedPublishedSenseRows(db,{chapterId,userId});\n const anchors=approvedRows.map(row=>({anchor:row.anchor,entry_id:row.entry_id,sense_id:row.sense_id}));\n return {chapterId,anchors,study_identity:'sense_id',
+ return {chapterId,approvedRows,blockedCounts};
+}
+export async function listPublishedApprovedLegacySenseAnchors(db,{chapterId,userId}={}){
+ const {approvedRows,blockedCounts}=await loadValidatedPublishedSenseRows(db,{chapterId,userId});
+ const anchors=approvedRows.map(row=>({anchor:row.anchor,entry_id:row.entry_id,sense_id:row.sense_id}));
+ return {chapterId,anchors,study_identity:'sense_id',
   source:'reviewed_published_legacy_links',approved_only:true,
   read_only:true,book_content_changed:false,
   user_study_rows_written:0,d1_writes:0,
