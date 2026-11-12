@@ -79,7 +79,7 @@ jobs:
             exit 1
           fi
           node scripts/verify-published-context-gloss-aggregate.mjs "$private/aggregate.json"
-          node --input-type=module "$private/aggregate.json" <<'NODE'
+          node --input-type=module - "$private/aggregate.json" <<'NODE'
           import assert from 'node:assert/strict';
           import {readFileSync} from 'node:fs';
           const x=JSON.parse(readFileSync(process.argv[2],'utf8'));
