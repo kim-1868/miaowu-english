@@ -29,7 +29,9 @@ const n=x=>String(x??'').normalize('NFKC').trim();
 const reject=(message)=>{throw Error(message)};
 const publicDer=key=>(key.type==='public'?key:createPublicKey(key))
  .export({type:'spki',format:'der'});
-function assertTrustAnchor(privateKeyPem,trustedOpsPublicKeyPem){
+function assertTrustAnchor(privateKeyPem,trustedOpsPublicKeyPem,registeredOpsPublicKeySha256){
+ assert.ok(HEX.test(registeredOpsPublicKeySha256??''),
+  'OPS_SIGNOFF_REGISTERED_PUBLIC_KEY_FINGERPRINT_REQUIRED');
  assert.ok(typeof privateKeyPem==='string'&&privateKeyPem.includes('PRIVATE KEY'),
   'OPS_SIGNOFF_PRIVATE_KEY_NOT_PROVISIONED');
  assert.ok(typeof trustedOpsPublicKeyPem==='string'&&trustedOpsPublicKeyPem.includes('BEGIN PUBLIC KEY'),
@@ -41,13 +43,15 @@ function assertTrustAnchor(privateKeyPem,trustedOpsPublicKeyPem){
  assert.equal(trustedKey.asymmetricKeyType,'ed25519',
   'OPS_SIGNOFF_TRUSTED_ED25519_PUBKEY_REQUIRED');
  const actual=publicDer(privateKey),trusted=publicDer(trustedKey);
+ assert.equal(sha(trusted),registeredOpsPublicKeySha256,
+  'OPS_SIGNOFF_PUBLIC_KEY_NOT_IN_INDEPENDENT_REGISTRY');
  assert.ok(actual.length===trusted.length&&timingSafeEqual(actual,trusted),
   'OPS_SIGNOFF_PRIVATE_KEY_NOT_REGISTERED_TO_TRUSTED_PUBKEY');
  return privateKey;
 }
 export function issueFirstRealPublisherOpsReceipt({
   packet,attestation,privateKeyPem,trustedOpsPublicKeyPem,
-  opsAuditId,signedAt,authenticatedReviewerId,
+  opsAuditId,signedAt,authenticatedReviewerId,registeredOpsPublicKeySha256,
   trustAnchorRegisteredInOps=false
 }={}){
  assert.equal(trustAnchorRegisteredInOps,true,
@@ -73,7 +77,8 @@ export function issueFirstRealPublisherOpsReceipt({
   'AUTHENTICATED_OPS_TEST_SCOPE_RECEIPT_MISSING_OR_CHANGED'
  ],'OPS_SIGNOFF_EDITOR_OR_SOURCE_RIGHTS_INCOMPLETE');
  assert.equal(status.target_database_id,TEST);
- const privateKey=assertTrustAnchor(privateKeyPem,trustedOpsPublicKeyPem);
+ const privateKey=assertTrustAnchor(privateKeyPem,trustedOpsPublicKeyPem,
+  registeredOpsPublicKeySha256);
  const receipt={
   schema:'wordletter-ops-publisher-clearance-receipt-v1',
   purpose:ROLE,
@@ -101,16 +106,23 @@ export function issueFirstRealPublisherOpsReceipt({
   status:verified.status,
   legal_rights_evidence_count:verified.rights_evidence_count,
   editorial_evidence_count:verified.editorial_evidence_count,
-  authenticated_ops_signature:true,
-  registered_ops_trust_anchor_asserted:true,
+  ops_ed25519_signature_verified:true,
+  registered_ops_trust_anchor_fingerprint_matched:true,
+  independent_ops_role_and_audit_service_check_still_required:true,
   requires_live_test_source_and_entry_verification:true,
   real_test_senses_activated:0,real_test_links_created:0,
   production_or_test_d1_writes:0,
   target_test_database_id:TEST}};
 }
 export function verifyFirstRealPublisherOpsReceipt({
- packet,attestation,receipt,trustedOpsPublicKeyPem
+ packet,attestation,receipt,trustedOpsPublicKeyPem,registeredOpsPublicKeySha256
 }={}){
+ assert.ok(HEX.test(registeredOpsPublicKeySha256??''),
+  'OPS_SIGNOFF_REGISTERED_PUBLIC_KEY_FINGERPRINT_REQUIRED');
+ const trustedKey=createPublicKey(trustedOpsPublicKeyPem);
+ assert.equal(trustedKey.asymmetricKeyType,'ed25519');
+ assert.equal(sha(publicDer(trustedKey)),registeredOpsPublicKeySha256,
+  'OPS_SIGNOFF_PUBLIC_KEY_NOT_IN_INDEPENDENT_REGISTRY');
  const status=evaluateRealPublisherClearance({
   packet,attestation,receipt,trustedOpsPublicKeyPem
  });
@@ -127,7 +139,8 @@ export function verifyFirstRealPublisherOpsReceipt({
   target_test_database_id:TEST,
   rights_evidence_count:status.rights_evidence_count,
   editorial_evidence_count:status.editorial_evidence_count,
-  registered_ops_key_must_be_verified_out_of_band:true,
+  registered_ops_key_fingerprint_matched:true,
+  ops_role_and_audit_event_must_be_verified_against_server:true,
   approved_senses_in_database:0,created_legacy_links_in_database:0,
   test_d1_writes:0,prod_d1_writes:0};
 }
@@ -146,6 +159,7 @@ if(process.argv[1]&&fileURLToPath(import.meta.url)===process.argv[1]){
    const r=issueFirstRealPublisherOpsReceipt({packet,attestation,
     trustedOpsPublicKeyPem,privateKeyPem,
     opsAuditId:audit,signedAt:at,authenticatedReviewerId:reviewer,
+    registeredOpsPublicKeySha256:process.env.MIAOWU_TRUSTED_OPS_PUBLISHER_PUBKEY_SHA256,
     // This CLI is only for authorized publisher key holders; the configured
     // trusted public key must have been registered in OPS independently.
     trustAnchorRegisteredInOps:process.env.MIAOWU_OPS_ED25519_TRUST_ANCHOR_REGISTERED==='true'});
@@ -159,7 +173,8 @@ if(process.argv[1]&&fileURLToPath(import.meta.url)===process.argv[1]){
     packet:JSON.parse(readFileSync(source,'utf8')),
     attestation:JSON.parse(readFileSync(attestation,'utf8')),
     receipt:JSON.parse(readFileSync(receipt,'utf8')),
-    trustedOpsPublicKeyPem:readFileSync(pub,'utf8')});
+    trustedOpsPublicKeyPem:readFileSync(pub,'utf8'),
+    registeredOpsPublicKeySha256:process.env.MIAOWU_TRUSTED_OPS_PUBLISHER_PUBKEY_SHA256});
    writeFileSync(out,JSON.stringify(r),{flag:'wx',mode:0o600});
    console.log('OPS_REAL_PUBLISHER_RECEIPT_VERIFIED_TEST_PREFLIGHT_NO_DB_WRITE');
   }else reject('OPS_REAL_PUBLISHER_RECEIPT_USAGE');
