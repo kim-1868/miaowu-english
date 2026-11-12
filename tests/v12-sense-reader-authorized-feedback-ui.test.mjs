@@ -49,7 +49,7 @@ test('authorized per-sense feedback uses same sense id across book A and B',asyn
  await x.get('senseRemember').onclick();
  assert.equal(x.state.revision,1);
  assert.equal(x.events.filter(e=>e.method==='POST').length,1);
- assert.deepEqual(x.events.find(e=>e.method==='POST').payload,
+ assert.deepEqual(JSON.parse(JSON.stringify(x.events.find(e=>e.method==='POST').payload)),
   {chapterId:'book-a-chapter',anchor:'p0:s7',
    kind:'remembered',eventId:'11111111-1111-4111-8111-111111111111',
    expectedRevision:0});
