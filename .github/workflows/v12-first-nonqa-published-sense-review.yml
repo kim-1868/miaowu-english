@@ -5,12 +5,16 @@ on:
       - .github/workflows/v12-first-nonqa-published-sense-review.yml
       - scripts/v12-first-published-sense-review-packet.mjs
       - tests/v12-first-published-sense-review-packet.test.mjs
+      - scripts/v12-first-nonqa-test-intake-diagnostic.mjs
+      - tests/v12-first-nonqa-test-intake-diagnostic.test.mjs
   push:
     branches: [feature/v11-smart-vocab-preflight-20261109]
     paths:
       - .github/workflows/v12-first-nonqa-published-sense-review.yml
       - scripts/v12-first-published-sense-review-packet.mjs
       - tests/v12-first-published-sense-review-packet.test.mjs
+      - scripts/v12-first-nonqa-test-intake-diagnostic.mjs
+      - tests/v12-first-nonqa-test-intake-diagnostic.test.mjs
 permissions:
   contents: read
 concurrency:
@@ -30,7 +34,7 @@ jobs:
       - name: Exact-context and private publication safeguards
         run: |
           set -euo pipefail
-          node --experimental-sqlite --test tests/v12-first-published-sense-review-packet.test.mjs
+          node --experimental-sqlite --test tests/v12-first-published-sense-review-packet.test.mjs tests/v12-first-nonqa-test-intake-diagnostic.test.mjs
           node --input-type=module <<'NODE'
           import assert from 'node:assert/strict';
           import {readFileSync} from 'node:fs';
@@ -68,6 +72,8 @@ jobs:
           mkdir -m 700 "$RUNNER_TEMP/first-real-review-private"
           node scripts/v12-first-published-sense-review-packet.mjs sql \
             "$RUNNER_TEMP/first-real-review-private/select.sql"
+          node scripts/v12-first-nonqa-test-intake-diagnostic.mjs sql \
+            "$RUNNER_TEMP/first-real-review-private/diagnostic.sql"
       - name: Read only REAL published non-QA TEST D1 anchor/card values
         shell: bash
         env:
@@ -87,6 +93,14 @@ jobs:
           fi
           node scripts/v12-first-published-sense-review-packet.mjs packet \
             "$p/input.json" "$p/review-packet.json"
+          if ! npx wrangler d1 execute miaowu-english-test --remote --json \
+            --config wrangler.jsonc --command "$(cat "$p/diagnostic.sql")" \
+            >"$p/diagnostic.json" 2>"$p/diagnostic-error.log"; then
+            echo 'FIRST_REAL_SENSE_DIAGNOSTIC_READ_FAILED_NO_PRIVATE_VALUES_LOGGED'
+            exit 1
+          fi
+          node scripts/v12-first-nonqa-test-intake-diagnostic.mjs counts \
+            "$p/diagnostic.json"
       - name: Encrypt candidate content, verify restoration, discard raw plaintext
         shell: bash
         env:
