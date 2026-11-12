@@ -87,4 +87,4 @@ jobs:
             scripts/v12-real-published-two-book-isolated-rehearsal.mjs \
             "$private/proof.json"
           rm -rf "$private"
-          echo 'REAL_PUBLISHED_SOURCE_TWO_BOOK_TECHNICAL_E2E_COMPLETED_MEMORY_ONLY_NOT_APPROVED'
+          echo 'REAL_SOURCE_TWO_BOOK_IN_MEMORY_QA_COMPLETED_NO_DB_WRITES_NOT_APPROVED'
