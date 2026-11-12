@@ -7,6 +7,7 @@ import {globalDictionaryTablesReady,loadGlobalDictionaryCandidateIndex}
 import {normalizeDictionaryNovelV2,convertDictionaryNovelV2}
   from './global-dictionary-novel-v2.js';
 import {planApprovedNovelSenseAnchors} from './global-dictionary-sense-anchor.js';
+import {planDraftNovelAutomaticTargets} from './global-dictionary-auto-draft-target-planner.js';
 import {extractUnmarkedV2EnglishTokens,planApprovedNovelAutoDiscovery}
  from './global-dictionary-auto-discovery.js';
 import {inspectStagingUnmarkedEditorWorkflow}
@@ -83,7 +84,8 @@ export async function inspectStagingDictionaryAutoDiscovery(env,payload){
   env.DB,extracted.unique_spellings);
  const ids=[...new Set([...lookup.index.byWord.values()]
   .flat().map(x=>x.entry_id))];
- const lessons=new Map(),senses=[];
+ const lessons=new Map(),senses=[],licensedSenses=[];
+ const strongerReview=env.GLOBAL_DICTIONARY_AUTO_DRAFT_PLANNER_V12_ENABLED==='true';
  for(const group of groups(ids)){
   if(!group.length)continue;
   const params=group.map(()=>'?').join(',');
@@ -102,10 +104,29 @@ export async function inspectStagingDictionaryAutoDiscovery(env,payload){
    'FROM global_dictionary_senses WHERE entry_id IN ('+params+')'
   ).bind(...group).all();
   senses.push(...(reviewed.results||[]));
+  if(strongerReview){
+   const licensed=await env.DB.prepare(
+    'SELECT s.sense_id,s.entry_id,s.pos,s.meaning_zh,'+
+    's.example_en,s.example_zh,s.reviewed_by,s.reviewed_at,s.approved,s.active,'+
+    '1 AS source_license_reviewed '+
+    'FROM global_dictionary_senses s '+
+    'JOIN global_dictionary_entries e ON e.entry_id=s.entry_id '+
+    'AND e.teaching_ready=1 AND e.reviewed_at IS NOT NULL '+
+    'JOIN global_dictionary_sources src ON src.source_key=e.source_name '+
+    'AND src.enabled=1 AND src.license_reviewed=1 '+
+    'WHERE s.entry_id IN ('+params+')'
+   ).bind(...group).all();
+   licensedSenses.push(...(licensed.results||[]));
+  }
  }
+ const autoTargetPatch=strongerReview?
+  planDraftNovelAutomaticTargets(source,lookup.index,lessons,{
+   approvedSenses:licensedSenses
+  }):null;
  return {...planApprovedNovelAutoDiscovery(extracted,lookup.index,{
   lessons,senses
- }),dictionary_status:'STAGING_APPROVED_SENSES_ONLY',
+ }),...(autoTargetPatch?{auto_target_patch_proposal:autoTargetPatch}:{}),
+  dictionary_status:'STAGING_APPROVED_SENSES_ONLY',
   next_step:'Editor must confirm each contextual meaning before generating a V2 learning target; this endpoint does not mutate the manuscript or publish.'};
 }
 export async function handleOpsDictionaryNovelV2(req,env,path){
