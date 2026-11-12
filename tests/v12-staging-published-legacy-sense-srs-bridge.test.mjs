@@ -25,7 +25,7 @@ function setup(){
  CREATE TABLE users(id TEXT PRIMARY KEY);
  CREATE TABLE categories(id TEXT PRIMARY KEY,is_visible INTEGER NOT NULL);
  CREATE TABLE books(id TEXT PRIMARY KEY,category_id TEXT,status TEXT NOT NULL);
- CREATE TABLE chapters(id TEXT PRIMARY KEY,book_id TEXT,published_at TEXT,is_preview INTEGER NOT NULL);
+ CREATE TABLE chapters(id TEXT PRIMARY KEY,book_id TEXT,published_at TEXT,is_preview INTEGER NOT NULL,content_json TEXT);
  CREATE TABLE words(id TEXT PRIMARY KEY,headword TEXT,phonetic_uk TEXT,phonetic_us TEXT,
   part_of_speech TEXT,meaning_zh TEXT,example_en TEXT,example_zh TEXT,collocations_json TEXT);
  CREATE TABLE chapter_words(chapter_id TEXT,context_anchor TEXT,word_id TEXT);
@@ -50,7 +50,10 @@ function setup(){
  sql.prepare("INSERT INTO users VALUES('reader')").run();
  for(const [b,ch,w] of [['book-a','ch-a','old-a'],['book-b','ch-b','old-b']]){
   sql.prepare("INSERT INTO books VALUES (?,'cet4','published')").run(b);
-  sql.prepare("INSERT INTO chapters VALUES (?,?,?,0)").run(ch,b,'2026-11-01 00:00:00');
+  sql.prepare("INSERT INTO chapters VALUES (?,?,?,0,?)").run(
+   ch,b,'2026-11-01 00:00:00',JSON.stringify({paragraphs:[{
+    segments:[{wordId:w,surface:'record',gloss:'记录'}]
+   }]}));
   sql.prepare("INSERT INTO words VALUES (?,?,?,?,?,?,?,?,?)")
    .run(w,'record','/r/','/r/','n.','记录',
     'I kept a record.','我保留了记录。','[]');
@@ -137,6 +140,19 @@ test('unauthorized, revoked, unlicensed, tampered or disabled overlay never read
   assert.equal(fail.status,403);
   sql.prepare("UPDATE activation_codes SET status='revoked'").run();
   assert.equal((await call(env,'ch-b')).status,403);
+  assert.equal(sql.prepare('SELECT count(*) n FROM user_dictionary_sense_study').get().n,0);
+ }finally{sql.close()}
+});
+test('published narration gloss drift cannot create crossbook study state',async()=>{
+ const {sql,env}=setup();try{
+  await link(sql);
+  sql.prepare("UPDATE chapters SET content_json=? WHERE id='ch-b'").run(
+   JSON.stringify({paragraphs:[{segments:[{wordId:'old-b',surface:'record',gloss:'唱片'}]}]}));
+  const blocked=await call(env,'ch-b');
+  assert.equal(blocked.status,403);
+  assert.equal((await call(env,'ch-b',{feedback:true,event:8})).status,403);
+  const allowed=await call(env,'ch-a');
+  assert.equal(allowed.status,200);
   assert.equal(sql.prepare('SELECT count(*) n FROM user_dictionary_sense_study').get().n,0);
  }finally{sql.close()}
 });
