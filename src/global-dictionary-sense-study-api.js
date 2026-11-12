@@ -176,7 +176,9 @@ export async function handleSenseStudyApi(req,env,path,user,{clock=()=>new Date(
    await query(env.DB,STATE_SQL,user.id,senseId).first(),user.id,senseId);
   const now=clock();
   if(!feedback)return json({card,study:previewSenseStudyDue(state,now),
-   bookmarked:state.bookmarked,revision,read_only:true});
+   bookmarked:state.bookmarked,revision,
+   read_only:env.GLOBAL_DICTIONARY_SENSE_SRS_WRITE_ENABLED!=='true',
+   write_enabled:env.GLOBAL_DICTIONARY_SENSE_SRS_WRITE_ENABLED==='true'});
   const existing=await query(env.DB,EVENT_SQL,eventId).first();
   if(existing){
    if(existing.user_id!==user.id||existing.sense_id!==senseId||
