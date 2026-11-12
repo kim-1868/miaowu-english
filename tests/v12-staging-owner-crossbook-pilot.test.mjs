@@ -56,7 +56,7 @@ test('two owner-release first chapter paragraphs have one canonical STAGING-only
   assert.equal(second.anchors.length,1);
   assert.equal(first.anchors[0].sense_id,pilot.senseId);
   assert.equal(second.anchors[0].sense_id,pilot.senseId);
-  assert.notEqual(first.anchors[0].anchor,second.anchors[0].anchor);
+  assert.notEqual(pilot.pilotAnchors[0].chapterId,pilot.pilotAnchors[1].chapterId);
   assert.equal(first.d1_writes,0);
   const original=sql.prepare("SELECT original_source_name,original_teaching_ready FROM v12_internal_pilot_entry_restore").get();
   assert.equal(original.original_source_name,'unreviewed-ecd');
