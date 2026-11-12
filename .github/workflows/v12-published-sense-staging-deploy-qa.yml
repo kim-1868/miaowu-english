@@ -1,0 +1,26 @@
+name: V1.2 staging-only approved sense bridge deploy safety synthetic QA
+on:
+  pull_request:
+    paths:
+      - .github/workflows/v12-published-sense-staging-deploy.yml
+      - .github/workflows/v12-published-sense-staging-deploy-qa.yml
+      - tests/v12-staging-only-approved-sense-deploy.test.mjs
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - tests/v12-staging-only-approved-sense-deploy.test.mjs
+permissions:
+  contents: read
+jobs:
+  no-cloudflare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/v12-staging-only-approved-sense-deploy.test.mjs
+      - run: echo 'NO_PRODUCTION_ACCESS_NO_DEPLOY_IN_QA'
