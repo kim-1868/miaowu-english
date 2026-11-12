@@ -634,6 +634,7 @@
     }
     function showCloudWord(wordId,anchorEl=null){
       window.MiaowuHeadwordReaderBridge?.invalidate();
+      window.MiaowuSenseReaderBridge?.invalidate();
       pauseNarrationForWord();
       if(!activeCloud?.chapterId)return;
       if(anchorEl?.isConnected)studyAnchorEl=anchorEl;
@@ -860,7 +861,24 @@
       const rawParts=Array.isArray(page.content?.paragraphs)?page.content.paragraphs:[];
       const parts=rawParts.filter(x=>typeof x==='string' || (x && Array.isArray(x.segments))).slice(0,300);
       book.chapterId=id;book.parts=parts.map(cloudPlainText);book.rawParagraphs=parts;
-      book.words=new Map();book.reviewedAnchors=new Map();
+      book.words=new Map();book.reviewedAnchors=new Map();book.reviewedSenseAnchors=new Map();
+      // Reviewed sense_id mappings are independent of headword-level matching.
+      // Never select a sense using spelling or a legacy word ID alone.
+      if(page.senseReaderReady&&user){
+        void serverRequest('/api/me/dictionary/chapters/'+encodeURIComponent(id)+'/sense-anchors')
+          .then(data=>{
+            if(activeCloud!==book||book.chapterId!==id||chosen!==cloudChapterSequence||
+              data?.chapterId!==id||!Array.isArray(data.anchors)||data.anchors.length>2000)return;
+            const anchors=new Map();
+            for(const row of data.anchors){
+              if(!/^p(?:0|[1-9][0-9]*):s(?:0|[1-9][0-9]*)$/.test(row?.anchor||'')||
+                !/^gdict_[a-f0-9]{24}$/.test(row?.entry_id||'')||
+                !/^gds_[a-f0-9]{24}$/.test(row?.sense_id||'')||anchors.has(row.anchor))return;
+              anchors.set(row.anchor,{entryId:row.entry_id,senseId:row.sense_id});
+            }
+            book.reviewedSenseAnchors=anchors;
+          }).catch(()=>{}); // Fail closed: original word card remains available.
+      }
       // Only staging explicitly exposes this feature. Missing/disabled flags
       // keep the original reader without an additional production API request.
       if(page.headwordReaderReady&&user){
@@ -977,6 +995,7 @@
     function openWord(w){if(!WORDS[w])return;popWord=w;touchWord(w);const info=WORDS[w];$('wordPop').innerHTML=`<button class="modal-close" id="wordClose" aria-label="关闭">×</button><div class="eyebrow">MIAOWU · WORD IN STORY</div><h3>${safe(w)}</h3><div class="pron">${safe(info.phonetic)} · ${safe(info.part)}</div><div class="meaning">${safe(info.meaning)}</div><div class="context">故事原句：<br>${safe(info.context)}</div><div class="word-extra"><strong>额外例句</strong><br>${safe(info.example)}<br><span style="color:var(--muted)">${safe(info.translation)}</span></div><div class="word-extra"><strong>常用搭配</strong><br>${info.collocations.map(x=>safe(x[0])+' · '+safe(x[1])).join('<br>')}</div><div class="word-actions"><button id="wordSpeak">♫ 听发音</button><button id="wordSave">${saved.has(w)?'✓ 已收藏':'♡ 收藏藏书票'}</button></div>`;$('wordPop').classList.add('on');$('wordBackdrop').classList.add('on');$('wordClose').onclick=closeWord;$('wordSpeak').onclick=()=>speakWord(w);$('wordSave').onclick=()=>toggleWord(w)}
     function closeWord(){
       window.MiaowuHeadwordReaderBridge?.invalidate();
+      window.MiaowuSenseReaderBridge?.invalidate();
       ++studyRequestSequence;selectedStudyWordId=null;studyAnchorEl=null;
       const tray=$('wordPop'),backdrop=$('wordBackdrop');
       tray.classList.remove('on');backdrop.classList.remove('on');
@@ -1699,8 +1718,13 @@
       if(word){
         e.preventDefault();e.stopPropagation();
         const anchor=word.dataset.dictionaryAnchor;
+        const reviewedSense=anchor&&activeCloud?.reviewedSenseAnchors?.get(anchor);
         const entryId=anchor&&activeCloud?.reviewedAnchors?.get(anchor);
-        if(entryId&&window.MiaowuHeadwordReaderBridge){
+        if(reviewedSense&&window.MiaowuSenseReaderBridge){
+          void window.MiaowuSenseReaderBridge.open({
+            ...reviewedSense,chapterId:activeCloud.chapterId,anchor,
+            legacyWordId:word.dataset.cloudWord,element:word});
+        }else if(entryId&&window.MiaowuHeadwordReaderBridge){
           void window.MiaowuHeadwordReaderBridge.open({
             entryId,chapterId:activeCloud.chapterId,anchor,
             legacyWordId:word.dataset.cloudWord,element:word});
@@ -1720,6 +1744,11 @@
     });
 $('wordBackdrop').onclick=closeWord;$('modalClose').onclick=closeModal;$('modalOverlay').onclick=e=>{if(e.target===$('modalOverlay'))closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeWord()}});document.querySelectorAll('[data-word-filter]').forEach(el=>el.onclick=()=>{wordFilter=el.dataset.wordFilter;wordbookPage=1;wordbookData=null;renderWords()});
     // Cloud reading progress is saved automatically on scroll and chapter navigation.
+    window.MiaowuSenseReaderBridge?.configure({
+      user:()=>!!user,request:serverRequest,speak:speakWord,
+      pause:pauseNarrationForWord,close:closeWord,openLegacy:showCloudWord,
+      supersedeLegacy:()=>{++studyRequestSequence},toast
+    });
     window.MiaowuHeadwordReaderBridge?.configure({
       user:()=>!!user,request:serverRequest,speak:speakWord,
       pause:pauseNarrationForWord,close:closeWord,openLegacy:showCloudWord,
