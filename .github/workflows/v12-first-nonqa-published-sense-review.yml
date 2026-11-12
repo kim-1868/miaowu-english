@@ -1,0 +1,125 @@
+name: V1.2 real published non-QA first sense review sealed intake (TEST read-only)
+on:
+  pull_request:
+    paths:
+      - .github/workflows/v12-first-nonqa-published-sense-review.yml
+      - scripts/v12-first-published-sense-review-packet.mjs
+      - tests/v12-first-published-sense-review-packet.test.mjs
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-first-nonqa-published-sense-review.yml
+      - scripts/v12-first-published-sense-review-packet.mjs
+      - tests/v12-first-published-sense-review-packet.test.mjs
+permissions:
+  contents: read
+concurrency:
+  group: first-nonqa-published-review-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  synthetic-fail-closed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Exact-context and private publication safeguards
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite --test tests/v12-first-published-sense-review-packet.test.mjs
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const c=JSON.parse(readFileSync('wrangler.jsonc','utf8'));
+          assert.equal(c.name,'miaowu-english-staging');
+          assert.equal(c.vars.APP_ENV,'staging');
+          assert.equal(c.d1_databases?.length,1);
+          assert.equal(c.d1_databases[0].database_name,'miaowu-english-test');
+          assert.equal(c.d1_databases[0].database_id,'88a817cb-23bb-4ae4-bcb8-92286c4165d4');
+          assert.notEqual(c.vars.GLOBAL_DICTIONARY_SENSE_SRS_WRITE_ENABLED,'true');
+          NODE
+  protected-real-test-readonly:
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    needs: synthetic-fail-closed
+    environment:
+      name: staging-d1-schema-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm TEST database target and install read-only CLI
+        run: |
+          set -euo pipefail
+          npm install --no-save --ignore-scripts wrangler@^4
+          umask 077
+          mkdir -m 700 "$RUNNER_TEMP/first-real-review-private"
+          node scripts/v12-first-published-sense-review-packet.mjs sql \
+            "$RUNNER_TEMP/first-real-review-private/select.sql"
+      - name: Read only REAL published non-QA TEST D1 anchor/card values
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_STAGING_READ_ONLY_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_ACCOUNT}"
+          umask 077
+          p="$RUNNER_TEMP/first-real-review-private"
+          if ! npx wrangler d1 execute miaowu-english-test --remote --json \
+            --config wrangler.jsonc --command "$(cat "$p/select.sql")" \
+            >"$p/input.json" 2>"$p/d1-error.log"; then
+            echo 'FIRST_REAL_SENSE_READONLY_QUERY_FAILED_NO_CUSTOMER_DATA_LOGGED'
+            exit 1
+          fi
+          node scripts/v12-first-published-sense-review-packet.mjs packet \
+            "$p/input.json" "$p/review-packet.json"
+      - name: Encrypt candidate content, verify restoration, discard raw plaintext
+        shell: bash
+        env:
+          REVIEW_PASSPHRASE: ${{ secrets.STAGING_D1_BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${REVIEW_PASSPHRASE:?MISSING_PROTECTED_REVIEW_PASSPHRASE}"
+          test "${#REVIEW_PASSPHRASE}" -ge 32
+          umask 077
+          p="$RUNNER_TEMP/first-real-review-private"
+          printf '%s' "$REVIEW_PASSPHRASE" >"$p/pass"
+          unset REVIEW_PASSPHRASE
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$p/pass" \
+            --symmetric --cipher-algo AES256 \
+            --output "$RUNNER_TEMP/wordletter-first-real-published-review-encrypted.gpg" \
+            "$p/review-packet.json" >"$p/encrypt.log" 2>&1
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$p/pass" \
+            --decrypt "$RUNNER_TEMP/wordletter-first-real-published-review-encrypted.gpg" \
+            >"$p/recovered.json" 2>"$p/decrypt.log"
+          cmp -s "$p/review-packet.json" "$p/recovered.json"
+          rm -f "$p/review-packet.json" "$p/recovered.json" "$p/input.json"
+          echo 'FIRST_REAL_SENSE_SEALED_REVIEW_PACKET_VERIFIED_NO_APPROVAL_NO_WRITES'
+      - name: Upload ciphertext ONLY (7 day retention)
+        uses: actions/upload-artifact@v4
+        with:
+          name: wordletter-first-real-published-review-encrypted
+          path: ${{ runner.temp }}/wordletter-first-real-published-review-encrypted.gpg
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+      - name: Always purge private runner files
+        if: always()
+        shell: bash
+        run: |
+          rm -rf "$RUNNER_TEMP/first-real-review-private"
+          rm -f "$RUNNER_TEMP/wordletter-first-real-published-review-encrypted.gpg"
