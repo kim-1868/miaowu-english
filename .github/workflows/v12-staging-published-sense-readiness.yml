@@ -123,4 +123,28 @@ jobs:
           console.log('STAGING_REAL_CROSSBOOK_PILOT_AGGREGATE='+JSON.stringify(rows[0]));
           console.log('STAGING_CROSSBOOK_PILOT_CANDIDATES_NOT_REVIEWED_SENSES');
           NODE
+          pilot_preflight="SELECT
+            (SELECT count(*) FROM categories WHERE slug='cet4' AND is_visible=1) cet4_category_available,
+            (SELECT count(*) FROM global_dictionary_entries WHERE headword='choice' COLLATE NOCASE) choice_entry_count,
+            (SELECT count(*) FROM global_dictionary_entries WHERE headword='choice' COLLATE NOCASE AND teaching_ready=0) choice_unreviewed_candidate_count,
+            (SELECT count(*) FROM global_dictionary_lessons l JOIN global_dictionary_entries e ON e.entry_id=l.entry_id WHERE e.headword='choice' COLLATE NOCASE) choice_existing_lesson_count,
+            (SELECT count(*) FROM books WHERE id IN ('mw-v12-pilot-ex-20261112','mw-v12-pilot-bride-20261112')) pilot_book_conflicts,
+            (SELECT count(*) FROM words WHERE id IN ('mw-v12-pilot-choice-ex','mw-v12-pilot-choice-bride')) pilot_word_conflicts;"
+          if ! npx wrangler d1 execute miaowu-english-test --remote --json --config wrangler.jsonc --command "$pilot_preflight" >"$private/pilot-preflight.json" 2>"$private/error"; then
+            echo 'STAGING_PILOT_CHOICE_SOURCE_PREFLIGHT_FAILED_NO_WRITES'
+            exit 1
+          fi
+          node --input-type=module - "$private/pilot-preflight.json" <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const x=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          const rows=(Array.isArray(x)?x:[x]).flatMap(p=>p.results??[]);
+          assert.equal(rows.length,1);
+          const keys=['cet4_category_available','choice_entry_count',
+            'choice_unreviewed_candidate_count','choice_existing_lesson_count',
+            'pilot_book_conflicts','pilot_word_conflicts'];
+          assert.deepEqual(Object.keys(rows[0]).sort(),keys.sort());
+          assert.ok(keys.every(k=>Number.isSafeInteger(rows[0][k])&&rows[0][k]>=0));
+          console.log('STAGING_PILOT_SOURCE_PREREQUISITES='+JSON.stringify(rows[0]));
+          NODE
           echo 'STAGING_READONLY_AGGREGATE_DONE_NO_CUSTOMER_VALUES_NO_D1_WRITES'
