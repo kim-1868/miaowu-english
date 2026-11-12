@@ -101,6 +101,13 @@ export function prepareRealTwoBookTestImportPreflight(packet){
    applies_to:['original_story_context'],
    excludes:['lexical_definition','uk_ipa','us_ipa','english_example',
     'chinese_example','collocations'],
+   bilingual_example_origin_claim:{
+    general_project_production:'CHATGPT_ASSISTED_ORIGINAL_DRAFTS',
+    confirmed_by_user:true,
+    prior_generation_records_exist:true,
+    each_selected_legacy_card_provenance_verified:false,
+    reviewer_still_checks_language_accuracy_and_external_overlap:true
+   },
    downstream_provider_terms_and_third_party_rights_unverified:true},
   counts:{real_publisher_books:books.length,chapters:chapters.length,
    old_word_cards:words.length,real_context_anchors:chapterWords.length,
