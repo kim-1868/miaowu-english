@@ -27,7 +27,8 @@ const HEX=/^[a-f0-9]{64}$/u;
 const AUDIT=/^ops_[a-z0-9_-]{12,120}$/iu;
 const n=x=>String(x??'').normalize('NFKC').trim();
 const reject=(message)=>{throw Error(message)};
-const publicDer=key=>createPublicKey(key).export({type:'spki',format:'der'});
+const publicDer=key=>(key.type==='public'?key:createPublicKey(key))
+ .export({type:'spki',format:'der'});
 function assertTrustAnchor(privateKeyPem,trustedOpsPublicKeyPem){
  assert.ok(typeof privateKeyPem==='string'&&privateKeyPem.includes('PRIVATE KEY'),
   'OPS_SIGNOFF_PRIVATE_KEY_NOT_PROVISIONED');
