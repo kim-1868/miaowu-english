@@ -9,7 +9,8 @@ const REQUIRED=['books','chapters','words','chapter_words','global_dictionary_en
  'user_dictionary_sense_review_events'];
 const KEYS=['published_books','published_chapters','approved_active_senses',
  'licensed_teaching_entries','approved_legacy_sense_links','linked_published_anchors',
- 'sense_study_rows'];
+ 'sense_study_rows','staging_fixture_senses','staging_fixture_legacy_links',
+ 'staging_fixture_published_anchors'];
 const parse=(json)=>{
  let raw;
  try{raw=typeof json==='string'?JSON.parse(json):json}catch{throw Error('STAGING_READINESS_INVALID_JSON')}
@@ -40,7 +41,10 @@ export function verifyStagingPublishedCounters(json){
   'STAGING_COUNTS_INVALID_'+k);
  return {status:row.approved_active_senses>0&&row.licensed_teaching_entries>0&&
   row.approved_legacy_sense_links>0&&row.linked_published_anchors>0?
-  'STAGING_APPROVED_PUBLISHED_LEGACY_LINKS_AVAILABLE':'STAGING_APPROVED_LINK_DATA_NOT_READY',
+  'STAGING_APPROVED_PUBLISHED_LEGACY_LINKS_AVAILABLE':
+   row.staging_fixture_published_anchors>0?
+    'STAGING_INTERNAL_QA_FIXTURE_ONLY_NOT_RELEASE_READY':
+    'STAGING_APPROVED_LINK_DATA_NOT_READY',
   counts:Object.fromEntries(KEYS.map(k=>[k,row[k]])),
   private_rows_exported:0,
   production_access:false,d1_writes:0};
