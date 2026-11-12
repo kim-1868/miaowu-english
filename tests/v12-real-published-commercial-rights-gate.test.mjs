@@ -81,6 +81,13 @@ test('first real publisher clearance always starts HOLD: 7 rights + 10 checkmark
  assert.equal(t.schema,'wordletter-real-two-book-publisher-clearance-v1');
  assert.equal(t.is_approved,false);
  assert.equal(t.ops_signature_required,true);
+ assert.equal(t.authorship_context.story.reported_origin,
+  'USER_AI_GENERATED_FOR_MIAOWU');
+ assert.equal(t.authorship_context.bilingual_examples.reported_origin,
+  'CHATGPT_ASSISTED_DRAFTS_PREPARED_FOR_MIAOWU');
+ assert.equal(t.authorship_context.bilingual_examples.per_old_card_creation_provenance_verified,false);
+ assert.equal(t.authorship_context.bilingual_examples.third_party_overlap_checked,false);
+ assert.equal(t.authorship_context.phonetics.uk_ipa_source,'NOT_CONFIRMED');
  assert.equal(RIGHTS_KINDS.length,7);
  assert.equal(CHECK_KINDS.length,10);
  assert.ok(RIGHTS_KINDS.every(k=>t.rights[k].verified===false));

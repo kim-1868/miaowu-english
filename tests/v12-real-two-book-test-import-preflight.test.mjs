@@ -52,6 +52,11 @@ test('real-shaped private two-book packet produces ONLY hidden draft and strict 
  assert.equal(m.publisher_content_origin.evidence_type,'user_self_report_unverified');
  assert.equal(m.publisher_content_origin.specific_book_rights_signed_off,false);
  assert.ok(m.publisher_content_origin.excludes.includes('english_example'));
+ assert.equal(m.publisher_content_origin.bilingual_example_origin_claim.general_project_production,
+  'CHATGPT_ASSISTED_ORIGINAL_DRAFTS');
+ assert.equal(m.publisher_content_origin.bilingual_example_origin_claim.confirmed_by_user,true);
+ assert.equal(m.publisher_content_origin.bilingual_example_origin_claim.each_selected_legacy_card_provenance_verified,false);
+ assert.equal(m.safety.authenticated_editorial_and_license_receipt_verified,false);
  assert.equal(m.safety.can_execute,false);
  assert.equal(m.safety.executable_d1_sql_generated,false);
  assert.equal(m.safety.database_writes_performed,0);
