@@ -50,7 +50,31 @@ jobs:
           npm test
           node --experimental-sqlite --test tests/v12-staging-published-legacy-sense-srs-bridge.test.mjs
           node --test tests/v12-auto-draft-target-planner.test.mjs
-      - name: Deploy staging only, preserve configured secrets
+      - name: Build preview-only runtime flags without changing checked-in config
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const config=JSON.parse(readFileSync('wrangler.jsonc','utf8'));
+          assert.equal(config.name,'miaowu-english-staging');
+          assert.equal(config.vars.APP_ENV,'staging');
+          assert.equal(config.d1_databases?.[0]?.database_name,'miaowu-english-test');
+          assert.equal(config.d1_databases?.[0]?.database_id,'88a817cb-23bb-4ae4-bcb8-92286c4165d4');
+          assert.equal(config.vars.GLOBAL_DICTIONARY_SENSE_SRS_ENABLED,undefined);
+          assert.equal(config.vars.GLOBAL_DICTIONARY_SENSE_SRS_WRITE_ENABLED,undefined);
+          assert.equal(config.vars.GLOBAL_DICTIONARY_PUBLISHED_LEGACY_PREVIEW_ENABLED,undefined);
+          config.vars={
+           ...config.vars,
+           GLOBAL_DICTIONARY_SENSE_SRS_ENABLED:'true',
+           GLOBAL_DICTIONARY_PUBLISHED_LEGACY_PREVIEW_ENABLED:'true',
+           GLOBAL_DICTIONARY_SENSE_SRS_WRITE_ENABLED:'false'
+          };
+          writeFileSync('wrangler.sense-pilot.generated.jsonc',
+           JSON.stringify(config,null,2)+'\n');
+          console.log('STAGING_SENSE_PILOT_READONLY_FLAGS_PREPARED_NO_CONFIG_COMMIT');
+          NODE
+      - name: Deploy isolated STAGING preview (read-only sense UI; feedback writes disabled)
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -59,8 +83,42 @@ jobs:
           : "${CLOUDFLARE_API_TOKEN:?MISSING_STAGING_DEPLOY_TOKEN}"
           : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_CLOUDFLARE_ACCOUNT_ID}"
           npm install --no-save --ignore-scripts wrangler@^4
-          npx wrangler deploy --keep-vars --config wrangler.jsonc
-          echo 'STAGING_DEPLOY_ONLY_NO_PRODUCTION_D1_WRITE_OR_DEPLOY'
+          npx wrangler deploy --keep-vars --config wrangler.sense-pilot.generated.jsonc
+          rm -f wrangler.sense-pilot.generated.jsonc
+          echo 'STAGING_SHARED_SENSE_READONLY_PREVIEW_DEPLOYED_NO_PRODUCTION_DB_NO_SRS_WRITES'
+      - name: Confirm staging-only prototype has the genuine pilot data
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_STAGING_D1_READ_ONLY_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_CLOUDFLARE_ACCOUNT_ID}"
+          sql="SELECT
+            (SELECT count(*) FROM books WHERE id IN ('mw-v12-pilot-ex-20261112',
+              'mw-v12-pilot-bride-20261112') AND status='published') pilot_books,
+            (SELECT count(*) FROM chapters WHERE id IN ('mw-v12-pilot-ex-20261112-ch01',
+              'mw-v12-pilot-bride-20261112-ch01') AND is_preview=1) pilot_chapters,
+            (SELECT count(*) FROM global_dictionary_legacy_sense_links WHERE legacy_word_id IN
+              ('mw-v12-pilot-choice-ex','mw-v12-pilot-choice-bride')) pilot_links,
+            (SELECT count(DISTINCT sense_id) FROM global_dictionary_legacy_sense_links
+              WHERE legacy_word_id IN ('mw-v12-pilot-choice-ex','mw-v12-pilot-choice-bride')) pilot_senses;"
+          if ! npx wrangler d1 execute miaowu-english-test --remote --json \
+            --config wrangler.jsonc --command "$sql" >"$RUNNER_TEMP/pilot-smoke.json" 2>"$RUNNER_TEMP/pilot-smoke.err"; then
+            echo 'STAGING_PILOT_REAL_D1_POSTDEPLOY_SMOKE_FAILED';exit 1
+          fi
+          node --input-type=module - "$RUNNER_TEMP/pilot-smoke.json" <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const raw=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          const rows=(Array.isArray(raw)?raw:[raw]).flatMap(p=>p.results??[]);
+          assert.equal(rows.length,1);
+          assert.deepEqual(rows[0],{pilot_books:2,pilot_chapters:2,
+           pilot_links:2,pilot_senses:1});
+          console.log('STAGING_DEPLOYED_PILOT_REAL_D1_BOOKS2_LINKS2_SENSE1');
+          NODE
+          rm -f "$RUNNER_TEMP/pilot-smoke.json" "$RUNNER_TEMP/pilot-smoke.err"
       - name: Ensure anonymous staging still protected after deployment
         run: |
           set -euo pipefail
