@@ -188,4 +188,66 @@ jobs:
           assert.ok(keys.every(k=>Number.isSafeInteger(rows[0][k])&&rows[0][k]>=0));
           console.log('STAGING_PILOT_SOURCE_PREREQUISITES='+JSON.stringify(rows[0]));
           NODE
+          exact_pilot="WITH qa AS (
+            SELECT b.id AS book_id,ch.content_json,cw.word_id,cw.context_anchor,
+              w.meaning_zh,l.sense_id,s.approved,s.active,
+              e.teaching_ready,src.license_reviewed,src.enabled,
+              length(trim(lesson.reviewed_by))>0 AS lesson_reviewed,
+              CASE WHEN json_valid(ch.content_json)=1 THEN
+                json_extract(ch.content_json,
+                 '$.paragraphs['||
+                 CAST(substr(cw.context_anchor,2,instr(cw.context_anchor,':')-2) AS INTEGER)||
+                 '].segments['||
+                 CAST(substr(cw.context_anchor,instr(cw.context_anchor,':s')+2) AS INTEGER)||
+                 '].wordId') ELSE NULL END AS segment_word_id,
+              CASE WHEN json_valid(ch.content_json)=1 THEN
+                json_extract(ch.content_json,
+                 '$.paragraphs['||
+                 CAST(substr(cw.context_anchor,2,instr(cw.context_anchor,':')-2) AS INTEGER)||
+                 '].segments['||
+                 CAST(substr(cw.context_anchor,instr(cw.context_anchor,':s')+2) AS INTEGER)||
+                 '].gloss') ELSE NULL END AS segment_gloss
+            FROM chapter_words cw
+            JOIN chapters ch ON ch.id=cw.chapter_id
+             AND ch.published_at IS NOT NULL
+             AND ch.published_at<=CURRENT_TIMESTAMP AND ch.is_preview=1
+            JOIN books b ON b.id=ch.book_id AND b.status='published'
+            JOIN words w ON w.id=cw.word_id
+            JOIN global_dictionary_legacy_sense_links l
+             ON l.legacy_word_id=w.id
+            JOIN global_dictionary_senses s ON s.sense_id=l.sense_id
+            JOIN global_dictionary_entries e ON e.entry_id=s.entry_id
+            JOIN global_dictionary_sources src ON src.source_key=e.source_name
+            JOIN global_dictionary_lessons lesson ON lesson.entry_id=e.entry_id
+            WHERE b.id IN ('mw-v12-pilot-ex-20261112','mw-v12-pilot-bride-20261112')
+             AND e.source_name='wordletter-internal-qa-choice-v12-20261112'
+          )
+          SELECT count(*) pilot_joins,count(DISTINCT book_id) pilot_books,
+            count(DISTINCT sense_id) shared_senses,
+            coalesce(sum(CASE WHEN segment_word_id=word_id THEN 1 ELSE 0 END),0)
+             matched_segment_ids,
+            coalesce(sum(CASE WHEN segment_gloss=meaning_zh THEN 1 ELSE 0 END),0)
+             matching_context_glosses,
+            coalesce(sum(CASE WHEN approved=1 AND active=1 AND teaching_ready=1
+             AND license_reviewed=1 AND enabled=1 AND lesson_reviewed=1
+             THEN 1 ELSE 0 END),0) verified_qa_only_gate_rows
+          FROM qa;"
+          if ! npx wrangler d1 execute miaowu-english-test --remote --json --config wrangler.jsonc --command "$exact_pilot" >"$private/pilot-exact.json" 2>"$private/error"; then
+            echo 'STAGING_PILOT_EXACT_CONTEXT_SELECT_FAILED_NO_WRITES'
+            exit 1
+          fi
+          node --input-type=module - "$private/pilot-exact.json" <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const raw=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          const rows=(Array.isArray(raw)?raw:[raw]).flatMap(x=>x.results??[]);
+          assert.equal(rows.length,1,'QA_PILOT_EXACT_ROW_COUNT');
+          assert.deepEqual(rows[0],{
+           pilot_joins:2,pilot_books:2,shared_senses:1,
+           matched_segment_ids:2,matching_context_glosses:2,
+           verified_qa_only_gate_rows:2
+          },'QA_PILOT_EXACT_CONTEXT_DRIFT');
+          console.log('STAGING_TEST_D1_REAL_PILOT_EXACT_CONTEXT_TWO_BOOKS_ONE_SENSE_PASS');
+          console.log('STAGING_QA_ONLY_NOT_COMMERCIAL_SIGNOFF_NO_USER_STATE_WRITES');
+          NODE
           echo 'STAGING_READONLY_AGGREGATE_DONE_NO_CUSTOMER_VALUES_NO_D1_WRITES'
