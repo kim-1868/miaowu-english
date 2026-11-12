@@ -166,7 +166,7 @@ export async function handleSenseStudyApi(req,env,path,user,{clock=()=>new Date(
  try{
   let row=await query(env.DB,CONTEXT_SQL,senseId,chapterId,anchor,user.id).first();
   if(!row&&env.GLOBAL_DICTIONARY_PUBLISHED_LEGACY_PREVIEW_ENABLED==='true'&&
-     /^p(?:0|[1-9]\\d*):s(?:0|[1-9]\\d*)$/u.test(anchor)){
+     /^p(?:0|[1-9]\d*):s(?:0|[1-9]\d*)$/u.test(anchor)){
    row=await lookupPublishedApprovedLegacySenseContext(env.DB,{
     chapterId,userId:user.id,anchor,senseId});
   }
