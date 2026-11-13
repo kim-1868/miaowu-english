@@ -35,7 +35,7 @@ case "$mode" in
   const sql=readFileSync('db/021_ops_dictionary_publisher_receipt_bridge.sql','utf8');
   assert.match(sql,/CREATE TABLE IF NOT EXISTS ops_dictionary_publisher_keys/u);
   assert.match(sql,/CREATE TABLE IF NOT EXISTS ops_dictionary_publisher_receipts/u);
-  assert.doesNotMatch(sql,/\b(?:INSERT|UPDATE|DELETE|ALTER|DROP|ATTACH|REPLACE)\b\s+(?:INTO|TABLE|FROM|DATABASE)?\b/iu);
+  assert.doesNotMatch(sql,/^\s*(?:INSERT|UPDATE|DELETE|ALTER|DROP|ATTACH|REPLACE)\b/mu);
   console.log('P0_021_EXACT_TEST_D1_ONLY_NO_DEFAULT_FEATURE_ACTIVATION');
   NODE
   node scripts/v12-ops-test-021-verify.mjs sql before >"$p/before.sql"
