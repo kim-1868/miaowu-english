@@ -6,7 +6,10 @@ export function studyKey(row) {
   const clean = value => String(value || "").normalize("NFKC").trim().toLocaleLowerCase("en-US").replace(/\s+/gu,"");
   const lemma=clean(row.headword);
   const pos=clean(row.part_of_speech).replace(/[.。]/gu,"").replace(/[／]/gu,"/");
-  const meaning=clean(String(row.meaning_zh||"").split(/[；;]/u)[0]);
+  // A shared first gloss is not proof of a shared sense. Preserve every
+  // teaching gloss fragment until reviewed sense_id mappings can replace this
+  // conservative legacy compatibility key.
+  const meaning=clean(row.meaning_zh);
   // Blank meanings do not prove shared identity; caller must use legacy IDs.
   if(!lemma||!pos||!meaning) return "legacy:"+String(row.word_id||row.id||"");
   return "sense:"+lemma+"|"+pos+"|"+meaning;
