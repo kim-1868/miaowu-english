@@ -81,3 +81,14 @@
 - 专项 Node 22 + 真 SQLite 007/021 schema 端到端 5/5 成功；PR 最新 head 的八项 CI 检查全部成功，包括 S1 和生产构建 dry-run。没有 Cloudflare 令牌、远程 TEST/PROD D1 操作或正式站部署。
 - **严格状态**：P0A-1 工程代码及测试已完成；P0A-1 的真实 TEST schema 迁移、受信公钥配置与实际 Publisher 签核尚未完成。7项权利、10项独立编辑签字、TEST真实词卡写入、A/B小说阅读验收仍未达成。请勿把代码合并或签名本身误当成合法教学内容批准。
 - **下一动作**：走既有受保护 staging 备份/迁移许可后应用 TEST 021；配置 OPS_DICTIONARY_PUBLISHER_BRIDGE_ENABLED 和独立可信指纹、由实际 Publisher 注册公钥、签具体单义项的审稿摘要并回传验签；之后才执行真实受控 TEST 导入、跨书阅读验收。所有生产操作仍需独立用户批准。
+
+
+## 2026-11-13 · P0A-1 真实 TEST 021 受保护迁移入口已准备（尚未执行）
+
+- **实际工程交付**：[PR #283](https://github.com/kim-1868/miaowu-english/pull/283)，合并 SHA `eb32aab834b21c4aab28fa06e87ae053dcc48a32`。专项 021 SQLite 迁移/历史计数/完整性测试成功；S1 回归也成功。
+- **GitHub 手工入口**：[PR #284](https://github.com/kim-1868/miaowu-english/pull/284)，合并 SHA `1e584cc26f463ef9060b866117cca59e88182988`；仅向 `main` 登记同名 `workflow_dispatch` UI 文件。默认分支工作流永远不访问 Cloudflare，运行直接失败；要在 Actions 下拉选 `feature/v11-smart-vocab-preflight-20261109` 才能使用真实受保护 TEST 流程。
+- 真实开发分支受保护工作流：`.github/workflows/v12-ops-test-021-protected-schema.yml`；脚本 `scripts/v12-ops-test-021-workflow.sh`、校验 `scripts/v12-ops-test-021-verify.mjs`，SQL `db/021_ops_dictionary_publisher_receipt_bridge.sql`。仅人工 workflow_dispatch + 仓库 owner `kim-1868` + 功能分支 + `staging-d1-schema-approval` 审批能进入实际远程 D1 操作。
+- 该工作流的一次性执行顺序：真实 TEST 只读计数+FK/quick_check → Cloudflare Time Travel bookmark → 全量 TEST SQL export → AES256 加密 → 解密、独立 SQLite 恢复/FK/完整性验证 → **先上传 30 天加密 Artifact** → 只执行 021 文件（从不运行全部 `migrations apply`）→ 比较 16 张历史表前后计数、021 新增两表/两索引/四触发器与新增注册行 0。若缺表、已有部分021、历史计数变化、完整性失败，直接失败关闭。
+- **实际远程状态**：到本次更新还**没有手动启动受保护的 021 工作流**；未远程迁移 TEST，未写任意 Publisher 公钥/真实义项，更未触及 PROD。代码和测试通过不等于实际数据库迁移完成。
+- **最短必要人工操作**：GitHub Actions 找到 `P0 protected TEST D1 OPS Publisher 021 schema with full backup` → Run workflow 下拉选择 `feature/v11-smart-vocab-preflight-20261109`；填 `confirm_target=miaowu-english-test`、`confirm_uuid=88a817cb-23bb-4ae4-bcb8-92286c4165d4`、`confirm_operation=APPLY_TEST_021_OPS_PUBLISHER_SCHEMA_ONLY`、`acknowledge=BACKUP_RESTORE_AND_NO_CUSTOMER_WRITES`；执行后如出现 `staging-d1-schema-approval` 环境审批，需要真实 owner 在 GitHub 审批。执行成功后应下载加密备份在 GitHub 外私密留存。
+- **下一项工程**：等真实 TEST 021 schema 通过后，核实预览 Worker 已使用包含 PR #282 的分支构建，再受控启用 OPS Publisher 桥接并配置独立可信公钥指纹，由真实 Publisher 用真正权限做注册、审稿摘要的审计、离线签名、验签；版权与内容审核、真实书绑定和 A/B E2E 仍是独立后续门禁。
