@@ -1,0 +1,38 @@
+# DEFAULT BRANCH UI REGISTRATION ONLY. This variant NEVER reads or writes D1.
+# For the actual protected TEST-only migration, choose
+# feature/v11-smart-vocab-preflight-20261109 in "Run workflow".
+# In that branch the job still requires exact inputs, a protected approval,
+# a fresh full AES256 backup, independent SQLite restore and 021-only validation.
+name: P0 protected TEST D1 OPS Publisher 021 schema with full backup
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_target:
+        type: string
+        required: true
+        description: Enter miaowu-english-test
+      confirm_uuid:
+        type: string
+        required: true
+        description: Enter the exact TEST D1 UUID
+      confirm_operation:
+        type: string
+        required: true
+        description: Enter APPLY_TEST_021_OPS_PUBLISHER_SCHEMA_ONLY
+      acknowledge:
+        type: string
+        required: true
+        description: Enter BACKUP_RESTORE_AND_NO_CUSTOMER_WRITES
+permissions:
+  contents: read
+jobs:
+  safe-default-branch-no-database-access:
+    if: github.repository == 'kim-1868/miaowu-english'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Main branch cannot perform 021 database operations
+        run: |
+          echo 'P0_021_DEFAULT_BRANCH_NEVER_ACCESSES_DATABASE'
+          echo 'Select feature/v11-smart-vocab-preflight-20261109 in Run workflow'
+          exit 1
