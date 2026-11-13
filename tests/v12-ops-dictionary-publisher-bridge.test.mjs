@@ -155,13 +155,6 @@ test('no key pin, anonymous token, editor, disabled or production can never auth
   assert.equal((await c.post('publisher-key/register',{
    requestId:reqId(8),publicKeyPem:c.key.pem,confirmRegistration:true
   })).status,503);
-  c.env.OPS_DICTIONARY_PUBLISHER_BRIDGE_ENABLED='true';
-  c.env.MIAOWU_TRUSTED_OPS_PUBLISHER_PUBKEY_SHA256='f'.repeat(64);
-  const notPinned=await c.post('publisher-key/register',{
-   requestId:reqId(9),publicKeyPem:c.key.pem,confirmRegistration:true
-  });
-  assert.equal(notPinned.status,403===notPinned.status?403:400);
-  assert.equal(notPinned.data.error,'OPS_PUBLISHER_ROLE_REQUIRED');
   assert.equal(c.db.prepare('SELECT count(*) n FROM ops_audit_events').get().n,0);
  }finally{c.db.close()}
 });
@@ -196,5 +189,19 @@ test('unregistered trust rejects signoff and different receipt audit is rejected
   assert.equal(invalid.data.error,'OPS_PUBLISHER_REAL_AUDIT_NOT_FOUND');
   assert.equal(c.db.prepare('SELECT count(*) n FROM ops_dictionary_publisher_receipts')
    .get().n,0);
+ }finally{c.db.close()}
+});
+
+test('unregistered or mismatched independently configured trust anchor cannot be used',async()=>{
+ const c=await context();
+ try{
+  c.env.MIAOWU_TRUSTED_OPS_PUBLISHER_PUBKEY_SHA256='f'.repeat(64);
+  const mismatch=await c.post('publisher-key/register',{
+   requestId:reqId(9),publicKeyPem:c.key.pem,confirmRegistration:true
+  });
+  assert.equal(mismatch.status,400);
+  assert.equal(mismatch.data.error,'OPS_PUBLISHER_KEY_NOT_IN_INDEPENDENT_TRUST_CONFIG');
+  assert.equal(c.db.prepare('SELECT count(*) n FROM ops_dictionary_publisher_keys').get().n,0);
+  assert.equal(c.db.prepare('SELECT count(*) n FROM ops_audit_events').get().n,0);
  }finally{c.db.close()}
 });
