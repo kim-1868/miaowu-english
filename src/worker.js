@@ -15,6 +15,7 @@ import { handleOpsImport } from "./ops-import.js";
 import {handleOpsImportPreflight} from "./ops-import-preflight.js";
 import {handleOpsBindingManifest} from "./ops-global-binding-manifests.js";
 import {handleOpsDictionaryAttach} from "./global-dictionary-attach.js";
+import {handleOpsDictionaryPublisherBridge} from "./ops-dictionary-publisher-bridge.js";
 import {handleOpsDictionaryNovelV2} from "./ops-dictionary-v2.js";
 import { handleOpsDraftRevision } from "./ops-draft-revision.js";
 import { handleOpsLiveEdit } from "./ops-live-edit.js";
@@ -674,6 +675,7 @@ async function api(req, env) {
     if(path==="/api/ops/import/bindings/preview"||
        path==="/api/ops/import/bindings/confirm"||
        path==="/api/ops/import/bindings/export")return handleOpsBindingManifest(req,env,path);
+    if(path.startsWith("/api/ops/dictionary/publisher-")) return handleOpsDictionaryPublisherBridge(req,env,path);
     if(path==="/api/ops/import/bindings/attach")return handleOpsDictionaryAttach(req,env,path);
     if(path==="/api/ops/import/dictionary-v2/preflight"||
        path==="/api/ops/import/dictionary-v2/discover"||
