@@ -135,9 +135,13 @@
     let wordbookPage=1,wordbookData=null,wordbookPending=false,wordbookRequest=0;
     const PERSONAL_SHELF_PAGE_SIZE=9;
     let initialSessionPromise=Promise.resolve(),heroResumeBusy=false;
+    let visitorSessionConfirmed=false;
+    const featuredPreviewBookId='editorial-ex-husband-extended-8ch-v2';
     function updateHeroReadLabel(){
       const btn=$('heroRead');if(!btn)return;
-      const title=user&&cloudProgress.length?'继续上次阅读':'开始阅读';
+      const title=user
+        ? (cloudProgress.length?'继续上次阅读':'进入书架')
+        : (visitorSessionConfirmed?'精选免费试读':'开始阅读');
       // Keep the existing arrow icon and visual treatment intact.
       const label=btn.firstChild;
       if(label&&label.nodeType===3)label.textContent=title+' ';
@@ -276,6 +280,18 @@
       requestAnimationFrame(()=>$('bookGrid')?.scrollIntoView({behavior:'smooth',block:'start'}));
       toast('挑选一本喜欢的小说开始阅读，登录后会自动记住进度。');
     }
+    async function openFeaturedPreview(){
+      const catalog=await serverRequest('/api/books/'+featuredPreviewBookId+'/chapters');
+      if(user||!visitorSessionConfirmed)return;
+      const preview=catalog.chapters?.find(chapter=>chapter.isPreview&&chapter.canRead);
+      if(!preview||catalog.book?.id!==featuredPreviewBookId){
+        chooseFirstStory();
+        return;
+      }
+      activeCloud={bookId:catalog.book.id,title:catalog.book.title,slug:catalog.book.category,
+        chapters:catalog.chapters,chapterId:null,parts:[]};
+      await openCloudChapter(preview.id);
+    }
     async function resumeLatestReading(){
       if(heroResumeBusy)return;
       heroResumeBusy=true;
@@ -283,7 +299,11 @@
       try{
         // The homepage can be clicked before /api/auth/me finishes loading.
         await initialSessionPromise;
-        if(!user){chooseFirstStory();return;}
+        if(!user){
+          if(visitorSessionConfirmed)await openFeaturedPreview();
+          else chooseFirstStory();
+          return;
+        }
         const currentUser=user.name;
         const result=await serverRequest('/api/me/progress');
         if(user?.name!==currentUser)return;
@@ -295,7 +315,7 @@
         await openCloudBook({id:recent.book_id,title:recent.book_title||'继续阅读'},
           recent.category_slug,{resumeChapterId:recent.chapter_id});
       }catch(error){
-        toast('上次阅读记录暂时无法加载，请从书架选择小说。');
+        toast(user?'上次阅读记录暂时无法加载，请从书架选择小说。':'精选试读暂时无法打开，请从书架选择小说。');
         navigate('library');
       }finally{
         heroResumeBusy=false;button.disabled=false;
@@ -1167,9 +1187,10 @@
       if(!response.ok){const issue=new Error(apiErrors[data.error] || '请求失败（HTTP '+response.status+'）');issue.code=data.error;throw issue;}
       return data;
     }
-    function applyServerAccount(data, move=false) {
+    function applyServerAccount(data, move=false, isGuest=false) {
       const name=data && data.user && data.user.username;
       user=name?{name}:null;
+      visitorSessionConfirmed=!user&&isGuest;
       grants=new Set(Array.isArray(data && data.categories)?data.categories.map(c=>c.slug):[]);
       if(activeCloud){
         // Discard a previously fetched protected test chapter on session changes.
@@ -1190,7 +1211,7 @@
     async function loadServerSession(){
       try { applyServerAccount(await serverRequest('/api/auth/me')); }
       catch(error){
-        applyServerAccount(null);
+        applyServerAccount(null,false,error.code==='LOGIN_REQUIRED');
         if(error.code==='STAGING_ACCESS_REQUIRED')toast('测试站访问已过期，刷新网页后用 reviewer 密码重新验证');
       }
     }
@@ -1264,7 +1285,7 @@
         else chooseFirstStory();
       };
       $('logout').onclick=async()=>{
-        try{await serverRequest('/api/auth/logout','POST',{});applyServerAccount(null,true);toast('已退出账号')}
+        try{await serverRequest('/api/auth/logout','POST',{});applyServerAccount(null,true,true);toast('已退出账号')}
         catch(e){toast(e.message)}
       };
     }

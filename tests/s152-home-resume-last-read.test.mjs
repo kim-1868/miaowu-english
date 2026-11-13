@@ -33,7 +33,7 @@ test("S152: hero uses current account progress endpoint and resumes the exact sa
   assert.match(app,/resumeChapterId:recent\.chapter_id/);
   assert.match(app,/const target=chapters\.find\(ch=>ch\.id===resumeChapterId\)/);
   assert.match(app,/if\(target&&\(target\.canRead\|\|target\.isPreview\)\)return openCloudChapter\(target\.id\)/);
-  assert.match(app,/if\(!user\)\{chooseFirstStory\(\);return;\}/);
+  assert.match(app,/if\(visitorSessionConfirmed\)await openFeaturedPreview\(\)/);
   assert.match(app,/if\(!recent\)\{chooseFirstStory\(\);return;\}/);
 });
 
@@ -53,7 +53,7 @@ test("S152: opening a permitted chapter saves the first fraction to make it the 
 test("S152: homepage script is cache-busted without replacing approved visuals",()=>{
   assert.match(html,/id="heroRead"/);
   assert.match(html,/href="\/styles.css\?v=20261104-v28-night-selection"/);
-  assert.match(html,/src="\/app.js\?v=20261109-favorites-wordbook12"/);
+  assert.match(html,/src="\/app.js\?v=20261109-favorites-wordbook12-featured-trial-20261113"/);
   assert.match(app,/function updateHeroReadLabel\(/);
-  assert.match(app,/user&&cloudProgress\.length\?'继续上次阅读':'开始阅读'/);
+  assert.match(app,/visitorSessionConfirmed\?'精选免费试读':'开始阅读'/);
 });
