@@ -4,6 +4,7 @@ on:
     branches: [feature/v11-smart-vocab-preflight-20261109]
     paths:
       - .github/workflows/v12-published-sense-staging-deploy.yml
+      - src/ops-dictionary-publisher-bridge.js
   workflow_dispatch:
 permissions:
   contents: read
