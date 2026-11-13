@@ -10,7 +10,8 @@ function setup(){
  const db=new DatabaseSync(':memory:');
  db.exec('PRAGMA foreign_keys=ON');
  for(const p of ['001_schema.sql','007_ops_identity_audit.sql',
-  '013_global_dictionary.sql','016_global_dictionary_lessons.sql',
+  '013_global_dictionary.sql','014_global_dictionary_bindings.sql',
+  '015_global_dictionary_book_bindings.sql','016_global_dictionary_lessons.sql',
   '018_global_dictionary_reviewed_senses.sql',
   '020_global_dictionary_sense_study.sql'])load(db,p);
  db.prepare('INSERT INTO ops_operators(id,display_name,role,environment,key_digest) '+
@@ -69,7 +70,6 @@ test('a changed existing OPS row or missing migration object fails after-verific
    .run('audit1','owner_main','test','word','a','reqid_123456');
   assert.throws(()=>verifyAfter(before,counters(db,'after'),fk(db),quick(db)),
    /P0_021_UNEXPECTED_HISTORICAL_DELTA_ops_audit_events/);
-  db.prepare("DELETE FROM ops_audit_events WHERE id='audit1'"); // append-only prevents deletion
  }finally{db.close()}
 });
 
