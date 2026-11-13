@@ -24,7 +24,20 @@ const sha=async bytes=>Array.from(new Uint8Array(
 const utf8=new TextEncoder();
 const shaText=async text=>sha(utf8.encode(text));
 const auditId=()=>('ops_'+crypto.randomUUID().replaceAll('-',''));
-const now=()=>new Date().toISOString();
+// Lock the exact source, candidate and reviewer to each OPS audit event.
+// The signed receipt MUST reproduce these values, not only the review SHA.
+const reviewBinding=({publisher_review_sha256,source_proof_sha256,
+ candidate_sha256,reviewer_id})=>JSON.stringify({
+ schema:'wordletter-ops-publisher-review-binding-v1',
+ publisher_review_sha256,source_proof_sha256,candidate_sha256,reviewer_id,
+ target_database_id:TEST
+});
+const publisherReviewBinding=async({publisherReviewSha256,sourceProofSha256,
+ candidateSha256,reviewerId})=>shaText(reviewBinding({
+ publisher_review_sha256:publisherReviewSha256,
+ source_proof_sha256:sourceProofSha256,
+ candidate_sha256:candidateSha256,reviewer_id:reviewerId}));
+
 const canonicalReceipt=r=>JSON.stringify({
  schema:r.schema,purpose:r.purpose,
  publisher_review_sha256:r.publisher_review_sha256,
@@ -107,10 +120,11 @@ async function authorizeReview(db,actor,b,pinned){
  if(!HEX.test(pinned||'')||!await activeKey(db,actor.id,pinned))
   throw Error('OPS_PUBLISHER_TRUSTED_REGISTRATION_REQUIRED');
  const event='dictionary.publisher_review_authorized';
+ const boundHash=await publisherReviewBinding(b);
  const prior=await auditRequest(db,event,b.requestId);
  if(prior){
   if(prior.actor_id!==actor.id||prior.resource_id!==b.publisherReviewSha256||
-     prior.content_fingerprint!==b.publisherReviewSha256)
+     prior.content_fingerprint!==boundHash)
    throw Error('OPS_PUBLISHER_REQUEST_ID_CONFLICT');
   return {status:'OPS_REVIEW_AUTHORIZED_FOR_OFFLINE_SIGNING',idempotent:true,
    opsAuditId:prior.id,authenticatedPublisherId:actor.id,
@@ -121,7 +135,7 @@ async function authorizeReview(db,actor,b,pinned){
  await db.prepare('INSERT INTO ops_audit_events '+
   '(id,actor_id,event_type,resource_type,resource_id,request_id,content_fingerprint,reason_code) '+
   'VALUES(?,?,?,?,?,?,?,?)').bind(id,actor.id,event,'dictionary_review',
-  b.publisherReviewSha256,b.requestId,b.publisherReviewSha256,
+  b.publisherReviewSha256,b.requestId,boundHash,
   'COMMERCIAL_REVIEW_CONFIRMED_FOR_SIGNING').run();
  return {status:'OPS_REVIEW_AUTHORIZED_FOR_OFFLINE_SIGNING',
   idempotent:false,opsAuditId:id,authenticatedPublisherId:actor.id,
@@ -158,7 +172,7 @@ async function verifyReceipt(db,actor,b,pinned){
     audit.event_type!=='dictionary.publisher_review_authorized'||
     audit.resource_type!=='dictionary_review'||
     audit.resource_id!==r.publisher_review_sha256||
-    audit.content_fingerprint!==r.publisher_review_sha256)
+    audit.content_fingerprint!==await shaText(reviewBinding(r)))
   throw Error('OPS_PUBLISHER_REAL_AUDIT_NOT_FOUND');
  const signature=Uint8Array.from(atob(r.signature_b64),c=>c.charCodeAt(0));
  if(signature.length!==64||
