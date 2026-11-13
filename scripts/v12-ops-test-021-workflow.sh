@@ -37,7 +37,7 @@ case "$mode" in
   assert.match(sql,/CREATE TABLE IF NOT EXISTS ops_dictionary_publisher_receipts/u);
   assert.doesNotMatch(sql,/^\s*(?:INSERT|UPDATE|DELETE|ALTER|DROP|ATTACH|REPLACE)\b/mu);
   console.log('P0_021_EXACT_TEST_D1_ONLY_NO_DEFAULT_FEATURE_ACTIVATION');
-  NODE
+NODE
   node scripts/v12-ops-test-021-verify.mjs sql before >"$p/before.sql"
   query "$(cat "$p/before.sql")" "$p/before.json"
   query 'PRAGMA foreign_key_check;' "$p/before-fk.json"
