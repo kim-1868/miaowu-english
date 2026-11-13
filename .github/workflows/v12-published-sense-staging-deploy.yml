@@ -53,6 +53,7 @@ jobs:
           node --test tests/v12-sense-reader-readonly-ui.test.mjs tests/v12-sense-reader-authorized-feedback-ui.test.mjs
           node --experimental-sqlite --test tests/v12-staging-published-legacy-sense-srs-bridge.test.mjs
           node --test tests/v12-auto-draft-target-planner.test.mjs
+          node --experimental-sqlite --test tests/v12-ops-dictionary-publisher-bridge.test.mjs
       - name: Build preview-only runtime flags without changing checked-in config
         run: |
           set -euo pipefail
@@ -66,12 +67,14 @@ jobs:
           assert.equal(config.d1_databases?.[0]?.database_id,'88a817cb-23bb-4ae4-bcb8-92286c4165d4');
           assert.equal(config.vars.GLOBAL_DICTIONARY_SENSE_SRS_ENABLED,undefined);
           assert.equal(config.vars.GLOBAL_DICTIONARY_SENSE_SRS_WRITE_ENABLED,undefined);
+          assert.equal(config.vars.OPS_DICTIONARY_PUBLISHER_BRIDGE_ENABLED,undefined);
           assert.equal(config.vars.GLOBAL_DICTIONARY_PUBLISHED_LEGACY_PREVIEW_ENABLED,undefined);
           config.vars={
            ...config.vars,
            GLOBAL_DICTIONARY_SENSE_SRS_ENABLED:'true',
            GLOBAL_DICTIONARY_PUBLISHED_LEGACY_PREVIEW_ENABLED:'true',
-           GLOBAL_DICTIONARY_SENSE_SRS_WRITE_ENABLED:'false'
+           GLOBAL_DICTIONARY_SENSE_SRS_WRITE_ENABLED:'false',
+           OPS_DICTIONARY_PUBLISHER_BRIDGE_ENABLED:'false'
           };
           writeFileSync('wrangler.sense-pilot.generated.jsonc',
            JSON.stringify(config,null,2)+'\n');
@@ -101,4 +104,8 @@ jobs:
           protected_code="$(curl --silent --show-error --output /tmp/miaowu-staging-protected-api \
             --write-out '%{http_code}' --max-time 25 "$protected_url")"
           test "$protected_code" = '401'
-          echo 'STAGING_ANONYMOUS_401_GUARD_VERIFIED__READONLY_SENSE_PREVIEW_REQUIRES_AUTH'
+          ops_url='https://miaowu-english-staging.kim10086a.workers.dev/api/ops/dictionary/publisher-key/register'
+          ops_code="$(curl --silent --show-error --request POST --output /tmp/miaowu-staging-ops-bridge \
+            --write-out '%{http_code}' --max-time 25 "$ops_url")"
+          test "$ops_code" = '401'
+          echo 'STAGING_ANONYMOUS_401_GUARD_VERIFIED__OPS_BRIDGE_EXPLICITLY_DISABLED'
