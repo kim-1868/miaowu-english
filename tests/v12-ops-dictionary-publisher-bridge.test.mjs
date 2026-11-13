@@ -205,3 +205,47 @@ test('unregistered or mismatched independently configured trust anchor cannot be
   assert.equal(c.db.prepare('SELECT count(*) n FROM ops_audit_events').get().n,0);
  }finally{c.db.close()}
 });
+
+test('source, candidate and reviewer are all locked into the real OPS audit (cannot swap signed payload)',async()=>{
+ const c=await context();
+ try{
+  const registered=await c.post('publisher-key/register',{
+   requestId:reqId(30),publicKeyPem:c.key.pem,confirmRegistration:true
+  });
+  assert.equal(registered.status,200);
+  const base={requestId:reqId(31),publisherReviewSha256:'1'.repeat(64),
+   sourceProofSha256:'2'.repeat(64),candidateSha256:'3'.repeat(64),
+   reviewerId:'editor_actual',confirmReviewed:true};
+  const first=await c.post('publisher-review/authorize',base);
+  assert.equal(first.status,200,JSON.stringify(first.data));
+  const repeat=await c.post('publisher-review/authorize',base);
+  assert.equal(repeat.status,200);
+  assert.equal(repeat.data.opsAuditId,first.data.opsAuditId);
+  const altered=await c.post('publisher-review/authorize',{
+   ...base,candidateSha256:'4'.repeat(64)
+  });
+  assert.equal(altered.status,400);
+  assert.equal(altered.data.error,'OPS_PUBLISHER_REQUEST_ID_CONFLICT');
+  const receipt={
+   schema:'wordletter-ops-publisher-clearance-receipt-v1',
+   purpose:'commercial-lesson-and-published-context-publisher-signoff-v1',
+   publisher_review_sha256:base.publisherReviewSha256,
+   source_proof_sha256:base.sourceProofSha256,
+   candidate_sha256:'4'.repeat(64),reviewer_id:base.reviewerId,
+   ops_audit_id:first.data.opsAuditId,
+   signed_at:'2026-11-13T08:00:00Z',
+   target_database_id:TEST
+  };
+  // Signature is mathematically VALID, but the original audit was for a
+  // DIFFERENT candidate. Cryptographic integrity alone is insufficient.
+  receipt.signature_b64=sign(null,Buffer.from(canonicalPublisherReceipt(receipt)),
+   c.key.privateKey).toString('base64');
+  const rejected=await c.post('publisher-receipt/verify',{
+   requestId:reqId(32),publicKeyPem:c.key.pem,receipt
+  });
+  assert.equal(rejected.status,400);
+  assert.equal(rejected.data.error,'OPS_PUBLISHER_REAL_AUDIT_NOT_FOUND');
+  assert.equal(c.db.prepare('SELECT count(*) n FROM ops_dictionary_publisher_receipts')
+   .get().n,0);
+ }finally{c.db.close()}
+});
