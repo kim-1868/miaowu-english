@@ -103,3 +103,10 @@
 - **状态更正**：P0A-1 的 **OPS签名桥接代码、021真实 TEST schema、备份/回滚证据均已完成**；未完成的只有预览 Worker 实际使用新代码/启用开关、独立可信 Publisher 公钥 pin 和真实 Publisher 登记/语言版权签核。真实商业义项仍是0，TEST 两书绑定和 A/B 阅读未达成。请勿再反复运行021迁移。
 - 第二次重复触发 [#43398006504](https://github.com/kim-1868/miaowu-english/actions/runs/43398006504) 仍处于 waiting，**应取消多余的 #2，绝不再次审批或重跑021**；即便运行，前置 021-existing-schema 检查也会拒绝并产生无意义失败。
 - **下一工程**：先确认 staging Worker 当前版本与 `ops-dictionary-publisher-bridge.js` 是否一致，受控预览部署后再配置独立真实 Publisher 公钥指纹，按既有 OPS 身份执行公钥注册/审核摘要审计/签名验真；7权利、10内容必须是有权人员真实审核记录；下一步才做真实词义安全入库。
+
+## 2026-11-13 · P0A-1 预览 Worker 已包含 OPS 桥接代码（默认关闭，真实部署成功）
+
+- [PR #285](https://github.com/kim-1868/miaowu-english/pull/285) 已 squash merge 到 feature 开发分支，提交 `b62001dafbb4aed748c4f44702099c75e84ef306`。复用旧版 `v12-published-sense-staging-deploy.yml`，新增 007+021 真 SQLite OPS Ed25519 链路回归测试、生成配置中显式 `OPS_DICTIONARY_PUBLISHER_BRIDGE_ENABLED='false'`，并增加匿名 POST 进入 OPS Publisher 路由仍被预览 Basic 认证拒绝的 401 smoke。
+- **真实受控部署成功**：[GitHub Actions #43399194553](https://github.com/kim-1868/miaowu-english/actions/runs/43399194553)，job `isolated-staging-worker` completed/success。全部步骤：TEST D1 专用目标校验、旧 UI/SQLite/业务回归、临时只读配置生成、`wrangler deploy --keep-vars` 仅 `miaowu-english-staging`、预览首页及词义接口的匿名 401、OPS Publisher register 路由匿名 POST 401。Runner 日志：`STAGING_SHARED_SENSE_READONLY_PREVIEW_DEPLOYED_NO_PRODUCTION_DB_NO_SRS_WRITES` 和 `STAGING_ANONYMOUS_401_GUARD_VERIFIED__OPS_BRIDGE_EXPLICITLY_DISABLED`。
+- **已验收范围**：真实 TEST 021 schema 成功 + Worker 新桥接代码已部署至 staging，但 bridge feature flag 显式 FALSE，SRS write FALSE。**未完成**：真实 OPS Publisher 公钥注册/可信密钥指纹配置、独立版权与语言审核、签名回传验真、真实已发布小说感知的词义入库和 A/B 阅读复习端到端。现有测试成功/匿名 401 不代表已证明真实 OPS 签发接口启用后可用。
+- **唯一下一步**：从真实 OPS Publisher 身份与其私有 Ed25519 密钥材料建立独立可信公钥指纹，通过有权限的 TEST/staging 设置及受控变更启用 bridge；由有权者完成 1 个真实义项的 7 类素材权利/10 项语言审签，凭签收进行服务端可信审计与回传验证，再执行非 QA 的最小 TEST 词义导入。严禁生成假签核或在公共 GitHub 中存放签名私钥/付费原文；不触碰 PROD。
