@@ -92,3 +92,14 @@
 - **实际远程状态**：到本次更新还**没有手动启动受保护的 021 工作流**；未远程迁移 TEST，未写任意 Publisher 公钥/真实义项，更未触及 PROD。代码和测试通过不等于实际数据库迁移完成。
 - **最短必要人工操作**：GitHub Actions 找到 `P0 protected TEST D1 OPS Publisher 021 schema with full backup` → Run workflow 下拉选择 `feature/v11-smart-vocab-preflight-20261109`；填 `confirm_target=miaowu-english-test`、`confirm_uuid=88a817cb-23bb-4ae4-bcb8-92286c4165d4`、`confirm_operation=APPLY_TEST_021_OPS_PUBLISHER_SCHEMA_ONLY`、`acknowledge=BACKUP_RESTORE_AND_NO_CUSTOMER_WRITES`；执行后如出现 `staging-d1-schema-approval` 环境审批，需要真实 owner 在 GitHub 审批。执行成功后应下载加密备份在 GitHub 外私密留存。
 - **下一项工程**：等真实 TEST 021 schema 通过后，核实预览 Worker 已使用包含 PR #282 的分支构建，再受控启用 OPS Publisher 桥接并配置独立可信公钥指纹，由真实 Publisher 用真正权限做注册、审稿摘要的审计、离线签名、验签；版权与内容审核、真实书绑定和 A/B E2E 仍是独立后续门禁。
+
+
+## 2026-11-13 · 真实 TEST D1 的 021 schema 已落地验收成功
+
+- **第一次受保护执行实际成功**：[GitHub Actions #43397904258](https://github.com/kim-1868/miaowu-english/actions/runs/43397904258) 的 protected-021-test-add-only job `completed/success`，环境审批 `staging-d1-schema-approval` 已实际生效。这不是离线模拟。
+- 只读迁移前校验：`P0_021_SAFE_BEFORE={"old_tables":2,"publisher_021_tables":0,"existing_business_count_keys":16,"remote_writes":0}`；远程 TEST D1 identity、FK、quick_check、Cloudflare Time Travel bookmark 全部通过。
+- 完整 TEST D1 远程导出，AES-256 对称加密、解密和独立 SQLite 恢复并检验一致性均通过：`P0_021_FULL_TEST_AES256_BACKUP_AND_RESTORE_VERIFIED_NO_DB_WRITES`。先上传受保护的 [encrypted Artifact #14023424336](https://github.com/kim-1868/miaowu-english/actions/runs/43397904258/artifacts/14023424336)，随后才实际调用 `wrangler d1 execute miaowu-english-test --remote --file db/021_ops_dictionary_publisher_receipt_bridge.sql`。Artifact TTL 30 天，须私密下载脱离 GitHub 长期保存。
+- 远程迁移后核验：`P0_021_SAFE_AFTER={"phase":"AFTER","status":"TEST_021_ADD_ONLY_SCHEMA_VERIFIED","metadata_tables_added":2,"indexes_added":2,"triggers_added":4,"historical_counts_preserved":16,"productionAccess":false,"customerRowsChanged":0,"noPublisherIdentityOrReceiptsCreated":true}`。外国键和 quick_check 通过，16 张核心业务表的行数未变化，新增 Publisher 公钥/收据均为0，无正式数据库读写。
+- **状态更正**：P0A-1 的 **OPS签名桥接代码、021真实 TEST schema、备份/回滚证据均已完成**；未完成的只有预览 Worker 实际使用新代码/启用开关、独立可信 Publisher 公钥 pin 和真实 Publisher 登记/语言版权签核。真实商业义项仍是0，TEST 两书绑定和 A/B 阅读未达成。请勿再反复运行021迁移。
+- 第二次重复触发 [#43398006504](https://github.com/kim-1868/miaowu-english/actions/runs/43398006504) 仍处于 waiting，**应取消多余的 #2，绝不再次审批或重跑021**；即便运行，前置 021-existing-schema 检查也会拒绝并产生无意义失败。
+- **下一工程**：先确认 staging Worker 当前版本与 `ops-dictionary-publisher-bridge.js` 是否一致，受控预览部署后再配置独立真实 Publisher 公钥指纹，按既有 OPS 身份执行公钥注册/审核摘要审计/签名验真；7权利、10内容必须是有权人员真实审核记录；下一步才做真实词义安全入库。
