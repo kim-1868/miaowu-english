@@ -73,3 +73,11 @@
 ## 7. 给其他开发窗口的接续规则
 
 只需读取本文件和 Issue #265；先检查最新 GitHub run、OPS 服务端和 TEST D1 的**实际状态**。不能将 2026-11-13 的已知计数当作永久最新状态。新的工作提交必须说明：相对本文件具体推进哪个未完成 A/B/C 节点、远程证据是什么、是否涉及受保护签核和 TEST/PROD 数据写入；禁止新开没有下一步执行者的审计脚本。
+## 2026-11-13 · P0A-1 实际工程执行记录（代码完成，不等于远程上线）
+
+- [PR #282](https://github.com/kim-1868/miaowu-english/pull/282) 已合并至统一词典开发分支，squash SHA 8d4f3bc82cc53fc0a851a2574f3cb74a505d7f8c。没有合并到正式发布分支。
+- 新增 TEST-only 的 021_ops_dictionary_publisher_receipt_bridge.sql，复用既有 ops_operators 和 ops_audit_events，记录受信 Publisher Ed25519 公钥指纹以及只用于预检的已验证签名收据；不创建任何账号、权限、词卡或许可。
+- Worker 已接入三个 staging-only 默认关闭的实际 OPS 接口：受独立配置指纹约束的公钥登记、Publisher 审核摘要授权审计、离线签名回传验签与持久化审计。只处理指纹和审稿摘要，不传小说原文或私钥。
+- 专项 Node 22 + 真 SQLite 007/021 schema 端到端 5/5 成功；PR 最新 head 的八项 CI 检查全部成功，包括 S1 和生产构建 dry-run。没有 Cloudflare 令牌、远程 TEST/PROD D1 操作或正式站部署。
+- **严格状态**：P0A-1 工程代码及测试已完成；P0A-1 的真实 TEST schema 迁移、受信公钥配置与实际 Publisher 签核尚未完成。7项权利、10项独立编辑签字、TEST真实词卡写入、A/B小说阅读验收仍未达成。请勿把代码合并或签名本身误当成合法教学内容批准。
+- **下一动作**：走既有受保护 staging 备份/迁移许可后应用 TEST 021；配置 OPS_DICTIONARY_PUBLISHER_BRIDGE_ENABLED 和独立可信指纹、由实际 Publisher 注册公钥、签具体单义项的审稿摘要并回传验签；之后才执行真实受控 TEST 导入、跨书阅读验收。所有生产操作仍需独立用户批准。
