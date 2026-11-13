@@ -40,9 +40,9 @@ jobs:
       - name: Restrict scope, reject malformed public fingerprint and production target
         shell: bash
         env:
-          PIN: \${{ inputs.public_key_fingerprint }}
-          TARGET: \${{ inputs.confirm_target }}
-          CONFIRM: \${{ inputs.confirmation }}
+          PIN: ${{ inputs.public_key_fingerprint }}
+          TARGET: ${{ inputs.confirm_target }}
+          CONFIRM: ${{ inputs.confirmation }}
         run: |
           set -euo pipefail
           test "$TARGET" = 'miaowu-english-test'
@@ -73,14 +73,14 @@ jobs:
         run: npm install --ignore-scripts --no-save wrangler@^4
       - name: Test-only D1 role, schema and pinned key collision check (READ ONLY)
         env:
-          CLOUDFLARE_API_TOKEN: \${{ secrets.CLOUDFLARE_STAGING_D1_READ_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: \${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          PIN: \${{ inputs.public_key_fingerprint }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PIN: ${{ inputs.public_key_fingerprint }}
         shell: bash
         run: |
           set -euo pipefail
-          : "\${CLOUDFLARE_API_TOKEN:?MISSING_STAGING_READ_TOKEN}"
-          : "\${CLOUDFLARE_ACCOUNT_ID:?MISSING_ACCOUNT_ID}"
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_STAGING_READ_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_ACCOUNT_ID}"
           umask 077
           sql="SELECT
             (SELECT count(*) FROM sqlite_master WHERE type='table'
@@ -112,7 +112,7 @@ jobs:
           rm -f "$RUNNER_TEMP/publisher-safe-counts.json" "$RUNNER_TEMP/publisher-private-error"
       - name: Generate TEST-only runtime config with public pin; preserve SRS write disabled
         env:
-          PIN: \${{ inputs.public_key_fingerprint }}
+          PIN: ${{ inputs.public_key_fingerprint }}
         run: |
           set -euo pipefail
           node --input-type=module <<'NODE'
@@ -135,12 +135,12 @@ jobs:
           NODE
       - name: Deploy only isolated staging Worker (no migration, no dictionary writes)
         env:
-          CLOUDFLARE_API_TOKEN: \${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: \${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
-          : "\${CLOUDFLARE_API_TOKEN:?MISSING_STAGING_DEPLOY_TOKEN}"
-          : "\${CLOUDFLARE_ACCOUNT_ID:?MISSING_ACCOUNT_ID}"
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_STAGING_DEPLOY_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_ACCOUNT_ID}"
           npx wrangler deploy --keep-vars --config wrangler.ops-signer.generated.jsonc
           echo 'P0_SIGNER_STAGING_WORKER_DEPLOYED_BRIDGE_ENABLED_NOT_AUTOMATICALLY_AUTHORIZED'
       - name: Smoke anonymous remains blocked and only staging URL responds
