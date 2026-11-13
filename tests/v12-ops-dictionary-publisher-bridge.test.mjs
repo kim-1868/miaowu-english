@@ -133,7 +133,15 @@ test('real OPS audit -> canonical offline Ed25519 signature -> persisted TEST pr
    requestId:reqId(5),publicKeyPem:c.key.pem,receipt:changed
   });
   assert.equal(rejected.status,400);
-  assert.equal(rejected.data.error,'OPS_PUBLISHER_SIGNATURE_INVALID');
+  assert.equal(rejected.data.error,'OPS_PUBLISHER_REAL_AUDIT_NOT_FOUND');
+  // New audit binding rejects changed contents before signature verification.
+  const alteredSignature={...receipt,signature_b64:
+   (receipt.signature_b64.startsWith('A')?'B':'A')+receipt.signature_b64.slice(1)};
+  const badSignature=await c.post('publisher-receipt/verify',{
+   requestId:reqId(33),publicKeyPem:c.key.pem,receipt:alteredSignature
+  });
+  assert.equal(badSignature.status,400);
+  assert.equal(badSignature.data.error,'OPS_PUBLISHER_SIGNATURE_INVALID');
   assert.equal(c.db.prepare('SELECT count(*) n FROM ops_dictionary_publisher_receipts')
    .get().n,1);
  }finally{c.db.close()}
