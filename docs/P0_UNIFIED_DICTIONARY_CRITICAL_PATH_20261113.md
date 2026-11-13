@@ -110,3 +110,14 @@
 - **真实受控部署成功**：[GitHub Actions #43399194553](https://github.com/kim-1868/miaowu-english/actions/runs/43399194553)，job `isolated-staging-worker` completed/success。全部步骤：TEST D1 专用目标校验、旧 UI/SQLite/业务回归、临时只读配置生成、`wrangler deploy --keep-vars` 仅 `miaowu-english-staging`、预览首页及词义接口的匿名 401、OPS Publisher register 路由匿名 POST 401。Runner 日志：`STAGING_SHARED_SENSE_READONLY_PREVIEW_DEPLOYED_NO_PRODUCTION_DB_NO_SRS_WRITES` 和 `STAGING_ANONYMOUS_401_GUARD_VERIFIED__OPS_BRIDGE_EXPLICITLY_DISABLED`。
 - **已验收范围**：真实 TEST 021 schema 成功 + Worker 新桥接代码已部署至 staging，但 bridge feature flag 显式 FALSE，SRS write FALSE。**未完成**：真实 OPS Publisher 公钥注册/可信密钥指纹配置、独立版权与语言审核、签名回传验真、真实已发布小说感知的词义入库和 A/B 阅读复习端到端。现有测试成功/匿名 401 不代表已证明真实 OPS 签发接口启用后可用。
 - **唯一下一步**：从真实 OPS Publisher 身份与其私有 Ed25519 密钥材料建立独立可信公钥指纹，通过有权限的 TEST/staging 设置及受控变更启用 bridge；由有权者完成 1 个真实义项的 7 类素材权利/10 项语言审签，凭签收进行服务端可信审计与回传验证，再执行非 QA 的最小 TEST 词义导入。严禁生成假签核或在公共 GitHub 中存放签名私钥/付费原文；不触碰 PROD。
+
+
+## 2026-11-13 · P0A 下一工程：真实 Publisher 安全启用入口（已实现并部署为关闭）
+
+- [PR #286](https://github.com/kim-1868/miaowu-english/pull/286) merged：`50417a22392256977c4bd56119f8842313ddd33d`。实际修复 `src/ops-dictionary-publisher-bridge.js` 审计上下文绑定漏洞：`ops_audit_events.content_fingerprint` 现在锁定 review SHA、来源 SHA、候选 sense SHA、editor ID、TEST UUID 的规范 SHA256；独立 Ed25519 签名虽合法，但来源/候选/编辑身份与该授权记录不同也必须拒绝。此前 TEST 021 还没有真实 Publisher 注册/收据，因此无旧真实签名迁移兼容问题。
+- 新本地操作工具 `scripts/v12-ops-publisher-local-onboarding.mjs`：`init` 仅在用户电脑 Git 仓库外创建 Ed25519 私钥（0600）与可公开公钥指纹；`register` 调用 staging 的真实 OPS Publisher 认证 API；`sign-reviewed` 只有实际私密审稿 packet 的 7项权利、10项独立内容审签都满足已存在许可 gate，才调用真实审计、在本地签名、远程验签。此脚本**不生成版权证据或代替审核者**，不写 dictionary sense。
+- 专项 QA [#43400974112](https://github.com/kim-1868/miaowu-english/actions/runs/43400974112)：真实 OPS 007+021 SQLite 6/6，Publisher 本地密钥、模拟 API 与 gate 4/4，合计10/10；其余 S1、安全构建、预览工作流检测全5项success。该 QA 没有访问任何远程数据库。
+- 最新真实隔离预览部署 [#43401140056](https://github.com/kim-1868/miaowu-english/actions/runs/43401140056) job Success：新协议代码已上线至 `miaowu-english-staging`，但 `OPS_DICTIONARY_PUBLISHER_BRIDGE_ENABLED=false`；SRS write false，匿名受保护路由401。
+- [PR #287](https://github.com/kim-1868/miaowu-english/pull/287) 已合入 `main` 作为**绝不访问数据库的手动工作流入口**：只有选 `feature/v11-smart-vocab-preflight-20261109` 的 `.github/workflows/v12-ops-publisher-staging-enable.yml`，并由用户在 GitHub 独立审批 `staging-d1-schema-approval`，才会用真实 TEST 只读查到已存在 active Publisher + 021 schema、旧密钥无冲突后，将**用户本地生成的公开 Ed25519 SHA256 指纹**绑定到 staging Worker 开关 true。这个操作不创建 Publisher 身份、不生成私钥、不接触 PROD、不导入词卡。
+- 具体受信操作手册：[docs/P0_PUBLISHER_REAL_SIGNING_ONBOARDING_20261113.md](https://github.com/kim-1868/miaowu-english/blob/feature/v11-smart-vocab-preflight-20261109/docs/P0_PUBLISHER_REAL_SIGNING_ONBOARDING_20261113.md)。
+- **实际状态**：代码安全修复与预览部署、保护性手工入口均已完成。**尚未**执行真实 activation、登记真实 OPS Publisher 公钥、验证真实独立审核收据、写入商业 sense、绑定原两书或读者 A/B E2E。此阶段不可标记 P0 完成。下一阻塞为用户在**自己的设备**生成/保管可信私钥和提供其公开指纹给受保护 workflow，现有 TEST D1 真实 Publisher 账号需在该流程 read-only 核验。不得把模拟测试数据或用户一般 AI 创作声明当作个别义项的可售许可证据。
