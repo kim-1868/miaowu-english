@@ -105,7 +105,7 @@ jobs:
             --write-out '%{http_code}' --max-time 25 "$protected_url")"
           test "$protected_code" = '401'
           ops_url='https://miaowu-english-staging.kim10086a.workers.dev/api/ops/dictionary/publisher-key/register'
-          ops_code="$(curl --silent --show-error --request POST --output /tmp/miaowu-staging-ops-bridge \\
+          ops_code="$(curl --silent --show-error --request POST --output /tmp/miaowu-staging-ops-bridge \
             --write-out '%{http_code}' --max-time 25 "$ops_url")"
           test "$ops_code" = '401'
           echo 'STAGING_ANONYMOUS_401_GUARD_VERIFIED__OPS_BRIDGE_EXPLICITLY_DISABLED'
