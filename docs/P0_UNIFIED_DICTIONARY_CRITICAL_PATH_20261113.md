@@ -121,3 +121,9 @@
 - [PR #287](https://github.com/kim-1868/miaowu-english/pull/287) 已合入 `main` 作为**绝不访问数据库的手动工作流入口**：只有选 `feature/v11-smart-vocab-preflight-20261109` 的 `.github/workflows/v12-ops-publisher-staging-enable.yml`，并由用户在 GitHub 独立审批 `staging-d1-schema-approval`，才会用真实 TEST 只读查到已存在 active Publisher + 021 schema、旧密钥无冲突后，将**用户本地生成的公开 Ed25519 SHA256 指纹**绑定到 staging Worker 开关 true。这个操作不创建 Publisher 身份、不生成私钥、不接触 PROD、不导入词卡。
 - 具体受信操作手册：[docs/P0_PUBLISHER_REAL_SIGNING_ONBOARDING_20261113.md](https://github.com/kim-1868/miaowu-english/blob/feature/v11-smart-vocab-preflight-20261109/docs/P0_PUBLISHER_REAL_SIGNING_ONBOARDING_20261113.md)。
 - **实际状态**：代码安全修复与预览部署、保护性手工入口均已完成。**尚未**执行真实 activation、登记真实 OPS Publisher 公钥、验证真实独立审核收据、写入商业 sense、绑定原两书或读者 A/B E2E。此阶段不可标记 P0 完成。下一阻塞为用户在**自己的设备**生成/保管可信私钥和提供其公开指纹给受保护 workflow，现有 TEST D1 真实 Publisher 账号需在该流程 read-only 核验。不得把模拟测试数据或用户一般 AI 创作声明当作个别义项的可售许可证据。
+
+## 2026-11-13 · 用户本机真实 Publisher 公钥已完成 TEST OPS 注册（不代表词义许可）
+
+- 用户截图的实际 `register` 返回 `REAL_OPS_PUBLISHER_KEY_REGISTERED_TEST_ONLY={"status":"REGISTERED_TEST_PUBLISHER_PUBLIC_KEY","publicKeySha256":"552a0a49b2173a894c8ed4f2ad07964915bde8fdcf917bcbf973ac667916149f","idempotent":false,"noD1SenseWrites":true}`。这是真实服务端响应，不是本地/CI mock，首次注册成功；已通过受保护 [#43423899319](https://github.com/kim-1868/miaowu-english/actions/runs/43423899319) 的独立公开 pin。用户使用自己的 Mac 私有 OPS Publisher 令牌和 preview password，经本地代理完成请求，未将原始凭证提交公共仓库。
+- **P0 身份门槛 A1 已打通**：真实 TEST Publisher 账户存在、预览 bridge 真实启用、可信 Ed25519 公钥已成功登记并得到服务端响应。当前仍无真实 `publisher-review/authorize` 与 `publisher-receipt/verify` 审核收据、商业 sense 入库、legacy links、或真实小说 A/B 阅读数据。
+- **下一唯一门槛 A2**：使用现有受保护 AES256 真书审稿包（2已发布小说、2原卡、1候选义项）逐项审核来源权利7项和教学编辑10项。原例句质量 1 项提醒、UK/US 音标来源和差异仍待实名审核。**不允许自动勾选或伪造权利声明**，不能将公钥注册成功说成“词卡正式审核通过”。实际权利证明和编辑签核成功后，才用本机私钥运行 `sign-reviewed`，然后单独受保护 TEST 入库和读者跨书验收。绝不重复 021、发 PROD、扩大全量词库。
