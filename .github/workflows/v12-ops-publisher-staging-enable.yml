@@ -1,0 +1,32 @@
+# SAFE DEFAULT BRANCH UI REGISTRATION ONLY — NEVER deploys or reads D1.
+# Select feature/v11-smart-vocab-preflight-20261109 in the Actions branch menu;
+# only that branch's job may use the protected TEST-only deployment workflow.
+name: P0 real OPS Publisher signing bridge STAGING enable (protected)
+on:
+  workflow_dispatch:
+    inputs:
+      public_key_fingerprint:
+        type: string
+        required: true
+        description: Public SHA256 fingerprint from local Publisher key init; NEVER private key
+      confirm_target:
+        type: string
+        required: true
+        description: Enter miaowu-english-test
+      confirmation:
+        type: string
+        required: true
+        description: Enter ENABLE_TEST_ONLY_PUBLISHER_BRIDGE
+permissions:
+  contents: read
+jobs:
+  refuse-default-branch-activation:
+    if: github.repository == 'kim-1868/miaowu-english'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Main branch NEVER enables Publisher signing or accesses databases
+        run: |
+          echo 'P0_SIGNER_DEFAULT_MAIN_CANNOT_DEPLOY_OR_ACCESS_D1'
+          echo 'Select feature/v11-smart-vocab-preflight-20261109 in Run workflow.'
+          exit 1
