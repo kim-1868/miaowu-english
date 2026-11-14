@@ -1349,16 +1349,18 @@ async function examineNovel(){
  const novel=$("uploadNovel").files?.[0];
  if(!novel)throw Error("请先选择小说文件");
  const checkVersion=novelCheckVersion;
+ const category=$("uploadCategory").value;
+ if(!category)throw Error("请先选择词汇商品等级");
  const source=await readFile("uploadNovel");
  let pkg,report;
  if(/\.json$/i.test(novel.name)){
   try{const data=JSON.parse(source);pkg=data.package??data;}
   catch{throw Error("文件不是有效JSON，请检查文件格式")}
+  if(pkg?.book)pkg={...pkg,book:{...pkg.book,category}};
   report=localReport(pkg,null);
  }else if(/\.(md|markdown|txt)$/i.test(novel.name)){
   const title=$("uploadBookTitle").value.trim()||uploadedTitle(novel.name);
   const bookId=$("uploadBookId").value.trim();
-  const category=$("uploadCategory").value;
   const previewChapters=Number($("uploadPreviewCount").value||"0");
   const common=await api("/api/ops/lexicon?category="+encodeURIComponent(category));
   let supplement=[];
@@ -1386,9 +1388,12 @@ async function examineNovel(){
  if(report.anchors===0)throw Error("没有可点击的英文词汇标注，请检查词库匹配");
  if(JSON.stringify(pkg).length>1_500_000)throw Error("内容包过大，请缩短单次上传文件");
  if(checkVersion!==novelCheckVersion||!connected())return;
- if(report.metadataIncomplete.length)uploadMsg("预检发现"+report.metadataIncomplete.length+"个词卡缺少音标/例句。可以导入草稿，但必须补齐后才能正式上架。");
+ const existing=catalogBooks.find(x=>x.id===pkg.book.id);
+ const existingCategoryDiffers=existing&&existing.category_id!==pkg.book.category;
+ if(existingCategoryDiffers)uploadMsg("当前仅预审所选等级。原书所属等级为"+
+  uploadCategoryLabel(existing.category_id)+"，修订原书时请选回原等级。");
+ else if(report.metadataIncomplete.length)uploadMsg("预检发现"+report.metadataIncomplete.length+"个词卡缺少音标/例句。可以导入草稿，但必须补齐后才能正式上架。");
  else{
-  const existing=catalogBooks.find(x=>x.id===pkg.book.id);
   const sameTitle=catalogBooks.find(x=>x.title===pkg.book.title&&
     x.category_id===pkg.book.category);
   if(existing?.status==="draft")uploadMsg("识别为已存在的未发布原书《"+
@@ -1397,11 +1402,11 @@ async function examineNovel(){
   else if(sameTitle)uploadMsg("发现同名小说，但文件中的书籍 ID 不匹配。请核对原书编号，勿重复新建。");
   else uploadMsg("文件识别成功。请检查下面的预览，选择封面，然后点击「确认上传并上架」。");
  }
- pendingNovel=pkg;
+ pendingNovel=existingCategoryDiffers?null:pkg;
  await renderImportTagSuggestions(pkg);
  if(checkVersion!==novelCheckVersion||!connected())return;
  const lines=[
-  "书籍："+pkg.book.title+"（"+pkg.book.category+"）",
+  "书籍："+pkg.book.title+"（"+uploadCategoryLabel(category)+"）",
   "章节："+report.chapters+"；付费章节："+report.paid,
   "词卡："+report.words+"；正文标注："+report.anchors,
   "缺少词卡信息："+report.metadataIncomplete.length,
@@ -1425,6 +1430,7 @@ async function showNovelCoverage(pkg,checkVersion){
   const rate=value=>value==null?"暂无":value+"%";
   const signed=value=>value>0?"+"+value:String(value);
   const lines=[
+   "预审等级："+uploadCategoryLabel(report.category||pkg.book.category),
    "本书有效去重词头："+report.bookHeadwords+" · 有效标注："+report.mentions,
    "跨书重合率："+rate(report.crossBookRate)+"（"+report.overlapWords.length+"/"+report.bookHeadwords+"）",
    "书内重复标注率："+rate(report.withinBookRate)+"（"+(report.mentions-report.bookHeadwords)+"/"+report.mentions+"）",
@@ -1456,10 +1462,25 @@ async function showNovelCoverage(pkg,checkVersion){
    " 请重新识别文件后再查看统计。";
  }
 }
-$("uploadNovel").addEventListener("change",()=>{
+function uploadCategoryLabel(category){
+ return [...$("uploadCategory").options].find(option=>option.value===category)?.textContent||category;
+}
+$("uploadNovel").addEventListener("change",async()=>{
  resetNovel();const file=$("uploadNovel").files?.[0];
  if(file&&!$("uploadBookTitle").value)$("uploadBookTitle").value=uploadedTitle(file.name);
  if(file&&!$("uploadBookId").value)$("uploadBookId").value="story-"+crypto.randomUUID().slice(0,12);
+ if(file&&/\.json$/i.test(file.name)){
+  const version=novelCheckVersion;
+  $("checkNovel").disabled=true;
+  try{
+   const data=JSON.parse(await readFile("uploadNovel"));
+   if(version===novelCheckVersion){
+    const grade=(data?.package??data)?.book?.category;
+    if([...$("uploadCategory").options].some(option=>option.value===grade))
+     $("uploadCategory").value=grade;
+   }
+  }catch{/* The file check reports invalid JSON. */}
+ }
  syncButtons();
 });
 ["uploadWords","uploadBookTitle","uploadBookId","uploadCategory",
