@@ -12,17 +12,20 @@ export async function reviewNovelCoverage(db,{book,chapters,words}){
  const {results}=await db.prepare(`
   SELECT DISTINCT w.headword,b.id=? AS is_replaced
   FROM books b
-  JOIN categories c ON c.id=b.category_id
-  JOIN chapters ch ON ch.book_id=b.id
-  JOIN chapter_words cw ON cw.chapter_id=ch.id
-  JOIN words w ON w.id=cw.word_id
-  JOIN json_each(CASE WHEN json_valid(ch.content_json) THEN ch.content_json ELSE '{}' END,'$.paragraphs') p
-  JOIN json_each(p.value,'$.segments') s
+  CROSS JOIN categories c ON c.id=b.category_id
+  CROSS JOIN chapters ch ON ch.book_id=b.id
+  CROSS JOIN chapter_words cw ON cw.chapter_id=ch.id
+  CROSS JOIN words w ON w.id=cw.word_id
   WHERE b.category_id=? AND c.is_visible=1 AND b.status='published'
     AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP
-    AND cw.context_anchor='p'||p.key||':s'||s.key
-    AND json_extract(s.value,'$.wordId')=w.id
     AND trim(coalesce(w.meaning_zh,''))<>'' AND trim(coalesce(w.part_of_speech,''))<>''
+    AND cw.context_anchor='p'||CAST(substr(cw.context_anchor,2) AS INTEGER)
+      ||':s'||CAST(substr(cw.context_anchor,instr(cw.context_anchor,':s')+2) AS INTEGER)
+    AND json_extract(CASE WHEN json_valid(ch.content_json) THEN ch.content_json ELSE '{}' END,
+      '$.paragraphs['||MAX(0,CAST(substr(cw.context_anchor,2) AS INTEGER))||
+      '].segments['||MAX(0,CAST(substr(cw.context_anchor,instr(cw.context_anchor,':s')+2) AS INTEGER))||'].wordId')=w.id
+    AND CAST(substr(cw.context_anchor,2) AS INTEGER)>=0
+    AND CAST(substr(cw.context_anchor,instr(cw.context_anchor,':s')+2) AS INTEGER)>=0
  `).bind(book.id,category.id).all();
  const inScope=head=>head&&(!targets||targets.has(head));
  const current=new Set(), otherBooks=new Set();
