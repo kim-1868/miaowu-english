@@ -1,0 +1,42 @@
+name: Dictionary zero-legacy new sense review gate synthetic QA
+on:
+  push:
+    paths:
+      - src/global-dictionary-new-sense-editorial-gate.js
+      - src/global-dictionary-new-sense-initial-review-adapter.js
+      - scripts/check-private-new-sense-editorial.mjs
+      - tests/v12-global-dictionary-new-sense-*.test.mjs
+      - .github/workflows/global-dictionary-unlinked-sense-editorial-qa.yml
+  pull_request:
+    paths:
+      - src/global-dictionary-new-sense-editorial-gate.js
+      - src/global-dictionary-new-sense-initial-review-adapter.js
+      - scripts/check-private-new-sense-editorial.mjs
+      - tests/v12-global-dictionary-new-sense-*.test.mjs
+      - .github/workflows/global-dictionary-unlinked-sense-editorial-qa.yml
+permissions:
+  contents: read
+jobs:
+  synthetic-offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: New unlinked sense synthetic-only tests
+        run: |
+          node --check src/global-dictionary-new-sense-editorial-gate.js
+          node --check src/global-dictionary-new-sense-initial-review-adapter.js
+          node --check scripts/check-private-new-sense-editorial.mjs
+          node --test tests/v12-global-dictionary-new-sense-*.test.mjs
+      - name: No remote DB, customer records or publish actions
+        run: |
+          ! grep -Ei 'wrangler|CLOUDFLARE|https?://|fetch\\(|production_deploy|user_words\\b|review_events\\b' \
+            src/global-dictionary-new-sense-editorial-gate.js \
+            src/global-dictionary-new-sense-initial-review-adapter.js \
+            scripts/check-private-new-sense-editorial.mjs
+          echo 'SYNTHETIC_ONLY_NO_PRIVATE_OWNER_FILES_NO_STAGING_OR_PRODUCTION_WRITE'

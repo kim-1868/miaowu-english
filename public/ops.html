@@ -4,6 +4,7 @@
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>妙屋英语 · 运营出版台</title>
 <link rel="stylesheet" href="/ops-console.css?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;layout=20261106-v42&amp;updates=20261108-pub1&amp;wave1=20261108">
+<link rel="stylesheet" href="/ops-unmarked-review.css?v=20261111-v12-phase5">
 <script src="/ops-console.js?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;tags=20261106-v40&amp;layout=20261106-v42&amp;updates=20261108-pub1&amp;wave1=20261108" defer></script>
 </head><body>
 <header><div class="brand">喵 · 妙屋英语 <span>THE STORY & WORD LIBRARY</span></div>
@@ -230,6 +231,10 @@
       <h3>修改正文或追加章节</h3>
       <p class="hint">下载当前内容包，保留原有 book.id、章节 ID 和已有目标单词 ID。可以修改段落、章节标题或在末尾追加新章节。无法直接移除已有章节或该章节已使用的学习词汇。</p>
       <div class="row"><button id="liveDownloadSource" class="secondary" type="button" disabled>下载当前小说 JSON</button></div>
+      <div class="row"><button id="cet4ExportBatch" class="secondary" type="button" disabled>只读导出全部已上架四级小说（本地 JSON）</button>
+      <button id="cet6ExportBatch" class="secondary" type="button" disabled>只读导出全部已上架六级小说（本地 JSON）</button></div>
+      <p id="cet6ExportStatus" class="hint" role="status" aria-live="polite">六级导出不修改任何数据，每本包含版本及 SHA-256；仅用于本机词卡审校。</p>
+      <p id="cet4ExportStatus" class="hint" role="status" aria-live="polite">仅发布者可用，复用现有只读导出接口，不修改小说、学习记录或权益；包含售卖正文的文件请私下保存。</p>
       <label for="liveRevisionFile">选择已修改的小说 JSON 文件
         <input id="liveRevisionFile" type="file" accept=".json,application/json" disabled></label>
       <div class="row">
@@ -248,6 +253,7 @@
   <section class="panel" aria-label="上传新小说">
     <div class="panel-heading"><h2>⑦ 上传并发布新小说</h2><span class="soft">仅限已验证发布者</span></div>
     <p class="hint">上传 JSON / Markdown / TXT，识别预览，选择封面，点击「确认上传并上架」。系统会核对章节、词卡资料、权益边界，不通过时保留草稿并提示修正。</p>
+    <p class="hint">预览站新增：支持不附带 <code>words[]</code> 的 V2 小说 JSON。只需在需要学习的单词处标注 <code>{"surface":"record","gloss":"录制"}</code>，系统使用已审核的统一词典生成共享主词卡；普通英文原文不强制生成学习卡。未审核、歧义或缺词会暂停导入。</p>
     <div class="row">
       <label class="stretch" for="uploadNovel">选择小说文件（JSON / Markdown / TXT）
         <input id="uploadNovel" type="file" accept=".json,.md,.markdown,.txt,application/json,text/plain,text/markdown"></label>
@@ -272,12 +278,17 @@
     <textarea id="uploadBookDescription" rows="2" maxlength="2000" placeholder="输入书籍简介，用于书架卡片"></textarea>
     <div class="row">
       <button id="checkNovel" class="secondary" disabled type="button">识别文件并检查内容</button>
+      <button id="previewGlobalMatch" class="secondary" disabled hidden type="button">统一词典自动匹配预检 · 仅预览站</button>
+      <button id="stageGlobalBindings" class="secondary" type="button" disabled hidden>确认保存词典关联候选（不发布）</button>
+      <button id="downloadGlobalBindingBundle" class="secondary" type="button" disabled hidden>下载已审核词典关联包（JSON）</button>
       <button id="importNovel" disabled type="button">确认上传并上架</button>
       <button id="useSelectedDraft" class="secondary" disabled type="button">使用当前选中草稿的书名和编号</button>
       <button id="reviseNovel" disabled type="button">替换当前未发布草稿（不上架）</button>
     </div>
     <div id="uploadStatus" role="status" aria-live="polite" class="status">请先验证运营身份，再选择文件。</div>
     <pre id="uploadReport" class="report" hidden></pre>
+    <pre id="globalMatchReport" class="report" hidden aria-live="polite"></pre>
+    <div id="globalMatchChoices" class="ops-tag-editor" aria-label="统一词典待复核的上下文选择" hidden></div>
     <div class="ops-tag-editor">
       <h3>新小说剧情标签建议</h3>
       <p class="hint">识别小说后，根据故事简介、章节标题及部分正文生成可选标签。勾选的建议会在确认上架成功后保存；不合适的可取消。</p>
@@ -291,7 +302,32 @@
     </div>
     <p class="hint">发音沿用浏览器语音合成。建议优先上传已加工、审核过的完整 JSON；这里的技术预检不会代替作品版权与语言质量判断。</p>
   </section>
-  <section class="panel mw-ops-update-panel" aria-label="更新公告管理">
+  <section class="panel" id="unmarkedReviewPanel" aria-label="V1.2 小说未标记英文审核工作台" hidden>
+    <details id="unmarkedReviewFold" class="ops-record-section">
+      <summary class="ops-record-section-summary"><span class="ops-section-title"><strong>⑧ 统一词卡自动识词审核（预览站）</strong><small>V2 小说 · 英文自动识别 · 编辑核对 · 安全导出</small></span><span class="ops-fold-caret" aria-hidden="true">⌄</span></summary>
+      <div class="ops-record-section-content">
+        <p class="hint">只支持未附带 words[] 的 V2 小说 JSON。自动识别英文并查找已有已审核主词卡；选择词义后生成<strong>待审核草稿</strong>，不会自动上架、迁移旧词卡或写入学习状态。</p>
+        <label for="unmarkedFile">选择 V2 小说 JSON（1.9MB 以内）</label>
+        <input id="unmarkedFile" type="file" accept=".json,application/json">
+        <div class="row"><button id="unmarkedScan" class="secondary" type="button" disabled>① 自动识词并查看审核候选</button></div>
+        <p id="unmarkedStatus" class="status" role="status" aria-live="polite">请先选择不包含 words[] 的 V2 小说文件。</p>
+        <p id="unmarkedSummary" class="ops-unmarked-summary" aria-live="polite"></p>
+        <p id="unmarkedUnknown" class="ops-unmarked-notice"></p>
+        <div class="row">
+          <label for="unmarkedFilter">审核列表筛选</label><select id="unmarkedFilter"><option value="all">全部可审核位置</option><option value="pending">未确认</option><option value="confirmed">已确认</option></select>
+          <button id="unmarkedBatch" class="secondary" type="button" disabled>批量确认本页唯一义项（需人工核对）</button>
+          <strong id="unmarkedSelectedCount">0 / 0 处已确认</strong>
+        </div>
+        <div id="unmarkedRows" class="ops-unmarked-list" aria-label="逐词上下文审核"></div>
+        <div class="ops-unmarked-navigation">
+          <button id="unmarkedPrev" class="secondary" type="button" disabled>上一页</button><span id="unmarkedPageText">1 / 1 页</span><button id="unmarkedNext" class="secondary" type="button" disabled>下一页</button>
+        </div>
+        <hr>
+        <div class="row"><button id="unmarkedConfirm" type="button" disabled>② 服务端复核并生成待上架文件</button><button id="unmarkedExportV2" class="secondary" type="button" disabled>下载 V2 学习目标草稿</button><button id="unmarkedExportV1" class="secondary" type="button" disabled>下载 V1 兼容预检包</button></div>
+        <p class="hint">所有生成文件仅用于后续运营台版本化预检与 Publisher 内容复核。正式上架仍要完成词卡质量/版权、D1 备份和用户学习状态保护验收。</p>
+      </div>
+    </details>
+  </section>  <section class="panel mw-ops-update-panel" aria-label="更新公告管理">
     <details id="updatesFold" class="ops-record-section">
       <summary class="ops-record-section-summary">
         <span class="ops-section-title"><strong>更新公告管理</strong><small>新书与功能更新 · 首页轻量通知 · 历史更新日志</small></span>

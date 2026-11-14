@@ -1,0 +1,41 @@
+name: Dictionary 013-018 additive migration DRY RUN (no Cloudflare)
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/global-dictionary-staging-migration-dryrun.yml
+      - db/013_global_dictionary.sql
+      - db/014_global_dictionary_bindings.sql
+      - db/015_global_dictionary_book_bindings.sql
+      - db/016_global_dictionary_lessons.sql
+      - db/017_global_dictionary_legacy_links.sql
+      - db/018_global_dictionary_reviewed_senses.sql
+      - scripts/rehearse-dictionary-staging-migration.mjs
+      - scripts/rehearse-dictionary-staging-rollback.mjs
+      - tests/v12-dictionary-staging-additive-plan.test.mjs
+      - tests/v12-dictionary-staging-rollback.test.mjs
+      - tests/v12-dictionary-staging-export-gate.test.mjs
+      - tests/v12-dictionary-staging-encrypted-backup-gate.test.mjs
+      - .github/workflows/global-dictionary-staging-durable-encrypted-backup.yml
+      - .github/workflows/global-dictionary-staging-migrate-manual.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-schema-and-legacy-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check only 013-018 on disposable local SQLite and verify legacy rights
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite scripts/rehearse-dictionary-staging-migration.mjs
+          node --experimental-sqlite scripts/rehearse-dictionary-staging-rollback.mjs
+          node --experimental-sqlite --test tests/v12-dictionary-staging-additive-plan.test.mjs tests/v12-dictionary-staging-rollback.test.mjs tests/v12-dictionary-staging-export-gate.test.mjs tests/v12-dictionary-staging-encrypted-backup-gate.test.mjs
+          echo "NO_CLOUDFLARE_SECRETS_NO_REMOTE_MIGRATIONS_NO_DATA_WRITES"

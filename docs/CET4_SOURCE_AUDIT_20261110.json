@@ -1,0 +1,49 @@
+{
+  "audit_date": "2026-11-10",
+  "source": "Owner-provided 考试词表_合并版_原始.csv (ECDICT compiled exam labels, not official exam syllabus)",
+  "source_sha256": "f748cdfbd3fa2c6bd33f5ced0b021dd8f69386a52539596db4d4d8b91cc67d37",
+  "total_source_headwords": 8671,
+  "cet4_unique_headwords": 3849,
+  "first_tier": {
+    "高考": 2195,
+    "四级": 1654
+  },
+  "source_flags": {
+    "IPA_MISSING": 12,
+    "POS_MISSING": 56,
+    "DICTIONARY_TAGS": 1577,
+    "MULTIPLE_POS_IN_SOURCE": 1465,
+    "MULTIPLE_SENSES_IN_SOURCE": 3064,
+    "COCA_RANK_MISSING": 61,
+    "BNC_RANK_MISSING": 31,
+    "SPECIAL_OR_SUSPECT_HEADWORD": 3,
+    "MANUAL_SOURCE_EXCEPTION": 10
+  },
+  "headwords_missing_both_corpus_ranks": 19,
+  "flagged_source_headwords": 3127,
+  "unverified_previous_shelf_snapshot": {
+    "not_observed_in_snapshot": 3430,
+    "observed_unverified": 419
+  },
+  "warning": "This snapshot is neither current live production coverage nor verified bookplate study data.",
+  "source_examples_available": false,
+  "raw_ipa_or_meaning_suitable_without_review": false,
+  "new_first_tier_card_drafts": 98,
+  "earlier_cet4_pilot_drafts": 10,
+  "total_distinct_cet4_card_drafts": 108,
+  "structurally_ready_drafts": 108,
+  "human_editorially_signed_off": 0,
+  "publication_approved": false,
+  "restrictions": [
+    "Never import ECDICT IPA or overloaded raw definitions as already reviewed cards",
+    "No automatic fallback meaning/examples fabricated for every missing entry",
+    "Do not mutate existing novels, words, user_words, review_events, entitlements",
+    "The raw source is not uploaded to GitHub; this file contains aggregate audit only",
+    "COCA/BNC frequency ranks are general corpus statistics not CET4 exam occurrence frequency"
+  ],
+  "curated_natural_collocation_pairs": 76,
+  "unranked_headwords_source_note": "19 CET4 source headwords have neither COCA nor BNC ranking; approved cards must be shown as UNRANKED after ranked words.",
+  "qa_framework": "staging-only; review flags and source exceptions never auto-mark approved",
+  "cet4_release_readiness": "blocked: 108/3849 drafted, none independently editorially approved, live preview not yet tested",
+  "release_rule": "Only owner may choose production release after complete curated CET4 content and preview account regression."
+}

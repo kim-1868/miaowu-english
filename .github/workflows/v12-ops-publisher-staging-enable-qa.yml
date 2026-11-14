@@ -1,0 +1,43 @@
+name: P0 real Publisher local enrollment and protected activation QA (no remote D1)
+on:
+  pull_request:
+    paths:
+      - src/ops-dictionary-publisher-bridge.js
+      - tests/v12-ops-dictionary-publisher-bridge.test.mjs
+      - scripts/v12-ops-publisher-local-onboarding.mjs
+      - tests/v12-ops-publisher-local-onboarding.test.mjs
+      - .github/workflows/v12-ops-publisher-staging-enable.yml
+      - .github/workflows/v12-ops-publisher-staging-enable-qa.yml
+      - .github/workflows/v12-published-sense-staging-deploy.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - src/ops-dictionary-publisher-bridge.js
+      - scripts/v12-ops-publisher-local-onboarding.mjs
+      - tests/v12-ops-dictionary-publisher-bridge.test.mjs
+      - tests/v12-ops-publisher-local-onboarding.test.mjs
+      - .github/workflows/v12-ops-publisher-staging-enable.yml
+      - .github/workflows/v12-ops-publisher-staging-enable-qa.yml
+permissions:
+  contents: read
+jobs:
+  real-publisher-onboarding-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate public trust pin workflow and protected manual scope
+        run: |
+          set -euo pipefail
+          node --check src/ops-dictionary-publisher-bridge.js
+          node --check scripts/v12-ops-publisher-local-onboarding.mjs
+          node --experimental-sqlite --test tests/v12-ops-dictionary-publisher-bridge.test.mjs
+          node --test tests/v12-ops-publisher-local-onboarding.test.mjs
+          ruby -ryaml -e 'YAML.load_file(".github/workflows/v12-ops-publisher-staging-enable.yml")'
+          test "$(grep -Fc 'staging-d1-schema-approval' .github/workflows/v12-ops-publisher-staging-enable.yml)" = 1
+          echo 'P0_PUBLISHER_LOCAL_SIGNING_TESTED_NO_REMOTE_CREDENTIALS_NO_APPROVAL_GRANTED'

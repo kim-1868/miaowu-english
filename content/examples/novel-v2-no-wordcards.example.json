@@ -1,0 +1,48 @@
+{
+  "version": 2,
+  "book": {
+    "id": "story-demo-cet6-v2",
+    "title": "示例：一次改变方向的面试",
+    "category": "cet6",
+    "description": "统一词典 V2 示例小说，演示不附带 words 数组。"
+  },
+  "sourceLabel": "dictionary-v2",
+  "chapters": [
+    {
+      "id": "chapter-v2-001",
+      "number": 1,
+      "title": "第一章 新的机会",
+      "preview": true,
+      "paragraphs": [
+        {
+          "segments": [
+            {
+              "text": "她刚刚 "
+            },
+            {
+              "surface": "developed",
+              "gloss": "开发"
+            },
+            {
+              "text": " 一套新的学习方案，准备在面试上展示。"
+            }
+          ]
+        },
+        {
+          "segments": [
+            {
+              "text": "走进办公室时，她决定 "
+            },
+            {
+              "surface": "record",
+              "gloss": "记录"
+            },
+            {
+              "text": " 面试官提出的问题，回家再认真整理。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

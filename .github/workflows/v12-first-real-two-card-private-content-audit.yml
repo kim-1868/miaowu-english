@@ -1,0 +1,125 @@
+name: V1.2 REAL first two published cards private source and linguistic audit
+on:
+  pull_request:
+    paths:
+      - .github/workflows/v12-first-real-two-card-private-content-audit.yml
+      - scripts/v12-first-real-two-card-private-content-audit.mjs
+      - tests/v12-first-real-two-card-private-content-audit.test.mjs
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-first-real-two-card-private-content-audit.yml
+      - scripts/v12-first-real-two-card-private-content-audit.mjs
+      - tests/v12-first-real-two-card-private-content-audit.test.mjs
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: v12-first-real-card-content-audit-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  synthetic-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Cryptographic original cards, version register, English/Chinese heuristics, fail-closed
+        run: |
+          set -euo pipefail
+          node --test tests/v12-first-real-two-card-private-content-audit.test.mjs
+  protected-actual-two-card-audit:
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    needs: synthetic-preflight
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify only existing encrypted publisher review artifact and review two real cards
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRIVATE_EVIDENCE_PASSPHRASE: ${{ secrets.PRODUCTION_D1_METADATA_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${GH_TOKEN:?PRIVATE_GITHUB_ARTIFACT_READ_REQUIRED}"
+          : "${PRIVATE_EVIDENCE_PASSPHRASE:?PROTECTED_SOURCE_DECRYPT_REQUIRED}"
+          test "${#PRIVATE_EVIDENCE_PASSPHRASE}" -ge 32
+          umask 077
+          private="$RUNNER_TEMP/real-two-card-content-private"
+          mkdir -m 700 "$private"
+          trap 'rm -rf "$private"' EXIT
+          printf '%s' "$PRIVATE_EVIDENCE_PASSPHRASE" > "$private/pass"
+          unset PRIVATE_EVIDENCE_PASSPHRASE
+          curl --fail --location --silent --show-error --retry 2 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/kim-1868/miaowu-english/actions/artifacts/13967615571/zip" \
+            --output "$private/source.zip"
+          test "$(unzip -Z1 "$private/source.zip" | wc -l | tr -d ' ')" = 1
+          unzip -Z1 "$private/source.zip" | grep -Fxq \
+            'v12-real-two-book-commercial-clearance-private.gpg'
+          unzip -p "$private/source.zip" \
+            'v12-real-two-book-commercial-clearance-private.gpg' > "$private/source.gpg"
+          if ! gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$private/pass" \
+            --decrypt "$private/source.gpg" > "$private/source.tar.gz" \
+            2> "$private/decrypt.err"; then
+            echo 'REAL_TWO_CARD_PRIVATE_REVIEW_DECRYPT_FAILED'
+            exit 1
+          fi
+          tar -tzf "$private/source.tar.gz" > "$private/tar-index"
+          test "$(wc -l < "$private/tar-index" | tr -d ' ')" = 2
+          grep -Fxq 'commercial-review-private.json' "$private/tar-index"
+          grep -Fxq 'review-readiness-private.json' "$private/tar-index"
+          tar -xzf "$private/source.tar.gz" -C "$private" \
+            --no-same-owner --no-same-permissions \
+            commercial-review-private.json review-readiness-private.json
+          node scripts/v12-first-real-two-card-private-content-audit.mjs \
+            "$private/commercial-review-private.json" \
+            content/lexicon/wordcard-existing-source-register-20261110.jsonl \
+            "$private/first-real-two-card-private-audit.json" \
+            "$private/first-real-two-card-editorial-review.md"
+          cd "$private"
+          tar -czf audited-private.tar.gz \
+            first-real-two-card-private-audit.json first-real-two-card-editorial-review.md
+          cd - >/dev/null
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$private/pass" \
+            --symmetric --cipher-algo AES256 \
+            --output "$RUNNER_TEMP/v12-first-real-two-card-content-audit-encrypted.gpg" \
+            "$private/audited-private.tar.gz" \
+            > "$private/encrypt.err" 2>&1
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$private/pass" \
+            --decrypt "$RUNNER_TEMP/v12-first-real-two-card-content-audit-encrypted.gpg" \
+            > "$private/verified.tar.gz" 2> "$private/verify.err"
+          cmp -s "$private/audited-private.tar.gz" "$private/verified.tar.gz"
+          rm -rf "$private"
+          echo 'FIRST_REAL_TWO_CARD_ENCRYPTED_CONTENT_AUDIT_VERIFIED_HOLD_NO_DB_ACCESS'
+      - name: Upload only AES256 protected real content audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: v12-first-real-two-card-content-audit-encrypted
+          path: ${{ runner.temp }}/v12-first-real-two-card-content-audit-encrypted.gpg
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+      - name: Purge encrypted scratch from runner
+        if: always()
+        run: rm -f "$RUNNER_TEMP/v12-first-real-two-card-content-audit-encrypted.gpg"

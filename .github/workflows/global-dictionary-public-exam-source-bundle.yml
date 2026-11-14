@@ -1,0 +1,87 @@
+name: Public pinned exam source bundle for PRIVATE offline review (no owner data)
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/global-dictionary-public-exam-source-bundle.yml
+      - scripts/prepare-public-exam-source-bundle.py
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  public-mit-exam-source-only:
+    if: github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download pinned public dictionary index artifact only
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          src="$RUNNER_TEMP/public-audited-index"
+          mkdir -m 700 "$src"
+          curl -fLsS --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/13742288377/zip" \
+            -o "$RUNNER_TEMP/audited-index.zip"
+          unzip -q "$RUNNER_TEMP/audited-index.zip" -d "$src"
+          test -s "$src/dictionary-unverified-entries.jsonl"
+          test -s "$src/audit-summary.json"
+      - name: Download pinned public MIT resources, excluding GPL-derived UK IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+          src="$RUNNER_TEMP/pinned-mit-sources"
+          mkdir -m 700 "$src"
+          ecdict="https://raw.githubusercontent.com/skywind3000/ECDICT/39cfb9672c0906b63569e0453c2e6abfb9ab182a"
+          ipa="https://raw.githubusercontent.com/open-dict-data/ipa-dict/972cd67dd5f96bc5660e28070cde26e3928abcd7"
+          curl -fLsS --retry 3 "$ecdict/ecdict.csv" -o "$src/ecdict.csv"
+          curl -fLsS --retry 3 "$ecdict/LICENSE" -o "$src/ECDICT-LICENSE.txt"
+          curl -fLsS --retry 3 "$ipa/data/en_US.txt" -o "$src/en_US.txt"
+          curl -fLsS --retry 3 "$ipa/LICENSE" -o "$src/IPA-DICT-LICENSE.txt"
+          test "$(wc -c < "$src/ecdict.csv")" -gt 1000000
+          test -s "$src/en_US.txt"
+          sha256sum "$src/ecdict.csv" "$src/en_US.txt"
+      - name: Subset public exam-tagged source words and preserve license notices
+        shell: bash
+        run: |
+          set -euo pipefail
+          a="$RUNNER_TEMP/public-audited-index"
+          s="$RUNNER_TEMP/pinned-mit-sources"
+          dest="$RUNNER_TEMP/public-exam-source-bundle"
+          python scripts/prepare-public-exam-source-bundle.py \
+            --index "$a/dictionary-unverified-entries.jsonl" \
+            --audit "$a/audit-summary.json" \
+            --ecdict "$s/ecdict.csv" \
+            --ecdict-license "$s/ECDICT-LICENSE.txt" \
+            --ipa-us "$s/en_US.txt" \
+            --ipa-license "$s/IPA-DICT-LICENSE.txt" \
+            --script scripts/build-exam-first-open-source-card-candidates.py \
+            --out "$dest"
+          python - "$dest/manifest.json" <<'PY'
+          import json,sys
+          m=json.load(open(sys.argv[1],encoding='utf-8'))
+          assert m['status']=='PUBLIC_SOURCE_CANDIDATES_ONLY_NOT_REVIEWED'
+          assert m['public_exam_tagged_headwords']==11422
+          assert m['public_exam_translation_rows']>=9700
+          assert m['no_owner_private_target_lists'] is True
+          assert m['no_customer_or_purchased_book_data'] is True
+          assert m['teaching_senses_approved']==0 and m['remote_d1_writes']==0
+          print('PUBLIC_EXAM_SOURCES_ONLY_LICENSES_RETAINED_NO_PRIVATE_OWNER_DATA')
+          PY
+          ! find "$dest" -type f | grep -E 'en_UK|user_words|entitlements|private-owner'
+      - name: Upload only reusable public exam subset and pinned US IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-mit-exam-lookup-bundle-${{ github.run_id }}
+          path: ${{ runner.temp }}/public-exam-source-bundle/
+          if-no-files-found: error
+          retention-days: 30

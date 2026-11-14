@@ -1,0 +1,138 @@
+name: V1.2 real 2-card full 32-book snapshot + fixed US IPA private audit
+on:
+  pull_request:
+    paths:
+      - .github/workflows/v12-real-two-card-full-source-us-ipa-audit.yml
+      - scripts/v12-real-two-card-full-snapshot-us-ipa-audit.mjs
+      - tests/v12-real-two-card-full-snapshot-us-ipa-audit.test.mjs
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-real-two-card-full-source-us-ipa-audit.yml
+      - scripts/v12-real-two-card-full-snapshot-us-ipa-audit.mjs
+      - tests/v12-real-two-card-full-snapshot-us-ipa-audit.test.mjs
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: real-two-card-full-source-review-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  synthetic-full-publisher-origin-and-us-ipa-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prove real old-card source crosscheck cannot invent approvals
+        run: |
+          set -euo pipefail
+          node --test tests/v12-real-two-card-full-snapshot-us-ipa-audit.test.mjs
+  protected-full-publisher-origin-and-us-ipa-audit:
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    needs: synthetic-full-publisher-origin-and-us-ipa-qa
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check full original private 32-book snapshot and fixed MIT US IPA source (no D1 API)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GPG_PASSPHRASE: ${{ secrets.PRODUCTION_D1_METADATA_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${GH_TOKEN:?GITHUB_EXISTING_ARTIFACT_READ_REQUIRED}"
+          : "${GPG_PASSPHRASE:?PROTECTED_ENCRYPTED_SOURCE_REQUIRES_APPROVAL}"
+          test "${#GPG_PASSPHRASE}" -ge 32
+          umask 077
+          p="$RUNNER_TEMP/private-publisher-origin-audit"
+          mkdir -m 700 "$p"
+          trap 'rm -rf "$p"' EXIT
+          printf '%s' "$GPG_PASSPHRASE" > "$p/pass"
+          unset GPG_PASSPHRASE
+          download_artifact() {
+            local id="$1" member="$2" out="$3"
+            curl --fail --location --silent --show-error --retry 2 \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/kim-1868/miaowu-english/actions/artifacts/$id/zip" \
+              --output "$p/archive-$id.zip"
+            test "$(unzip -Z1 "$p/archive-$id.zip" | wc -l | tr -d ' ')" = 1
+            unzip -Z1 "$p/archive-$id.zip" | grep -Fxq "$member"
+            unzip -p "$p/archive-$id.zip" "$member" > "$p/archive-$id.gpg"
+            test -s "$p/archive-$id.gpg"
+            if ! gpg --batch --yes --pinentry-mode loopback \
+              --passphrase-file "$p/pass" \
+              --decrypt "$p/archive-$id.gpg" > "$out" \
+              2> "$p/gpg-$id.err"; then
+              echo 'REAL_FULL_SNAPSHOT_SOURCE_DECRYPT_FAILED'
+              exit 1
+            fi
+            test -s "$out"
+          }
+          download_artifact 13967904583 \
+            v12-first-real-two-card-content-audit-encrypted.gpg "$p/private-review.tar.gz"
+          test "$(tar -tzf "$p/private-review.tar.gz" | wc -l | tr -d ' ')" = 2
+          tar -tzf "$p/private-review.tar.gz" | grep -Fxq \
+            'first-real-two-card-private-audit.json'
+          tar -tzf "$p/private-review.tar.gz" | grep -Fxq \
+            'first-real-two-card-editorial-review.md'
+          tar -xzf "$p/private-review.tar.gz" -C "$p" \
+            --no-same-owner --no-same-permissions \
+            first-real-two-card-private-audit.json
+          download_artifact 13911979176 \
+            v12-published-32-editorial-review-queue.gpg "$p/private-full-snapshot.json"
+          # Read only the en_US dataset, never the GPL-derived en_UK dataset.
+          curl --fail --location --silent --show-error --retry 2 \
+            "https://raw.githubusercontent.com/open-dict-data/ipa-dict/972cd67dd5f96bc5660e28070cde26e3928abcd7/data/en_US.txt" \
+            --output "$p/ipa-en_US-locked.txt"
+          test -s "$p/ipa-en_US-locked.txt"
+          node scripts/v12-real-two-card-full-snapshot-us-ipa-audit.mjs \
+            "$p/first-real-two-card-private-audit.json" \
+            "$p/private-full-snapshot.json" \
+            "$p/ipa-en_US-locked.txt" \
+            "$p/private-complete-source-audit.json" \
+            "$p/private-two-card-qa-summary.md"
+          cd "$p"
+          tar -czf sealed-output.tar.gz \
+            private-complete-source-audit.json private-two-card-qa-summary.md
+          cd - >/dev/null
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$p/pass" --symmetric --cipher-algo AES256 \
+            --output "$RUNNER_TEMP/v12-real-two-card-full-snapshot-us-ipa-audit.gpg" \
+            "$p/sealed-output.tar.gz" > "$p/gpg-encrypt.err" 2>&1
+          test -s "$RUNNER_TEMP/v12-real-two-card-full-snapshot-us-ipa-audit.gpg"
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$p/pass" \
+            --decrypt "$RUNNER_TEMP/v12-real-two-card-full-snapshot-us-ipa-audit.gpg" \
+            > "$p/verified.tar.gz" 2> "$p/gpg-verify.err"
+          cmp -s "$p/sealed-output.tar.gz" "$p/verified.tar.gz"
+          rm -rf "$p"
+          echo 'REAL_FULL_PUBLISHER_SOURCE_AND_US_IPA_CHECK_ENCRYPTED_NO_DB_ACCESS_NO_APPROVAL'
+      - name: Save only AES256 private source and content reconciliation
+        uses: actions/upload-artifact@v4
+        with:
+          name: v12-real-two-card-full-snapshot-us-ipa-audit-encrypted
+          path: ${{ runner.temp }}/v12-real-two-card-full-snapshot-us-ipa-audit.gpg
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+      - name: Remove encrypted runner copy
+        if: always()
+        run: rm -f "$RUNNER_TEMP/v12-real-two-card-full-snapshot-us-ipa-audit.gpg"

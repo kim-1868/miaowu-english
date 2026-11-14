@@ -1,0 +1,34 @@
+name: Dictionary 5985 complex exam review planning synthetic QA (no D1)
+on:
+  push:
+    paths:
+      - scripts/plan-complex-exam-sense-review.py
+      - tests/test_complex_exam_sense_review.py
+      - .github/workflows/global-dictionary-complex-exam-review-qa.yml
+  pull_request:
+    paths:
+      - scripts/plan-complex-exam-sense-review.py
+      - tests/test_complex_exam_sense_review.py
+      - .github/workflows/global-dictionary-complex-exam-review-qa.yml
+permissions:
+  contents: read
+jobs:
+  private-free-synthetic-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Synthetic fixture only
+        run: |
+          python -m py_compile scripts/plan-complex-exam-sense-review.py
+          python -m unittest discover -s tests -p 'test_complex_exam_sense_review.py' -v
+      - name: No cloud access or publisher data
+        run: |
+          ! grep -Ei 'wrangler|CLOUDFLARE|https?://|requests\.get|urllib\.request|production_deploy' \
+            scripts/plan-complex-exam-sense-review.py
+          echo 'OWNER_DATA_PRIVATE_AND_NO_DB_NO_USER_STUDY_WRITES'

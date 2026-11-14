@@ -1,0 +1,33 @@
+name: V1.2 published novel legacy approved sense shared SRS staging synthetic QA
+on:
+  pull_request:
+    paths:
+      - src/global-dictionary-published-approved-legacy-overlay.js
+      - src/global-dictionary-sense-study-api.js
+      - tests/v12-staging-published-legacy-sense-srs-bridge.test.mjs
+      - .github/workflows/v12-staging-published-legacy-sense-srs-bridge-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - src/global-dictionary-published-approved-legacy-overlay.js
+      - src/global-dictionary-sense-study-api.js
+      - tests/v12-staging-published-legacy-sense-srs-bridge.test.mjs
+permissions:
+  contents: read
+jobs:
+  published-legacy-synthetic-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          set -euo pipefail
+          node --check src/global-dictionary-published-approved-legacy-overlay.js
+          node --check src/global-dictionary-sense-study-api.js
+          node --experimental-sqlite --test tests/v12-staging-published-legacy-sense-srs-bridge.test.mjs tests/v12-published-approved-legacy-overlay.test.mjs tests/v12-sense-study-api.test.mjs
+      - run: echo 'STAGING_ONLY_NO_REAL_DB_CONNECTION_NO_PRODUCTION_STATE_CHANGES'

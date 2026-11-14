@@ -1,0 +1,31 @@
+name: V1.2 owner released novels real-excerpt staging crossbook pilot OFFLINE QA
+on:
+  pull_request:
+    paths:
+      - scripts/compile-staging-owner-crossbook-pilot.mjs
+      - tests/v12-staging-owner-crossbook-pilot.test.mjs
+      - .github/workflows/v12-staging-owner-crossbook-pilot-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - scripts/compile-staging-owner-crossbook-pilot.mjs
+      - tests/v12-staging-owner-crossbook-pilot.test.mjs
+      - .github/workflows/v12-staging-owner-crossbook-pilot-qa.yml
+permissions:
+  contents: read
+jobs:
+  exact-existing-owner-excerpts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          set -euo pipefail
+          node --check scripts/compile-staging-owner-crossbook-pilot.mjs
+          node --experimental-sqlite --test tests/v12-staging-owner-crossbook-pilot.test.mjs
+      - run: echo 'SYNTHETIC_DB_HISTORICAL_OWNER_RELEASE_EXCERPTS_NO_D1_WRITES'

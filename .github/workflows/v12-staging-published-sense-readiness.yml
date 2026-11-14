@@ -1,0 +1,265 @@
+name: V1.2 staging published sense integration real D1 aggregate readiness (read-only)
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-staging-published-sense-readiness.yml
+      - scripts/verify-staging-published-sense-readiness.mjs
+      - tests/v12-staging-published-sense-readiness.test.mjs
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: v12-staging-published-sense-readiness
+  cancel-in-progress: false
+jobs:
+  staging-readonly-aggregate:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate isolated staging target and parser
+        run: |
+          set -euo pipefail
+          node --test tests/v12-staging-published-sense-readiness.test.mjs
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const cfg=JSON.parse(readFileSync('wrangler.jsonc','utf8'));
+          assert.equal(cfg.name,'miaowu-english-staging');
+          assert.equal(cfg.vars.APP_ENV,'staging');
+          assert.equal(cfg.d1_databases?.length,1);
+          assert.equal(cfg.d1_databases[0].database_name,'miaowu-english-test');
+          assert.equal(cfg.d1_databases[0].database_id,'88a817cb-23bb-4ae4-bcb8-92286c4165d4');
+          NODE
+      - name: Install staging D1 CLI (read-only)
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Read only table metadata and aggregated approved links in TEST D1
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_STAGING_D1_READ_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_ACCOUNT_ID}"
+          umask 077
+          private="$RUNNER_TEMP/staging-sense-readiness"
+          mkdir -m 700 "$private"
+          trap 'rm -rf "$private"' EXIT
+          schema="SELECT name FROM sqlite_master WHERE type='table' AND name IN ('books','chapters','words','chapter_words','global_dictionary_entries','global_dictionary_senses','global_dictionary_lessons','global_dictionary_sources','global_dictionary_legacy_sense_links','global_dictionary_book_bindings','global_dictionary_book_sense_bindings','user_dictionary_sense_study','user_dictionary_sense_review_events') ORDER BY name;"
+          if ! npx wrangler d1 execute miaowu-english-test --remote --json --config wrangler.jsonc --command "$schema" >"$private/schema.json" 2>"$private/error"; then
+            echo 'STAGING_READONLY_SCHEMA_SELECT_FAILED_NO_PRODUCTION_ACCESS'
+            exit 1
+          fi
+          node scripts/verify-staging-published-sense-readiness.mjs schema "$private/schema.json"
+          aggregate="SELECT
+            (SELECT count(*) FROM books WHERE status='published') published_books,
+            (SELECT count(*) FROM chapters ch JOIN books b ON b.id=ch.book_id
+              WHERE b.status='published' AND ch.published_at IS NOT NULL
+                AND ch.published_at<=CURRENT_TIMESTAMP) published_chapters,
+            (SELECT count(*) FROM global_dictionary_senses s
+              JOIN global_dictionary_entries e ON e.entry_id=s.entry_id
+              WHERE s.approved=1 AND s.active=1 AND e.source_name!='wordletter-internal-qa-choice-v12-20261112') approved_active_senses,
+            (SELECT count(*) FROM global_dictionary_entries e
+              JOIN global_dictionary_sources src ON src.source_key=e.source_name
+              WHERE e.teaching_ready=1 AND src.enabled=1 AND src.license_reviewed=1
+                AND src.source_key!='wordletter-internal-qa-choice-v12-20261112') licensed_teaching_entries,
+            (SELECT count(*) FROM global_dictionary_legacy_sense_links l
+              JOIN global_dictionary_senses s ON s.sense_id=l.sense_id
+              JOIN global_dictionary_entries e ON e.entry_id=s.entry_id
+              JOIN global_dictionary_sources src ON src.source_key=e.source_name
+              WHERE s.approved=1 AND s.active=1 AND e.teaching_ready=1
+                AND src.enabled=1 AND src.license_reviewed=1
+                AND EXISTS (SELECT 1 FROM global_dictionary_lessons lesson
+                  WHERE lesson.entry_id=e.entry_id
+                    AND length(trim(coalesce(lesson.reviewed_by,'')))>0)
+                AND e.source_name!='wordletter-internal-qa-choice-v12-20261112') approved_legacy_sense_links,
+            (SELECT count(*) FROM chapter_words cw
+              JOIN chapters ch ON ch.id=cw.chapter_id
+              JOIN books b ON b.id=ch.book_id
+              JOIN global_dictionary_legacy_sense_links l ON l.legacy_word_id=cw.word_id
+              JOIN global_dictionary_senses s ON s.sense_id=l.sense_id
+              JOIN global_dictionary_entries e ON e.entry_id=s.entry_id
+              JOIN global_dictionary_sources src ON src.source_key=e.source_name
+              WHERE b.status='published' AND ch.published_at IS NOT NULL
+                AND ch.published_at<=CURRENT_TIMESTAMP
+                AND s.approved=1 AND s.active=1 AND e.teaching_ready=1
+                AND src.enabled=1 AND src.license_reviewed=1
+                AND EXISTS (SELECT 1 FROM global_dictionary_lessons lesson
+                  WHERE lesson.entry_id=e.entry_id
+                    AND length(trim(coalesce(lesson.reviewed_by,'')))>0)
+                AND e.source_name!='wordletter-internal-qa-choice-v12-20261112') linked_published_anchors,
+            (SELECT count(*) FROM user_dictionary_sense_study) sense_study_rows,
+            (SELECT count(*) FROM global_dictionary_senses s
+              JOIN global_dictionary_entries e ON e.entry_id=s.entry_id
+              WHERE e.source_name='wordletter-internal-qa-choice-v12-20261112') staging_fixture_senses,
+            (SELECT count(*) FROM global_dictionary_legacy_sense_links l
+              JOIN global_dictionary_senses s ON s.sense_id=l.sense_id
+              JOIN global_dictionary_entries e ON e.entry_id=s.entry_id
+              WHERE e.source_name='wordletter-internal-qa-choice-v12-20261112') staging_fixture_legacy_links,
+            (SELECT count(*) FROM chapter_words cw
+              JOIN chapters ch ON ch.id=cw.chapter_id
+              JOIN books b ON b.id=ch.book_id
+              JOIN global_dictionary_legacy_sense_links l ON l.legacy_word_id=cw.word_id
+              JOIN global_dictionary_senses s ON s.sense_id=l.sense_id
+              JOIN global_dictionary_entries e ON e.entry_id=s.entry_id
+              WHERE b.status='published' AND ch.published_at IS NOT NULL
+                AND ch.published_at<=CURRENT_TIMESTAMP
+                AND e.source_name='wordletter-internal-qa-choice-v12-20261112') staging_fixture_published_anchors;"
+          if ! npx wrangler d1 execute miaowu-english-test --remote --json --config wrangler.jsonc --command "$aggregate" >"$private/aggregate.json" 2>"$private/error"; then
+            echo 'STAGING_READONLY_AGGREGATE_SELECT_FAILED_NO_PRODUCTION_ACCESS'
+            exit 1
+          fi
+          node scripts/verify-staging-published-sense-readiness.mjs counts "$private/aggregate.json"
+          # Real published TEST-book crossbook pilot discovery. Counts ONLY;
+          # never export actual word text, book/chapter IDs or user rows.
+          pilot="WITH used AS (
+            SELECT b.id AS book_id,cw.word_id AS old_id,ch.id AS chapter_id,
+              lower(trim(w.headword)) AS lemma,
+              lower(trim(coalesce(w.part_of_speech,''))) AS pos,
+              trim(coalesce(w.meaning_zh,'')) AS gloss
+            FROM chapter_words cw JOIN chapters ch ON ch.id=cw.chapter_id
+            JOIN books b ON b.id=ch.book_id JOIN words w ON w.id=cw.word_id
+            WHERE b.status='published' AND ch.published_at IS NOT NULL
+              AND ch.published_at<=CURRENT_TIMESTAMP
+          ), same_id AS (
+            SELECT old_id FROM used GROUP BY old_id
+            HAVING count(DISTINCT book_id)>1
+          ), same_text AS (
+            SELECT lemma,pos,gloss FROM used
+            WHERE lemma<>'' AND pos<>'' AND gloss<>''
+            GROUP BY lemma,pos,gloss HAVING count(DISTINCT book_id)>1
+          ), two_card_text AS (
+            SELECT lemma,pos,gloss FROM used
+            WHERE lemma<>'' AND pos<>'' AND gloss<>''
+            GROUP BY lemma,pos,gloss
+            HAVING count(DISTINCT book_id)>1 AND count(DISTINCT old_id)>1
+          )
+          SELECT
+            (SELECT count(*) FROM used) published_anchor_occurrences,
+            (SELECT count(DISTINCT old_id) FROM used) distinct_legacy_word_ids,
+            (SELECT count(*) FROM same_id) crossbook_identical_old_id_groups,
+            (SELECT count(*) FROM same_text) crossbook_identical_textual_sense_groups,
+            (SELECT count(*) FROM two_card_text) crossbook_distinct_old_id_same_text_groups,
+            (SELECT count(*) FROM used u JOIN two_card_text t
+             ON u.lemma=t.lemma AND u.pos=t.pos AND u.gloss=t.gloss)
+             crossbook_distinct_old_id_same_text_anchors;"
+          if ! npx wrangler d1 execute miaowu-english-test --remote --json --config wrangler.jsonc --command "$pilot" >"$private/pilot.json" 2>"$private/error"; then
+            echo 'STAGING_PUBLISHED_CROSSBOOK_PILOT_SELECT_FAILED_NO_WRITES'
+            exit 1
+          fi
+          node --input-type=module - "$private/pilot.json" <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const payload=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          const rows=(Array.isArray(payload)?payload:[payload]).flatMap(x=>x.results??[]);
+          assert.equal(rows.length,1,'PUBLISHED_CROSSBOOK_PILOT_ONE_ROW_ONLY');
+          const keys=['published_anchor_occurrences','distinct_legacy_word_ids',
+            'crossbook_identical_old_id_groups',
+            'crossbook_identical_textual_sense_groups',
+            'crossbook_distinct_old_id_same_text_groups',
+            'crossbook_distinct_old_id_same_text_anchors'];
+          assert.deepEqual(Object.keys(rows[0]).sort(),[...keys].sort());
+          for(const key of keys)assert.ok(Number.isSafeInteger(rows[0][key])&&
+            rows[0][key]>=0,'PUBLISHED_CROSSBOOK_PILOT_INVALID_AGGREGATE');
+          assert.ok(rows[0].crossbook_distinct_old_id_same_text_groups<=
+            rows[0].crossbook_identical_textual_sense_groups);
+          console.log('STAGING_REAL_CROSSBOOK_PILOT_AGGREGATE='+JSON.stringify(rows[0]));
+          console.log('STAGING_CROSSBOOK_PILOT_CANDIDATES_NOT_REVIEWED_SENSES');
+          NODE
+          pilot_preflight="SELECT
+            (SELECT count(*) FROM categories WHERE slug='cet4' AND is_visible=1) cet4_category_available,
+            (SELECT count(*) FROM global_dictionary_entries WHERE headword='choice' COLLATE NOCASE) choice_entry_count,
+            (SELECT count(*) FROM global_dictionary_entries WHERE headword='choice' COLLATE NOCASE AND teaching_ready=0) choice_unreviewed_candidate_count,
+            (SELECT count(*) FROM global_dictionary_lessons l JOIN global_dictionary_entries e ON e.entry_id=l.entry_id WHERE e.headword='choice' COLLATE NOCASE) choice_existing_lesson_count,
+            (SELECT count(*) FROM books WHERE id IN ('mw-v12-pilot-ex-20261112','mw-v12-pilot-bride-20261112')) pilot_book_conflicts,
+            (SELECT count(*) FROM words WHERE id IN ('mw-v12-pilot-choice-ex','mw-v12-pilot-choice-bride')) pilot_word_conflicts;"
+          if ! npx wrangler d1 execute miaowu-english-test --remote --json --config wrangler.jsonc --command "$pilot_preflight" >"$private/pilot-preflight.json" 2>"$private/error"; then
+            echo 'STAGING_PILOT_CHOICE_SOURCE_PREFLIGHT_FAILED_NO_WRITES'
+            exit 1
+          fi
+          node --input-type=module - "$private/pilot-preflight.json" <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const x=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          const rows=(Array.isArray(x)?x:[x]).flatMap(p=>p.results??[]);
+          assert.equal(rows.length,1);
+          const keys=['cet4_category_available','choice_entry_count',
+            'choice_unreviewed_candidate_count','choice_existing_lesson_count',
+            'pilot_book_conflicts','pilot_word_conflicts'];
+          assert.deepEqual(Object.keys(rows[0]).sort(),keys.sort());
+          assert.ok(keys.every(k=>Number.isSafeInteger(rows[0][k])&&rows[0][k]>=0));
+          console.log('STAGING_PILOT_SOURCE_PREREQUISITES='+JSON.stringify(rows[0]));
+          NODE
+          exact_pilot="WITH qa AS (
+            SELECT b.id AS book_id,ch.content_json,cw.word_id,cw.context_anchor,
+              w.meaning_zh,l.sense_id,s.approved,s.active,
+              e.teaching_ready,src.license_reviewed,src.enabled,
+              length(trim(lesson.reviewed_by))>0 AS lesson_reviewed,
+              CASE WHEN json_valid(ch.content_json)=1 THEN
+                json_extract(ch.content_json,
+                 '$.paragraphs['||
+                 CAST(substr(cw.context_anchor,2,instr(cw.context_anchor,':')-2) AS INTEGER)||
+                 '].segments['||
+                 CAST(substr(cw.context_anchor,instr(cw.context_anchor,':s')+2) AS INTEGER)||
+                 '].wordId') ELSE NULL END AS segment_word_id,
+              CASE WHEN json_valid(ch.content_json)=1 THEN
+                json_extract(ch.content_json,
+                 '$.paragraphs['||
+                 CAST(substr(cw.context_anchor,2,instr(cw.context_anchor,':')-2) AS INTEGER)||
+                 '].segments['||
+                 CAST(substr(cw.context_anchor,instr(cw.context_anchor,':s')+2) AS INTEGER)||
+                 '].gloss') ELSE NULL END AS segment_gloss
+            FROM chapter_words cw
+            JOIN chapters ch ON ch.id=cw.chapter_id
+             AND ch.published_at IS NOT NULL
+             AND ch.published_at<=CURRENT_TIMESTAMP AND ch.is_preview=1
+            JOIN books b ON b.id=ch.book_id AND b.status='published'
+            JOIN words w ON w.id=cw.word_id
+            JOIN global_dictionary_legacy_sense_links l
+             ON l.legacy_word_id=w.id
+            JOIN global_dictionary_senses s ON s.sense_id=l.sense_id
+            JOIN global_dictionary_entries e ON e.entry_id=s.entry_id
+            JOIN global_dictionary_sources src ON src.source_key=e.source_name
+            JOIN global_dictionary_lessons lesson ON lesson.entry_id=e.entry_id
+            WHERE b.id IN ('mw-v12-pilot-ex-20261112','mw-v12-pilot-bride-20261112')
+             AND e.source_name='wordletter-internal-qa-choice-v12-20261112'
+          )
+          SELECT count(*) pilot_joins,count(DISTINCT book_id) pilot_books,
+            count(DISTINCT sense_id) shared_senses,
+            coalesce(sum(CASE WHEN segment_word_id=word_id THEN 1 ELSE 0 END),0)
+             matched_segment_ids,
+            coalesce(sum(CASE WHEN segment_gloss=meaning_zh THEN 1 ELSE 0 END),0)
+             matching_context_glosses,
+            coalesce(sum(CASE WHEN approved=1 AND active=1 AND teaching_ready=1
+             AND license_reviewed=1 AND enabled=1 AND lesson_reviewed=1
+             THEN 1 ELSE 0 END),0) verified_qa_only_gate_rows
+          FROM qa;"
+          if ! npx wrangler d1 execute miaowu-english-test --remote --json --config wrangler.jsonc --command "$exact_pilot" >"$private/pilot-exact.json" 2>"$private/error"; then
+            echo 'STAGING_PILOT_EXACT_CONTEXT_SELECT_FAILED_NO_WRITES'
+            exit 1
+          fi
+          node --input-type=module - "$private/pilot-exact.json" <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const raw=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          const rows=(Array.isArray(raw)?raw:[raw]).flatMap(x=>x.results??[]);
+          assert.equal(rows.length,1,'QA_PILOT_EXACT_ROW_COUNT');
+          assert.deepEqual(rows[0],{
+           pilot_joins:2,pilot_books:2,shared_senses:1,
+           matched_segment_ids:2,matching_context_glosses:2,
+           verified_qa_only_gate_rows:2
+          },'QA_PILOT_EXACT_CONTEXT_DRIFT');
+          console.log('STAGING_TEST_D1_REAL_PILOT_EXACT_CONTEXT_TWO_BOOKS_ONE_SENSE_PASS');
+          console.log('STAGING_QA_ONLY_NOT_COMMERCIAL_SIGNOFF_NO_USER_STATE_WRITES');
+          NODE
+          echo 'STAGING_READONLY_AGGREGATE_DONE_NO_CUSTOMER_VALUES_NO_D1_WRITES'

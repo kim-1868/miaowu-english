@@ -1,0 +1,40 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=f=>readFileSync(new URL('../public/'+f,import.meta.url),'utf8');
+const html=()=>read('ops.html');
+const js=()=>read('ops-console.js');
+const ui=()=>read('ops-unmarked-review.js');
+test('OPS retains original 20261104 script markers and has a hidden V1.2 staging review workspace',()=>{
+ const s=html();
+ assert.match(s,/id="unmarkedReviewPanel"[^>]*hidden/);
+ assert.match(s,/id="unmarkedFile"/);
+ assert.match(s,/id="unmarkedConfirm"/);
+ assert.match(s,/id="unmarkedExportV1"/);
+ assert.match(s,/ops-unmarked-review\.css\?v=20261111-v12-phase5/);
+ assert.match(s,/ops-console\.js\?v=20261104-v29-live-editor/);
+ assert.doesNotMatch(s,/<script[^>]+src="\/ops-unmarked-review\.js/);
+});
+test('OPS review JS loads lazily only in authenticated staging publisher flow, without credential persistence',()=>{
+ const s=js();
+ assert.match(s,/await mountUnmarkedReviewAdmin\(\)/);
+ assert.match(s,/identity\?\.environment!=="staging"/);
+ assert.match(s,/import\("\/ops-unmarked-review\.js\?v=20261111-v12-phase5"\)/);
+ assert.match(s,/unmarkedAdmin\?\.reset\(\)/);
+ assert.match(s,/connected\(\).*identity/);
+ const module=ui();
+ assert.doesNotMatch(module,/localStorage|sessionStorage|document\.cookie|X-Mw-Ops-Key|OPS_TOKEN_PEPPER/);
+ assert.doesNotMatch(module,/\/api\/ops\/import\/(publish|save|revise|create)/);
+ assert.match(module,/\/api\/ops\/import\/dictionary-v2\/plan-unmarked/);
+ assert.match(module,/\/api\/ops\/import\/dictionary-v2\/confirm-unmarked/);
+});
+test('No write-through, no auto signoff, no arbitrary HTML injection from paid text',()=>{
+ const s=ui();
+ assert.match(s,/response\.publication_allowed!==false/);
+ assert.match(s,/response\.d1_writes!==0/);
+ assert.match(s,/response\.user_study_changes!==0/);
+ assert.match(s,/makeEditorDecisions\(rows,selected\)/);
+ assert.match(s,/window\.confirm/);
+ assert.match(s,/textContent=String\(value\)/);
+ assert.doesNotMatch(s,/innerHTML\s*=/);
+});

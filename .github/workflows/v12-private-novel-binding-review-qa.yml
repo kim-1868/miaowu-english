@@ -1,0 +1,37 @@
+name: V1.2 private novel context sense binding synthetic QA
+on:
+  pull_request:
+    paths:
+      - src/global-dictionary-private-novel-binding-review.js
+      - scripts/build-private-novel-binding-review.mjs
+      - tests/v12-private-novel-binding-review.test.mjs
+      - .github/workflows/v12-private-novel-binding-review-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - src/global-dictionary-private-novel-binding-review.js
+      - scripts/build-private-novel-binding-review.mjs
+      - tests/v12-private-novel-binding-review.test.mjs
+permissions:
+  contents: read
+jobs:
+  synthetic-no-publisher-content:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test local candidate matching and privacy
+        run: |
+          set -euo pipefail
+          node --check src/global-dictionary-private-novel-binding-review.js
+          node --check scripts/build-private-novel-binding-review.mjs
+          node --test tests/v12-private-novel-binding-review.test.mjs
+      - name: No remote D1 writes or authenticated content
+        run: |
+          echo 'LOCAL_SYNTHETIC_NOVEL_REVIEW_ONLY'
+          echo 'ALL_APPROVALS_BLOCKED_NO_REMOTE_D1_NO_DEPLOY'

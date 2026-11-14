@@ -1,0 +1,30 @@
+name: V1.2 published private duplicate review signoff adapter synthetic QA
+on:
+  pull_request:
+    paths:
+      - src/global-dictionary-published-private-review-signoff-adapter.js
+      - tests/v12-published-private-review-signoff-adapter.test.mjs
+      - .github/workflows/v12-published-private-review-signoff-adapter-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - src/global-dictionary-published-private-review-signoff-adapter.js
+      - tests/v12-published-private-review-signoff-adapter.test.mjs
+permissions:
+  contents: read
+jobs:
+  no-real-lexical-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          set -euo pipefail
+          node --check src/global-dictionary-published-private-review-signoff-adapter.js
+          node --test tests/v12-published-private-review-signoff-adapter.test.mjs
+      - run: echo 'SYNTHETIC_ONLY_NO_D1_NO_PUBLISHER_APPROVAL_NO_USER_STATE_MIGRATION'

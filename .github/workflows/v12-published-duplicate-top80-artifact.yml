@@ -1,0 +1,89 @@
+name: V1.2 published 532 duplicate senses protected top80 review from existing artifact
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-published-duplicate-top80-artifact.yml
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: v12-published-duplicate-top80-artifact
+  cancel-in-progress: false
+jobs:
+  review-existing-encrypted-evidence:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Synthetic private editorial triage and approval-barrier tests
+        run: |
+          set -euo pipefail
+          node --check scripts/triage-private-published-duplicate-senses-top80.mjs
+          node --test tests/v12-published-duplicate-top80.test.mjs
+      - name: Protected existing artifact local decrypt, triage, AES256 encrypt
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          METADATA_PASSPHRASE: ${{ secrets.PRODUCTION_D1_METADATA_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${GH_TOKEN:?MISSING_GITHUB_READ_TOKEN}"
+          : "${METADATA_PASSPHRASE:?MISSING_PROTECTED_ENCRYPTION_PASSWORD}"
+          test "${#METADATA_PASSPHRASE}" -ge 32
+          umask 077
+          private="$RUNNER_TEMP/published-duplicate-top80-private"
+          mkdir -m 700 "$private"
+          encrypted="$RUNNER_TEMP/v12-published-duplicate-top80-private.gpg"
+          trap 'rm -rf "$private"' EXIT
+          printf '%s' "$METADATA_PASSPHRASE" >"$private/pass"
+          unset METADATA_PASSPHRASE
+          curl --fail --location --silent --show-error --retry 2 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/kim-1868/miaowu-english/actions/artifacts/13911979176/zip" \
+            --output "$private/source.zip"
+          test "$(unzip -Z1 "$private/source.zip" | wc -l | tr -d ' ')" = '1'
+          unzip -Z1 "$private/source.zip" | grep -Fxq 'v12-published-32-editorial-review-queue.gpg'
+          unzip -p "$private/source.zip" 'v12-published-32-editorial-review-queue.gpg' >"$private/source.gpg"
+          test -s "$private/source.gpg"
+          if ! gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$private/pass" \
+            --decrypt "$private/source.gpg" >"$private/source.json" 2>"$private/gpg.stderr"; then
+            echo 'PUBLISHED_DUPLICATE_TOP80_SOURCE_DECRYPT_FAILED'
+            exit 1
+          fi
+          node scripts/triage-private-published-duplicate-senses-top80.mjs \
+            "$private/source.json" "$private/top80.json"
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$private/pass" \
+            --symmetric --cipher-algo AES256 --output "$encrypted" \
+            "$private/top80.json" >/dev/null 2>"$private/encrypt.stderr"
+          test -s "$encrypted"
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$private/pass" \
+            --decrypt "$encrypted" >"$private/verified.json" 2>"$private/verify.stderr"
+          cmp -s "$private/top80.json" "$private/verified.json"
+          rm -rf "$private"
+          echo 'PUBLISHED_DUPLICATE_TOP80_PRIVATE_ARTIFACT_RECOVERED_ENCRYPTED_VERIFIED'
+          echo 'NO_PRODUCTION_DB_ACCESS_NO_APPROVED_SENSES_NO_STUDY_WRITES'
+      - name: Upload ONLY encrypted top80 review, never lexical source
+        uses: actions/upload-artifact@v4
+        with:
+          name: v12-published-duplicate-top80-encrypted
+          path: ${{ runner.temp }}/v12-published-duplicate-top80-private.gpg
+          retention-days: 7
+          if-no-files-found: error
+          compression-level: 0
+      - name: Destroy encrypted copy on runner
+        if: always()
+        run: rm -f "$RUNNER_TEMP/v12-published-duplicate-top80-private.gpg"

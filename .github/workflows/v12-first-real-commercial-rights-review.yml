@@ -1,0 +1,124 @@
+name: V1.2 real two-book publisher commercial rights clearance HOLD-only worksheet
+on:
+  pull_request:
+    paths:
+      - .github/workflows/v12-first-real-commercial-rights-review.yml
+      - scripts/v12-real-published-commercial-rights-gate.mjs
+      - tests/v12-real-published-commercial-rights-gate.test.mjs
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-first-real-commercial-rights-review.yml
+      - scripts/v12-real-published-commercial-rights-gate.mjs
+      - tests/v12-real-published-commercial-rights-gate.test.mjs
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: v12-first-real-commercial-rights-review-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  synthetic-commercial-rights-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm rights and legitimate OPS signature are mandatory
+        run: |
+          set -euo pipefail
+          node --test tests/v12-real-published-commercial-rights-gate.test.mjs
+  protected-existing-proof-commercial-review:
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    needs: synthetic-commercial-rights-gate
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Produce independent commercial rights review template from encrypted real source WITHOUT D1
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRIVATE_EVIDENCE_PASSPHRASE: ${{ secrets.PRODUCTION_D1_METADATA_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${GH_TOKEN:?READ_EXISTING_ARTIFACT_REQUIRED}"
+          : "${PRIVATE_EVIDENCE_PASSPHRASE:?EXISTING_PROTECTED_SECRET_REQUIRED}"
+          test "${#PRIVATE_EVIDENCE_PASSPHRASE}" -ge 32
+          umask 077
+          private="$RUNNER_TEMP/real-two-book-legal-review-private"
+          mkdir -m 700 "$private"
+          trap 'rm -rf "$private"' EXIT
+          printf '%s' "$PRIVATE_EVIDENCE_PASSPHRASE" > "$private/pass"
+          unset PRIVATE_EVIDENCE_PASSPHRASE
+          curl --fail --location --silent --show-error --retry 2 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/kim-1868/miaowu-english/actions/artifacts/13964630089/zip" \
+            --output "$private/proof.zip"
+          test "$(unzip -Z1 "$private/proof.zip" | wc -l | tr -d ' ')" = 1
+          unzip -Z1 "$private/proof.zip" | grep -Fxq \
+            'v12-real-published-two-book-editorial-hold.gpg'
+          unzip -p "$private/proof.zip" \
+            'v12-real-published-two-book-editorial-hold.gpg' \
+            > "$private/proof.gpg"
+          test -s "$private/proof.gpg"
+          if ! gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$private/pass" \
+            --decrypt "$private/proof.gpg" \
+            > "$private/actual-publisher-packet.json" \
+            2> "$private/gpg-decrypt.stderr"; then
+            echo 'REAL_PUBLISHER_RIGHTS_ENCRYPTED_SOURCE_FAILED_NO_DB_ACCESS'
+            exit 1
+          fi
+          node scripts/v12-real-published-commercial-rights-gate.mjs template \
+            "$private/actual-publisher-packet.json" \
+            "$private/commercial-review-private.json"
+          node scripts/v12-real-published-commercial-rights-gate.mjs status \
+            "$private/actual-publisher-packet.json" \
+            "$private/review-readiness-private.json"
+          # Both files are private. The plain template contains two novels' content.
+          cd "$private"
+          tar -czf review-materials-private.tar.gz \
+            commercial-review-private.json review-readiness-private.json
+          cd - >/dev/null
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$private/pass" \
+            --symmetric --cipher-algo AES256 \
+            --output "$RUNNER_TEMP/v12-real-two-book-commercial-clearance-private.gpg" \
+            "$private/review-materials-private.tar.gz" \
+            > "$private/gpg-encrypt.stderr" 2>&1
+          test -s "$RUNNER_TEMP/v12-real-two-book-commercial-clearance-private.gpg"
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$private/pass" \
+            --decrypt "$RUNNER_TEMP/v12-real-two-book-commercial-clearance-private.gpg" \
+            > "$private/recovered.tar.gz" 2> "$private/gpg-check.stderr"
+          cmp -s "$private/review-materials-private.tar.gz" "$private/recovered.tar.gz"
+          rm -rf "$private"
+          echo 'REAL_TWO_BOOK_COMMERCIAL_RIGHTS_PRIVATE_TEMPLATE_ENCRYPTED_HOLD_ZERO_APPROVAL_ZERO_DB_WRITES'
+      - name: Upload AES256 private review materials only, 7-day retention
+        uses: actions/upload-artifact@v4
+        with:
+          name: v12-real-two-book-commercial-clearance-private-encrypted
+          path: ${{ runner.temp }}/v12-real-two-book-commercial-clearance-private.gpg
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+      - name: Purge encrypted temporary file
+        if: always()
+        run: rm -f "$RUNNER_TEMP/v12-real-two-book-commercial-clearance-private.gpg"

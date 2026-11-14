@@ -1,0 +1,420 @@
+## 2026-11-11 · 最新：61,422候选来源已完全查清并修复019只读基线（PR #225）
+
+> 本节最新，覆盖下方旧快照中“额外5万来源不明”的过时表述。真实 Cloudflare TEST D1数据没有在本轮被改动；原有历史真实导入属于计划内。
+
+- [原考试候选导入run #42847388782](https://github.com/kim-1868/miaowu-english/actions/runs/42847388782) 在2026-11-10T15:46Z后置验收 **11,422个未审词头、16,442词形**，旧学习/书籍计数不变。随后11月10日16:13–16:18Z，授权的 [50,000词头额外批次run #42852308915](https://github.com/kim-1868/miaowu-english/actions/runs/42852308915) 验证固定工件及前后状态，成功输出 `STAGING_COHORT_VERIFIED {"number":1,"entries":61422,"forms":16442}`，无教学审批和历史用户数据改写。这是正式的测试库增量候选源导入；无需清理或重复导入。
+- 最新只读 [run #42986081236](https://github.com/kim-1868/miaowu-english/actions/runs/42986081236) 实际返回 `candidate_heads=61422,upstream_heads=61422,other_heads=0,candidate_forms=16442,upstream_forms=16442,other_forms=0,original_import_source_intact=1`，远程FK和quick_check均成功；失败只是019验收脚本曾硬编码初始11422而忽略后一批合法50k。**不是GitHub/Cloudflare额度不足。**
+- 新 [PR #225](https://github.com/kim-1868/miaowu-english/pull/225) 已合入开发分支（squash commit `f9138da7adce32150a08bf2ecfdc836a72e1d23f`），把精确 `candidate_heads` 和 `upstream_heads` 断言更新为真实61422，不改原source登记元数据 `imported_entries=11422` 及16442表形、0其他来源、0已审/0已启用、10词典表5触发器、旧4核心表及019尚不存在、FK和quick_check。测试明确钉住历史50k成功任务，没有直接放宽验证。
+- [PR专项019离线run #42986990125](https://github.com/kim-1868/miaowu-english/actions/runs/42986990125) success；[全站S1 #42986990118](https://github.com/kim-1868/miaowu-english/actions/runs/42986990118) **872项/871通过/0失败/1跳过**。
+- **待环境审批的最新受保护只读任务** [run #42987114694](https://github.com/kim-1868/miaowu-english/actions/runs/42987114694)，点击 Review deployments→`staging-d1-schema-approval`→Approve。只读验证通过后才进入**针对当前61422候选TEST D1的新鲜加密完整备份、隔离恢复完整integrity_check、单独批准019远程迁移**。正式站与用户权限/收藏/学习未改，Publisher商用教学义项批准仍0。
+- 完整溯源文档 `docs/STAGING_019_61422_COHORT_PROVENANCE_20261111.md`。下方更旧记录中的数据量被后续导入覆盖，切勿按旧任务重复审批或迁移。
+
+---
+## 2026-11-11 · 最新：测试D1候选词头数量与旧基线不同，非额度故障（PR #224）
+
+> 旧进度中早先D1远程SQL失败已解决；**最新真正失败的是历史词头数量严格核对**。013–018和考试索引此前已导入，不要重复操作。
+
+- 用户已批准最新受保护read-only [run #42985180326](https://github.com/kim-1868/miaowu-english/actions/runs/42985180326)，实际日志 `Error: STAGING_HEADWORD_BASELINE_DRIFT_candidate_heads`。Cloudflare远程SELECT、FK、quick_check均执行成功，失败于本地断言 `candidate_heads===11422`。**无API配额/Action额度报错，不是因为余额不够；也未执行019**。
+- 11月10日 [考试候选真实导入run #42847388782](https://github.com/kim-1868/miaowu-english/actions/runs/42847388782) success日志证明当时精确11422候选词头、16442未审词形、来源禁用和旧用户表完整。这次发生的差异需要查询当前匿名计数，日志未暴露目前实际多少。
+- [PR #224](https://github.com/kim-1868/miaowu-english/pull/224) 已合入Draft #206开发分支（`aa7041a05e51a666c26f72edd30f34541fb030f5`）。只读工作流新增7项**匿名汇总**：当前词头/原ECDICT来源/其他来源，当前词形/原来源/其他来源，以及原来源登记完整性。不打印词汇列表/用户数据/凭证，不因增量修改原11422/16442严查规则，仍fail-closed。
+- [专项019离线CI #42985960427](https://github.com/kim-1868/miaowu-english/actions/runs/42985960427) success，[S1 #42985960430](https://github.com/kim-1868/miaowu-english/actions/runs/42985960430) 871项/870通过/0失败/1跳过。新 [只读受保护run #42986081236](https://github.com/kim-1868/miaowu-english/actions/runs/42986081236) 等待用户环境审批，通过后即使有数量差异也安全打印7个数字并阻断，供溯源；**不要rerun旧失败任务**。
+- 后续根据实际匿名差异调查是否有合法来源新增或原导入部分缺失，未核对不能修改库/自动批准。019真实远程迁移还必须新鲜完整加密备份、独立恢复、人工批准。生产站和用户数据无变化，教学Publisher approved 0。
+
+---
+## 2026-11-11 · 019只读失败根因已修复：使用D1支持的quick_check，等新审批
+
+- 二次环境审批后的真实 [D1 read-only #42984399791](https://github.com/kim-1868/miaowu-english/actions/runs/42984399791) 安全日志明确 `STAGING_019_READONLY_INTEGRITY_READ_TOKEN_PERMISSION_DENIED`。前面固定测试D1+COUNT匿名统计+外键检查没有失败，**最后远程 `PRAGMA integrity_check;` 被拒绝**。不能推论D1已损坏/既存数据丢失。没有D1写库和019迁移。
+- Cloudflare官方D1列出兼容的 `PRAGMA quick_check`。新 [PR #223](https://github.com/kim-1868/miaowu-english/pull/223) 已合并开发分支（`261074e69df60022ddf217b89399830c2ea21e05`）：**只替换这一条远程SQL为quick_check**，精确验证返回 `quick_check='ok'`。保持权限、授权人工审批、严格统计/FK、失败分类、19号未安装门禁完全不变。新3项安全测试，[专项CI #42985023265](https://github.com/kim-1868/miaowu-english/actions/runs/42985023265)通过；[S1 #42985023211](https://github.com/kim-1868/miaowu-english/actions/runs/42985023211) **868总/867通过/0失败/1跳过**。
+- **新受保护且仅只读任务** [#42985180326](https://github.com/kim-1868/miaowu-english/actions/runs/42985180326) 已生成（待用户环境审批）。Owner去新run `Review deployments→staging-d1-schema-approval→Approve`。**不要重跑两条旧失败run。**
+- `quick_check`不是完整`integrity_check`：执行019远程迁移前必须先对**当前已经导入11,422未审考试索引词头和16,442词形**的测试D1进行新鲜加密持久备份，隔离恢复后完整SQLite integrity_check和FK、源备份哈希验证、独立人工批准。013–018已成功，不可重复迁移。真实Publisher教学义项仍0、所有旧用户状态和生产站没动。
+- 详细诊断说明 `docs/STAGING_019_REMOTE_READONLY_QUICK_CHECK_FIX_20261111.md`。严禁误判新工作流的测试通过 = D1 019已上线。
+
+---
+
+## 2026-11-11 · 当前阻塞：019只读审批后失败，诊断修复待新审批
+
+> 真实测试D1的013–018迁移及11422词头/16442未审词形导入均成功，不能重复。正式站未改变。
+
+- 旧只读 [run 42979766894](https://github.com/kim-1868/miaowu-english/actions/runs/42979766894) 获用户GitHub环境审批后**失败**。固定测试库UUID检查和Wrangler安装成功，匿名统计/外键/完整性的查询step退出1。因为旧脚本重定向并删除Wrangler输出，**无法确认实际错误类别**；不是已证实DB损坏。没有执行019迁移、D1写入或正式部署。
+- 新 [PR #222](https://github.com/kim-1868/miaowu-english/pull/222) 已合入开发分支（commit `c10dbfaa6df6d1bdf4c0b6843155d1b454c94cce`）：新只读查询按COUNTS、FK、INTEGRITY分别记录脱敏的固定错误码；不输出原始云端报错、Token或数据；离开Runner删除日志。不修改统计预期、不切换到D1写Token、更不绕过Publisher审核。S1 [42984243198](https://github.com/kim-1868/miaowu-english/actions/runs/42984243198) 865/864通过/0失败/1跳过。
+- **新等待审批的只读run**：[42984399791](https://github.com/kim-1868/miaowu-english/actions/runs/42984399791)。Owner需在其 Actions 页面 Review deployments，批准 `staging-d1-schema-approval`。**不要rerun旧失败的42979766894**。
+- 新运行若再次失败，按明确分类码修复测试库Read Token、CLI或查询；不猜根因、不自动写库。019真正远程写入仍必须先对**当前已导入候选的测试D1**重新加密完整备份、独立恢复和人工审批。真实Publisher approved senses=0、正式部署未开始。
+
+---
+
+## 2026-11-11 · 最新阶段6：已有测试 D1 013–018 与考试索引已完成，019真实SQL完整预演
+
+> **本节修正下方旧快照中的错误表述**：测试 Cloudflare D1 **013–018 已部署成功**，不要再重复执行；旧记录中“等待013–018迁移”已经过时。正式生产库、Worker和旧客户数据仍未因第六阶段改动。
+
+1. **已独立核实 GitHub 真运行**：[013–018 migration run 42843020562](https://github.com/kim-1868/miaowu-english/actions/runs/42843020562) `completed/success`，后续受保护测试库只读 run 42843538233 验证 10词典表、5个审核触发器。**考试候选索引导入 run 42847388782** `completed/success`，测试 D1 已导入 ECDICT 11,422 考试标签候选词头与16,442未审词形、来源禁用/未审核；私有主人词表 7,391 范围是另一码，不能用11,422当正式全覆盖，也不能重复导入现存索引。正式教学义项 Publisher approved=0。
+2. 新[PR #221](https://github.com/kim-1868/miaowu-english/pull/221) **已合入词典开发分支**（squash `c6ebf2b5fc6262d4cb4233d349345910af00a245`）。新`scripts/rehearse-headword-019.mjs` 使用真实仓库 `db/001_schema.sql` 与 `db/013–018`、`db/019` 构建纯离线合成SQLite，原有19张业务/词典表全部逐表完整行SHA256及旧表schema SQL SHA256前后相同，019仅新增2表+2索引，重复执行无污染，`user_id+entry_id`同词头跨CET4/CET6两小说一条SRS计划、事件不同上下文保留且同revision重复会拦截、原旧user_words/mastered/bookmarked/购买/阅读进度和历史事件保留。**整个流程没连Cloudflare，没有旧用户数据或正式审核词义。**
+3. 专项 [019真实SQL离线CI 42979584912](https://github.com/kim-1868/miaowu-english/actions/runs/42979584912) `success`：4项新迁移测试+27项原一词一卡服务端/复习安全用例；[全站S1 42979584848](https://github.com/kim-1868/miaowu-english/actions/runs/42979584848) 862总/861通过/0失败/1跳过。此为 PR SHA 的验证；合并开发分支后 CI 正在另行回归。
+4. **只读远程测试 D1 检查已准备而尚未获环境批准**：[run 42979766894](https://github.com/kim-1868/miaowu-english/actions/runs/42979766894) 运行 `V1.2 test D1 019 readiness READ ONLY (requires approval)`，在2026-11-11T07:28Z为 `waiting`。用户如要推进真实现状验收，需要在该 GitHub Actions 运行页对受保护 environment `staging-d1-schema-approval` 点 Review deployments/Approve。**这是只读**：固定 `miaowu-english-test` UUID、仅用 `CLOUDFLARE_STAGING_D1_READ_TOKEN`，核实10表/5触发器、11422/16442原索引、019 2表缺失、0正式已审教学卡/启用来源、外键完整性，不导出任何顾客记录/备份，也不写任何D1。
+5. **下一步且仅下一步**：待只读实际结果通过后，针对**已经导入考试候选后的当前测试D1**创建**新一份加密持久备份**，独立解密恢复和审计；旧013–018迁移前、考试索引导入前备份不能替代。获取独立受保护环境人工审批后才能执行**单独019**，绝不可复跑013–018或绕过备份。再以真的Publisher已审核词卡+真实最新两本小说+真实客户权限和跨设备一词一卡学习验收。
+6. 私有项目 Library 已保存 `/开发英语单词学习网站/统一词卡_待审工作区/开发脚本_V12_一词一卡第六阶段/妙屋英语_V12一词一卡_第六阶段019安全迁移预演与只读验收包_20261111.zip`，6个源码/QA/文档+SHA256清单，共7成员，ZIP SHA256 `4bc7a13a8aab5147314b01f1d26f0806739a8f99e57728a01539f56396e70953`。公开GitHub只有程序与合成数据，没有Owner私有7391词单、收费小说或客户信息。
+
+**尚未完成/禁止宣称**：019真实Cloudflare D1迁移、预览Worker上线、真实Publisher终审、真正已上架最新小说的无损匹配、跨设备读/说/复习/掌握/收藏 E2E、生产批准。Draft #206不能合并生产。
+
+---
+
+## 2026-11-11 · 最新阶段5：运营台已接自动识词审核 UI（PR #220）
+
+> 本节是最新事实，下面旧快照仅供历史参考。**仅 Draft #206 所在开发分支，预览站/生产站均未部署；真实 Publisher-approved teaching senses=0，Cloudflare D1 013–019 仍未实际迁移**。
+
+- PR [#220](https://github.com/kim-1868/miaowu-english/pull/220) **已合入词典开发分支**（commit `8a60101166b64730c3900996e3a14eae44707bff`）。第四阶段 PR #219 的 `plan-unmarked` 和 `confirm-unmarked` 已有 Publisher 认证 API，本阶段在原 `public/ops.html` 增加仅 staging Publisher 显示的折叠工作台、`public/ops-unmarked-review.js` 和独立 `public/ops-unmarked-review.css`。**不重写/覆盖旧运营台上传、封面、订单、标签、公告和旧版修订**。
+- 操作流程：运营账号在预览站登录 → 选择 **不含 `words[]` 的 V2 小说JSON（1.9MB以内）** → 服务器用已批准词库查找英文候选、返回源文与方案 SHA256 → 在运营台按每处原文片段核对 `entry_id`、`sense_id`、词性和中文释义（20条/页）→ 可对**当前页且只有一个已审义项的候选，经二次“已经逐句确认”提示后手工批量确认**；多义词仍须逐处选义 → 服务端再次查源和审批状态后生成只读 `marked_v2_package` / `verified_v1_package` → 下载本地待上架草稿，之后仍须原有运营台预检及人工 Publisher 签核才可进入最终发布流程。两处record可选n.记录/v.录制，但始终1个主词头。
+- 身份/数据安全：面板HTML初始 hidden，`ops-console.js` 只有身份获认证为 staging Publisher 才动态 import 新模块，模块仅接受原OPS `api` 闭包（key依旧只存在原脚本内存）。401/退出/pagehide/改为production均清理上传源、确认状态和下载候选。JS无localStorage/sessionStorage/独立token，词句以textContent渲染。错误书ID/源原文offset/未审或改动senseID/已变更SHA全部 fail closed。**没有新上架按钮、云端D1写入或用户学习数据写入**。
+- 本地纯JS 5项词义和位置安全测试 + 3项静态运营台集成测试，合计8项；Chromium **1280px桌面/390px手机**用合成的record名/动双义运行：V2导入、扫描、逐处确认、服务器返回模拟草稿、下载、正式站隐藏与清空均通过、0JS异常。GitHub [专项CI #42977590218](https://github.com/kim-1868/miaowu-english/actions/runs/42977590218) success；[production build dry-run #42977590237](https://github.com/kim-1868/miaowu-english/actions/runs/42977590237) success（只是构建，**没有部署**）；[全站S1 #42977590284](https://github.com/kim-1868/miaowu-english/actions/runs/42977590284) **858测试/857成功/0失败/1跳过**。
+- 技术文档 `docs/OPS_UNMARKED_NOVEL_EDITOR_WORKSPACE_PHASE5_20261111.md`。完整安全测试交付ZIP在用户私有Library：`/开发英语单词学习网站/统一词卡_待审工作区/开发脚本_V12_一词一卡第五阶段/妙屋英语_V12一词一卡_第五阶段运营台自动识词审核与测试包_20261111.zip`；10成员文件及逐项SHA256实测全部一致，SHA256(zip)=`47d0f8fdadaf4913fc4fe709597e77b98b87e495aef0a661d1aa1f81aaccb17e`。公仓只有代码+合成测试，**没有 owner7391词头原资料、付费小说、655原创句草稿、客户数据**。
+- **下一阶段严格先决条件**：真实 staging Cloudflare D1 备份、013–019增量迁移、获得 Publisher 经授权的词义内容签核，使用真实当前已上架四级六级考研书审核双书共用词头的 E2E；未标记词的正式绑定、小说发布和跨书学习状态的真实跑通依赖这些。真实0 approved senses所以当前工作台对真实尚未签核新词会显示审核缺口，**不可声称可以直接用于线上售卖**。旧2,206 word IDs和所有用户进度/购买权益保持不动。
+
+---
+
+## 2026-11-11 · 最新阶段4：未标记英文→编辑选义→V2上架候选，850项整站回归成功
+
+> **最新进度覆盖下方旧快照**。PR [#219](https://github.com/kim-1868/miaowu-english/pull/219) 已仅合入词典 Draft [#206](https://github.com/kim-1868/miaowu-english/pull/206) 的**开发分支**。没有部署 staging/production，没有对 Cloudflare D1 运行 019 或其他迁移，没有提交任何私人7391词表/收费小说/真实用户学习资料。真实 Publisher 已批准教学义项仍 **0**。
+
+- 之前已有 `global-dictionary-auto-discovery.js` 扫描 V2 未标记英文、`global-dictionary-matcher.js` 词形查词、`global-dictionary-headword-click-plan.js` 已审义项建议和 `global-dictionary-novel-v2.js` 的 V2→V1 转换；缺的是**按真实人类选义把纯文本切成可被现有上架管线识别的目标段落**。
+- 新 `src/global-dictionary-unmarked-editor-confirm.js` 对同一小说及审核方案逐次计算 SHA256；编辑须逐处确认 `chapter_number/paragraph_index/segment_index/start_offset/entry_id/sense_id`。只允许独立已批准、active 的义项，拒绝伪造批准/词形/身份或复用旧审核方案；对确认的英文局部替换为 V2 的 `{surface,gloss}` **目标段落**，原文章逐字符无损、未选中英文仍为普通原文、原有明示词卡目标完整保留、不提交重复主卡。比如两段 record 分别取 n.记录 / v.录制，但在 V1 兼容草稿 `words[]` 中仍只是一张 record 主卡。
+- 转换后继续通过现有 `normalizeDictionaryNovelV2`、`convertDictionaryNovelV2`、`planApprovedNovelSenseAnchors` 原审核与稳定义项校验，输出**待审核 V2 和 V1 兼容草稿**，不等于真正已发布；`user_headword_study`、legacy IDs、书库/订单/阅读均不改。
+- 新 `src/global-dictionary-unmarked-editor-ops.js` 从 **实际已授权 staging D1** 重查当前词典来源许可、lesson 与 approved/active sense。原 `src/ops-dictionary-v2.js` 和 `src/worker.js` 加入 Publisher 认证下两个**纯只读处理**端点 `POST /api/ops/import/dictionary-v2/plan-unmarked`（生成审稿位置及 SHA）和 `confirm-unmarked`（使用源数据+方案 SHA+逐条决策生成兼容草稿）。只有 staging + 原 lookup 明确读开关开启才有路由；生产拒绝。**仍必须通过原 OPS 真实上架、版本化修订及章节精确锚点绑定，不能把转换候选当可售书。**
+- 专项使用合成 `record` 名词/动词和 `decision` 测试；包括已明示词目标+新增纯文本混合场景、两个英文词同一text segment 的 UTF-16 精确拆分、哈希失效/伪造审批/旧ID 混入/禁用许可/无已审sense/zero D1 writes。第一轮 CI 发现旧目标与新增审核结果的数量混淆，现已修复并真实重跑。
+- GitHub [专项 #42975449106](https://github.com/kim-1868/miaowu-english/actions/runs/42975449106)、[阅读器 #42975449100](https://github.com/kim-1868/miaowu-english/actions/runs/42975449100)、[服务端 #42975449080](https://github.com/kim-1868/miaowu-english/actions/runs/42975449080)、[Production dry-run #42975449174](https://github.com/kim-1868/miaowu-english/actions/runs/42975449174) 全部 success；[全站 S1 #42975449305](https://github.com/kim-1868/miaowu-english/actions/runs/42975449305) **850测试/849通过/0失败/1跳过**。以上仅代码和合成 SQLite，不是线上。
+- 合并 commit `516548a06b77ff3bcd57ab8031d3ad9f4073568f`。工程文档 [第四阶段](https://github.com/kim-1868/miaowu-english/blob/feature/v11-smart-vocab-preflight-20261109/docs/UNMARKED_NOVEL_EDITOR_CONFIRM_PHASE4_20261111.md)；私有交付包 `/开发英语单词学习网站/统一词卡_待审工作区/开发脚本_V12_一词一卡第四阶段/妙屋英语_V12一词一卡_第四阶段未标记英文自动匹配审稿流程_20261111.zip` 共7个源码/合成测试/说明文件，SHA256 manifest 逐项验证，无owner原词/收费小说。
+- **下一优先**：运营台编辑词义审核选择 UI（批量选择/例外人工）、已确认 V2 包走真实 staging 正版导入/章节 `chapter_words` 和 018 绑定、旧书 latest revision 安全迁移；把快速刷词/剧情回声/云端收藏改成主词头状态共享；必须先完成 Staging D1 备份/授权迁移、Publisher 真人签核（目前0）和两本真实书/移动端/权益 E2E，才允许考虑发布。
+
+---
+
+## 2026-11-11 · 最新阶段3：已审核一词一卡接入小说阅读器（PR #218）
+
+> 本节为最新工程事实。**PR #218 仅合入 Draft #206 的统一词典开发分支，未部署真实 staging/production，未运行 Cloudflare D1 013–019，真实 Publisher approved senses 仍为0。**
+
+- 已合并 [PR #218](https://github.com/kim-1868/miaowu-english/pull/218)，commit `0217d1a319405c25363e153089474eaee2a76273`。基于已合并 PR #216（一词一卡纯SRS/点击定位草案）、PR #217（用户登录+付费权限+已审核词头的读写安全API）继续开发，**没有重新制作词库**。
+- 新 `src/global-dictionary-reader-anchors.js`：仅在**用户实际有权阅读的已发布章节**查询原 `chapter_words`、`global_dictionary_book_bindings` 和已审批/active 的 `global_dictionary_book_sense_bindings`，并交叉检验主卡审核/来源版权；`p段:s段` 精确锚点才返回 `entry_id`。未审词/订单撤销/未授权/章节下架都不给一词一卡锚点。
+- `src/global-dictionary-headword-api.js` 新增仅staging且开读开关可用的 `GET /api/me/dictionary/chapters/{chapterId}/anchors`。旧有 GET 主词卡、POST 反馈不改。若来源缺少正式审批，旧版阅读词卡保持原功能。
+- `public/app.js` 复用已有标记目标词的按钮、`wordPop` 桌面就地词卡与移动底部学习栏：渲染精确 pX:sY，获授权后才加载审核锚点列表。新 `public/headword-reader-bridge.js` 以 `entryId+chapterId+anchor` 获取同一张含n./v.多词性的主词卡，支持发音、例句朗读、认识/再记一次/独立已掌握通过 PR #217 服务端幂等CAS上报。点词暂停章节自动朗读，需手动继续；点阅读空白关闭词卡；异步过期请求无效。**尚未自动把所有普通未标记英文词发布成可点击词卡**。
+- 保留旧收藏/藏书票接口与原词卡版本，不自动合并旧收藏；**词头级统一收藏、快速刷词、剧情回声共享SRS仍未真正接新接口**，需后续处理。历史 2,206旧ID和 user_words/read progress/entitlements 未改。
+- 严格保留正式首页 `/app.js?v=20261109-favorites-wordbook12` 资源引用以保护既有UI发布基线，新增独立带版本的 bridge 脚本；在**未来真实staging部署**必须检查并刷新旧 `app.js` 缓存，必要时经发布基线评审升级版本号，否则可能载入旧app导致桥接代码不生效。此次开发未部署，不冒称此风险已验证。
+- 本地合成SQLite 5测试 + JS桥5测试 + 静态整合4测试，Chromium **1280px桌面/390px手机**均模拟打开原词卡→获审多义主卡→认识POST→关闭，**0 JS异常**。GitHub [专项reader #42973628429](https://github.com/kim-1868/miaowu-english/actions/runs/42973628429)、[现有API #42973628471](https://github.com/kim-1868/miaowu-english/actions/runs/42973628471)、[production dry-run #42973628473](https://github.com/kim-1868/miaowu-english/actions/runs/42973628473) success；[S1 #42973628430](https://github.com/kim-1868/miaowu-english/actions/runs/42973628430) **835 total / 834 pass / 0 fail / 1 skipped**，CI没有真实D1写入。
+- 详细 [阶段3说明](https://github.com/kim-1868/miaowu-english/blob/feature/v11-smart-vocab-preflight-20261109/docs/HEADWORD_ONE_CARD_ENGINEERING_PHASE3_20261111.md)；私有 Library `/开发英语单词学习网站/统一词卡_待审工作区/开发脚本_V12_一词一卡第三阶段/妙屋英语_V12一词一卡_第三阶段阅读器接入与验证_20261111.zip` 包含新增前端/后端/合成测试/浏览器测试及SHA256 manifest；**公仓只放通用代码，真实7391、655未审句、付费小说留私人工作区**。
+- **下一阶段**：实现带编辑确认的“未标记英文 token→已审核主词卡→小说正文安全绑定与可点击呈现”，以及保守的旧书真实上下文重映射；获得权限、加密备份/回滚后才可以在staging实际迁移 019 并验证两本真实小说的跨书SRS、词卡朗读、收藏和购买权限。最终正式 Publisher 审批和商用内容覆盖才是真正上线硬门槛。
+
+---
+
+## 2026-11-11 · 最新阶段2：登录/权限/审核的词头级SRS服务端已通过整站测试（PR #217）
+
+> **本节最新工程事实**，下方旧进度快照只为历史溯源。代码只在 [Draft #206](https://github.com/kim-1868/miaowu-english/pull/206) 的统一词典**开发分支**中；**没有部署预览站或生产站、没有执行 019 D1 迁移、没有 Publisher 真实词卡签核**。
+
+1. 已安全合入 [PR #217](https://github.com/kim-1868/miaowu-english/pull/217)（squash commit `fa65b849c4bd86361b7696105230f6deb641cc92`）。在上一轮 [PR #216](https://github.com/kim-1868/miaowu-english/pull/216) 纯函数统一词头 SRS / 点击锚点草案基础上，新增 `src/global-dictionary-headword-api.js` 与 `src/worker.js` **已登录用户路由**，不触碰旧阅读、词卡、用户订单或复习接口。
+2. **只限隔离 staging**：`APP_ENV==='staging'` 且 `GLOBAL_DICTIONARY_HEADWORD_SRS_ENABLED==='true'` 才能 GET 已审词卡；POST 还需 `GLOBAL_DICTIONARY_HEADWORD_SRS_WRITE_ENABLED==='true'`。生产任何条件都返回 404。上述 flag 不应未经迁移及真实验收就开启。
+3. `GET /api/me/dictionary/headwords/{entry_id}?chapterId=...&anchor=...` **只读**取含多词性、对应发音、英中例句及搭配的**同一张主词卡**，并返回服务器持有的 `user_id+entry_id` SRS 状态和 revision。**只返回已审核且active的sense**；若仍有未审sense则避免显示可能涉及未审语义的搭配；非审核源/伪造正文义项不能通过。
+4. `POST /api/me/dictionary/headwords/{entry_id}/feedback` 仅接受 `chapterId,anchor,kind,eventId,expectedRevision`。用户ID只取现有 Worker Cookie session，POST 原网站同源校验继续有效。**必须有精确已审批 chapter/context_anchor/sense 绑定且小说已上架、章节已发布、用户拥有该分类有效购买权益或公开预览**；兑换码作废或未购买直接拒绝，绝不因词库有同名词而越权展示付费课程。
+5. 使用服务端时间和此前 1/3/7/14/30 纯 SRS 规则；**D1.batch事务内用户+词头 revision 乐观锁 CAS + 审计事件唯一 revision**，UUID `eventId` 幂等。同日重复“认识”不无限延期；忘记缩短；独立「已掌握」不由认识自动触发；两小说 record 的 n./v. 共用1份计划。事件保留 book+chapter+context_anchor 供追溯。
+6. `db/019_global_dictionary_headword_study.sql` 是增量草案，给事件流水增加 `source_chapter_id` 和 `source_context_anchor`，**没有加入现有013–018远程迁移工具、未对 Cloudflare D1 写入**。修复因新增审计字段造成的上一轮合成测试兼容问题，保留所有 `user_words` / `review_events` / 2,206个历史词卡 ID 不变；真实旧用户需另行保守迁移审签。
+7. 验证：本地**19项新API合成测试 + 8项旧SRS测试**全通过；GitHub [专项 API 42971010243](https://github.com/kim-1868/miaowu-english/actions/runs/42971010243)、[旧SRS回归 42971010164](https://github.com/kim-1868/miaowu-english/actions/runs/42971010164)、[生产构建干运行 42971010631](https://github.com/kim-1868/miaowu-english/actions/runs/42971010631) 均 success；[全站S1 42971010130](https://github.com/kim-1868/miaowu-english/actions/runs/42971010130) **821测试 / 820通过 / 0失败 / 1跳过**。这些均是代码及合成SQLite验证，**不等于真实 Cloudflare D1 已运行**。
+8. 私有交付包已归档 Library：`/开发英语单词学习网站/统一词卡_待审工作区/开发脚本_V12_一词一卡第二阶段/妙屋英语_V12一词一卡_第二阶段服务端接口_19项专项测试与旧代码兼容修复_20261111.zip`，6个源码/脚本/测试文件逐一 SHA256 验证；不含私人7391 owner词表和收费小说。
+9. **下一阶段核心任务**：先接 `public/live-reader.js` / `public/chapter-words.js` 的点击、朗读、关闭卡与反馈动作；在未来已备份/获授权的真实 test D1 上执行013–019后仅启用 GET 验证，再单独启用写，验证真实已审义项、原旧书/新书、跨书状态和权限；当前实际 Publisher approved teaching senses仍**0**，无理由提前放行正式课程或生产。
+
+---
+
+## 2026-11-11 · 已进入实际开发：一词一卡跨书SRS与点击词卡关联首轮实现（PR #216）
+
+> 本节为最新工程进度，旧资料保留供审计。**仅 Draft #206 开发分支；预览与生产 D1 均未实施 019 迁移；尚未上线用户功能。**
+
+- 用户最终确认：**一规范英文词头对应一张可见主词卡**，其中包含多词性/释义/英美音标/原创新例句/合适搭配；不因record是n./v.生成两个必须学习的卡。内部sense_id仍保留作词义上下文/审核追溯，但SRS唯一键为`user_id + entry_id`，小说跨书复用。
+- 新文件 `src/global-dictionary-headword-srs.js`：纯函数按1/3/7/14/30天推进；只有真正到期才升级；同UTC日反复点击认识不重复延长；忘记则缩短并提示5张后重现，点击“已掌握”为独立动作，可撤销；打开词卡只增加接触次数，不改变due，用户之间隔离。
+- 新文件 `src/global-dictionary-headword-click-plan.js`：直接复用`global-dictionary-matcher.js`+`global-dictionary-novel-v2.js`审校与`global-dictionary-auto-discovery.js`英文分词输出，对已批准主卡的**已批准且active**名/动等sense只生成**一张主卡**，产生章节字符位置供后续读者点击；不猜小说中文语义、不展示未批准sense，不触碰收费小说和用户数据。**仍为只读锚点草案，未绑定真阅读UI。**
+- 增量 `db/019_global_dictionary_headword_study.sql` 仅提出 `user_headword_study`+新事件流水表；`(user_id,entry_id)`复合主键，保存state/due/revision等，不删除`user_words`、`review_events`、旧wordID或购买记录。**该SQL仅在本地SQLite测试，没有添加到已有013–018远程迁移工作流。**
+- `tests/v12-global-dictionary-headword-*` 三套**合成**单测包含两本小说record n./v.共用卡与复习计划、词形/未审内容阻断、跨用户隔离、不可通过同日刷认识跳期、独立已掌握、D1 019加法模拟/历史表保留。8项SRS/DB本地全通过，GitHub [专项CI 42968619751](https://github.com/kim-1868/miaowu-english/actions/runs/42968619751)、[全站S1 42968619927](https://github.com/kim-1868/miaowu-english/actions/runs/42968619927)、[Production dry-run 42968619722](https://github.com/kim-1868/miaowu-english/actions/runs/42968619722) 全为 success，**dry-run并非真实生产部署**。
+- PR [#216](https://github.com/kim-1868/miaowu-english/pull/216) 已安全合入词典开发分支，新增完整文档 `docs/HEADWORD_ONE_CARD_ENGINEERING_PHASE1_20261111.md`。原7391 owner来源/655待审原创新句/2206旧ID/5985复杂审稿/OPS审稿门禁继续保留不重做。
+- **下一工程任务**：真实授权服务端SRS API（session、权益、已批准词卡、服务端时间、并发revision和事件幂等校验）；从点击锚点草稿生成安全的已审主卡小说绑定并接回阅读UI/朗读/关闭卡交互；在隔离预览站备份、批准后进行013–019数据库迁移，并用最新版旧书/新书真机账户验收；当前正式Publisher批准教学sense=0，**禁止上线**。
+
+---
+## 2026-11-11 · 最新：92 缺美音来源/13 个低冲突括号释义风险已实测
+
+> 本节最新，覆盖下方旧快照。全部为**来源候选和离线人工审核准备**；正式已批准 teaching senses = 0，云端 D1/用户数据没有变化。
+
+- 对 239 个 S0/P1 真实审稿源继续复核：**92** 目标词缺现有 US IPA 来源（基础33、四级新增17、六级新增34、考研新增8）。使用固定 MIT ipa-dict/en_US 原始源，仅有 **42** 个找到相关拼写/相关词对应 IPA 条目，**50** 暂无相关源线索。**42 条不能复制成目标词读音，正式美音确认0条**。
+- 用原始 owner 7,391 SHA-verified 来源重新进行括号中文释义的差分解析，发现有 **13** 个本来归入565低冲突队列的词应增加语义人工复核风险，如 dilemma、headmaster、commence。实验解析器也改变了大量候选片段，因此**只输出13条审稿升级清单，不静默重写565既有例句、5985队列或用户的学习状态**。
+- 可复用纯离线程序 `scripts/review-exam-us-ipa-source-variants.py` + 新合成测试只做相关拼写的**来源参考**，不会冒充 IPA 审签或将近义词发音作为词头发音。私有拼写对照 JSON **不入公共仓**。
+- 私有 ZIP 在 Library `/开发英语单词学习网站/统一词卡_待审工作区/四级六级考研_优先审稿1150/妙屋英语_92缺美音候选_42相关拼写参考与13词义风险修正待审包_20261111.zip`；10份文件带SHA256 manifest，已真实逐文件复验。
+- [PR #215](https://github.com/kim-1868/miaowu-english/pull/215) 已合入 **Draft #206 开发分支**。专项 [CI 42963523969](https://github.com/kim-1868/miaowu-english/actions/runs/42963523969) 和 [全站S1 42963523751](https://github.com/kim-1868/miaowu-english/actions/runs/42963523751) 通过。含4项离线 synthetic case，本地和CI都验证不生成批准词义。
+- 新发现 Britfone (`JoseLlarena/Britfone`) 自称英式 IPA + MIT 许可证，但 README 描述参考多种词典；在进一步核验依赖数据权利之前**不得导入或用于收费教学**。现有 ipa-dict en_UK GPL 派生数据依然未引入。
+- 接下来：先核实42条相关拼写的发音是否对应原词、为剩余50条寻找可追溯商用许可来源；13个括号释义升级风险人工核准；优先依据最新小说语境处理P2/P3复杂义项并生成原创教学例句。仍需OPS Publisher经认证的签核、staging备份与真实旧书/新书/权限 E2E。
+
+---
+## 2026-11-11 · 最新：S0/P1 239 条逐词真实核验和新增 10 条原创例句
+
+> 本节是开发分支最新接力状态，覆盖下方所有旧快照；正式生产站未部署。仅有数据候选和原创例句**草稿**，正式 Publisher approved sense = 0。
+
+- 真实 owner 7,391 范围不变。已完成 565 个低冲突词头原创中英句草稿 + 原历史 80 条草稿，共 645 条；本轮对 S0 来源异常 **122** 和 P1 多美音风险 **117** 逐条复核（239）并补写**10 条新词原创英中例句**，目前累计 **655 个不同词头/655 条不同英文句子（全部未审）**。
+- 来源 S0 的优先专项统计：**11 条旧解析器漏掉带括号释义的明确词性标记**（如 v. (使)减少、n. (中小学)女校长）；另 **22** 没有可靠词性线索；**83** 是不伴随更优先来源异常的美音缺口；**6** 缩写词要人工给定稳定身份。特别注意 S0 内原始美音缺失**共92条**，包括同时有词性/缩写问题的9条，不能把83误当成完整美音缺口。
+- P1 多美音候选：**109 条音素序列不同**；另 **8 条音素序列一致但重音位置/标记不同**。例如 museum、automobile 不能因删除重音标记后字符串一致，就当作完全相同的读音。只分配审核提示，不自动选择、删除重音或合并学习义项。
+- 原11个括号词性漏判词中10词已编写原创英中例句草稿（circulate、starve、headmistress、diminish、soften、mingle、degrade、emigrate、freshen、polarize），**罕见 protend 不猜测教学用法，单列 source/考试词表人工复核**。新的10条与原645条 headword、entry_id、英文句子无重合，不改变历史2,206旧ID。
+- 安全工具 [PR #214](https://github.com/kim-1868/miaowu-english/pull/214) 已合入 Draft #206 开发分支，[专项合成CI 42962556220](https://github.com/kim-1868/miaowu-english/actions/runs/42962556220)、[S1 全站 CI 42962556309](https://github.com/kim-1868/miaowu-english/actions/runs/42962556309) **success**。工具只有原始词性标记恢复线索、音标风险比较、词头 SHA 身份/状态和完整来源包校验；**7项合成测试、优化Python模式同样全绿**，禁伪批准/旧ID混用/越权复用。
+- 新私人 ZIP：`/开发英语单词学习网站/统一词卡_待审工作区/四级六级考研_优先审稿1150/妙屋英语_239词源音标修复_10条新增原创例句_真实验证待审包_20261111.zip`，含239逐词原始问题清单、编辑表、10句独立原创英中待审稿、protend人工保留单、QA和SHA256 manifest，已保存用户私有 Library，且**8文件逐文件 SHA256 对账通过**。公开 GitHub 不含原私有词表、小说或用户身份。
+- **不可声称修完 92 个音标/正式批准任何新义项**：目前只是找到来源错误并提供有据可查的修复线索与10句原创初稿。下一步优先寻找合法的缺音标来源，并真正进行真人语义与合法UK IPA审核；需授权 OPS Publisher 签核和 staging 最新小说真实 E2E 后才可以考虑生产部署。
+
+---
+## 2026-11-11 · 5,985复杂词头真实分流全量验证（最新）
+
+> 本节为最新真实离线数据结果，覆盖下方旧进度快照。词典代码仍在 Draft [#206](https://github.com/kim-1868/miaowu-english/pull/206) **开发分支**，生产站未部署、真实 Publisher approved sense 仍为 **0**。
+
+1. 私有 owner **7,391 目标词头**与历史 **1,150 candidate senses / 2,206 不重复旧卡 IDs** 完整对账。历史涉及920个唯一词头，其中 **841 在本期**、**79 属于后续词头**（对应83个后续历史义项）；6550本期词头完全没有历史义项，且没有任何和841历史词头重叠。
+2. 6550中此前565低冲突词头已各有英中例句草稿；本轮真正剩下 **5,985/5,985** 的复杂词头均严格进入一个优先队列：**S0 来源缺口122，P1机器仅美音变体117，P2多词性2796，P3多释义2944，P4其他6**，无重复，原头词 entry_id 和考试等级均与原7391一致。
+3. 按本期等级复杂队列：**基础2786 / 四级新增1370 / 六级新增1555 / 考研新增274**。P1的117按基础70/四级14/六级24/考研9。此组“仅美音风险”是机器特征，**不可认定没有多义、不能未经人工编辑直接生成正式教学 sense**。
+4. 重新逐行比对历史1150、目标7391、缺历史6550、复杂5985和原创英中645草稿：**0级别/entry_id不一致，0重复旧ID，0复杂队列重复，645例句无重复英文句**，且645中565属于新增词、80属于历史候选义项。正式批准0。
+5. 新通用纯离线调度器 `scripts/plan-complex-exam-sense-review.py` 只读私人工作单，按SHA校验重建 entry_id，拒绝来源自称批准、错误等级/重复词、覆盖已有输出；合成回归**7测试全绿**。GitHub [PR #213](https://github.com/kim-1868/miaowu-english/pull/213) 已合入 Draft 开发分支；[专项 CI 42960998414](https://github.com/kim-1868/miaowu-english/actions/runs/42960998414) 和 [全站 S1 42961023152](https://github.com/kim-1868/miaowu-english/actions/runs/42961023152) success。
+6. 私有分流全量包在 Library：`/开发英语单词学习网站/统一词卡_待审工作区/四级六级考研_优先审稿1150/妙屋英语_5985复杂词头_四级六级考研审稿分流与真实验证_20261111.zip`。**ZIP 13成员附 SHA256/独立核验、原词+US IPA候选+原译义+等级+工作流状态均在私有包，不可推 public repo**。
+7. **下一步**：基于这五队列的词义实审，不要先生成拍脑袋自动审批；优先查S0来源缺漏和P1发音分歧，然后考虑关联最新已上架真实小说文本，决定P2/P3语境常用义。仍缺人工审稿/音标来源授权/实际OPS Publisher审签/真实Cloudflare staging数据库/旧小说最新版本和新小说上架 E2E/学习状态与支付权限验证；全部未完成不可发布正式站。
+
+---
+
+## 2026-11-11 · 最新：565 原创例句全覆盖 + 新义项零旧卡 ID 安全门禁
+
+> 本节覆盖下方 6550 分流/100 例句的**旧进度快照**。当前仅在词典 Draft [#206](https://github.com/kim-1868/miaowu-english/pull/206) 开发分支，**仍未真实 Publisher 签核、staging D1 验收或生产部署**。
+
+- 7,391 owner 词头 / 原 1,150 历史候选义项 / **2,206 个旧卡 ID** 保持不变；历史 23 本快照仍非最新线上导出。
+- 原有 **6,550** 无历史教学义项的词头：**565 单词性低冲突、5,863 多义多读音、122 来源异常**。565 个低冲突词头均补完独立原创英中例句草稿，按基础320 / 四级新增98 / 六级新增122 / 考研新增25；连同旧历史 80 条原创草稿合计 **645 不同词头/645 不同英文例句**，全为未审候选。
+- 565 低冲突原始译义并非安全可用义项，**135 个语义/语用高风险**需优先审查（commence、supersonic、headmaster、calculus 等）。低冲突不等于来源释义正确。剩余 5,985 个词头仍需开展语境化拆义及例句创作，其中纯机器“多美音候选”风险的 **117 个**可单列音标优先复核，仍不得直接签核。
+- 565 词离线初审台已填满原创新句，支持等级/135 风险筛选/修订/JSONL 导出，浏览器 1365px 桌面和 390px 手机验证。**初审不等于有权发布的最终 Publisher 审核**。
+- 补齐 **零历史旧卡 ID 新义项的门禁**：`src/global-dictionary-new-sense-editorial-gate.js`、`src/global-dictionary-new-sense-initial-review-adapter.js`、`scripts/check-private-new-sense-editorial.mjs`。其结果只可转为 `HOLD` 审稿模板，拒绝冒充商用许可/审核人、携带旧卡 ID、跨词义混用。真实 565 初审空白源全量读入→565 HOLD→565 BLOCKED→0 approved→0 D1/用户数据写入；历史 80 义项仍使用原历史门禁。浏览器测试时模拟勾选过1条，正式模板**已经全部恢复未勾选**。
+- GitHub [#211](https://github.com/kim-1868/miaowu-english/pull/211) 和 [#212](https://github.com/kim-1868/miaowu-english/pull/212) 已安全合入 Draft **开发分支**。#211 17 项 Python 合成测试+全站 S1 通过；#212 16 项 Node 合成测试+[专项 CI 42959894540](https://github.com/kim-1868/miaowu-english/actions/runs/42959894540)、[S1 42959894413](https://github.com/kim-1868/miaowu-english/actions/runs/42959894413)、[Production dry-run 42959894535](https://github.com/kim-1868/miaowu-english/actions/runs/42959894535) 全通过，**dry-run 不是上线**。
+- 私有交付包（完整 7,391 + 565 原创 + 私人审稿台）在 Library 同文件夹 `妙屋英语_四级六级考研_7391统一词头_565低冲突词卡例句全覆盖待审包_20261111.zip`；新增 `妙屋英语_565新增义项_离线审稿衔接与安全门禁_20261111.zip` 含 565 无人工审核的 HOLD 模板/整批 blocker/合成测试与 SHA256。均不可推送到公共 GitHub。
+- 下一优先：人工审 135 重点风险与 430 一般低冲突项、合法 UK IPA/商用权利；加速 117 个只有多读音风险的词和剩余 5,985 复杂词；实现有身份的真实 OPS Publisher 签核及 staging D1 备份/回滚后，才验证最新版旧书+新书自动配卡、付费/复习/收藏并申请生产发布。
+
+---
+
+## 2026-11-11 · CET4/CET6/考研 6550 缺卡批次与180原创例句最新交接
+
+> **本节覆盖下方尚标记“公开来源未完成”的旧交接内容。** 最新代码位于 Draft PR #206 开发分支（非正式站）；[本轮 QA 文档](EXAM_FIRST_6550_TRIAGE_AND_100_ORIGINAL_EXAMPLES_20261111.md) / [首次 7391 实测报告](EXAM_FIRST_7391_REAL_SOURCE_AND_LEGACY_QA_20261111.md)。
+
+- **真实来源合并已完成**：ECDICT + US IPA 固定公开版本通过公共 GitHub Actions；在私人 Library 对 owner **7,391** 词头运行离线合并。中文词义候选 **7,385**、US IPA 候选 **7,299**、POS 候选 **7,358**。所有都是**未审候选，不是可售词卡**。
+- **历史词卡只读核验已完成**：原历史 1,150 义项内 1,067 属于第一阶段，历史 2,206 个旧 word ID 均被保留；23 本历史快照对账 0 ID 冲突。但不是最新正式书版本，也没有完成用户状态迁移。
+- **新增 6,550 缺历史教学卡的结构化审稿**：565 单词性低冲突、5,863 多义或读音冲突、122 来源异常；已按基础/四级新增/六级新增/考研新增分四份输出。机器判断“低冲突”不等于人工已审核。
+- **例句推进**：旧 80 条历史义项原创英中草稿 + 新 100 条没有历史词义稿的原创英中草稿，**180 条独立词头/180 条不同英文例句**，全部留私人 Library；新增 100 中 14 个与 ECDICT 中文建议含义文字不完全一致，需语义复审。
+- **真实私人增量包**：`/开发英语单词学习网站/统一词卡_待审工作区/四级六级考研_优先审稿1150/妙屋英语_6550缺卡词头自动分流_新增100原创例句_待审包_20261111.zip`。含 565 低冲突工作表、四等级 6550 词待审稿、14 处差异清单、100 例句、SHA256 清单与可复用纯离线工具；不可写进公有仓。
+- **代码进度**：[PR #209](https://github.com/kim-1868/miaowu-english/pull/209) 与 [PR #210](https://github.com/kim-1868/miaowu-english/pull/210) 已合入 **词典开发分支**。本轮 [专用 CI 42951217837](https://github.com/kim-1868/miaowu-english/actions/runs/42951217837) 和 [全站 S1 42951217845](https://github.com/kim-1868/miaowu-english/actions/runs/42951217845) success。没有正式站/Cloudflare D1 操作，Publisher approved senses 仍为 **0**。
+- **下一优先级**：先审 100 新稿 + 80 旧稿，逐步补 465 无原创例句低冲突词头，再处理 5,863 多义/多音及 122 异常；拿到授权后完成 staging Publisher 义项审签，再用现网最新导出的四级、六级、考研书验证真正跨书同义项去重和 V2 新书自动发现，检查付费权限/回滚，之后才申请生产合并。
+
+---
+
+# 妙屋英语 · 全量统一词典与既有词卡工作交接（2026-11-10）
+
+> **项目跨窗口唯一现状入口（截至本次提交）**。读取仓库 `kim-1868/miaowu-english` 的 `feature/v11-smart-vocab-preflight-20261109` 分支，而非可能滞后的默认 `main`。关联 [Draft PR #206](https://github.com/kim-1868/miaowu-english/pull/206) / [Issue #208](https://github.com/kim-1868/miaowu-english/issues/208)。
+
+**2026-11-10 最新操作入口：** 用户 Cloudflare D1 Token 授权步骤、GitHub Secret 名称、既有只读工作流重跑链接、后续 A–K 交付验收表，见 [统一词典授权与后续执行清单](UNIFIED_WORDCARD_AUTH_AND_DELIVERY_RUNBOOK_20261110.md)。该执行清单也已保存到私人 Library：`/开发英语单词学习网站/妙屋英语_统一词典_授权与后续执行清单_20261110.md`，供其他聊天直接读取。**修订：Cloudflare D1 Read Secret 已保存且真实只读检查通过；测试库统一词典表 0/10，Time Travel 恢复点可读。真实建表仍需独立写权限、备份与人工放行。**
+
+## 2026-11-11 · 跨窗口即时交接（最新，优先读）
+
+用户已决定在新聊天窗口继续妙屋英语统一词卡项目。**主线不变**：四级/六级/考研先完成 7,391 目标词头相关的审核教学义项，匹配已上架真实小说，然后确保后续小说上传自动配卡；不等待剩余 40 万候选词头导入。
+
+最近进展：固定版本 ECDICT + ipa-dict 美式 IPA 的离线组合程序 `scripts/build-exam-first-open-source-card-candidates.py` 已提交；[公开小样本 CI 42862811984](https://github.com/kim-1868/miaowu-english/actions/runs/42862811984) 通过（5 测试、真实上游 4 公开词）。私有 7,391 词表已有 7,299 美式 IPA 匹配、92 缺失、1,114 多音候选，全部未签核。
+
+**最新正在开发但尚未完成验证的提交**：`scripts/prepare-public-exam-source-bundle.py` 已加入（提交 `28a67de`，fixture 兼容性修订 `6133f92`），目标是在公共 Actions 中流式处理 ECDICT 已审计的 **11,422** 个带任意考试标签的公开词头，打包公开 ECDICT 翻译候选 + `ipa-dict/en_US` 及版权声明，再仅在私有环境与 owner 7,391 表合并。**新脚本尚无完整 CI 或端到端实测结果，不能声称已生成完整公开词源包或已经完成 7,391 张词卡。** 新窗口应先核对代码/添加测试和公开 CI，再产出私有审稿汇总。
+
+当前内容事实：第一期 7,391 词头（基础 3,674 + 四级新增 1,654 + 六级新增 1,755 + 考研新增 308），7,385 个 ECDICT 匹配，6 个缩写待审；历史 1,150 候选义项中 1,067 与第一期相关；第一轮 40 条原创双语例句仅为草稿；**Publisher 审核通过稳定 sense = 0**。测试 D1 已有 61,422 未审核候选词头（包括考试来源 11,422 + 额外 50,000），生产站未集成；不要重跑成功的 cohort 1。
+
+已有旧书 V2 / 自动发现代码已通过部分单元测试，但真实已上架小说的最新版本尚未逐本核验，也未通过预览/正式站端到端。不得宣称旧书已匹配、新书已自动上线。私人 7,391、1,150、例句材料仅留 Library，不可 push 到公开仓库。
+
+**新窗口推荐下一步**：① 为公开 exam-source-bundle 编译器补单测并通过 GitHub CI，固定上游 SHAs 和 LICENSE；② 私有生成器与 7,391 词表实跑，给出逐词源字段/IPA/缺口统计；③ 从真实高复用义项开始 100–200 条分批原创例句与审校、准备 Publisher 签核；④ 旁路只读审核最新小说书籍并走 staging V2 自动配卡；⑤ 才能受控上线。历史交接及许可说明见 `docs/EXAM_FIRST_OPEN_SOURCE_ACCELERATION_20261111.md`、`docs/EXAM_FIRST_UNIFIED_WORDCARD_DELIVERY_20261111.md`。
+
+## 2026-11-11 · 开源词典提速实测并入主线（最新）
+- **用户已同意整合 GitHub 开源资源提高统一词卡产能**，不变更优先级：四级、六级、考研第一期 7,391 词头，旧小说配卡和后续新书 V2 自动找卡；暂停让额外 40 万候选词头导入成为阻塞。
+- 已锁定 ECDICT（MIT，固定上游提交）和 ipa-dict `en_US.txt`（美音，固定提交）为**候选辅助来源**。真实 owner 私有词表与 IPA 来源逐一匹配：**7,299/7,391（98.76%）有美式读音候选，92 缺失，1,114 多读音待义项审核**；不能把这些计数作为已发布词卡数。
+- 在公有仓代码中新增纯离线辅助生成器 `scripts/build-exam-first-open-source-card-candidates.py` + 5 项严格防误发布测试 + 真实固定 GitHub 来源烟雾 CI [run 42862811984](https://github.com/kim-1868/miaowu-english/actions/runs/42862811984) **Success**：4 个公开 fixture 的源释义/美音候选接入成功；实际 Publisher-approved senses=0，D1 writes=0。
+- `ipa-dict` 英式来源的许可链另审，本阶段**不直接采用 `en_UK.txt`**；英文例句仍由本项目独立原创、审校。ECDDCT 字段及任何外部来源的完整商业使用权仍需逐字段审核；repo LICENSE 不等于全部第三方音频/例句权益。
+- 具体后续见 [开源资源提速与实际执行计划](EXAM_FIRST_OPEN_SOURCE_ACCELERATION_20261111.md)。本轮 7391 个**私人**完整词卡字段候选包尚未实际生成/审核；不能当成完成。真实优先工作转为批量候选补充、100–200 条/批内容签核、已上线小说最新版只读配卡核验、V2 staging。
+- **此段优先于后面过期的操作入口说明**：staging D1 013–018 和 61,422 候选词头已完成；下文历史「0/10 表」是旧记录，不得作为当前状态。
+
+## 2026-11-11 · 最近期状态补充：新书自动发现的运营台交互已编码、未部署（最高优先级）
+
+- [GitHub QA 42860327774](https://github.com/kim-1868/miaowu-english/actions/runs/42860327774) **33/33 测试通过**；`public/ops-console.js` 已对纯文本（未标注单词）的 V2 JSON 使用 staging-only `POST /api/ops/import/dictionary-v2/discover` 自动扫描；展示已审核唯一义项候选和每一处异常。
+- 只要存在缺词/未审/多义项，界面**不允许一键生成草稿**（需编辑先处理全部异常）；全部候选唯一时，Publisher 可明确点击核对确认，使用 `public/auto-discovery-v2-draft.js` 保留每个中文段落及英文词原始字符偏移转换为 `{surface,gloss}`，再经过原 V2 preflight 和后续学习 sense 审核。拒绝重叠偏移、被修改上下文、伪造 stable sense ID；不写库、不发售、不合并学习状态。
+- **这还是 GitHub 功能代码和本地/CI 验证成功，不是预览站或正式站的线上部署**。发布需独立 staging 验收/Publisher 登录并通过 QA；现阶段实际已审批 sense 仍为 0，真实文章不能直接自动转为可售卡。
+- 私人内容审核任务 zip 和第一期 6,550 内容缺口在 Library 路径见下文。完整说明：[EXAM_FIRST_P1_REAL_EXECUTION_20261111.md](EXAM_FIRST_P1_REAL_EXECUTION_20261111.md)。
+
+## 2026-11-11 · 最新主线实现进展：7391 词卡缺口清算 + 预览 OPS 新书纯文本自动发现（优先读）
+
+- [最新执行记录](EXAM_FIRST_P1_REAL_EXECUTION_20261111.md) 与 [GitHub QA 42859349776](https://github.com/kim-1868/miaowu-english/actions/runs/42859349776)：**31/31 测试通过**，新增加三级考试原始词表 + 历史义项 + 新原创例句的纯离线审稿计划工具 `src/global-dictionary-exam-first-review.js`、`scripts/audit-private-exam-first.mjs`。
+- **私人真实清算新发现**：第一期 7,391 词头中仅 **841 个**具有可复用的历史教学义项**候选草稿**；**6,550 个**词头还没有历史教学义项草稿（其中 6 个特殊缩写需额外编审）；历史 1,067 个本期候选涉及 **176 个一词多义词头**，另 83 个非本期保留；2,206 个旧 word ID 全数保留，40 个原创双语例句仍**未审核**；真正 Publisher approved sense 仍为 **0**。此前 7,385/7,391 是候选词头来源存在率，**不是教学卡覆盖率**。
+- 私有完整清单 zip 已保存个人 Library：`/开发英语单词学习网站/统一词卡_待审工作区/四级六级考研_优先审稿1150/P1真实词卡缺口与首批审核任务包_20261111.zip`，含完整 6,550 内容缺口、1,067 历史候选及高复用/低冲突各 100 条首轮审稿任务。不上传 GitHub 公有仓库。
+- **代码已实现但还未部署的 staging OPS 自动发现接口**：`POST /api/ops/import/dictionary-v2/discover`。上传 `version:2` 中文小说即使没有任何 `{surface,gloss}` 标注，也能只读扫描正文英文 token，关联真实 D1 的审核来源/课卡/唯一 stable sense，按段落偏移返回「待编辑确认建议」；多义、不明来源和未经审核一律列队，不写付费小说或用户掌握状态。已有 `/preflight` 不变。运营台交互 UI 还未连接，staging Worker/正式站尚未部署。
+- 与上述同步的 SQLite E2E 测试显示：单一已审核义项可以提出 suggestion，多义词如 `record` 必须人工确认，旧 `user_words` / `review_events` / `books` 行数保持不变。实际生产未访问，无法宣称已上架小说自动配卡上线。
+- **后续集中做的只有三项**：真实 Publisher 内容许可与音标/语义签核 → 现网站点版本只读导出和旧用户状态演练 → 将自动建议 UI 集成预览 OPS 并做真实小说端到端验收，正式站另行受控发布。剩余 8 批非考试候选入库仍**非阻塞**。
+
+## 2026-11-11 · 开源词卡资源实际接入与质量审核基线（最新，勿将候选称为成品）
+
+- 当前第一期仍锁定**基础+四级新增+六级新增+考研新增，去重 7391 词头**；远程测试 D1 已有至少 7385 个对应禁用 ECDICT 考试候选、历史 1067 条在期内待审义项、6550 词头仍缺历史教学内容、40 条原创例句初稿；已审核可售 sense **仍是 0**。
+- **本轮真的去 GitHub 查验了许可证及来源**，并提交脚本 `scripts/build-exam-first-open-source-card-candidates.py`、测试 `tests/test_open_source_card_candidates.py` 和开源候选 CI `.github/workflows/global-dictionary-opensource-assist-qa.yml`。来源：ECDICT MIT @ `39cfb967...`（中译、POS 候选）、ipa-dict **仅 en_US** MIT @ `972cd67...`（美式 IPA 候选）、Open English WordNet CC BY 4.0（仅参考）。**英式 en_UK 衍生 GPL-3.0，暂不直接并入收费卡；Tatoeba、第三方 audio/句子不自动入库。**
+- 使用实际 owner 7391 私有词头+公开固定 `ipa-dict` 125,927 行的**真实精确比对**：**7299/7391（98.76%）匹配美式候选 IPA，92 未匹配，1114 多音**；分层高中 `3641/3674`、四级 `1637/1654`、六级 `1721/1755`、考研 `300/308`。多音必须和具体 sense 审核关联，不能直接选第一发音。
+- **真实 CI [42862811984](https://github.com/kim-1868/miaowu-english/actions/runs/42862811984) 成功**：5 项单测+固定上游真实样本 `abundant/record/apple/mr.` 中译/US IPA 双源均匹配，D1 写入 0、批准教学词义 0、未上传私人原词表与收费书。当前新代码仍是候选内容辅助工具，不是线上发布。
+- 本轮来源与私有统计见 [开源词卡来源审核](OPEN_SOURCE_WORDCARD_SOURCE_AUDIT_20261111.md)，私人 Library `/开发英语单词学习网站/统一词卡_待审工作区/开源词卡来源核查_20261111/`。**后续继续先审旧卡 1067、批量补无历史稿内容 6550、用真实书籍上下文确认词义，再执行受保护 Publisher 审核和 staging 自动配卡；不再做无关的 40 万普通词头扩表。**
+
+## 2026-11-11 · P1 实际推进：完整 1,150 义项重新优先排序、40 条原创例句已起草（最新）
+
+- **已完成私人审稿工作区更新，不是仅讨论**：历史旧 1,150 候选保持 1,150 个独立候选 hash，全部 2,206 个 old word ID 原封保留；和用户 7,391 第一阶段词头匹配，**1,067 个第一期内候选义项**、**83 个其他词义保留**。
+- 已构建可离线运行的「四级六级考研 · 1,150 历史义项优先审稿台」：**204 跨书高复用**（需重点确认同义和多义，勿自动合并）、**429 低冲突快审**、**434 多义/IPA 专项**、**83 非第一期暂存**。保留原 10 批筛选、候选身份、本地初审/导出功能，不与 OPS 自动同步；静态 HTML JSON 完整性 + JS 语法检查通过。
+- 从低冲突队列独立新写并保存**首批 40 条原创英中双语例句及释义建议**，在新工作台可直接看见。全部依旧是 `DRAFT_EDITORIAL_SUGGESTION_ONLY`，没有伪造审稿人或 Publisher 商用批准；独立 IPA 与内容语义审核、许可审查仍须完成才能转正式稳定 `sense_id`。
+- 私人 Library `/开发英语单词学习网站/统一词卡_待审工作区/四级六级考研_优先审稿1150/`：审稿工作台 HTML、1150 完整 JSONL、摘要 JSON、40 条新例句草稿 JSONL、两份审核说明已真实上传；**不要提交公有仓库**。
+- [P1 新主线交付标准](EXAM_FIRST_UNIFIED_WORDCARD_DELIVERY_20261111.md) 已同步。测试 D1 词头现 61,422（第 1 批余量任务 `42852308915` Success），正式 approved senses 仍为 0，旧书 23+5 当前实时版本尚未只读导出；剩余八批 40 万上游非考试词头不是本期阻塞点。下一实质步骤应为真实审核候选义项内容/签核而非继续建库、继续导无关词头。
+
+## 2026-11-11 最新主线决策：四级 + 六级 + 考研先交付（此段优先于历史状态）
+
+- 用户决定不再为 40 万上游普通候选词头等待，**第一期必须完成：四级、六级、考研合并去重的可售教学卡 → 当前真实已售小说配卡 → 新小说上传直接配已审卡**。雅思与其他罕见词汇延后。绝不变更已售学习记录或跨等级权限。
+- 已从项目**私人 Library 原始合并词表**实际逐行核实：**高中基础 3,674、四级新增 1,654、六级新增 1,755、考研新增 308，合计 7,391 个词头，无重复**；原始全五层 8,671，雅思独有 1,280 延后。来源数据的「逐级包含」是**项目人为首现分组**，不能当作各官方考试清单严格包含的事实。
+- 与上游 ECDICT 400,183 词头离线逐项核对，7,385/7,391（99.92%）匹配；**六个待审核缩写**：`mr.`, `ms.`, `no.`, `b.c.`, `p.m.`, `i.e.`。7,385 项均有 ECDICT 考试标签，已包含在测试 D1 首批 11,422 条**未审核禁用候选**中；**不是正式批准义项，已批准 sense 数仍是 0**。
+- 私有可重复审稿材料已存入 Library `/开发英语单词学习网站/统一词卡_待审工作区/四级六级考研_优先词表7391/`：完整 7,391 项的 `entry_id/考试优先层/来源标签` 私有 JSONL、完整性摘要和异常清单；**不得上传到公有仓库**。
+- [GitHub 受控余量第 1 批 run 42852308915](https://github.com/kim-1868/miaowu-english/actions/runs/42852308915) **成功**：新增 50,000 个非考试来源候选，测试 D1 词头现 61,422、词形 16,442，原有学习行数检查通过，加密备份 artifact ID `13779788753`。**后续余量第 2–9 批不再阻塞三级考试主线**；不要重复第 1 批。
+- [ECDICT 标签并集审计 run 42853466475](https://github.com/kim-1868/miaowu-english/actions/runs/42853466475)：3,846 CET4 标签词 + 1,956 CET6 新增 + 356 考研新增 = 6,158。这只反映 ECDICT 的三个**原始标签并集**，不是用户合并表 7,391 词头分母。两者必须明确区分，禁止混成教学完成率。
+- **以最新一期主线文档为准：** [EXAM_FIRST_UNIFIED_WORDCARD_DELIVERY_20261111.md](EXAM_FIRST_UNIFIED_WORDCARD_DELIVERY_20261111.md)。下一阶段投入内容审核（历史 1,150 严格义项候选/493 易审+657 重点审校），并行受控只读导出实际书籍版本，补六个缩写例外。编辑签核之前任何来源不能直接标为可售卡。
+- 原来的下方全部历史段落仅作复盘记录，凡与本段冲突（例如称第一批未执行、只读审计仍待批）均以本段和真实 CI 日志为准。
+
+## 2026-11-11 · 最新验证：真实测试 D1 词典候选独立只读审计已通过
+
+- [GitHub Actions 42848827545](https://github.com/kim-1868/miaowu-english/actions/runs/42848827545) 已在受保护环境审批后完成，原始日志：`STAGING_POSTINDEX_11422_ENTRIES_16442_FORMS_ONE_DISABLED_SOURCE_VERIFIED`、`STAGING_POSTINDEX_ZERO_APPROVED_SENSES_AND_ZERO_STUDY_BINDINGS`、`STAGING_POSTINDEX_HISTORICAL_BASELINE_4_59_9_262_VERIFIED`、`STAGING_POSTINDEX_READ_ONLY_NO_D1_MUTATION_NO_PRODUCTION_ACCESS`。**原先记为等待审批的只读门禁现已结束并通过。**
+- 测试 D1 当前 11,422 候选词头+16,442 词形仍禁用、正式批准 sense=0、历史书籍/学习行数仅验收计数一致。全量剩余 9 批离线回放已验证；**还未手动审批/执行第一批 50,000 行**。
+- 可进入独立人工批准的受控 staging 全量候选第 1 批，工作流 `.github/workflows/global-dictionary-staging-remainder-cohort-manual.yml`。必须由主人选择 feature 分支、批准 Environment，并遵守 D1 当日写入额度；已完成任务请勿重复运行。登录 GitHub 的浏览器执行权限尚不能由当前工具链代替用户授权，其他窗口不得虚构云端导入结果。
+- 详情见 `docs/GLOBAL_DICTIONARY_FULL_SOURCE_ROLLOUT_20261110.md`。**用户最终三大目标（全量已审教学卡、旧小说自动义项匹配、新上传自动配卡）尚未完成**；离线索引与数据库表通过不等于可以售卖。
+
+## 2026-11-10 · 全量词头离线分片完成，真实云端仍只有考试候选（优先读此段）
+
+- **新增可复现程序及真实 CI 验收**：完整 400,183 词头 + 56,898 词形候选均通过临时 SQLite 全量回放，但 staging D1 目前只真实写入 11,422 考试词头 + 16,442 词形；剩余 388,761 + 40,456 在 GitHub Actions 生成 9 个**未执行**批次，绝不把离线成功算成线上完成。
+- [全量离线验收 run 42850583900](https://github.com/kim-1868/miaowu-english/actions/runs/42850583900) 通过（6 项生成器测试、4 项安全工作流测试、九批哈希和行数校验）；更近期回归 [run 42850847556](https://github.com/kim-1868/miaowu-english/actions/runs/42850847556) 同样通过。已生成的候选 SQL 归档 artifact `13781435146`，没有用户、付费小说、商业例句等私有内容。
+- 为剩余九批新增 `.github/workflows/global-dictionary-staging-remainder-cohort-manual.yml`：仅 feature 分支/测试 D1，经 `staging-d1-schema-approval` 人工批准，逐批要求原表状态不变、文件哈希、每批全量加密备份先持久保存、再导入 ≤50,000 行。main 只注册 fail-closed 入口；**尚未启动任何一批真实余量导入**。
+- 独立只读验收 [run 42848827545](https://github.com/kim-1868/miaowu-english/actions/runs/42848827545) 已创建，但 GitHub 环境仍等待负责人审批，不能称该任务已验证成功。
+- 所有词头仍是 `teaching_ready=0` 的候选索引；**正式审核批准的教学义项 = 0**。1150 历史义项审核和当前四级23本/六级5本实际最新版本全文匹配、复习去重、V2 线上端到端都尚未完成。为避免旧文档误导，详细分批执行与阻断请参阅 [全量上线计划](GLOBAL_DICTIONARY_FULL_SOURCE_ROLLOUT_20261110.md)。
+- 后续若测试库出现异常，不能重跑已部分写入批次或直接删表，须先核实行数与加密备份。新书“无需 `words[]`”的技术方向成立，但只有词义、例句和许可真实审核通过后才可自动教学匹配；不同义项不能共用记忆状态。
+
+## 2026-11-10 23:46（北京时间）· 真实测试 D1 考试词头候选导入成功（最新）
+
+- **刚完成** GitHub Actions 手动审批运行 [42847388782](https://github.com/kim-1868/miaowu-english/actions/runs/42847388782)，job `129938463140` `Success`。37/37 SQL 导入批次成功：**11,422 个考试标签候选词头、16,442 条候选词形关联、1 个禁用来源**。
+- 源数据为此前已审计 ECDICT 全量索引的考试标记子集，并非 400,183 词头已经全部写入 Cloudflare；所有候选没有教学/商业审核，`teaching_ready=0`、`reviewed=0`、`source.enabled=0`、已批准稳定义项 **0**。
+- 本次导入前重新完成全量测试 D1 加密备份、离线 SQLite 回放、加密 Artifact 上传；加密备份 Artifact ID `13778877139`，本机长期保存仍待站长自行下载。
+- 测试 D1 原有基础记录计数前后均 `books=4,words=59,user_words=9,chapter_words=262`；正式 D1、正式 Worker 和线上 23+5 本小说未更改。GitHub 曾弹出审批门禁红色 UI 提示，但实际运行已成功，请勿重复运行。
+- 后续需只读核查导入内容、独立审稿 1150 个历史义项候选以及真实已上架小说全文匹配；新书自动补词卡的在线端到端仍未通过验收。详见 [最新 staging 执行记录](GLOBAL_DICTIONARY_STAGING_D1_RUNBOOK_20261110.md)。**本段覆盖下面较早「候选 SQL 已准备但还未写入」状态。**
+
+## 最新状态（2026-11-10 夜间 · 以后续验收为准）
+
+**测试 D1 结构与只读验收已真实完成**：GitHub Actions `42843020562` 成功执行迁移 013–018，共 10 张新词典表和 5 个防误配/未经审核保护触发器；`42843538233` 只读核对通过：已有 `books=4, words=59, user_words=9, chapter_words=262`，新词典表在数据导入前为空，未启用任何来源或正式教学卡。生产 D1 / 正式站均未改动。**较早段落中「测试表0/10、未真实迁移」现已过期，以本段和末尾 staging runbook 为准。**
+
+**全量来源在离线归档、考试优先候选导入包已实际生成**：ECDICT 上游审计索引 400,183 词头 + 56,898 词形关系仍只是来源候选（未独立教学审核）。实际 CI `42846439845` 已生成 **11,422 带考试标记的词头 + 16,442 未审核词形关系**，37 个分块 SQL，通过 10 项测试及本地 SQLite 回放；对应公开来源衍生 artifact `13779510062`。所有 `teaching_ready=0`、`source.enabled=0`，已审核教学 sense 数仍为 **0**。
+
+**下一项实际待办**：使用 `global-dictionary-staging-exam-candidate-import-manual.yml` 在 feature 分支、受保护 Environment 下进行用户明确审批的测试 D1 候选数据导入。默认分支只是不可写的工作流注册入口。导入前工作流必须再生成加密备份，核实历史行数及来源 SHA；导入后重查未发布状态与用户学习记录。当前**尚未执行远程候选数据导入**，因此不能宣称已建立在线可售词卡，也不能说四级23本/六级5本已经在线全部匹配。工作流和 QA 见 `docs/GLOBAL_DICTIONARY_STAGING_D1_RUNBOOK_20261110.md`，请其他窗口先读取本段避免引用旧状态。
+
+## 历史23本旧词卡候选全量匹配（新增；不是实时线上匹配）
+
+2026-11-06 的私人上架 P5 历史源含 CET4 **18**、CET6 **1**、考研 **4**，合计 **23 本**；已在**离线环境实际核对**其 **2,206 个历史 old word ID 全部能找到严格“词头+词性+中文释义”对应的 1,150 义项候选（2,206/2,206）**。严格文本跨书重复候选 384 组。已生成每本历史书的统计、2206 旧 ID→候选哈希/entry_id JSONL、Excel、ZIP；只存在私人 Library：
+
+`/开发英语单词学习网站/统一词卡_待审工作区/历史23本_旧卡全书候选匹配/`
+
+**至关重要的数据限制：** P5 源只包含每旧 ID **一条代表上下文**，所以可核对 **2206 条上下文代表样本**；其摘要中的 **6114 条 chapter_word 关联**只是历史数据库聚合数字，**并没有获得 6114 条逐章段落的完整锚点**。绝不能声称“6114/6114 锚点已完成匹配”。另外这23本不是今日的正式四级23本+六级5本；仍须使用受控 OPS Publisher 只读导出当前实际书版本、指纹与所有段落锚点并做完整校验，才能声称正式已上架小说真的匹配完成。
+
+公有可复用代码 `src/global-dictionary-historical-books-compare.js` 和 [审计说明](LEGACY_23_BOOK_SENSE_CANDIDATE_AUDIT_20261110.md)，均不触碰用户/权益/正式 D1，不包含收费正文。**已批准 stable sense_id 仍 0。**
+
+## B1.5 本轮新增：从词卡机器审核到正式签核的中间层（2026-11-10）
+
+**状态：开发分支可重复代码已提交，私有文件已真正生成；没有把任何未经许可审核的素材标成可售卡。**
+
+- `src/global-dictionary-editorial-signoff-gate.js` + `scripts/check-private-reviewer-decisions.mjs`：1150 条候选的专用“审核决议模板”，审核人须逐一说明 UK/US IPA、POS、词义、双语例句自然度、**商业来源/双语例句权利**、旧 ID 同义项身份等 8 类审核项目与依据；仅输出「可交运营台最终签核」候选。即使 JSON 所有勾选为 true，也 **不** 自动创建 `approved_sense_id`、`teaching_ready` 或用户掌握记录。具体见 [B1.5 审稿签核方案](GLOBAL_DICTIONARY_B15_EDITORIAL_SIGNOFF_GATE_20261110.md)。
+- 用户私人 Library **`/开发英语单词学习网站/统一词卡_待审工作区/全量1150义项_B15商用终审决议/`**：实际 1150 条逐义项空白签核 JSONL、独立机器建议 JSONL、源内容 SHA 和 ZIP。源 SHA256 = `54360cf47197b75ebe3a102f3abce99ba901b2bdb8dafb22f2f09e59b1759e21`。**不要把私人例句、旧 Word ID、收费内容上传公有 GitHub**。
+- `src/global-dictionary-fast-review-triage.js`：对 1150 条进行真实审核复杂度分流——**493 条**旧卡材料较少冲突（单一 IPA 英美候选、标准单词词性、无显式重复/多义冲突、例句含登记词形），另 **657 条**重点检查。原有 2206 个 old word ID 全部保留；**493 绝不代表已通过教学或许可审核**。真实分流文件在私人 Library `/开发英语单词学习网站/统一词卡_待审工作区/B15按审核难度分流/`。
+- 发现额外写入安全风险并修复：`src/ops-import.js` 现不仅拒绝未经审核的 `gdict_` 主词头和 `v2_tmp_` 临时 ID，还**拒绝伪造的 `gds_` 稳定义项 ID 通过普通 V1 上传接口写库**。未来真正的 V2 上传需经过独立、服务端审核和权限约束，不能绕过已有用户学习键。
+- **真正已批准教学义项依然 0**：人工及法务来源审阅、由认证 Publisher 最终签署的稳定 `sense_id` / 幂等 D1 写入仍待实施。真实测试 D1 schema 尚为 **0/10**，用户当前正式站未修改。
+- Cloudflare Time Travel 可以按 UTC 时间或 bookmark 恢复，属于有期限的恢复手段，不等于长期脱机备份，真实 staging migration 必须记录恢复点；D1 Write Secret `CLOUDFLARE_STAGING_D1_WRITE_TOKEN` **未新授权，保持旧 Read Secret 不变**。参见 [仅手动测试库迁移门禁](DICTIONARY_STAGING_MANUAL_MIGRATION_GATE_20261110.md)。
+
+## 当前最靠前的项目结论：1150 历史义项全部分为十批（2026-11-10）
+
+**这一步已实际产生私人文件，不再只是工作计划。** 历史 2,206 个旧卡 ID 对应的 1,150 个严格义项候选已经完整编排成 **10 个不重不漏的离线审稿批次**：第 1–9 批各 120 条，第 10 批 70 条。第一批原有 120 个保留，另外 1,030 个已分别编排；覆盖旧卡 ID 关联总计正好 2,206。包含全部义项的独立 HTML 审稿工作台（搜索、分级、批次、风险过滤和本地初审）、Excel 审核总表、完整 JSONL、10 份分批 JSONL、质量统计和 ZIP。
+
+- **私人 Library 原始路径：** `/开发英语单词学习网站/统一词卡_待审工作区/全量1150义项_十批完整审稿/`。本次所有文件已保存且 ZIP 完整性检验通过；其他聊天用 Files 可以直接读取，不要将私有历史教学例句/旧 ID 上传 GitHub 公有仓库。
+- **可重复代码：** `src/global-dictionary-complete-review-plan.js`（由 1150 候选和固定第一批生成后九批，强制全量去重、拒绝无效或已审核身份）；[项目说明](GLOBAL_DICTIONARY_ALL_1150_TEN_BATCHES_20261110.md)。
+- **准确区分：** “历史义项排班 1150/1150”≠“正式审核 1150/1150”；当前正式教学义项 `approved_sense_id` **0**，用户与正式/测试 D1 均未因该工作区改变。
+- **真正还未完成四大关**：（1）教学义项释义、英美音标、原创中英例句、商业来源许可终审与稳定 ID；（2）Cloudflare staging D1 在受控独立写授权+备份门禁后完成 013–018 真实迁移；（3）发布者安全只读导出当前 CET4 23 + CET6 5 本全部受保护正文，建立版本化义项匹配并验证既有学习状态不丢；（4）未来新书无 `words[]` 的真实 V2 导入→词义锚点→阅读/复习联动→多端体验验收，最后按审批上线正式站。
+
+## 2026-11-10 本轮实际交付（较早计划里的“尚待私有草稿运行”已更新）
+
+- **实际生成，不再仅是脚本：**从私人 Library 历史快照 `miaowu-english-prod-2026-11-06.p5-content-review.json` 成功恢复原完整 `2206` 个旧词卡 ID；在私有工作区生成 **920 主词条教学草稿、1150 义项审核工作单**，保留每个旧 ID、各义项的 UK/US 音标候选、原有双语例句和搭配。每条继续 `reviewed:false`、`lesson_approved:false`，本次正式批准统一主课卡数仍是 **0**。
+- 用户私人 Library **`/开发英语单词学习网站/统一词卡_待审工作区/`** 已保存真实 JSONL 数据文件、QA 统计和一键下载 ZIP；私有数据、收费小说正文、顾客学习记录**不上传公共 GitHub**。另一聊天可以用 Files 按该路径直接查找。
+- 实际统计：920 词头、1150 严格文本义项、384 跨旧 ID 的同文本重复组、1056 个额外重复旧卡、180 个多义项主词头、173 组音标不一致候选；历史发布书籍 **CET4 18、CET6 1、考研 4**，这不是实时书架 **CET4 23+CET6 5**。
+- 已使用历史书档案对应小说实际跑离线义项匹配：六级 **《末班车前请回信》111/111** 同文本、词性候选，跨其他旧小说复用候选 **45**，IPA 冲突 **35**；考研 **《第十三张底片》122/122**，跨其他旧小说候选 **65**，IPA 冲突 **55**。两本与旧快照同源，**不能宣称这是当前正式站全量匹配或正式义项审核通过**；不覆盖任何旧学习进度。
+- 可复用程序：`src/global-dictionary-published-legacy-compare.js` / `scripts/match-published-novel-to-private-legacy.mjs`，将存量书的每个目标词映射为候选，保证 headword+POS+中文义项严格匹配、旧 ID 和跨书候选留痕、版本化审校；[对应说明](CET4_CET6_HISTORICAL_MATCHING_READONLY_20261110.md)。
+- 013–018 六份 SQLite 迁移已在一次性测试库建立 **10 张**新增表、核验重复执行不覆旧数据；又测试迁移中断和全部执行后的本地恢复，CI 通过。仅是**离线演练**，Cloudflare staging D1 尚未迁移。详见 [迁移模拟计划](DICTIONARY_STAGING_013_018_MIGRATION_DRYRUN_20261110.md)。
+- 真实 staging D1 Read Token 已验证、Time Travel bookmark 读取已成功；只读查询显示真实统一词典表 **0/7**。实际改 test D1 仍需要备份/恢复门禁及独立的 D1 Write 权限。**不准动生产 D1**。
+
+## 首批120义项与全量1150机器质检（当前有效）
+
+**已实际完成私有整理和机器质检，尚未通过人工教学签核。**
+- 从 1,150 条历史严格义项中选 **120 条首批审稿**：45 条高跨书重复、35 条四级首现新级词、25 条六级首现新级词、15 条雅思/考研/原考试表未命中；涉及 113 个英文词头、576 个历史旧 word ID，74 条 IPA 冲突项。已生成完整 JSONL/CSV/离线 HTML 审稿工具/ZIP。
+- 私有 Library 路径：`/开发英语单词学习网站/统一词卡_待审工作区/首批120义项_分级审核/`。HTML 可以离线搜索、标记“初审/待修改”、记录笔记并导出 JSON，**不能直接审批正式课程**。
+- 另外对**全部 1,150 严格义项**完成机器质量排查：410 条在同词头下存在多个义项文本、384 组旧 ID 同文本、173 组英美 IPA 分歧、72 条需要拆分或复核的复合/特殊词性。1,148/1,150 条能在英语例句中找到原词头或原考试 CSV 所载词形；另 2 条规则推断 `reshape→reshaped` 与 `reunite→reunited`，需进一步核对。**文本形式命中不代表例句自然、中文释义准确或商业授权完成。**
+- 私有 Library 路径：`/开发英语单词学习网站/统一词卡_待审工作区/全量1150义项_机器质检/`，包含全量 QA JSONL、聚合统计、报告、ZIP。**不要向公有 GitHub 提交收费小说上下文或私人词卡原始记录**。
+- 公开 GitHub 只保存安全的复现规则与 QA 测试：`src/global-dictionary-review-batches.js`、`scripts/build-private-dictionary-review-batch.mjs`、`src/global-dictionary-private-qa.js`、`tests/v12-global-dictionary-review-batches.test.mjs`、`tests/v12-global-dictionary-private-qa.test.mjs`，对应 [首批文档](PRIVATE_WORDCARD_EDITORIAL_BATCH120_20261110.md) / [全量机器质检文档](PRIVATE_1150_WORDCARD_QA_20261110.md)。
+- 严格门禁保持：**被独立商业+教学审核的 `sense_id` 为 0**；Cloudflare test D1 字典表当前真实 0/10；没有线上迁移/正式发布或旧用户学习状态合并。必须先人工审核后才允许生成稳定归一义项并进入 staging。
+
+## 用户要求的 3 个最终目标（不要拆丢）
+1. **完成全量词卡**：把统一英文词典来源覆盖四级、六级、考研、雅思乃至后续小说新词；提供准确英/美音标、分词性分义项中文释义、自然原创中英例句和适用搭配，审核商业来源与质量后成为可售教学卡。
+2. **已上架小说全面关联**：正式四级 23 本、六级 5 本已经公开可见。读取真正当前受权限保护的正文版本，关联统一词典，不重写旧 book/chapter/word ID、不破坏已有书架、用户已学/收藏/复习/订单/权益；复现同义项可共用状态、异义项必须独立。避免 409 冲突并保留可回滚修订。
+3. **后续上传自动匹配无需单独词卡**：小说 Agent 写剧情与英文学习目标及语境标注，上传 V2 可不包含 `words[]`；系统从**已审核**教学词卡库回填词卡信息。未审、缺词、歧义先人工确认，再形成可复用卡；禁止悄悄写入不准确或未经许可的词卡。
+
+## 真正完成了哪些词卡/来源
+
+- 上游 ECDICT 全量词头候选 **400,183**、词形候选 **56,898** 已离线解析审计；存在 GitHub Actions artifact，复核及获取方法见 [全量来源审计](GLOBAL_DICTIONARY_FULL_UPSTREAM_B1_REHEARSAL_20261110.md)。**它们全部是来源索引，不是已审核教学卡**；真实 Cloudflare staging D1 尚未导入。
+- 独立编辑词卡草稿 **238**（全部 `reviewed:false`、缺美式音标）；仓库下 `content/lexicon` 原本的四个文件，均含英式音标、例句、基础中文释义。
+- 两份历史小说包共 **105** 条词卡来源记录，含 **38** 条 *旧词卡 ID 和全部内容完全相同* 的跨书复用，去重后 **67 张**。两份包字段完整（含英美音标、双语例句），**尚不能代表生产站最新版本或独立教学签核**。
+- 所以共计 **343 条原始来源记录 → 305 张旧 ID 去重候选卡**（238 草稿 + 67 历史样本），其中完整字段 67，缺美音 238。**独立审核批准成为统一主词卡 0 张**；切勿宣称“已经完成 40 万张词卡”或“305 张已可自动上架”。
+
+### 跨窗口请直接读取的数据
+- [词卡源数据登记册（305 条完整 JSONL 记录）](../content/lexicon/wordcard-existing-source-register-20261110.jsonl)：包含原 ID、词头、POS、中文义项、UK/US IPA、双语例句、搭配、来源文档/书目、候选义项键和严格未审核标记。
+- [来源/去重数量与 SHA 登记](../content/lexicon/wordcard-existing-source-register-manifest-20261110.json)。
+- 不能因为一条记录在历史小说包中出现过，就让其 `lesson_approved=true`；审核需保留可追踪审核人、许可和完成时间。
+
+## 2026-11-06 历史私有正式书库：另有 2206 张旧卡（不要与上述 305 张源登记混淆）
+
+**重大发现：** 项目私人 Library 已保存 `miaowu-english-prod-2026-11-06.p5-content-review.json`。该快照的 `cards` 是 2026-11-06 当时正式已上架小说引用的 **2206 个不同旧 word ID**，涉及当时 23 本跨等级小说、6114 条章节目标词关联，实际去重 920 英文词头、1150 个严格文本义项候选、384 组重复词义文本、1056 个重复旧 ID 额外副本；卡片英美音标/例句字段均非空。此快照与今天四级 23 本、六级 5 本的**实时公开书架不可混作同一统计口径**。
+
+**数据归属与读取方式：** 私有旧卡/收费小说上下文只留在 ChatGPT Library，不复制公共 GitHub。其他窗口在 Library 搜索准确文件名直接读取；本仓库仅保存不泄漏正文的 [摘要与只读脚本](LEGACY_20261106_PUBLISHED_CARDS_PRIVATE_SOURCE_20261110.md)。这是填充统一教学卡、回溯老身份、修复跨书重复问题的首要历史复用来源；仍需当前正式版及人工义项审核，不能将 1056 个重复旧 ID 直接合并用户复习状态。
+
+## 2026-11-10 最新 B1.3–B1.4 实施进度及授权阻断（优先阅读）
+
+**本段覆盖其他较旧的“一词头只有一份掌握状态”说法。**
+- **总原则：英文词头只有一张展示主卡，但学习状态必须按稳定的已审核义项 sense_id 独立**，相同已审义项跨书不重复学习；异义项分别学习。
+- 已提交 `db/018_global_dictionary_reviewed_senses.sql`、`src/global-dictionary-sense-anchor.js`、`src/global-dictionary-sense-study-rehearsal.js`：已审 sense_id、旧卡 ID 审核关联、章节锚点绑定和按义项合并历史复习的**只读演练**。全部尚未迁移生产/预览数据库。
+- 已提交 `scripts/build-private-historical-sense-worklist.mjs` 和 `scripts/build-private-historical-lesson-drafts.mjs`：从本人的历史私有词卡快照一次性制作 **920 个主词条草稿 / 1,150 个严格义项草稿**（输出于用户本地私有目录，代码已提交；不是已经执行完整私有生成或独立审核完成）。保留 2,206 个旧 ID，禁止自动审核。
+- 我们对历史快照实际再次统计：384 组重复文本候选、1,056 张额外重复卡、**180 个有多个文本义项的词头**、**173 组英美音标存在差异的义项候选**。优先审核高重复、多义项和音标冲突。
+- V2 小说 `/api/ops/import/dictionary-v2/preflight` 已增加 `sense_preflight`，用 018 表中真实审核通过的 sense_id 按章节/段落/位置对齐语境。旧版兼容主卡仍可产出**草稿**，但 `ready_for_sense_study=false` 时不能认作学习状态安全。
+- GitHub CI 截至 2026-11-10 S1 [run 42805336251](https://github.com/kim-1868/miaowu-english/actions/runs/42805336251) 707/708 通过，0 失败、1 跳过；后续提交请以最新 SHA CI 为准。
+- **Cloudflare 真实预览 D1 只读检查未通过**：[Run 42805328444](https://github.com/kim-1868/miaowu-english/actions/runs/42805328444) 判定 `STAGING_D1_READONLY_PROBE_FAILED_D1_TOKEN_PERMISSION`。GitHub Secret 虽存在，但当前 Token 对 D1 远程查询权限不足；不可因此假称已做迁移或实际预览验收。需项目负责人在 Cloudflare 重新授予**仅测试 D1 miaowu-english-test** 所需读写权限/重设安全 Token 后方可执行备份、迁移。不要在公开仓库或聊天发送 Token。
+- 当前正式四级 23 本、六级 5 本的线上受保护正文仍待运营发布者安全导出。不允许从 2026-11-06 跨等级 23 本旧快照推断实时当前覆盖率。
+
+## 统一身份不变规则
+
+**一个英文主词头可以展示一张主卡，但记忆和复习进度按已审核的 `sense_id` 单独计算**。例如：
+- record n. “记录” 与 record v. “录制” 各有独立学习状态。
+- customer “顾客” 与 “消费者”是 *可能同义*，不得仅凭英文同形和中文相近自动并成一个已学记录。
+- 相同旧 word ID 且所有卡字段相同的跨书复用必须保留，不重复建立一张新旧卡或让读者重新记忆。
+- `sense_key_candidate` 是机器审核候选，不等于正式稳定 `sense_id`；应增设经过审核的义项身份与旧词义映射，再验收跨书进度。
+- 等级只标注学习来源，不允许跨商品等级自动取得付费权益。
+
+## 现有自动化能力 / 缺口
+
+已开发（**代码级测试通过、尚未部署真实预览/生产**）：
+- `src/global-dictionary-matcher.js` 词头与词形识别、缺词/多原形待审判断。
+- `src/global-dictionary-novel-v2.js` 小说无需 `words[]`，通过标注 `{surface:"record",gloss:"录制"}` 使用已审核统一词典回填主卡；无人工审核不能自动放行。
+- `src/global-dictionary-cross-grade-sense-review.js` 跨等级词义候选，无任何自动合并学习状态。
+- `public/ops-cet4-export.js` 与运营台的 CET4/CET6 只读批量导出开发代码；不是已部署的功能。
+- `scripts/audit-cet4-published-archive-offline.mjs` 支持 `--category cet4|cet6`、`--batch` 当前导出包离线审查。
+- 已核实两本 CET4 历史备份：510 目标标注、194 实际引用词头、14 共同词头（13 中文义项文本一致）；CET6《末班车前请回信》历史修复版：14 章、111 候选卡、279 标注，其中 5 段无学习目标、六级真正新增级词密度低。
+
+尚未实现/验收（**不能误报已完成**）：
+1. 将 400,183 词头候选变成持久可用的审核分层索引；按来源许可批次、优先四级六级核心义项，补全英美音标、自然例句、稳定 `sense_id`，运行全量质量/同义词审核。不能强迫一次性审核 40 万条才允许逐级交付；对新词保留随用随审机制。
+2. 凭发布者权限安全导出真实 23 本 CET4 和 5 本 CET6 当前受保护正文，校验版本 SHA，按义项建立旧 word ID 到新 `sense_id` 映射审稿清单，不能复用旧快照冒充真实全量覆盖。
+3. 真正 Cloudflare **staging D1 先备份→013–017 迁移→来源及已审核义项导入→回滚**。
+4. 运营台自动匹配新 V2 小说、消歧、上架、版本化 409 修订真实测试；跨设备阅读、收藏、掌握、剧情回声/快速刷词同步、购买/作废/恢复权益安全测试。
+5. **“连英文学习目标都不标注、上传任意原始小说自动挑词并判断语义”尚未完成**。当前 V2 免 `words[]`，但仍需要 `surface + gloss` 标记。若用户要完全零标注，还需词汇提取与语境义项自动推荐及低信心审核门禁。
+
+## 下一个窗口执行顺序
+
+先读本文件、两份词卡 JSONL/manifest → 建立审核 `sense_id` 与来源许可证审查模块 → 从 305 候选和现有授权样书开始高质量教学卡补齐，同时维护 400k 来源检索索引 → 预览站灰度导入 → 收集 23+5 本正式小说受控版本匹配 → 修正缺词及六级新级词密度 → 完成复习状态/权益/回滚验收 → 经站长确认再上线。
+
+**不得提交 `user_words` / 订单 / 激活码 / OPS_TOKEN 等敏感数据到公共 GitHub，也不得暗中覆盖历史卡 ID、学习进度或在线 D1。**

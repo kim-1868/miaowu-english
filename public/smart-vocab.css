@@ -1,0 +1,92 @@
+/* Optional smart-vocabulary lesson: isolated styles and no overrides to old cards. */
+.flash-choices.mw-smart-three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.mw-smart-new-label{font-size:10px;color:#94617a;letter-spacing:.08em}
+#smartVocabStage[hidden],#flashcardTrainer[hidden]{display:none!important}
+#smartVocabStage{margin:18px 0 24px;padding:23px;border:1px solid #dfcdc3;
+ border-radius:23px;background:#fffaf4;max-width:100%;box-sizing:border-box}
+.mw-smart-top{display:flex;justify-content:space-between;gap:12px;align-items:start}
+.mw-smart-top h2{margin:7px 0 6px;color:#663b4c;font-size:24px;line-height:1.25}
+.mw-smart-top p{font-size:13px;color:#896d6a;line-height:1.7;margin:0}
+.mw-smart-exit{flex:none;border:1px solid #d6bab9;border-radius:11px;background:transparent;
+ padding:9px 12px;color:#754658;cursor:pointer}
+.mw-smart-levels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:24px}
+.mw-smart-level{display:flex;flex-direction:column;gap:7px;text-align:left;padding:18px;
+ border:1px solid #dfc8c6;border-radius:15px;background:#fff5f2;cursor:pointer}
+.mw-smart-level strong{font-size:17px;color:#6c4054}
+.mw-smart-level small{font-size:12px;color:#946f79}
+.mw-smart-level.mw-smart-recent{border-color:#af7c91}
+.mw-smart-progress-label{display:flex;justify-content:space-between;margin:23px 0 8px;
+ font-size:12px;color:#8b6e77}
+.mw-smart-track{height:7px;background:#f1e1df;border-radius:10px;overflow:hidden}
+.mw-smart-track span{display:block;height:100%;background:#b4778a;transition:width .15s}
+.mw-smart-paper{border:1px solid #e6d4ce;border-radius:18px;background:#fffefa;
+ padding:24px 16px;margin-top:18px;text-align:center}
+.mw-smart-kind{font-size:11px;color:#9c7282;letter-spacing:.05em}
+.mw-smart-word{font-size:clamp(27px,5vw,42px);color:#653b50;
+ font-weight:700;line-height:1.3;margin-top:15px;overflow-wrap:anywhere}
+.mw-smart-pronounce{font-size:13px;color:#826976;margin:10px 0 15px}
+.mw-smart-pronounce button{background:none;border:0;color:#7a465f;cursor:pointer;
+ font-size:13px;padding:8px}
+.mw-smart-memory{font-size:13px;color:#9b7d83;line-height:1.75;margin:12px 0 17px}
+.mw-smart-detail{border-top:1px solid #eadbd7;text-align:left;margin-top:18px;
+ padding-top:15px;line-height:1.7;color:#634454}
+.mw-smart-meaning{font-weight:700;font-size:17px}
+.mw-smart-detail p{margin:8px 0 3px;font-size:15px}
+.mw-smart-detail small{color:#987684;font-size:13px}
+.mw-smart-collocations{margin-top:14px;padding:10px 12px;border-radius:12px;
+ background:rgba(184,137,151,.08);text-align:left}
+.mw-smart-collocations strong{font-size:12px;color:#8a6172}
+.mw-smart-collocations p{font-size:12px;line-height:1.7;margin:6px 0;color:#846471}
+.mw-smart-collocations span{font-weight:600;color:#75495e}
+html[data-theme="dark"] .mw-smart-collocations{background:rgba(208,159,184,.1)}
+html[data-theme="dark"] .mw-smart-collocations p,
+html[data-theme="dark"] .mw-smart-collocations span{color:#f2d5e1}
+.mw-smart-bookmark{border-top:1px solid #f0e6e1;padding-top:12px;margin-top:18px}
+.mw-smart-bookmark button{border:1px solid #ddc6c9;border-radius:11px;
+ background:transparent;color:#855267;padding:9px 13px;cursor:pointer}
+.mw-smart-votes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:17px}
+.mw-smart-button{border:1px solid #cfa9b5;background:#fff8f5;color:#78485b;
+ border-radius:12px;padding:12px 14px;cursor:pointer;font-size:14px;font-weight:600}
+.mw-smart-button.primary{background:#824b64;color:#fff;border-color:#824b64}
+.mw-smart-button:hover:not(:disabled),.mw-smart-level:hover{filter:brightness(.98)}
+.mw-smart-button:disabled,#smartVocabStage button:disabled{opacity:.6;cursor:wait}
+.mw-smart-feedback{margin:17px 0 12px;color:#637f64;font-size:13px;line-height:1.7}
+.mw-smart-error{color:#a74446;font-size:13px;line-height:1.7}
+.mw-smart-footnote{font-size:12px;color:#987985;line-height:1.7;margin-top:13px}
+.mw-smart-finish{text-align:center;padding:30px 12px}
+.mw-smart-finish strong{display:block;font-size:45px;color:#754358}
+.mw-smart-finish span,.mw-smart-finish p{color:#94717e}
+.mw-smart-loading{padding:23px 0;color:#886f75}
+.mw-smart-guide{border:1px solid #e1c7c0;border-radius:20px;
+ padding:22px;width:min(420px,calc(100vw - 28px));max-width:calc(100vw - 28px);
+ color:#694354;background:#fffaf4;box-sizing:border-box}
+.mw-smart-guide::backdrop{background:rgba(38,25,30,.45)}
+.mw-smart-guide h2{font-size:21px;margin:0 0 10px}
+.mw-smart-guide p,.mw-smart-guide li{font-size:14px;line-height:1.75}
+.mw-smart-guide ul{padding-left:21px}
+.mw-smart-guide button{border:0;background:#82536b;border-radius:12px;
+ padding:12px 17px;width:100%;color:#fff;cursor:pointer}
+#smartVocabStage button:focus-visible,.mw-smart-guide button:focus-visible{outline:3px solid #c59c78;outline-offset:3px}
+@media(max-width:870px){.flash-choices.mw-smart-three{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){
+ .flash-choices.mw-smart-three{grid-template-columns:1fr}
+ #smartVocabStage{padding:14px;border-radius:17px}
+ .mw-smart-top h2{font-size:20px}
+ .mw-smart-paper{padding:18px 12px}
+ .mw-smart-levels{grid-template-columns:1fr}
+ .mw-smart-exit{padding:7px 8px}
+}
+@media(prefers-reduced-motion:reduce){.mw-smart-track span{transition:none}}
+html[data-theme="dark"] #smartVocabStage,html[data-theme="dark"] .mw-smart-guide{
+ background:#302932;border-color:#65525d;color:#eedadd}
+html[data-theme="dark"] .mw-smart-paper{background:#342d38;border-color:#69565f}
+html[data-theme="dark"] .mw-smart-top h2,html[data-theme="dark"] .mw-smart-word,
+html[data-theme="dark"] .mw-smart-level strong,html[data-theme="dark"] .mw-smart-meaning{color:#f6c9d8}
+html[data-theme="dark"] .mw-smart-paper p,html[data-theme="dark"] .mw-smart-top p,
+html[data-theme="dark"] .mw-smart-footnote,html[data-theme="dark"] .mw-smart-pronounce,
+html[data-theme="dark"] .mw-smart-detail{color:#ddc5cb}
+html[data-theme="dark"] .mw-smart-level,html[data-theme="dark"] .mw-smart-button:not(.primary){
+ background:#473741;border-color:#6f5964;color:#ffe1ea}
+html[data-theme="dark"] .mw-smart-bookmark button,html[data-theme="dark"] .mw-smart-exit{
+ border-color:#8a6c7c;color:#ffd3e4}
+html[data-theme="dark"] .mw-smart-track{background:#594753}

@@ -1,0 +1,104 @@
+name: P0 protected TEST D1 OPS Publisher 021 schema with full backup
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_target:
+        type: string
+        required: true
+        description: Enter miaowu-english-test
+      confirm_uuid:
+        type: string
+        required: true
+        description: Enter the exact TEST D1 UUID
+      confirm_operation:
+        type: string
+        required: true
+        description: Enter APPLY_TEST_021_OPS_PUBLISHER_SCHEMA_ONLY
+      acknowledge:
+        type: string
+        required: true
+        description: Enter BACKUP_RESTORE_AND_NO_CUSTOMER_WRITES
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: p0-test-021-add-only-write
+  cancel-in-progress: false
+jobs:
+  protected-021-test-add-only:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109' &&
+      github.event_name == 'workflow_dispatch'
+    environment:
+      name: staging-d1-schema-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Verify one-time exact TEST target intent before D1 access
+        env:
+          TARGET: ${{ inputs.confirm_target }}
+          UUID: ${{ inputs.confirm_uuid }}
+          OPERATION: ${{ inputs.confirm_operation }}
+          ACK: ${{ inputs.acknowledge }}
+        run: |
+          set -euo pipefail
+          test "$TARGET" = 'miaowu-english-test'
+          test "$UUID" = '88a817cb-23bb-4ae4-bcb8-92286c4165d4'
+          test "$OPERATION" = 'APPLY_TEST_021_OPS_PUBLISHER_SCHEMA_ONLY'
+          test "$ACK" = 'BACKUP_RESTORE_AND_NO_CUSTOMER_WRITES'
+          echo 'P0_021_EXPLICIT_USER_TEST_ONLY_APPROVAL_CONFIRMED'
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: SQLite rehearsal, exact scope and Publisher bridge regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check scripts/v12-ops-test-021-verify.mjs
+          bash -n scripts/v12-ops-test-021-workflow.sh
+          node --experimental-sqlite --test tests/v12-ops-test-021-verify.test.mjs
+          node --experimental-sqlite --test tests/v12-ops-dictionary-publisher-bridge.test.mjs
+      - name: Install isolated Wrangler for TEST D1 only
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Protected remote TEST read-only baseline and recovery bookmark
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: bash scripts/v12-ops-test-021-workflow.sh preflight
+      - name: Produce and locally restore a fresh encrypted full TEST backup
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          STAGING_D1_BACKUP_PASSPHRASE: ${{ secrets.STAGING_D1_BACKUP_PASSPHRASE }}
+        run: bash scripts/v12-ops-test-021-workflow.sh backup
+      - name: Upload protected AES256 backup BEFORE any schema write
+        uses: actions/upload-artifact@v4
+        with:
+          name: p0-test-021-full-before-aes256
+          path: ${{ runner.temp }}/p0-021-full-before.gpg
+          compression-level: 0
+          retention-days: 30
+          if-no-files-found: error
+      - name: Apply ONLY the exact TEST 021 additive schema (never migrations apply)
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: bash scripts/v12-ops-test-021-workflow.sh apply
+      - name: Remote TEST integrity and unchanged historical counts
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: bash scripts/v12-ops-test-021-workflow.sh after
+      - name: Always purge plaintext and temporary encrypted files
+        if: always()
+        shell: bash
+        run: bash scripts/v12-ops-test-021-workflow.sh cleanup

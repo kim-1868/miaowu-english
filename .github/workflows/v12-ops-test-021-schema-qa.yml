@@ -1,0 +1,39 @@
+name: P0 TEST-only OPS 021 migration and backup workflow QA
+on:
+  pull_request:
+    paths:
+      - scripts/v12-ops-test-021-verify.mjs
+      - scripts/v12-ops-test-021-workflow.sh
+      - tests/v12-ops-test-021-verify.test.mjs
+      - .github/workflows/v12-ops-test-021-protected-schema.yml
+      - .github/workflows/v12-ops-test-021-schema-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - scripts/v12-ops-test-021-verify.mjs
+      - scripts/v12-ops-test-021-workflow.sh
+      - tests/v12-ops-test-021-verify.test.mjs
+      - .github/workflows/v12-ops-test-021-protected-schema.yml
+      - .github/workflows/v12-ops-test-021-schema-qa.yml
+permissions:
+  contents: read
+jobs:
+  sql-migration-rehearsal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Exact 021 SQL and historical-count integrity test
+        run: |
+          set -euo pipefail
+          node --check scripts/v12-ops-test-021-verify.mjs
+          bash -n scripts/v12-ops-test-021-workflow.sh
+          node --experimental-sqlite --test tests/v12-ops-test-021-verify.test.mjs
+          node --experimental-sqlite --test tests/v12-ops-dictionary-publisher-bridge.test.mjs
+          test "$(grep -Fc 'workflow_dispatch:' .github/workflows/v12-ops-test-021-protected-schema.yml)" = 1
+          echo 'P0_021_TEST_ONLY_NO_REMOTE_D1_ACCESS_IN_QA'

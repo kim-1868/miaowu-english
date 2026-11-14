@@ -1,0 +1,139 @@
+name: V1.2 real 2-card MIT Britfone UK IPA and one-sense editorial review
+on:
+  pull_request:
+    paths:
+      - .github/workflows/v12-real-two-card-britfone-uk-editorial-review.yml
+      - scripts/v12-real-two-card-britfone-uk-editorial-review.mjs
+      - tests/v12-real-two-card-britfone-uk-editorial-review.test.mjs
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-real-two-card-britfone-uk-editorial-review.yml
+      - scripts/v12-real-two-card-britfone-uk-editorial-review.mjs
+      - tests/v12-real-two-card-britfone-uk-editorial-review.test.mjs
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: v12-britfone-real-one-sense-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  BRITFONE_COMMIT: 1062be14adc96c358f2087ac5449d72130c7a6f4
+jobs:
+  public-mit-uk-pronunciation-source-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch pinned public Britfone MIT dataset, never third-party GPL en_UK
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --silent --show-error --retry 2 \
+            "https://raw.githubusercontent.com/JoseLlarena/Britfone/$BRITFONE_COMMIT/britfone.main.3.0.1.csv" \
+            -o /tmp/britfone.main.3.0.1.csv
+          curl --fail --location --silent --show-error --retry 2 \
+            "https://raw.githubusercontent.com/JoseLlarena/Britfone/$BRITFONE_COMMIT/LICENSE.txt" \
+            -o /tmp/britfone.LICENSE.txt
+          test -s /tmp/britfone.main.3.0.1.csv
+          test -s /tmp/britfone.LICENSE.txt
+          node --test tests/v12-real-two-card-britfone-uk-editorial-review.test.mjs
+          rm -f /tmp/britfone.main.3.0.1.csv /tmp/britfone.LICENSE.txt
+  protected-real-one-sense-uk-us-audit:
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    needs: public-mit-uk-pronunciation-source-qa
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Review ONE real shared sense with two old cards against pinned independent MIT British source; encrypt results
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_PASSPHRASE: ${{ secrets.PRODUCTION_D1_METADATA_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${GH_TOKEN:?GITHUB_ARTIFACT_READ_REQUIRED}"
+          : "${EVIDENCE_PASSPHRASE:?PRIVATE_ARTIFACT_PASSPHRASE_REQUIRED}"
+          test "${#EVIDENCE_PASSPHRASE}" -ge 32
+          umask 077
+          p="$RUNNER_TEMP/real-uk-ipa-private"
+          mkdir -m 700 "$p"
+          trap 'rm -rf "$p"' EXIT
+          printf '%s' "$EVIDENCE_PASSPHRASE" > "$p/pass"
+          unset EVIDENCE_PASSPHRASE
+          curl --fail --location --silent --show-error --retry 2 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/kim-1868/miaowu-english/actions/artifacts/13971555687/zip" \
+            --output "$p/private-archive.zip"
+          test "$(unzip -Z1 "$p/private-archive.zip" | wc -l | tr -d ' ')" = 1
+          unzip -Z1 "$p/private-archive.zip" | grep -Fxq \
+            'v12-real-two-card-full-snapshot-us-ipa-audit.gpg'
+          unzip -p "$p/private-archive.zip" \
+            'v12-real-two-card-full-snapshot-us-ipa-audit.gpg' \
+            > "$p/old-private.gpg"
+          if ! gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$p/pass" --decrypt "$p/old-private.gpg" \
+            > "$p/old-private.tar.gz" 2> "$p/old-decrypt.log"; then
+            echo 'REAL_ONE_SENSE_PREVIOUS_SOURCE_DECRYPT_FAILED'
+            exit 1
+          fi
+          test "$(tar -tzf "$p/old-private.tar.gz" | wc -l | tr -d ' ')" = 2
+          tar -tzf "$p/old-private.tar.gz" | grep -Fxq 'private-complete-source-audit.json'
+          tar -xzf "$p/old-private.tar.gz" -C "$p" --no-same-owner --no-same-permissions \
+            private-complete-source-audit.json
+          curl --fail --location --silent --show-error --retry 2 \
+            "https://raw.githubusercontent.com/JoseLlarena/Britfone/$BRITFONE_COMMIT/britfone.main.3.0.1.csv" \
+            -o "$p/britfone.main.3.0.1.csv"
+          curl --fail --location --silent --show-error --retry 2 \
+            "https://raw.githubusercontent.com/JoseLlarena/Britfone/$BRITFONE_COMMIT/LICENSE.txt" \
+            -o "$p/britfone.LICENSE.txt"
+          node scripts/v12-real-two-card-britfone-uk-editorial-review.mjs \
+            "$p/private-complete-source-audit.json" \
+            "$p/britfone.main.3.0.1.csv" \
+            "$p/britfone.LICENSE.txt" \
+            "$p/editorial-review-private.json" \
+            "$p/editorial-review-private.md"
+          cd "$p"
+          tar -czf sealed-real-one-sense.tar.gz \
+            editorial-review-private.json editorial-review-private.md
+          cd - >/dev/null
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$p/pass" --symmetric --cipher-algo AES256 \
+            --output "$RUNNER_TEMP/real-one-sense-britfone-uk-private.gpg" \
+            "$p/sealed-real-one-sense.tar.gz" > "$p/encrypt.log" 2>&1
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$p/pass" \
+            --decrypt "$RUNNER_TEMP/real-one-sense-britfone-uk-private.gpg" \
+            > "$p/verify.tar.gz" 2> "$p/verify.log"
+          cmp -s "$p/sealed-real-one-sense.tar.gz" "$p/verify.tar.gz"
+          rm -rf "$p"
+          echo 'REAL_ONE_SENSE_UK_US_CANDIDATES_ENCRYPTED_EDITOR_REVIEW_HOLD_NO_DB_ACCESS'
+      - name: Upload AES256 sealed publisher review, never plaintext
+        uses: actions/upload-artifact@v4
+        with:
+          name: v12-real-one-sense-britfone-uk-review-encrypted
+          path: ${{ runner.temp }}/real-one-sense-britfone-uk-private.gpg
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+      - name: Purge GPG copy
+        if: always()
+        run: rm -f "$RUNNER_TEMP/real-one-sense-britfone-uk-private.gpg"

@@ -1,0 +1,61 @@
+name: Dictionary CET4 CET6 Postgrad overlap audit (offline only)
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/global-dictionary-exam-priority-union.yml
+      - scripts/analyze-exam-priority-union.py
+      - tests/test_exam_priority_union.py
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  priority-union:
+    if: github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test multi-level union and explicit non-nesting
+        run: python -m unittest discover -s tests -p 'test_exam_priority_union.py' -v
+      - name: Download pinned audited PUBLIC headword candidates (no user content)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          source="$RUNNER_TEMP/unverified-headword-source"
+          mkdir -m 700 "$source"
+          curl --fail --silent --show-error --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/13742288377/zip" \
+            -o "$RUNNER_TEMP/headwords.zip"
+          unzip -t "$RUNNER_TEMP/headwords.zip" >/dev/null
+          unzip -q "$RUNNER_TEMP/headwords.zip" -d "$source"
+          test -s "$source/dictionary-unverified-entries.jsonl"
+          test -s "$source/audit-summary.json"
+          echo 'AUDITED_UNVERIFIED_LEMMA_SOURCE_READY'
+      - name: Measure CET4 CET6 postgraduate overlaps and net-new union
+        shell: bash
+        run: |
+          set -euo pipefail
+          source="$RUNNER_TEMP/unverified-headword-source"
+          python scripts/analyze-exam-priority-union.py \
+            --entries "$source/dictionary-unverified-entries.jsonl" \
+            --audit "$source/audit-summary.json" \
+            --out "$RUNNER_TEMP/exam-priority-union-aggregate.json"
+          echo 'EXAM_UNION_IS_HEADWORD_TAG_ANALYSIS_NOT_PUBLISHED_STUDY_CARDS'
+      - name: Publish aggregate counts ONLY (no proprietary teaching cards)
+        uses: actions/upload-artifact@v4
+        with:
+          name: cet4-cet6-postgrad-overlap-aggregate-${{ github.run_id }}
+          path: ${{ runner.temp }}/exam-priority-union-aggregate.json
+          if-no-files-found: error
+          retention-days: 30

@@ -5,7 +5,9 @@
 const $=id=>document.getElementById(id);
 let key="",chosen=null,readiness=null,identity=null,busy=false;
 let liveEditorState=null,liveRevision=null,liveHistory=[];
-let customerAdmin=null,claimAdmin=null,updatesAdmin=null;
+let globalMatchDecisions=[],globalManifestPreview=null,globalSavedManifestRequestId=null;
+let dictionaryV2Source=null,dictionaryV2Decisions=[],dictionaryV2ModeConverted=false;
+let customerAdmin=null,claimAdmin=null,updatesAdmin=null,unmarkedAdmin=null;
 const byId=(tag,text,className)=>{
   const el=document.createElement(tag);
   if(text!==undefined)el.textContent=String(text);
@@ -37,7 +39,7 @@ async function api(path,method="GET",body){
     if(result.status===401){
       key="";identity=null;catalogBooks=[];catalogPage=1;chosen=null;
       $("operatorIdentity").textContent="身份已失效";
-      clearActions();renderBookDirectory();customerAdmin?.reset();claimAdmin?.reset();updatesAdmin?.reset();
+      clearActions();renderBookDirectory();customerAdmin?.reset();claimAdmin?.reset();updatesAdmin?.reset();unmarkedAdmin?.reset();
     }
     throw Error("操作被拒绝："+(typeof data.error==="string"?data.error:"UNKNOWN")+
       "（HTTP "+result.status+"）。");
@@ -54,8 +56,37 @@ function button(id,fn){
 function syncButtons(){
   syncSaleButtons();syncLiveEditorButtons();
   $("checkNovel").disabled=!connected()||!$("uploadNovel").files?.length;
+  // A1 preview is only exposed to verified staging publishers.
+  const matchButton=$("previewGlobalMatch");
+  if(matchButton){
+    matchButton.hidden=identity?.environment!=="staging";
+    matchButton.disabled=!connected()||!pendingNovel||identity?.environment!=="staging";
+  }
+  const saveBindings=$("stageGlobalBindings");
+  if(saveBindings){
+    saveBindings.hidden=identity?.environment!=="staging"||
+      !globalManifestPreview?.save_available;
+    saveBindings.disabled=!connected()||!pendingNovel||
+      !globalManifestPreview?.ready_to_stage;
+  }
+  const downloadBindings=$("downloadGlobalBindingBundle");
+  if(downloadBindings){
+    downloadBindings.hidden=identity?.environment!=="staging"||
+      !globalSavedManifestRequestId;
+    downloadBindings.disabled=!connected()||!pendingNovel||
+      !globalSavedManifestRequestId||!globalManifestPreview?.ready_to_stage;
+  }
   $("importNovel").disabled=!(connected()&&pendingNovel&&$("uploadCoverWithNovel").files?.length&&
     pendingNovel.words?.every(w=>w.phoneticUk&&w.phoneticUs&&w.partOfSpeech&&w.meaningZh&&w.exampleEn&&w.exampleZh));
+  if(dictionaryV2ModeConverted&&(!globalSavedManifestRequestId||
+     !globalManifestPreview?.ready_to_stage||
+     !globalManifestPreview?.attach_available))
+    $("importNovel").disabled=true;
+  $("importNovel").textContent=dictionaryV2ModeConverted?
+    (globalSavedManifestRequestId&&globalManifestPreview?.attach_available?
+       "上传并关联统一词典（仅保存草稿）":"先完成词典审核并保存关联候选"):
+    (identity?.environment==="staging"&&globalSavedManifestRequestId?
+      "上传并关联统一词典（仅保存草稿）":"确认上传并上架");
   $("tagSave").disabled=!connected()||!chosen||!$("tagText").value.trim();
   $("applyStoryTags").disabled=!connected()||catalogBooks.length===0;
   $("suggestTags").disabled=!connected()||!chosen;
@@ -98,6 +129,10 @@ async function verify(){
   $("operatorIdentity").textContent=identity.displayName+" · "+identity.role+" · "+identity.environment;
   status("已通过运营身份校验。所有数据只从后台接口读取。");
   await loadBooks();
+  try{await mountUnmarkedReviewAdmin();}catch(e){
+    if($("unmarkedReviewPanel"))$("unmarkedReviewPanel").hidden=true;
+    status("自动识词审核面板暂不可用，其余运营功能不受影响。");
+  }
   try{await loadSaleCategories();}catch(e){saleStatus('发码功能暂不可用：'+e.message);}
   try{await mountCustomerAdmin();}catch(e){$("customerResult").textContent="查询暂不可用："+e.message;}
   try{await mountClaimAdmin();}catch(e){$("claimsStatus").textContent="对账功能暂不可用："+e.message;}
@@ -106,6 +141,20 @@ async function verify(){
       $("updatesAdminStatus").textContent="公告管理未启用或无法连接："+e.message+"。请先确认独立公告表与正式站启用开关。";
     }
   }
+}
+async function mountUnmarkedReviewAdmin(){
+  const panel=$("unmarkedReviewPanel");
+  if(!panel)return;
+  if(identity?.environment!=="staging"){
+    unmarkedAdmin?.reset();panel.hidden=true;return;
+  }
+  if(!unmarkedAdmin){
+    const mod=await import("/ops-unmarked-review.js?v=20261111-v12-phase5");
+    unmarkedAdmin=mod.initUnmarkedReviewAdmin({
+      api,connected,environment:()=>identity?.environment,root:panel
+    });
+  }
+  unmarkedAdmin.refresh();
 }
 async function mountUpdatesAdmin(){
   if(!updatesAdmin){
@@ -307,6 +356,12 @@ function syncLiveEditorButtons(){
   const active=connected()&&chosen?.status==="published"&&
     liveEditorState?.bookId===chosen?.id&&liveEditorState.editable;
   $("liveDownloadSource").disabled=!active||busy;
+  $("cet4ExportBatch").disabled=!connected()||busy||
+    !["staging","production"].includes(identity?.environment)||
+    !catalogBooks.some(b=>b.category_id==="cet4"&&b.status==="published");
+  $("cet6ExportBatch").disabled=!connected()||busy||
+    !["staging","production"].includes(identity?.environment)||
+    !catalogBooks.some(b=>b.category_id==="cet6"&&b.status==="published");
   $("liveEditTitle").disabled=!active||busy;
   $("liveEditDescription").disabled=!active||busy;
   $("liveRevisionFile").disabled=!active||busy;
@@ -457,6 +512,61 @@ button("liveSaveMetadata",async()=>{
   await loadBooks(id);
   $("liveEditorStatus").textContent="书名和简介已更新，旧版已保存到历史记录。";
   status("书籍资料修改成功。");
+});
+button("cet6ExportBatch",async()=>{
+ if(!connected()||!["production","staging"].includes(identity?.environment))
+   throw Error("请先验证运营发布者身份。");
+ if(!window.confirm("确认只读导出已上架六级小说的当前正文和词卡？内容可能涉及付费作品，仅保存在本地安全目录，不上传公共仓库或聊天。"))return;
+ const progress=$("cet6ExportStatus");
+ progress.textContent="正在读取六级已上架书籍并逐本校验版本……";
+ const {collectPublishedExamBatch}=await import("/ops-cet4-export.js?v=20261110-cet6");
+ try{
+  const data=await collectPublishedExamBatch({
+   category:"cet6",catalog:catalogBooks,
+   fetchExport:id=>api("/api/ops/books/"+encodeURIComponent(id)+"/live-editor/export"),
+   fetchOverview:id=>api("/api/ops/books/"+encodeURIComponent(id)+"/live-editor"),
+   refreshCatalog:async()=>{const fresh=await api("/api/ops/books");return fresh.books;},
+   onProgress:p=>{progress.textContent="只读导出六级 "+p.done+"/"+p.total+
+     (p.title?" · "+p.title:" · 完整性校验已完成");}
+  });
+  const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],
+    {type:"application/json;charset=utf-8"}));
+  const link=document.createElement("a");
+  link.href=url;link.download="miaowu-cet6-live-batch-"+data.capturedAt.slice(0,10)+".json";
+  document.body.append(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),10000);
+  progress.textContent="已本地导出 "+data.bookCount+" 本六级小说。无用户数据；请安全保管并在离线环境审核。";
+ }catch(e){
+  progress.textContent="已中止导出，不提供不完整的六级文件："+String(e.message||e);
+  throw e;
+ }
+});
+button("cet4ExportBatch",async()=>{
+ if(!connected()||!["production","staging"].includes(identity?.environment))
+   throw Error("请先验证运营发布者身份。");
+ if(!window.confirm("确认只读下载四级已上架小说的正文和词卡？导出文件含付费小说内容，请只在本机保存，不上传公共仓库、聊天或网盘。"))return;
+ const progress=$("cet4ExportStatus");
+ progress.textContent="正在核对四级书架与内容版本……";
+ const {collectPublishedCET4Batch}=await import("/ops-cet4-export.js?v=20261110-batch1");
+ try{
+  const result=await collectPublishedCET4Batch({
+   catalog:catalogBooks,
+   fetchExport:id=>api("/api/ops/books/"+encodeURIComponent(id)+"/live-editor/export"),
+   fetchOverview:id=>api("/api/ops/books/"+encodeURIComponent(id)+"/live-editor"),
+   refreshCatalog:async()=>{const current=await api("/api/ops/books");return current.books;},
+   onProgress:s=>{progress.textContent="只读导出 "+s.done+"/"+s.total+(s.title?" · "+s.title:" · 正在验证完整性");}
+  });
+  const url=URL.createObjectURL(new Blob([JSON.stringify(result,null,2)],
+   {type:"application/json;charset=utf-8"}));
+  const link=document.createElement("a");
+  link.href=url;link.download="miaowu-cet4-live-batch-"+result.capturedAt.slice(0,10)+".json";
+  document.body.append(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),10000);
+  progress.textContent="已导出 "+result.bookCount+" 本。每本含原版 ID、版本、章节数和 SHA-256；请私下保存。";
+ }catch(e){
+  progress.textContent="导出中止，未生成不完整的审核文件："+String(e.message||e);
+  throw e;
+ }
 });
 button("liveDownloadSource",async()=>{
   if(!liveEditorState||!chosen)throw Error("请先选择已上架小说");
@@ -1264,9 +1374,15 @@ async function renderImportTagSuggestions(pkg){
 
 const uploadMsg=message=>{$("uploadStatus").textContent=message;};
 function resetNovel(){
+ dictionaryV2Source=null;dictionaryV2Decisions=[];dictionaryV2ModeConverted=false;
+ globalMatchDecisions=[];globalManifestPreview=null;globalSavedManifestRequestId=null;
+ const reviewChoices=$("globalMatchChoices");
+ if(reviewChoices){reviewChoices.hidden=true;reviewChoices.replaceChildren();}
  pendingNovel=null;$("importNovel").disabled=true;$("reviseNovel").disabled=true;
  $("uploadTagSuggestions").replaceChildren();$("uploadTagStatus").textContent="识别小说后显示可选标签建议。";
  $("uploadReport").hidden=true;$("uploadPreview").hidden=true;
+ const matchReport=$("globalMatchReport");
+ if(matchReport){matchReport.hidden=true;matchReport.textContent="";}
 }
 function uploadedTitle(name){
  return name.replace(/\.(json|md|markdown|txt)$/i,"").replace(/[_-]+/g," ").trim();
@@ -1320,6 +1436,166 @@ function previewNovelPackage(pkg){
  }
  $("uploadPreview").hidden=false;
 }
+
+// Publisher-only staging discovery. Unmarked English is NEVER silently
+// promoted to a paid learning target; editors must confirm each suggestion.
+async function reviewUnmarkedDictionaryV2(source,result){
+ const pending=result.review_queue||[],suggested=result.suggestions||[];
+ const lines=[
+   "V2 小说正文英文词自动发现（预览站，只读）",
+   "已扫描未标注英文出现："+(result.scanned_unmarked_tokens??0),
+   "找到唯一已审词义候选："+suggested.length,
+   "需要人工确认或补卡："+pending.length,
+   "词典候选词头不等于可售教学卡；该预检不会改写正文、用户收藏与复习状态。",
+   ...suggested.slice(0,25).map(x=>
+      "第"+x.chapter_number+"章第"+(x.paragraph_index+1)+
+      "段 · "+x.surface+" → "+x.gloss+"（编辑仍需核对上下文）"),
+   ...pending.slice(0,25).map(x=>
+      "待审：第"+x.chapter_number+"章第"+(x.paragraph_index+1)+
+      "段 · "+x.surface+"： "+x.reason)
+ ];
+ if(pending.length>25)lines.push("其余待审项目："+(pending.length-25)+"处");
+ const report=$("uploadReport");report.hidden=false;report.textContent=lines.join("\n");
+ const choices=$("globalMatchChoices");choices.replaceChildren();choices.hidden=false;
+ choices.append(byId("h3","自动发现结果 · 必须编辑确认"));
+ if(!suggested.length){
+  choices.append(byId("p","目前没有唯一已审核的教学义项。请先完成词卡审核，不会生成空白词卡包。"));
+ }else if(pending.length){
+  choices.append(byId("p","发现"+pending.length+
+   "处尚未解决的英文词。先补齐或明确审核异常词，不能悄悄丢弃后继续上架。"));
+ }else{
+  const confirm=byId("button","我已核对所有语境，生成待验收 V2 草稿","secondary");
+  confirm.type="button";
+  confirm.addEventListener("click",async()=>{
+   if(confirm.disabled||!connected()||identity?.environment!=="staging")return;
+   confirm.disabled=true;
+   try{
+    const {draftAutoDiscoveredV2}=await import("/auto-discovery-v2-draft.js");
+    const draft=draftAutoDiscoveredV2(source,suggested);
+    const checked=await api("/api/ops/import/dictionary-v2/preflight","POST",{package:draft});
+    dictionaryV2Source=draft;dictionaryV2Decisions=[];
+    if(!checked.ready_to_convert||!checked.converted_package){
+      await reviewDictionaryV2(checked);
+      return;
+    }
+    dictionaryV2ModeConverted=true;
+    uploadMsg("自动词义标注草稿已生成；继续核对具体 sense_id 后才能发布。");
+    await applyPreparedNovel(checked.converted_package,
+      localReport(checked.converted_package,null));
+   }catch(error){
+    uploadMsg("自动发现草稿验证失败："+(error.message||"请稍后重试"));
+   }finally{confirm.disabled=false;syncButtons();}
+  });
+  choices.append(confirm);
+ }
+ uploadMsg("自动发现完成："+suggested.length+"处唯一已审候选、"+
+   pending.length+"处仍需人工核验。");
+ syncButtons();
+}
+async function reviewDictionaryV2(result){
+ const blocked=result.review_queue||[];
+ const panel=$("uploadReport");
+ panel.hidden=false;
+ panel.textContent=[
+   "统一词典小说 V2（无需提交 words[]）",
+   "目标词出现："+result.source_target_occurrences,
+   "自动匹配且教学合格："+result.approved_occurrences,
+   "待人工处理："+blocked.length,
+   "稳定词义身份已匹配："+(result.sense_preflight?.approved_sense_occurrences??0),
+   "词义身份待审核："+(result.sense_preflight?.manual_review_occurrences??result.approved_occurrences),
+   "共享主词卡不等于不同词义可共用掌握记录；缺稳定义项 ID 时只能保存预览草稿。",
+   ...blocked.slice(0,45).map(x=>
+     "第"+x.chapter_number+"章·第"+(x.paragraph_index+1)+"段 · "+
+     x.surface+"："+x.reason+"；候选："+(x.candidates||[])
+       .map(c=>c.headword).join("/"))
+ ].join("\n");
+ const container=$("globalMatchChoices");
+ container.replaceChildren();
+ const reviewable=blocked.filter(x=>x.reason==="AMBIGUOUS_HEADWORD_OR_INFLECTION"&&
+   (x.candidates||[]).some(c=>c.teaching_ready&&c.form_reviewed));
+ container.hidden=reviewable.length===0;
+ if(reviewable.length){
+   container.append(byId("h3","按句子语境确认歧义词（仅预览，不直接发布）"));
+   for(const item of reviewable.slice(0,40)){
+     const row=byId("div",undefined,"row");
+     const label=byId("label",
+       "第"+item.chapter_number+"章，第"+(item.paragraph_index+1)+
+       "段：「"+item.surface+"」 — "+(item.context||""));
+     const select=document.createElement("select");
+     select.setAttribute("aria-label",item.surface+" 对应的主词条");
+     for(const candidate of item.candidates.filter(c=>c.teaching_ready&&c.form_reviewed)){
+       const option=document.createElement("option");
+       option.value=candidate.entry_id;
+       option.textContent=candidate.headword;
+       select.append(option);
+     }
+     const confirm=byId("button","确认本句词头","secondary");
+     confirm.type="button";
+     confirm.addEventListener("click",async()=>{
+       if(!dictionaryV2Source||!connected()||confirm.disabled)return;
+       confirm.disabled=true;
+       const next={chapter_number:item.chapter_number,
+         paragraph_index:item.paragraph_index,segment_index:item.segment_index,
+         entry_id:select.value,confirmed:true};
+       const before=[...dictionaryV2Decisions];
+       dictionaryV2Decisions=[
+         ...before.filter(x=>x.chapter_number!==next.chapter_number||
+           x.paragraph_index!==next.paragraph_index||
+           x.segment_index!==next.segment_index),next
+       ];
+       try{
+         const r=await api("/api/ops/import/dictionary-v2/preflight","POST",{
+           package:dictionaryV2Source,decisions:dictionaryV2Decisions
+         });
+         if(r.ready_to_convert&&r.converted_package){
+           container.hidden=true;container.replaceChildren();
+           uploadMsg(r.ready_for_sense_study?
+             "主词卡与词义身份均已匹配，继续预览草稿。":
+             "主词卡已生成兼容草稿，但仍有"+
+             (r.sense_preflight?.manual_review_occurrences??0)+
+             "处稳定词义身份待审核，不能作为正式学习状态上线。");
+           dictionaryV2ModeConverted=true;
+           await applyPreparedNovel(r.converted_package,
+             localReport(r.converted_package,null));
+         }else await reviewDictionaryV2(r);
+       }catch(error){
+         dictionaryV2Decisions=before;
+         uploadMsg("歧义词核对失败："+(error.message||"请重新尝试"));
+       }finally{confirm.disabled=false;syncButtons();}
+     });
+     row.append(label,select,confirm);
+     container.append(row);
+   }
+ }
+ uploadMsg("已识别小说，但还需处理"+blocked.length+
+   "处缺词、教学资料或词形歧义。全部审核通过前不能导入。");
+ syncButtons();
+}
+async function applyPreparedNovel(pkg,report){ if(pkg?.version!==1||!pkg.book?.id||!Array.isArray(pkg.chapters)||
+  !pkg.chapters.length||!Array.isArray(pkg.words)||!pkg.words.length)
+  throw Error("小说文件缺少书籍、章节或目标词卡，无法导入");
+ if(report.anchors===0)throw Error("没有可点击的英文词汇标注，请检查词库匹配");
+ if(JSON.stringify(pkg).length>1_500_000)throw Error("内容包过大，请缩短单次上传文件");
+ if(report.metadataIncomplete.length)uploadMsg("预检发现"+report.metadataIncomplete.length+"个词卡缺少音标/例句。可以导入草稿，但必须补齐后才能正式上架。");
+ else uploadMsg("文件识别成功。请检查下面的预览，选择封面，然后点击「确认上传并上架」。");
+ pendingNovel=pkg;
+ await renderImportTagSuggestions(pkg);
+ syncButtons();
+ const lines=[
+  "书籍："+pkg.book.title+"（"+pkg.book.category+"）",
+  "章节："+report.chapters+"；付费章节："+report.paid,
+  "词卡："+report.words+"；正文标注："+report.anchors,
+  "缺少词卡信息："+report.metadataIncomplete.length,
+  "待复核识别提示："+report.warningsCount
+ ];
+ if(report.avgPerParagraph!=null)lines.push("平均每段英语词："+report.avgPerParagraph);
+ if(report.metadataIncomplete.length)lines.push("缺失信息词："+report.metadataIncomplete.slice(0,20).join("、"));
+ if(report.warningsCount)lines.push("示例提示："+report.warnings.slice(0,12).map(x=>
+  "第"+x.chapter+"章"+x.paragraph+"段 "+x.kind+" "+(x.word||"")).join("；"));
+ $("uploadReport").hidden=false;$("uploadReport").textContent=lines.join("\n");
+ previewNovelPackage(pkg);
+}
+
 async function examineNovel(){
  if(!connected())throw Error("请先验证运营身份");
  const novel=$("uploadNovel").files?.[0];
@@ -1329,6 +1605,37 @@ async function examineNovel(){
  if(/\.json$/i.test(novel.name)){
   try{const data=JSON.parse(source);pkg=data.package??data;}
   catch{throw Error("文件不是有效JSON，请检查文件格式")}
+  if(pkg?.version===2){
+    if(identity?.environment!=="staging")
+      throw Error("无需附带词卡的新版小说 JSON 暂只在预览站支持。");
+    const hasExplicitTargets=pkg.chapters?.some(ch=>
+      ch.paragraphs?.some(p=>p.segments?.some(seg=>
+        typeof seg?.surface==="string"&&typeof seg?.gloss==="string")));
+    if(!hasExplicitTargets){
+      dictionaryV2Source=pkg;dictionaryV2Decisions=[];
+      const discovery=await api("/api/ops/import/dictionary-v2/discover","POST",{
+        package:pkg
+      });
+      await reviewUnmarkedDictionaryV2(pkg,discovery);
+      return;
+    }
+    const result=await api("/api/ops/import/dictionary-v2/preflight","POST",{
+      package:pkg
+    });
+    dictionaryV2Source=pkg;
+    dictionaryV2Decisions=[];
+    if(!result.ready_to_convert||!result.converted_package){
+      await reviewDictionaryV2(result);
+      return;
+    }
+    pkg=result.converted_package;
+    dictionaryV2ModeConverted=true;
+    uploadMsg("已生成"+result.unique_main_cards+"张共享主词卡草稿；"+
+      (result.ready_for_sense_study?"各处具体词义身份均已核对。":
+       "仍有"+(result.sense_preflight?.manual_review_occurrences??0)+
+       "处稳定词义身份待审，不能合并已学状态。")+
+      " 继续预览、封面与草稿检查。");
+  }
   report=localReport(pkg,null);
  }else if(/\.(md|markdown|txt)$/i.test(novel.name)){
   const title=$("uploadBookTitle").value.trim()||uploadedTitle(novel.name);
@@ -1355,29 +1662,7 @@ async function examineNovel(){
   }
   pkg=result.package;report=localReport(pkg,result.report);
  }else throw Error("当前支持JSON、Markdown(.md)和TXT文件");
- if(pkg?.version!==1||!pkg.book?.id||!Array.isArray(pkg.chapters)||
-  !pkg.chapters.length||!Array.isArray(pkg.words)||!pkg.words.length)
-  throw Error("小说文件缺少书籍、章节或目标词卡，无法导入");
- if(report.anchors===0)throw Error("没有可点击的英文词汇标注，请检查词库匹配");
- if(JSON.stringify(pkg).length>1_500_000)throw Error("内容包过大，请缩短单次上传文件");
- if(report.metadataIncomplete.length)uploadMsg("预检发现"+report.metadataIncomplete.length+"个词卡缺少音标/例句。可以导入草稿，但必须补齐后才能正式上架。");
- else uploadMsg("文件识别成功。请检查下面的预览，选择封面，然后点击「确认上传并上架」。");
- pendingNovel=pkg;
- await renderImportTagSuggestions(pkg);
- syncButtons();
- const lines=[
-  "书籍："+pkg.book.title+"（"+pkg.book.category+"）",
-  "章节："+report.chapters+"；付费章节："+report.paid,
-  "词卡："+report.words+"；正文标注："+report.anchors,
-  "缺少词卡信息："+report.metadataIncomplete.length,
-  "待复核识别提示："+report.warningsCount
- ];
- if(report.avgPerParagraph!=null)lines.push("平均每段英语词："+report.avgPerParagraph);
- if(report.metadataIncomplete.length)lines.push("缺失信息词："+report.metadataIncomplete.slice(0,20).join("、"));
- if(report.warningsCount)lines.push("示例提示："+report.warnings.slice(0,12).map(x=>
-  "第"+x.chapter+"章"+x.paragraph+"段 "+x.kind+" "+(x.word||"")).join("；"));
- $("uploadReport").hidden=false;$("uploadReport").textContent=lines.join("\n");
- previewNovelPackage(pkg);
+ await applyPreparedNovel(pkg,report);
 }
 $("uploadNovel").addEventListener("change",()=>{
  resetNovel();const file=$("uploadNovel").files?.[0];
@@ -1392,18 +1677,192 @@ $("uploadNovel").addEventListener("change",()=>{
 button("checkNovel",async()=>{
  resetNovel();await examineNovel();
 });
+async function previewGlobalMatch(){
+ globalManifestPreview=null;globalSavedManifestRequestId=null;
+ if(!pendingNovel||identity?.environment!=="staging")
+   throw Error("请在预览站先识别小说，再检查统一词典匹配。");
+ const result=await api("/api/ops/import/preflight","POST",{
+   package:pendingNovel,decisions:globalMatchDecisions
+ });
+ const c=result.summary?.target||{};
+ const lines=[
+   "统一词典匹配预检（只读，不上架、不覆盖旧词卡）",
+   "等级："+(result.category||"未知")+"；明确标注的目标词："+(result.summary?.target_unique??0),
+   "匹配成功："+(c.matched||0)+"；旧词库有词但教学待审："+(c.dictionary_only||0),
+   "歧义待确认："+(c.needs_review||0)+"；词典缺词："+(c.missing||0),
+   "正文其余英文："+(result.summary?.discovered_unique||0)+"个不同词形（仅供参考，不作为强制目标）",
+   "词典索引状态："+(result.dictionary_status||"未知"),
+   "主词典索引："+(result.dictionary_index_ready?"已连接预览词典":"尚未接入；正在使用旧词卡只读对照")
+ ];
+ const exceptions=(result.targets||[]).filter(x=>x.status!=="matched");
+ if(exceptions.length)lines.push("需复核的目标词（最多展示30个）：");
+ for(const x of exceptions.slice(0,30)){
+   const why=x.status==="needs_review"?"同形或多个词卡待确认":
+     x.status==="dictionary_only"?"旧卡可查但尚未按新标准审核":"当前词库未找到";
+   lines.push("第"+(x.chapters||[]).join("、")+"章 "+
+     x.surface+" → "+why+"；建议："+(x.candidates||[]).map(y=>y.headword).join("/") );
+ }
+ const binding=result.binding_proposal;
+ if(binding){
+   lines.push("逐次出现绑定候选："+binding.confirmed_occurrences+
+     "；需要人工检查的位置："+binding.review_required_occurrences);
+   const review=binding.review_queue||[];
+   if(review.length)lines.push("按章节/段落/词位置定位异常（前30个）：");
+   for(const entry of review.slice(0,30)){
+     lines.push("第"+entry.chapter_number+"章，第"+(entry.paragraph_index+1)+
+       "段，第"+(entry.segment_index+1)+"段元 · "+entry.surface+
+       "： "+entry.reason+"\n  语境："+entry.context);
+   }
+   if(binding.conflicting_legacy_ids?.length){
+     lines.push("警告：旧 wordId 指向不同主词头，必须先人工核对："+
+       binding.conflicting_legacy_ids.map(x=>x.legacy_word_id).join("、"));
+   }
+   lines.push("本报告不会直接生成正式上传包，也不会修改用户学习状态。");
+ }
+ if(result.dictionary_index_ready){
+   try{
+     globalManifestPreview=await api("/api/ops/import/bindings/preview","POST",{
+       package:pendingNovel,decisions:globalMatchDecisions
+     });
+     lines.push("候选关联审核："+
+       (globalManifestPreview.ready_to_stage?"全部目标词可保存候选（不会上架）":
+       "仍有"+globalManifestPreview.blockers.length+"个异常须先处理"));
+     if(globalManifestPreview.ready_to_stage&&!globalManifestPreview.save_available)
+       lines.push("候选保存功能尚未启用；仅可预览，不可持久化。");
+   }catch(error){
+     lines.push("关联清单预览暂不可用："+error.message);
+   }
+ }
+ const panel=$("globalMatchReport");
+ panel.textContent=lines.join("\n");panel.hidden=false;
+ syncButtons();
+ const choices=$("globalMatchChoices");
+ if(choices){
+   choices.replaceChildren();
+   const review=(binding?.review_queue||[]).filter(x=>
+     x.reason!=="LEGACY_ID_MULTIPLE_CANONICAL_LEMMAS"&&
+     (x.candidates||[]).some(c=>c.teaching_ready&&c.form_reviewed));
+   choices.hidden=review.length===0;
+   if(review.length){
+     choices.append(byId("h3","待核对的上下文（只在当前浏览器预览，不会保存）"));
+     for(const item of review.slice(0,30)){
+       const candidates=(item.candidates||[]).filter(c=>
+         c.teaching_ready&&c.form_reviewed);
+       const group=byId("div",undefined,"row");
+       const label=byId("label",
+         "第"+item.chapter_number+"章·第"+(item.paragraph_index+1)+
+         "段：「"+item.surface+"」 — "+item.context);
+       const select=document.createElement("select");
+       select.setAttribute("aria-label",item.surface+" 的词典词头选择");
+       for(const candidate of candidates){
+         const option=document.createElement("option");
+         option.value=candidate.entry_id;
+         option.textContent=candidate.headword+" ("+candidate.evidence+")";
+         select.append(option);
+       }
+       const confirm=byId("button","仅预览确认","secondary");
+       confirm.type="button";
+       confirm.addEventListener("click",async()=>{
+         if(busy||!pendingNovel||!connected())return;
+         busy=true;confirm.disabled=true;
+         const decision={
+           chapter_number:item.chapter_number,
+           paragraph_index:item.paragraph_index,
+           segment_index:item.segment_index,
+           entry_id:select.value,confirmed:true
+         };
+         globalMatchDecisions.push(decision);
+         try{await previewGlobalMatch();}
+         catch(error){
+           globalMatchDecisions.pop();
+           uploadMsg(error.message||"本次匹配预览失败");
+         }finally{busy=false;confirm.disabled=false;syncButtons();}
+       });
+       group.append(label,select,confirm);choices.append(group);
+     }
+   }
+ }
+}
+
+if($("previewGlobalMatch"))button("previewGlobalMatch",async()=>{
+  globalMatchDecisions=[];await previewGlobalMatch();
+});
+
+if($("stageGlobalBindings"))button("stageGlobalBindings",async()=>{
+ if(identity?.environment!=="staging"||!pendingNovel||
+    !globalManifestPreview?.ready_to_stage||
+    !globalManifestPreview?.save_available)
+   throw Error("此阶段尚不能保存词典关联。请先完成匹配预检。");
+ if(!window.confirm("确认保存当前审核通过的词典关联候选？"+
+    "只会在预览站记录候选，不会上传或上架小说，也不会修改学习状态。"))return;
+ const newRequestId=requestId();
+ const data=await api("/api/ops/import/bindings/confirm","POST",{
+   package:pendingNovel,decisions:globalMatchDecisions,
+   requestId:newRequestId,confirmSave:true,
+   expectedPackageSha256:globalManifestPreview.package_sha256,
+   expectedBindingSha256:globalManifestPreview.binding_sha256
+ });
+ globalSavedManifestRequestId=newRequestId;
+ syncButtons();
+ uploadMsg("词典关联候选已保存到预览站（"+(data.count||0)+
+   "处目标词）；小说尚未上架，用户状态未变。");
+});
+if($("downloadGlobalBindingBundle"))button("downloadGlobalBindingBundle",async()=>{
+ if(identity?.environment!=="staging"||!pendingNovel||
+    !globalSavedManifestRequestId||!globalManifestPreview?.ready_to_stage)
+   throw Error("请先完成词卡审核并在预览站保存关联候选。");
+ const packageData=await api("/api/ops/import/bindings/export","POST",{
+   package:pendingNovel,decisions:globalMatchDecisions,
+   requestId:globalSavedManifestRequestId,
+   expectedPackageSha256:globalManifestPreview.package_sha256,
+   expectedBindingSha256:globalManifestPreview.binding_sha256
+ });
+ if(packageData.status!=="STAGING_VERIFIED_NOT_IMPORTED"||
+    packageData.publication_ready!==false)
+   throw Error("返回的候选关联包状态不正确，已取消下载。");
+ const filename=(pendingNovel.book?.id||"novel")+"-dictionary-bindings.json";
+ const blob=new Blob([JSON.stringify(packageData,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob);
+ try{
+   const anchor=document.createElement("a");
+   anchor.href=url;anchor.download=filename;
+   document.body.append(anchor);anchor.click();anchor.remove();
+ }finally{setTimeout(()=>URL.revokeObjectURL(url),1000);}
+ uploadMsg("已生成词典关联候选 JSON（仅供审核；尚未上架或更改用户数据）。");
+});
 $("uploadCoverWithNovel").addEventListener("change",syncButtons);
 button("importNovel",async()=>{
   if(!pendingNovel)throw Error("请先识别并预览小说内容");
   const coverFile=$("uploadCoverWithNovel").files?.[0];
   if(!coverFile)throw Error("请先选择小说封面");
   const title=pendingNovel.book.title;
+  const attachVerified=identity?.environment==="staging"&&Boolean(globalSavedManifestRequestId);
+  if(attachVerified&&!globalManifestPreview?.attach_available)
+    throw Error("统一词典草稿关联功能尚未启用，不能以已绑定模式上传。");
   let created=null;
   try{
     uploadMsg("正在保存《"+title+"》的正文和词卡……");
     created=await api("/api/ops/import","POST",{package:pendingNovel});
     uploadMsg("草稿已保存，正在上传封面……");
     await uploadCoverForBook(created.bookId,coverFile);
+    if(attachVerified){
+      uploadMsg("草稿与封面已保存，正在核对并关联统一词典……");
+      const result=await api("/api/ops/import/bindings/attach","POST",{
+        package:pendingNovel,decisions:globalMatchDecisions,
+        requestId:globalSavedManifestRequestId,confirmAttach:true,
+        expectedPackageSha256:globalManifestPreview.package_sha256,
+        expectedBindingSha256:globalManifestPreview.binding_sha256
+      });
+      if(!result.attached||result.published!==false)
+        throw Error("词典关联未通过最终校验，草稿不会发布。");
+      const savedTitle=title;
+      $("uploadCoverWithNovel").value="";
+      resetNovel();await loadBooks(created.bookId);
+      uploadMsg("《"+savedTitle+"》已保存为未发布草稿，"+
+        result.bindings+"处学习目标已对应统一词典；"+
+        "阅读器共享词卡功能上线前，不自动发布。");
+      return;
+    }
     uploadMsg("封面上传成功，正在核对上架条件……");
     const snapshot=await api("/api/ops/books/"+encodeURIComponent(created.bookId)+"/readiness");
     if(!snapshot.quickPublishAvailable){
@@ -1638,7 +2097,7 @@ $("bookPageNext").addEventListener("click",()=>{
 button("connect",verify);button("refresh",()=>loadBooks());
 button("publish",doPublish);button("withdraw",doWithdraw);
 button("disconnect",async()=>{
-  key="";identity=null;chosen=null;clearActions();clearSaleReceipt();customerAdmin?.reset();claimAdmin?.reset();updatesAdmin?.reset();
+  key="";identity=null;chosen=null;clearActions();clearSaleReceipt();customerAdmin?.reset();claimAdmin?.reset();updatesAdmin?.reset();unmarkedAdmin?.reset();
   catalogBooks=[];catalogPage=1;
   $("bookSearch").value="";$("bookStatus").value="";updateBookCategoryOptions();
   renderBookDirectory();
@@ -1648,6 +2107,6 @@ button("disconnect",async()=>{
   $("audit").replaceChildren(byId("p","请先验证身份。","soft"));
   $("selected").textContent="请选择一本书";status("本页内存中的运营密钥已清除。");
 });
-window.addEventListener("pagehide",()=>{key="";identity=null;clearSaleReceipt();customerAdmin?.reset();claimAdmin?.reset();updatesAdmin?.reset();});
+window.addEventListener("pagehide",()=>{key="";identity=null;clearSaleReceipt();customerAdmin?.reset();claimAdmin?.reset();updatesAdmin?.reset();unmarkedAdmin?.reset();});
 syncButtons();
 })();

@@ -1,0 +1,33 @@
+name: V1.2 772 published gloss mismatch private review isolated QA
+on:
+  pull_request:
+    paths:
+      - sql/published_32_private_772_context_gloss_mismatch_readonly.sql
+      - scripts/build-private-published-gloss-mismatch-review.mjs
+      - tests/v12-published-772-private-review.test.mjs
+      - .github/workflows/v12-published-772-private-review-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - sql/published_32_private_772_context_gloss_mismatch_readonly.sql
+      - scripts/build-private-published-gloss-mismatch-review.mjs
+      - tests/v12-published-772-private-review.test.mjs
+      - .github/workflows/v12-published-772-private-review-qa.yml
+permissions:
+  contents: read
+jobs:
+  isolated-no-production-db:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          set -euo pipefail
+          node --check scripts/build-private-published-gloss-mismatch-review.mjs
+          node --experimental-sqlite --test tests/v12-published-772-private-review.test.mjs
+      - run: echo 'SYNTHETIC_SQLITE_ONLY_NO_PROD_ACCESS_NO_EDITS_NO_STUDY_WRITES'

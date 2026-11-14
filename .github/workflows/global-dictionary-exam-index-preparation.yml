@@ -1,0 +1,70 @@
+name: Dictionary exam-first candidate index SQL PREPARE (NO D1 writes)
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/global-dictionary-exam-index-preparation.yml
+      - scripts/build-staging-exam-candidate-import.py
+      - tests/test_staging_exam_candidate_import.py
+      - tests/test_staging_exam_candidate_import_workflow.py
+      - .github/workflows/global-dictionary-staging-exam-candidate-import-manual.yml
+      - db/013_global_dictionary.sql
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  offline-exam-candidate-compiler:
+    if: github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run candidate import protection and SQL rehearsal tests locally
+        run: python -m unittest discover -s tests -p 'test_staging_exam_candidate_import*.py' -v
+      - name: Download only the audited public upstream index artifact
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/miaowu-upstream-audited.zip"
+          source="$RUNNER_TEMP/miaowu-upstream-audited"
+          mkdir -m 700 "$source"
+          curl --fail --silent --show-error --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/13742288377/zip" \
+            -o "$archive"
+          unzip -t "$archive" >/dev/null
+          unzip -q "$archive" -d "$source"
+          for file in dictionary-unverified-entries.jsonl dictionary-unverified-forms.jsonl audit-summary.json LICENSE-ECDICT.txt; do
+            test -s "$source/$file" || { echo "MISSING_AUDITED_INDEX_FILE"; exit 1; }
+          done
+          grep -qi 'MIT' "$source/LICENSE-ECDICT.txt" || { echo 'UPSTREAM_LICENSE_NOTICE_NOT_FOUND'; exit 1; }
+          echo 'AUDITED_PUBLIC_SOURCE_ARTIFACT_RETRIEVED_NO_CUSTOMER_DATA'
+      - name: Compile ALL exam-tagged unverified entries and test in offline SQLite
+        shell: bash
+        run: |
+          set -euo pipefail
+          source="$RUNNER_TEMP/miaowu-upstream-audited"
+          export="$RUNNER_TEMP/miaowu-dictionary-exam-candidate-sql"
+          python scripts/build-staging-exam-candidate-import.py \
+            --entries "$source/dictionary-unverified-entries.jsonl" \
+            --forms "$source/dictionary-unverified-forms.jsonl" \
+            --audit "$source/audit-summary.json" \
+            --out "$export" --batch-size 800
+          cp "$source/LICENSE-ECDICT.txt" "$export/LICENSE-ECDICT.txt"
+          echo 'CANDIDATE_SQL_PREPARED_AND_SQLITE_VERIFIED_NO_CLOUDFLARE_OR_D1_WRITE'
+      - name: Upload only public source derived candidate SQL and manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: exam-first-unverified-d1-sql-${{ github.run_id }}
+          path: ${{ runner.temp }}/miaowu-dictionary-exam-candidate-sql/
+          if-no-files-found: error
+          retention-days: 30

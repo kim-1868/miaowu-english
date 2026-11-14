@@ -1,0 +1,49 @@
+name: V1.2 approved reader sense anchor bridge synthetic QA
+on:
+  pull_request:
+    paths:
+      - src/global-dictionary-reader-sense-anchors.js
+      - src/global-dictionary-sense-study-api.js
+      - src/worker.js
+      - tests/v12-reviewed-reader-sense-anchors.test.mjs
+      - tests/v12-sense-reader-readonly-ui.test.mjs
+      - public/sense-reader-bridge.js
+      - public/index.html
+      - public/app.js
+      - .github/workflows/v12-reviewed-reader-sense-anchors-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - src/global-dictionary-reader-sense-anchors.js
+      - src/global-dictionary-sense-study-api.js
+      - src/worker.js
+      - tests/v12-reviewed-reader-sense-anchors.test.mjs
+      - tests/v12-sense-reader-readonly-ui.test.mjs
+      - public/sense-reader-bridge.js
+      - public/index.html
+      - public/app.js
+permissions:
+  contents: read
+jobs:
+  isolated-sqlite-no-publisher-or-remote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify sense reader bridge and previous sense study API
+        run: |
+          set -euo pipefail
+          node --check src/global-dictionary-reader-sense-anchors.js
+          node --check src/global-dictionary-sense-study-api.js
+          node --check src/worker.js
+          node --check public/sense-reader-bridge.js
+          node --check public/app.js
+          node --test tests/v12-sense-reader-readonly-ui.test.mjs
+          node --experimental-sqlite --test tests/v12-reviewed-reader-sense-anchors.test.mjs tests/v12-sense-study-api.test.mjs tests/v12-global-dictionary-reader-anchors.test.mjs
+      - name: Assert no remote D1 writes or production deploy
+        run: echo 'STAGING_APPROVED_READER_SENSE_BRIDGE_SYNTHETIC_ONLY'

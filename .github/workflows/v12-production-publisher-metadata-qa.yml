@@ -1,0 +1,34 @@
+name: V1.2 production Publisher metadata ONLY synthetic QA
+on:
+  pull_request:
+    paths:
+      - scripts/validate-production-publisher-metadata.mjs
+      - .github/workflows/v12-production-publisher-metadata-readonly.yml
+      - .github/workflows/v12-production-publisher-metadata-qa.yml
+      - tests/v12-production-publisher-metadata-readonly.test.mjs
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - scripts/validate-production-publisher-metadata.mjs
+      - tests/v12-production-publisher-metadata-readonly.test.mjs
+permissions:
+  contents: read
+jobs:
+  synthetic-local-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inspect production config and privacy/consistency gates
+        run: |
+          set -euo pipefail
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          node --check scripts/validate-production-publisher-metadata.mjs
+          node --test tests/v12-production-publisher-metadata-readonly.test.mjs
+      - name: Never use production secrets for synthetic QA
+        run: echo 'PROD_METADATA_LOCAL_QA_ONLY_NO_CLOUDFLARE_REQUESTS_NO_MIGRATION'

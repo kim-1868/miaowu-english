@@ -1,0 +1,135 @@
+# EXPLICIT MANUAL, METADATA-ONLY. Does not export content_json, user data or purchase records.
+# IMPORTANT: Production D1 token must be independently provisioned with read-only access.
+name: Manual V1.2 production Publisher metadata encrypted READ ONLY (no content)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_database:
+        type: string
+        required: true
+        description: Enter miaowu-english-prod
+      confirm_intent:
+        type: string
+        required: true
+        description: Enter PRODUCTION_PUBLISHER_METADATA_READ_ONLY
+      offline_encryption_ack:
+        type: string
+        required: true
+        description: Enter ENCRYPTED_PRIVATE_METADATA_ONLY
+permissions:
+  contents: read
+concurrency:
+  group: v12-production-publisher-metadata-readonly
+  cancel-in-progress: false
+jobs:
+  guarded-publisher-metadata-only:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109' &&
+      github.event_name == 'workflow_dispatch'
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Explicit authorization for private production metadata, not production mutations
+        shell: bash
+        env:
+          TARGET: ${{ inputs.confirm_database }}
+          INTENT: ${{ inputs.confirm_intent }}
+          ENCRYPT_ACK: ${{ inputs.offline_encryption_ack }}
+        run: |
+          set -euo pipefail
+          test "$TARGET" = 'miaowu-english-prod'
+          test "$INTENT" = 'PRODUCTION_PUBLISHER_METADATA_READ_ONLY'
+          test "$ENCRYPT_ACK" = 'ENCRYPTED_PRIVATE_METADATA_ONLY'
+          echo 'METADATA_ONLY_PRODUCTION_SELECT_NO_CONTENT_NO_CUSTOMERS'
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Lock the PRODUCTION database identity and schema-only SELECT scope
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const x=JSON.parse(readFileSync('deploy/production.wrangler.jsonc','utf8'));
+          assert.equal(x.vars.APP_ENV,'production');
+          assert.equal(x.name,'miaowu-english-production');
+          assert.equal(x.d1_databases?.length,1);
+          assert.equal(x.d1_databases[0].database_name,'miaowu-english-prod');
+          assert.equal(x.d1_databases[0].database_id,'649c71b3-340c-49bf-b806-3d39256851d3');
+          assert.notEqual(x.d1_databases[0].database_id,'88a817cb-23bb-4ae4-bcb8-92286c4165d4');
+          console.log('PRODUCTION_DB_UUID_VERIFIED__NO_WRITE_COMMANDS');
+          NODE
+      - name: Install isolated Wrangler CLI for SELECT only
+        run: npm install --ignore-scripts --no-save wrangler@^4
+      - name: Select three limited Publisher metadata datasets, verify and encrypt
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PROD_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          METADATA_PASSPHRASE: ${{ secrets.PRODUCTION_D1_METADATA_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_DEDICATED_PROD_D1_READ_ONLY_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_ACCOUNT_ID}"
+          : "${METADATA_PASSPHRASE:?MISSING_METADATA_PASSPHRASE}"
+          test "${#METADATA_PASSPHRASE}" -ge 32 || { echo 'ENCRYPTION_PASSPHRASE_TOO_SHORT'; exit 1; }
+          umask 077
+          private="$RUNNER_TEMP/private-prod-publisher-metadata"
+          mkdir -m 700 "$private"
+          encrypted="$RUNNER_TEMP/v12-publisher-production-metadata.gpg"
+          trap 'rm -rf "$private"' EXIT
+          printf '%s' "$METADATA_PASSPHRASE" > "$private/pass"
+          unset METADATA_PASSPHRASE
+          readonly_query(){
+            local query="$1" output="$2"
+            if ! npx wrangler d1 execute miaowu-english-prod --remote --json \
+                --config deploy/production.wrangler.jsonc --command "$query" \
+                >"$output" 2>"$private/stderr"; then
+              echo 'PROD_METADATA_SELECT_FAILED_CHECK_READ_ONLY_TOKEN_AND_LIVE_SCHEMA'
+              exit 1
+            fi
+          }
+          # Every executed statement is a fixed SELECT; never interpolate user values.
+          readonly_query "SELECT b.id book_id,b.category_id,b.status,b.title,
+            (SELECT COUNT(*) FROM chapters ch WHERE ch.book_id=b.id) chapter_count,
+            (SELECT COUNT(*) FROM chapter_words cw JOIN chapters ch ON ch.id=cw.chapter_id
+              WHERE ch.book_id=b.id) word_anchor_count FROM books b ORDER BY b.id;" "$private/books.json"
+          readonly_query "SELECT ch.id chapter_id,ch.book_id,ch.chapter_no,
+            ch.is_preview,ch.published_at,
+            length(CAST(ch.content_json AS BLOB)) content_bytes
+            FROM chapters ch ORDER BY ch.book_id,ch.chapter_no;" "$private/chapters.json"
+          readonly_query "SELECT cw.chapter_id,cw.word_id legacy_word_id,cw.context_anchor
+            FROM chapter_words cw ORDER BY cw.chapter_id,cw.word_id,cw.context_anchor;" "$private/anchors.json"
+          node scripts/validate-production-publisher-metadata.mjs \
+            "$private/books.json" "$private/chapters.json" "$private/anchors.json" \
+            "$private/validated-private.json"
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$private/pass" \
+            --symmetric --cipher-algo AES256 --output "$encrypted" \
+            "$private/validated-private.json" >/dev/null 2>"$private/encrypt-error"
+          test -s "$encrypted"
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$private/pass" \
+            --decrypt "$encrypted" >"$private/independent-recovered.json" \
+            2>"$private/decrypt-error"
+          cmp -s "$private/validated-private.json" "$private/independent-recovered.json"
+          echo 'PROD_METADATA_VERIFIED_ENCRYPTED_RECOVERABLE_NO_PRODUCTION_WRITES'
+          # Remove private files BEFORE the upload-artifact step. Only encrypted .gpg persists.
+          rm -rf "$private"
+      - name: Upload ONLY encrypted production Publisher metadata, never customer rows or full fiction
+        uses: actions/upload-artifact@v4
+        with:
+          name: v12-production-publisher-metadata-encrypted
+          path: ${{ runner.temp }}/v12-publisher-production-metadata.gpg
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+      - name: Purge encrypted runner copy
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/v12-publisher-production-metadata.gpg"

@@ -1,0 +1,54 @@
+name: V1.2 approved one-card reader bridge synthetic QA
+on:
+  push:
+    paths:
+      - src/global-dictionary-reader-anchors.js
+      - src/global-dictionary-headword-api.js
+      - src/worker.js
+      - public/headword-reader-bridge.js
+      - public/app.js
+      - public/index.html
+      - tests/v12-global-dictionary-reader-anchors.test.mjs
+      - tests/v12-headword-reader-bridge.test.mjs
+      - tests/v12-headword-reader-app-integration.test.mjs
+      - .github/workflows/v12-headword-reader-bridge-qa.yml
+  pull_request:
+    paths:
+      - src/global-dictionary-reader-anchors.js
+      - src/global-dictionary-headword-api.js
+      - src/worker.js
+      - public/headword-reader-bridge.js
+      - public/app.js
+      - public/index.html
+      - tests/v12-global-dictionary-reader-anchors.test.mjs
+      - tests/v12-headword-reader-bridge.test.mjs
+      - tests/v12-headword-reader-app-integration.test.mjs
+      - .github/workflows/v12-headword-reader-bridge-qa.yml
+permissions:
+  contents: read
+jobs:
+  reader-staging-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check syntax and browser script
+        run: |
+          node --check src/global-dictionary-reader-anchors.js
+          node --check src/global-dictionary-headword-api.js
+          node --check src/worker.js
+          node --check public/headword-reader-bridge.js
+          node --check public/app.js
+      - name: Staging-only approved chapter anchors and reader bridge
+        run: |
+          node --experimental-sqlite --test tests/v12-global-dictionary-reader-anchors.test.mjs tests/v12-headword-reader-bridge.test.mjs tests/v12-headword-reader-app-integration.test.mjs
+      - name: Retain existing API and one-card SRS regression coverage
+        run: |
+          node --experimental-sqlite --test tests/v12-global-dictionary-headword-api.test.mjs tests/v12-global-dictionary-headword-srs.test.mjs
+      - name: No cloud writes in this workflow
+        run: echo 'NO_D1_MIGRATION_NO_OWNER_WORDLIST_NO_CLOUDFLARE_DEPLOY'

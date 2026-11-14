@@ -1,0 +1,31 @@
+name: V1.2 staging published sense D1 readiness parser synthetic QA
+on:
+  pull_request:
+    paths:
+      - scripts/verify-staging-published-sense-readiness.mjs
+      - tests/v12-staging-published-sense-readiness.test.mjs
+      - .github/workflows/v12-staging-published-sense-readiness.yml
+      - .github/workflows/v12-staging-published-sense-readiness-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - scripts/verify-staging-published-sense-readiness.mjs
+      - tests/v12-staging-published-sense-readiness.test.mjs
+permissions:
+  contents: read
+jobs:
+  isolated-parser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          set -euo pipefail
+          node --check scripts/verify-staging-published-sense-readiness.mjs
+          node --test tests/v12-staging-published-sense-readiness.test.mjs
+      - run: echo 'NO_CLOUDFLARE_ACCESS_IN_SYNTHETIC_QA'

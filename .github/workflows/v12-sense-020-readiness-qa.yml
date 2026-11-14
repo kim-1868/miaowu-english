@@ -1,0 +1,36 @@
+name: V1.2 020 post-019 guarded readiness synthetic QA
+on:
+  pull_request:
+    paths:
+      - scripts/verify-staging-020-post019-baseline.mjs
+      - .github/workflows/v12-sense-020-post019-readonly.yml
+      - .github/workflows/v12-sense-020-post019-encrypted-backup.yml
+      - .github/workflows/v12-sense-020-readiness-qa.yml
+      - tests/v12-staging-020-post019-preflight.test.mjs
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - scripts/verify-staging-020-post019-baseline.mjs
+      - tests/v12-staging-020-post019-preflight.test.mjs
+permissions:
+  contents: read
+jobs:
+  no-remote-d1:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate strict post-019 pre-020 gates
+        run: |
+          set -euo pipefail
+          node --check scripts/verify-staging-020-post019-baseline.mjs
+          node --test tests/v12-staging-020-post019-preflight.test.mjs
+          node --experimental-sqlite --test tests/v12-sense-020-srs-migration.test.mjs
+      - name: No production access or secrets in synthetic QA
+        run: |
+          echo '020_TEST_GATES_ONLY_NO_REMOTE_D1_NO_USER_RECORDS_NO_DEPLOYMENT'

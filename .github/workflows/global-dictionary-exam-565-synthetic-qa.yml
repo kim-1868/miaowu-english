@@ -1,0 +1,38 @@
+name: Dictionary exam-first 565 original review drafts synthetic QA (no D1)
+on:
+  push:
+    paths:
+      - scripts/compile-exam-next-batch-review-drafts.py
+      - scripts/compile-exam-base-remaining-review-drafts.py
+      - tests/test_exam_next_batch_review_drafts.py
+      - tests/test_exam_base_last_batch_drafts.py
+      - .github/workflows/global-dictionary-exam-565-synthetic-qa.yml
+  pull_request:
+    paths:
+      - scripts/compile-exam-next-batch-review-drafts.py
+      - scripts/compile-exam-base-remaining-review-drafts.py
+      - tests/test_exam_next_batch_review_drafts.py
+      - tests/test_exam_base_last_batch_drafts.py
+      - .github/workflows/global-dictionary-exam-565-synthetic-qa.yml
+permissions:
+  contents: read
+jobs:
+  synthetic-editorial-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile and test synthetic input only
+        run: |
+          python -m py_compile scripts/compile-exam-next-batch-review-drafts.py scripts/compile-exam-base-remaining-review-drafts.py
+          python -m unittest discover -s tests -p 'test_exam_*_drafts.py' -v
+      - name: Offline-only workflow policy
+        run: |
+          ! grep -Ei 'wrangler|CLOUDFLARE|https?://|requests\.get|urllib\.request|production_deploy' \
+            scripts/compile-exam-next-batch-review-drafts.py scripts/compile-exam-base-remaining-review-drafts.py
+          echo 'NO_OWNER_VOCAB_NO_AUTH_TOKEN_NO_REMOTE_D1_NO_PUBLISHER_SIGNOFF'

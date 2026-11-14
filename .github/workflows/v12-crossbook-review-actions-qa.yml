@@ -1,0 +1,39 @@
+name: V1.2 crossbook editorial action plan synthetic QA
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - src/global-dictionary-crossbook-review-action-plan.js
+      - scripts/build-private-crossbook-review-actions.mjs
+      - tests/v12-crossbook-review-action-plan.test.mjs
+      - .github/workflows/v12-crossbook-review-actions-qa.yml
+  pull_request:
+    paths:
+      - src/global-dictionary-crossbook-review-action-plan.js
+      - scripts/build-private-crossbook-review-actions.mjs
+      - tests/v12-crossbook-review-action-plan.test.mjs
+      - .github/workflows/v12-crossbook-review-actions-qa.yml
+permissions:
+  contents: read
+jobs:
+  editorial-private-synthetic-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Static syntax and synthetic editorial review QA
+        run: |
+          set -euo pipefail
+          node --check src/global-dictionary-crossbook-review-action-plan.js
+          node --check scripts/build-private-crossbook-review-actions.mjs
+          node --test tests/v12-crossbook-review-action-plan.test.mjs
+          node --test tests/v12-crossbook-batch-preflight.test.mjs
+      - name: Confirm no D1 access or publication
+        run: |
+          echo 'OFFLINE_REVIEW_TASKS_ONLY_NO_REAL_NOVELS'
+          echo 'NO_LIVE_D1_NO_SIGNOFF_NO_PROGRESS_MERGE'

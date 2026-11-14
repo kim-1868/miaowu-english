@@ -1,0 +1,35 @@
+name: V1.2 protected 020 TEST D1 manual migration gates synthetic QA
+on:
+  pull_request:
+    paths:
+      - .github/workflows/v12-sense-020-staging-manual-migrate.yml
+      - scripts/verify-staging-020-postmigration.mjs
+      - tests/v12-staging-020-guarded-manual.test.mjs
+      - .github/workflows/v12-sense-020-staging-manual-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-sense-020-staging-manual-migrate.yml
+      - scripts/verify-staging-020-postmigration.mjs
+      - tests/v12-staging-020-guarded-manual.test.mjs
+permissions:
+  contents: read
+jobs:
+  synthetic-guard-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test strict post-check and manual staging-only gates
+        run: |
+          set -euo pipefail
+          node --check scripts/verify-staging-020-postmigration.mjs
+          node --test tests/v12-staging-020-guarded-manual.test.mjs
+          node --experimental-sqlite --test tests/v12-sense-020-srs-migration.test.mjs
+      - name: Never contact Cloudflare from synthetic QA
+        run: echo '020_MANUAL_QA_LOCAL_SYNTHETIC_ONLY__NO_REMOTE_DB_WRITES'

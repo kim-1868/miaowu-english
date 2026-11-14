@@ -1,0 +1,229 @@
+name: Manual V1.2 019 test D1 ADD-ONLY schema (human approval, never production)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_target:
+        type: string
+        required: true
+        description: Enter miaowu-english-test
+      confirm_uuid:
+        type: string
+        required: true
+        description: Exact test D1 UUID (from the reviewed workflow)
+      confirmation:
+        type: string
+        required: true
+        description: Enter STAGING_019_ADD_ONLY
+      encrypted_backup_run_id:
+        type: string
+        required: true
+        description: Successful fresh V1.2 full encrypted backup run ID
+      encrypted_artifact_id:
+        type: string
+        required: true
+        description: Matching unexpired encrypted backup artifact ID
+      offline_backup_saved:
+        type: string
+        required: true
+        description: Enter ENCRYPTED_BACKUP_SAVED_OFF_GITHUB only after you saved it privately
+      sense_policy_ack:
+        type: string
+        required: true
+        description: Enter SCHEMA_ONLY_SENSE_SRS_DISABLED (never enable entry-level mastery)
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: v12-staging-019-schema-write
+  cancel-in-progress: false
+jobs:
+  guarded-019-additive-only:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109' &&
+      github.event_name == 'workflow_dispatch'
+    environment:
+      name: staging-d1-schema-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Require explicit test-only approval, fresh encrypted backup and sense-policy acknowledgement
+        shell: bash
+        env:
+          CONFIRM_TARGET: ${{ inputs.confirm_target }}
+          CONFIRM_UUID: ${{ inputs.confirm_uuid }}
+          CONFIRM_APPLY: ${{ inputs.confirmation }}
+          BACKUP_RUN_ID: ${{ inputs.encrypted_backup_run_id }}
+          BACKUP_ARTIFACT_ID: ${{ inputs.encrypted_artifact_id }}
+          OFFLINE_BACKUP_SAVED: ${{ inputs.offline_backup_saved }}
+          SENSE_POLICY_ACK: ${{ inputs.sense_policy_ack }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$CONFIRM_TARGET" = 'miaowu-english-test' || exit 1
+          test "$CONFIRM_UUID" = '88a817cb-23bb-4ae4-bcb8-92286c4165d4' || exit 1
+          test "$CONFIRM_APPLY" = 'STAGING_019_ADD_ONLY' || exit 1
+          test "$OFFLINE_BACKUP_SAVED" = 'ENCRYPTED_BACKUP_SAVED_OFF_GITHUB' || exit 1
+          test "$SENSE_POLICY_ACK" = 'SCHEMA_ONLY_SENSE_SRS_DISABLED' || exit 1
+          [[ "$BACKUP_RUN_ID" =~ ^[0-9]{8,15}$ ]] || exit 1
+          [[ "$BACKUP_ARTIFACT_ID" =~ ^[0-9]{8,15}$ ]] || exit 1
+          umask 077
+          meta="$RUNNER_TEMP/v12-019-backup-run.json"
+          artifacts="$RUNNER_TEMP/v12-019-backup-artifacts.json"
+          trap 'rm -f "$meta" "$artifacts"' EXIT
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID" > "$meta"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID/artifacts" > "$artifacts"
+          jq -e '
+            .status=="completed" and .conclusion=="success" and
+            .event=="push" and
+            .head_branch=="feature/v11-smart-vocab-preflight-20261109" and
+            (.head_sha|test("^[0-9a-f]{40}$")) and
+            (.path|endswith("v12-headword-staging-019-encrypted-backup.yml"))
+          ' "$meta" >/dev/null || { echo 'STAGING_019_BACKUP_RUN_NOT_VERIFIED'; exit 1; }
+          backup_sha="$(jq -r '.head_sha' "$meta")"
+          compare="$RUNNER_TEMP/v12-019-backup-ancestry-private.json"
+          gh api "repos/$GITHUB_REPOSITORY/compare/$backup_sha...$GITHUB_SHA" > "$compare"
+          jq -e '.status=="ahead" or .status=="identical"' "$compare" >/dev/null || {
+            echo 'STAGING_019_BACKUP_COMMIT_NOT_ANCESTOR'; exit 1;
+          }
+          rm -f "$compare"
+          jq -e --argjson id "$BACKUP_ARTIFACT_ID" '
+            [.artifacts[]|select(.id==$id and .name=="v12-staging-019-encrypted-full-backup"
+            and .expired==false and .size_in_bytes>0)]|length==1
+          ' "$artifacts" >/dev/null || { echo 'STAGING_019_BACKUP_ARTIFACT_UNAVAILABLE'; exit 1; }
+          node - "$meta" "$artifacts" "$BACKUP_ARTIFACT_ID" <<'NODE'
+          const fs=require('fs');
+          const [runPath,artPath,id]=process.argv.slice(2);
+          const r=JSON.parse(fs.readFileSync(runPath,'utf8'));
+          const a=JSON.parse(fs.readFileSync(artPath,'utf8')).artifacts.find(x=>String(x.id)===id);
+          const age=Date.now()-Date.parse(r.updated_at);
+          if(!Number.isFinite(age)||age<0||age>24*3600000)throw Error('STAGING_019_FRESH_BACKUP_REQUIRED_WITHIN_24_HOURS');
+          if(!a||Date.parse(a.expires_at)<=Date.now())throw Error('STAGING_019_ARTIFACT_EXPIRED');
+          console.log('STAGING_019_FRESH_ENCRYPTED_BACKUP_VERIFIED_OFFLINE_COPY_OWNER_ATTESTED');
+          NODE
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Hard-lock target and keep all new SRS entry-level APIs disabled
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const cfg=JSON.parse(readFileSync('wrangler.jsonc','utf8'));
+          assert.equal(cfg.name,'miaowu-english-staging');
+          assert.equal(cfg.vars.APP_ENV,'staging');
+          assert.equal(cfg.d1_databases.length,1);
+          assert.equal(cfg.d1_databases[0].database_name,'miaowu-english-test');
+          assert.equal(cfg.d1_databases[0].database_id,'88a817cb-23bb-4ae4-bcb8-92286c4165d4');
+          assert.notEqual(cfg.vars.GLOBAL_DICTIONARY_HEADWORD_SRS_ENABLED,'true');
+          assert.notEqual(cfg.vars.GLOBAL_DICTIONARY_HEADWORD_SRS_WRITE_ENABLED,'true');
+          console.log('STAGING_019_SCHEMA_ONLY_SENSE_LEVEL_MASTERY_NOT_ACTIVATED');
+          NODE
+      - name: Rehearse exact add-only migration on synthetic full schema and verify hash
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite scripts/rehearse-headword-019.mjs
+          node --experimental-sqlite --test tests/v12-headword-019-migration-rehearsal.test.mjs
+          node --test tests/v12-staging-019-guarded-manual.test.mjs
+      - name: Install Wrangler CLI for TEST D1 only
+        run: npm install --ignore-scripts --no-save wrangler@^4
+      - name: Verify remote baseline 019 absent, read-only FK and quick-check before any write
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?STAGING_WRITE_TOKEN_MISSING}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?STAGING_ACCOUNT_ID_MISSING}"
+          umask 077
+          counts="$RUNNER_TEMP/v12-019-before-counts.json"
+          fk="$RUNNER_TEMP/v12-019-before-fk.json"
+          quick="$RUNNER_TEMP/v12-019-before-quick.json"
+          private_error="$RUNNER_TEMP/v12-019-private-before-error.txt"
+          query(){
+            if ! npx wrangler d1 execute miaowu-english-test --remote --json \
+              --config wrangler.jsonc --command "$1" > "$2" 2>"$private_error"; then
+              echo 'STAGING_019_READONLY_PREFLIGHT_FAILED_LOGS_PRIVATE'; exit 1
+            fi
+          }
+          BASELINE_SQL="$(cat <<'SQL'
+          SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name LIKE 'global_dictionary_%') AS dictionary_tables,(SELECT COUNT(*) FROM sqlite_master WHERE type='trigger' AND name IN ('global_dictionary_bindings_draft_guard','global_dictionary_sense_identity_guard','global_dictionary_legacy_sense_link_guard','global_dictionary_legacy_sense_link_no_repoint','global_dictionary_book_sense_guard')) AS dictionary_triggers,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('books','words','user_words','chapter_words')) AS core_tables,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('user_headword_study','user_headword_review_events')) AS headword_tables,(SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name IN ('ix_user_headword_study_due','ix_user_headword_events_user_entry')) AS headword_indexes,(SELECT COUNT(*) FROM global_dictionary_entries) AS candidate_heads,(SELECT COUNT(*) FROM global_dictionary_forms) AS candidate_forms,(SELECT COUNT(*) FROM global_dictionary_entries WHERE source_name='upstream_ecdict_unverified') AS upstream_heads,(SELECT COUNT(*) FROM global_dictionary_entries WHERE source_name!='upstream_ecdict_unverified') AS other_heads,(SELECT COUNT(*) FROM global_dictionary_forms WHERE source_name='upstream_ecdict_unverified') AS upstream_forms,(SELECT COUNT(*) FROM global_dictionary_forms WHERE source_name!='upstream_ecdict_unverified') AS other_forms,(SELECT COUNT(*) FROM global_dictionary_sources WHERE source_key='upstream_ecdict_unverified' AND license_reviewed=0 AND enabled=0 AND imported_entries=11422 AND imported_forms=16442) AS source_original_intact,(SELECT COUNT(*) FROM global_dictionary_senses WHERE approved=1) AS approved_senses,(SELECT COUNT(*) FROM global_dictionary_entries WHERE teaching_ready=1) AS teaching_ready,(SELECT COUNT(*) FROM global_dictionary_sources WHERE enabled=1) AS active_sources,(SELECT COUNT(*) FROM global_dictionary_lessons) AS approved_lessons,(SELECT COUNT(*) FROM books) AS old_books,(SELECT COUNT(*) FROM chapters) AS old_chapters,(SELECT COUNT(*) FROM words) AS old_words,(SELECT COUNT(*) FROM user_words) AS old_user_words,(SELECT COUNT(*) FROM review_events) AS old_review_events,(SELECT COUNT(*) FROM entitlements) AS old_entitlements,(SELECT COUNT(*) FROM activation_codes) AS old_activation_codes,(SELECT COUNT(*) FROM chapter_words) AS old_chapter_words,(SELECT COUNT(*) FROM reading_progress) AS old_reading_progress ;
+          SQL
+          )"
+          query "$BASELINE_SQL" "$counts"
+          query 'PRAGMA foreign_key_check;' "$fk"
+          query 'PRAGMA quick_check;' "$quick"
+          node scripts/verify-staging-019-remote-aggregate.mjs before "$counts" "$fk" "$quick" "$RUNNER_TEMP/v12-019-pre-aggregates.json"
+          rm -f "$counts" "$fk" "$quick" "$private_error"
+      - name: Verify Cloudflare recovery bookmark exists before schema-only change
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          umask 077
+          private="$RUNNER_TEMP/v12-019-time-travel-private.txt"
+          if ! npx wrangler d1 time-travel info miaowu-english-test \
+            --config wrangler.jsonc >"$private" 2>&1; then
+            rm -f "$private"
+            echo 'STAGING_019_TIMETRAVEL_NOT_AVAILABLE'
+            exit 1
+          fi
+          grep -qi bookmark "$private" || { rm -f "$private"; exit 1; }
+          rm -f "$private"
+          echo 'STAGING_019_TIMETRAVEL_BOOKMARK_PRESENT_REDACTED'
+      - name: Apply exact 019 ADD-ONLY schema file to TEST D1 (NO user data migration)
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          umask 077
+          private="$RUNNER_TEMP/v12-019-migrate-private.log"
+          if ! npx wrangler d1 execute miaowu-english-test --remote \
+            --config wrangler.jsonc --file db/019_global_dictionary_headword_study.sql \
+            > "$private" 2>&1; then
+            rm -f "$private"
+            echo 'STAGING_019_SCHEMA_APPLY_FAILED_MANUAL_INVESTIGATION_REQUIRED'
+            exit 1
+          fi
+          rm -f "$private"
+          echo 'STAGING_019_EXACT_ADD_ONLY_SQL_SUBMITTED_TO_TEST_D1'
+      - name: Post-migration read-only counts, old access records and FK integrity
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          umask 077
+          counts="$RUNNER_TEMP/v12-019-after-counts.json"
+          fk="$RUNNER_TEMP/v12-019-after-fk.json"
+          quick="$RUNNER_TEMP/v12-019-after-quick.json"
+          private_error="$RUNNER_TEMP/v12-019-private-after-error.txt"
+          query(){
+            if ! npx wrangler d1 execute miaowu-english-test --remote --json \
+              --config wrangler.jsonc --command "$1" > "$2" 2>"$private_error"; then
+              echo 'STAGING_019_POST_QUERY_FAILED_REQUIRES_MANUAL_INVESTIGATION'; exit 1
+            fi
+          }
+          BASELINE_SQL="$(cat <<'SQL'
+          SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name LIKE 'global_dictionary_%') AS dictionary_tables,(SELECT COUNT(*) FROM sqlite_master WHERE type='trigger' AND name IN ('global_dictionary_bindings_draft_guard','global_dictionary_sense_identity_guard','global_dictionary_legacy_sense_link_guard','global_dictionary_legacy_sense_link_no_repoint','global_dictionary_book_sense_guard')) AS dictionary_triggers,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('books','words','user_words','chapter_words')) AS core_tables,(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('user_headword_study','user_headword_review_events')) AS headword_tables,(SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name IN ('ix_user_headword_study_due','ix_user_headword_events_user_entry')) AS headword_indexes,(SELECT COUNT(*) FROM global_dictionary_entries) AS candidate_heads,(SELECT COUNT(*) FROM global_dictionary_forms) AS candidate_forms,(SELECT COUNT(*) FROM global_dictionary_entries WHERE source_name='upstream_ecdict_unverified') AS upstream_heads,(SELECT COUNT(*) FROM global_dictionary_entries WHERE source_name!='upstream_ecdict_unverified') AS other_heads,(SELECT COUNT(*) FROM global_dictionary_forms WHERE source_name='upstream_ecdict_unverified') AS upstream_forms,(SELECT COUNT(*) FROM global_dictionary_forms WHERE source_name!='upstream_ecdict_unverified') AS other_forms,(SELECT COUNT(*) FROM global_dictionary_sources WHERE source_key='upstream_ecdict_unverified' AND license_reviewed=0 AND enabled=0 AND imported_entries=11422 AND imported_forms=16442) AS source_original_intact,(SELECT COUNT(*) FROM global_dictionary_senses WHERE approved=1) AS approved_senses,(SELECT COUNT(*) FROM global_dictionary_entries WHERE teaching_ready=1) AS teaching_ready,(SELECT COUNT(*) FROM global_dictionary_sources WHERE enabled=1) AS active_sources,(SELECT COUNT(*) FROM global_dictionary_lessons) AS approved_lessons,(SELECT COUNT(*) FROM books) AS old_books,(SELECT COUNT(*) FROM chapters) AS old_chapters,(SELECT COUNT(*) FROM words) AS old_words,(SELECT COUNT(*) FROM user_words) AS old_user_words,(SELECT COUNT(*) FROM review_events) AS old_review_events,(SELECT COUNT(*) FROM entitlements) AS old_entitlements,(SELECT COUNT(*) FROM activation_codes) AS old_activation_codes,(SELECT COUNT(*) FROM chapter_words) AS old_chapter_words,(SELECT COUNT(*) FROM reading_progress) AS old_reading_progress ;
+          SQL
+          )"
+          query "$BASELINE_SQL" "$counts"
+          query 'PRAGMA foreign_key_check;' "$fk"
+          query 'PRAGMA quick_check;' "$quick"
+          node scripts/verify-staging-019-remote-aggregate.mjs after "$counts" "$fk" "$quick" "$RUNNER_TEMP/v12-019-pre-aggregates.json"
+          rm -f "$counts" "$fk" "$quick" "$private_error" "$RUNNER_TEMP/v12-019-pre-aggregates.json"
+          echo 'STAGING_019_2_ADDITIVE_TABLES_2_INDEXES_CREATED_NO_USER_STUDY_MIGRATION'
+          echo 'NO_PRODUCTION_DEPLOYMENT_SENSE_LEVEL_ACTIVATION_STILL_BLOCKED'

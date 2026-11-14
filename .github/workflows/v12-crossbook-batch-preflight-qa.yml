@@ -1,0 +1,39 @@
+name: V1.2 CET4 CET6 Postgrad crossbook private batch preflight synthetic QA
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - src/global-dictionary-crossbook-batch-preflight.js
+      - scripts/preflight-crossbook-dictionary-batches.mjs
+      - tests/v12-crossbook-batch-preflight.test.mjs
+      - .github/workflows/v12-crossbook-batch-preflight-qa.yml
+  pull_request:
+    paths:
+      - src/global-dictionary-crossbook-batch-preflight.js
+      - scripts/preflight-crossbook-dictionary-batches.mjs
+      - tests/v12-crossbook-batch-preflight.test.mjs
+      - .github/workflows/v12-crossbook-batch-preflight-qa.yml
+permissions:
+  contents: read
+jobs:
+  no-private-data-crossbook-synthetic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and multi-grade private-export synthetic QA
+        run: |
+          set -euo pipefail
+          node --check src/global-dictionary-crossbook-batch-preflight.js
+          node --check scripts/preflight-crossbook-dictionary-batches.mjs
+          node --test tests/v12-crossbook-batch-preflight.test.mjs
+          node --test tests/v12-cet4-published-archive-offline.test.mjs tests/v12-cet6-published-batch-export-and-audit.test.mjs
+      - name: Verify no user data, Cloudflare access, public book extracts or deploy
+        run: |
+          echo 'CET4_CET6_POSTGRAD_CROSSBOOK_REVIEW_ONLY'
+          echo 'NO_PUBLISHER_APPROVAL_NO_USER_STUDY_WRITES_NO_REMOTE_D1'

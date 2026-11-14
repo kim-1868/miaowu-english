@@ -1,0 +1,38 @@
+name: V1.2 stage-only sense study feedback UI + API read-only guard isolated QA
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - public/sense-reader-bridge.js
+      - src/global-dictionary-sense-study-api.js
+      - tests/v12-sense-reader-authorized-feedback-ui.test.mjs
+      - tests/v12-sense-reader-readonly-ui.test.mjs
+      - .github/workflows/v12-sense-feedback-ui-qa.yml
+  pull_request:
+    paths:
+      - public/sense-reader-bridge.js
+      - src/global-dictionary-sense-study-api.js
+      - tests/v12-sense-reader-authorized-feedback-ui.test.mjs
+      - tests/v12-sense-reader-readonly-ui.test.mjs
+      - .github/workflows/v12-sense-feedback-ui-qa.yml
+permissions:
+  contents: read
+jobs:
+  no-remote-writes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read-only fail-close, conditional feedback UI and server SRS gate
+        run: |
+          set -euo pipefail
+          node --check public/sense-reader-bridge.js
+          node --check src/global-dictionary-sense-study-api.js
+          node --test tests/v12-sense-reader-readonly-ui.test.mjs tests/v12-sense-reader-authorized-feedback-ui.test.mjs
+          node --experimental-sqlite --test tests/v12-sense-study-api.test.mjs tests/v12-staging-published-legacy-sense-srs-bridge.test.mjs
+      - run: echo 'STAGING_UI_TEST_NO_REMOTE_DB_NO_PREVIEW_DEPLOY_NO_PRODUCTION'
