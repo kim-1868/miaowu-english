@@ -21,7 +21,7 @@ Cloudflare D1 以 `rowsRead` 计费/免费配额，而非 API 请求数。单次
 | P0 | `GET /api/me/wordbook` — `src/reading-library.js:103+` | 每翻一页都按 400 条从头分批扫完整用户生词，JS 去重后再截 12 张 | 页码变大并不会减少数据库读取；需设计可索引的稳定词义 ID、计数和游标翻页 |
 | P1 | `GET /api/me/words` — `src/reading-library.js:74+` | 读最多 4000 行，附带每词关联 `chapter_words` 语境句的标量子查询；到期统计再次查询所有符合条件的用户词义 | 查询成本随收藏数上涨；用数据库侧汇总、有限列表、批量取句或缓存不可变字段替代 |
 | P1 | `GET /api/me/bookshelf` — `src/my-bookshelf.js` | 原来对每本书执行 6 次重复的进度相关统计/查最新章节，另有 EXISTS | 本 PR 将用户进度汇总一次，保留相同返回字段、书签/最近阅读分离、权限边界 |
-| P1 | `GET /api/chapters/:id/words` — `src/worker.js:427+` | 为验证权限调用 `chapterAccess`，读取并 JSON.parse 整章 `content_json`，然后再读词卡和学习状态 | **正文重复读取/解析是确定事实**，但整章一行不会直接说明高 `rowsRead`；重点核验大字段响应量、数据库读次数和重复 HTTP 请求 |
+| P1 | `GET /api/chapters/:id/words` — `src/worker.js:427+` | 为验证权限调用 `chapterAccess`，读取并 JSON.parse 整章 `content_json`，然后再读词卡和学习状态 | **正文重复读取/解析是确定事实**。本 PR 将词卡权限检查改为只查轻量章节元数据，不再读取/解析 `content_json`；此项主要优化传输/CPU，不等于已经证实节省大规模 `rowsRead` |
 | P2 | `GET /api/books` — `src/worker.js:766+` | 按类查询，计数和结果分两次；每本有章节数相关查询；标签单独批量取回 | 当前书数较少时不应直接认定全表扫描，需配合 `EXPLAIN QUERY PLAN` 与 Query Insights 判断 |
 | P2 | 词卡跨书共享 — `src/study-identity.js` | `LOWER(TRIM(w.headword))` 和章节关联，`annotateStudyWords` 对每 60 个词目进行一次数据库查询 | 查明已有 `ix_chapter_words_word` 是否确实已应用到生产；函数/表达式索引需要 `EXPLAIN` 后再加 |
 
@@ -53,6 +53,8 @@ npx wrangler d1 insights miaowu-english-prod --sort-by=count --time-period=2d --
 - [x] 盘点四条指定链路和章节权限读取；对应源码及查询风险如上。
 - [x] `my-bookshelf` 的 6 个重复用户进度相关子查询改为按用户一次汇总（保留书籍计数的单独标量查询）。用合成 SQLite 比较新旧结果，样例字段完全一致（两本书、跨用户、未发表章节）。
 - [x] 新增 Node SQLite 回归测试（需 CI 实际执行验证）。
+- [x] 词卡接口权限判定复用正文规则但只取章节元数据，不再先加载整章正文。
+- [x] 核查浏览器端已有 `glossaryCache`（`public/app.js`，按用户与章节缓存成功结果）；待通过真实 Query Insights 后决定是否做请求进行中的去重、跨书统一词卡静态缓存。
 - [ ] 获取生产过去 48h 的 Query Insights 的真实指标与时间窗。
 - [ ] 确认 Cloudflare `rowsRead` Top 5，按累计读取量、单次平均读取量、执行次数归因。
 - [ ] 确认线上索引是否和仓库迁移一致；在测试库 EXPLAIN/回归，才能讨论生产执行索引迁移。
