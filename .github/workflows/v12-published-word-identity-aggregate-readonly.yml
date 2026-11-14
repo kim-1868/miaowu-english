@@ -7,11 +7,11 @@ on:
   workflow_dispatch:
     inputs:
       confirm_scope:
-        description: PUBLISHED_32_BOOKS_ONLY or CET4_02_144_HEADWORDS_ONLY
+        description: PUBLISHED_32_BOOKS_ONLY or CET4_02_144_HEADWORDS_ONLY or CET4_02_ENCRYPTED_ARTIFACT_HANDOFF_ONLY
         type: string
         required: true
       confirm_intent:
-        description: PRODUCTION_WORD_IDENTITY_AGGREGATE_SELECT_ONLY or PRODUCTION_CET4_02_WORDCARD_SELECT_ONLY
+        description: PRODUCTION_WORD_IDENTITY_AGGREGATE_SELECT_ONLY or PRODUCTION_CET4_02_WORDCARD_SELECT_ONLY or REWRAP_EXISTING_CET4_02_REPORT_NO_D1_QUERY
         type: string
         required: true
 permissions:
@@ -196,3 +196,88 @@ jobs:
         if: always()
         shell: bash
         run: rm -f "$RUNNER_TEMP/cet4-02-wordcards-encrypted.gpg"
+
+  cet4-02-private-artifact-handoff:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109' &&
+      github.event_name == 'workflow_dispatch' &&
+      inputs.confirm_scope == 'CET4_02_ENCRYPTED_ARTIFACT_HANDOFF_ONLY' &&
+      inputs.confirm_intent == 'REWRAP_EXISTING_CET4_02_REPORT_NO_D1_QUERY'
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify exact encrypted artifact and expiring reviewer certificate
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          METADATA_PASSPHRASE: ${{ secrets.PRODUCTION_D1_METADATA_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${GH_TOKEN:?MISSING_GITHUB_READ_ONLY_TOKEN}"
+          : "${METADATA_PASSPHRASE:?MISSING_PRIVATE_ENCRYPTION_PASSPHRASE}"
+          test "${#METADATA_PASSPHRASE}" -ge 32
+          umask 077
+          private="$RUNNER_TEMP/cet4-02-handoff-private"
+          mkdir -m 700 "$private"
+          trap 'rm -rf "$private"' EXIT
+          printf '%s' "$METADATA_PASSPHRASE" > "$private/passphrase"
+          unset METADATA_PASSPHRASE
+          curl --fail --location --silent --show-error --retry 2 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            'https://api.github.com/repos/kim-1868/miaowu-english/actions/artifacts/14106188552/zip' \
+            --output "$private/source.zip"
+          echo 'b72f3b40265fa0aa4f502d20feccbdc4428ecb86dd8160ae91d289c8cb230180  '"$private/source.zip" | sha256sum -c - >/dev/null
+          unzip -p "$private/source.zip" cet4-02-wordcards-encrypted.gpg > "$private/source.gpg"
+          echo 'fc139d4943883505edd18578bfd04d1c79cbb5487963fac0da1a2630107c0a17  '"$private/source.gpg" | sha256sum -c - >/dev/null
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$private/passphrase" \
+            --decrypt "$private/source.gpg" \
+            > "$private/decoded.json" 2> "$private/decrypt.stderr"
+          node --input-type=module - "$private/decoded.json" <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const j=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          assert.equal(j.review_type,'CET4-02_144_TARGET_PRODUCTION_READONLY_LEGACY_WORD_CANDIDATES');
+          assert.equal(j.total_target_heads,144);
+          assert.equal(j.matched_headwords,43);
+          assert.equal(j.card_rows,48);
+          assert.equal(j.missing_headwords.length,101);
+          assert.equal(j.ambiguous_headwords.length,4);
+          assert.equal(j.confirmed_publisher_approval,false);
+          assert.equal(j.confirmed_crossbook_study_state,false);
+          assert.equal(j.production_writes,0);
+          assert.ok(Array.isArray(j.cards)&&j.cards.length===48);
+          assert.ok(j.cards.every(x=>x&&typeof x.word_id==='string'&&typeof x.headword==='string'));
+          console.log('CET4_02_VERIFIED_FIXED_PREVIOUS_REPORT_ONLY');
+          NODE
+          artifact="$RUNNER_TEMP/cet4-02-isolated-review.cms"
+          openssl cms -encrypt -binary -aes256 -outform DER \
+            -in "$private/decoded.json" \
+            -out "$artifact" config/cet4-02-reviewer-temporary-public.crt
+          test -s "$artifact"
+          rm -rf "$private"
+          echo 'CET4_02_PREVIOUS_ARTIFACT_REENCRYPTED_PRIVATE_NO_D1_QUERY_NO_USER_DATA'
+      - name: Upload isolated reviewer encrypted CMS only
+        uses: actions/upload-artifact@v4
+        with:
+          name: cet4-02-isolated-review-cms-48-cards
+          path: ${{ runner.temp }}/cet4-02-isolated-review.cms
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: error
+      - name: Purge encrypted runner copy
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/cet4-02-isolated-review.cms"
