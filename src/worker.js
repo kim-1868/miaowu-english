@@ -658,7 +658,7 @@ async function api(req, env) {
     if(path==="/api/ops/customers/query")return handleOpsCustomers(req,env,path);
     if(path==="/api/ops/customers/voucher-action")return handleOpsVoucher(req,env,path);
     if(path.startsWith("/api/ops/claims/"))return handleOpsClaims(req,env,path);
-    if(path==="/api/ops/import"||path==="/api/ops/lexicon")return handleOpsImport(req,env,path);
+    if(path==="/api/ops/import"||path==="/api/ops/import/coverage"||path==="/api/ops/lexicon")return handleOpsImport(req,env,path);
     if(path==="/api/ops/import/revise")return handleOpsDraftRevision(req,env,path);
     if(/^\/api\/ops\/books\/[a-z][a-z0-9_-]{2,79}\/live-editor(?:\/|$)/.test(path))
       return handleOpsLiveEdit(req,env,path);

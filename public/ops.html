@@ -3,8 +3,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>妙屋英语 · 运营出版台</title>
-<link rel="stylesheet" href="/ops-console.css?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;layout=20261106-v42&amp;updates=20261108-pub1&amp;wave1=20261108">
-<script src="/ops-console.js?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;tags=20261106-v40&amp;layout=20261106-v42&amp;updates=20261108-pub1&amp;wave1=20261108" defer></script>
+<link rel="stylesheet" href="/ops-console.css?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;layout=20261106-v42&amp;updates=20261108-pub1&amp;wave1=20261108&amp;coverage=1">
+<script src="/ops-console.js?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;tags=20261106-v40&amp;layout=20261106-v42&amp;updates=20261108-pub1&amp;wave1=20261108&amp;coverage=1" defer></script>
 </head><body>
 <header><div class="brand">喵 · 妙屋英语 <span>THE STORY & WORD LIBRARY</span></div>
   <div class="strap">运营出版台 <span class="pill">受控操作</span></div></header>
@@ -278,6 +278,14 @@
     </div>
     <div id="uploadStatus" role="status" aria-live="polite" class="status">请先验证运营身份，再选择文件。</div>
     <pre id="uploadReport" class="report" hidden></pre>
+    <section id="uploadCoverage" hidden aria-labelledby="uploadCoverageTitle">
+      <h3 id="uploadCoverageTitle">词汇预审</h3>
+      <pre id="uploadCoverageSummary" class="report" aria-live="polite"></pre>
+      <details id="uploadCoverageDetails" hidden>
+        <summary>查看新增词、重复词和剩余缺词</summary>
+        <pre id="uploadCoverageWords" class="report"></pre>
+      </details>
+    </section>
     <div class="ops-tag-editor">
       <h3>新小说剧情标签建议</h3>
       <p class="hint">识别小说后，根据故事简介、章节标题及部分正文生成可选标签。勾选的建议会在确认上架成功后保存；不合适的可取消。</p>

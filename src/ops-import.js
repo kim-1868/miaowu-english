@@ -2,6 +2,7 @@
 // NEVER creates entitlements or publishes any chapter. The S9 release gate
 // remains a separate explicit review + publish action with a version fingerprint.
 import {authenticateOperator,hasOpsRole} from "./ops-access.js";
+import {reviewNovelCoverage} from "./ops-novel-coverage.js";
 import {validatePackage} from "./editorial-content.js";
 const HEAD={"content-type":"application/json; charset=utf-8","cache-control":"private, no-store",
  "x-content-type-options":"nosniff","referrer-policy":"no-referrer"};
@@ -96,7 +97,8 @@ async function existingWordConflicts(db,words){
  return null;
 }
 export async function handleOpsImport(req,env,path){
- if(!(path==="/api/ops/import"&&req.method==="POST")&&
+ const coverage=path==="/api/ops/import/coverage"&&req.method==="POST";
+ if(!coverage&&!(path==="/api/ops/import"&&req.method==="POST")&&
     !(path==="/api/ops/lexicon"&&req.method==="GET"))return err("NOT_FOUND",404);
  if(env.APP_ENV!=="production"&&env.APP_ENV!=="staging")return err("NOT_FOUND",404);
  const auth=await authenticateOperator(req,env);
@@ -129,6 +131,12 @@ export async function handleOpsImport(req,env,path){
  let plan;
  try{plan=planOpsBookImport(checked.validated)}
  catch(e){return err(e.message==="PACKAGE_STATEMENT_LIMIT"?"PACKAGE_STATEMENT_LIMIT":"INVALID_NOVEL_PACKAGE",400)}
+ if(coverage){
+  try{
+   const result=await reviewNovelCoverage(env.DB,checked.validated);
+   return result?json(result):err("INVALID_CATEGORY",400);
+  }catch{return err("COVERAGE_UNAVAILABLE",503);}
+ }
  try{
   const exists=await stmt(env.DB,"SELECT id FROM books WHERE id=?",plan.summary.bookId).first();
   if(exists)return err("BOOK_ALREADY_EXISTS_USE_VERSIONED_REVISION",409);

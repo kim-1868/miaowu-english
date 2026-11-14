@@ -37,7 +37,7 @@ async function api(path,method="GET",body){
     if(result.status===401){
       key="";identity=null;catalogBooks=[];catalogPage=1;chosen=null;
       $("operatorIdentity").textContent="身份已失效";
-      clearActions();renderBookDirectory();customerAdmin?.reset();claimAdmin?.reset();updatesAdmin?.reset();
+      clearActions();resetNovel();renderBookDirectory();customerAdmin?.reset();claimAdmin?.reset();updatesAdmin?.reset();
     }
     throw Error("操作被拒绝："+(typeof data.error==="string"?data.error:"UNKNOWN")+
       "（HTTP "+result.status+"）。");
@@ -1282,7 +1282,12 @@ async function renderImportTagSuggestions(pkg){
 }
 
 const uploadMsg=message=>{$("uploadStatus").textContent=message;};
+let novelCheckVersion=0;
 function resetNovel(){
+ novelCheckVersion++;
+ $("uploadCoverage").hidden=true;
+ $("uploadCoverageDetails").hidden=true;
+ $("uploadCoverageWords").textContent="";
  pendingNovel=null;$("importNovel").disabled=true;$("reviseNovel").disabled=true;
  $("uploadTagSuggestions").replaceChildren();$("uploadTagStatus").textContent="识别小说后显示可选标签建议。";
  $("uploadReport").hidden=true;$("uploadPreview").hidden=true;
@@ -1343,6 +1348,7 @@ async function examineNovel(){
  if(!connected())throw Error("请先验证运营身份");
  const novel=$("uploadNovel").files?.[0];
  if(!novel)throw Error("请先选择小说文件");
+ const checkVersion=novelCheckVersion;
  const source=await readFile("uploadNovel");
  let pkg,report;
  if(/\.json$/i.test(novel.name)){
@@ -1379,6 +1385,7 @@ async function examineNovel(){
   throw Error("小说文件缺少书籍、章节或目标词卡，无法导入");
  if(report.anchors===0)throw Error("没有可点击的英文词汇标注，请检查词库匹配");
  if(JSON.stringify(pkg).length>1_500_000)throw Error("内容包过大，请缩短单次上传文件");
+ if(checkVersion!==novelCheckVersion||!connected())return;
  if(report.metadataIncomplete.length)uploadMsg("预检发现"+report.metadataIncomplete.length+"个词卡缺少音标/例句。可以导入草稿，但必须补齐后才能正式上架。");
  else{
   const existing=catalogBooks.find(x=>x.id===pkg.book.id);
@@ -1392,7 +1399,7 @@ async function examineNovel(){
  }
  pendingNovel=pkg;
  await renderImportTagSuggestions(pkg);
- syncButtons();
+ if(checkVersion!==novelCheckVersion||!connected())return;
  const lines=[
   "书籍："+pkg.book.title+"（"+pkg.book.category+"）",
   "章节："+report.chapters+"；付费章节："+report.paid,
@@ -1406,6 +1413,48 @@ async function examineNovel(){
   "第"+x.chapter+"章"+x.paragraph+"段 "+x.kind+" "+(x.word||"")).join("；"));
  $("uploadReport").hidden=false;$("uploadReport").textContent=lines.join("\n");
  previewNovelPackage(pkg);
+ await showNovelCoverage(pkg,checkVersion);
+}
+async function showNovelCoverage(pkg,checkVersion){
+ const summary=$("uploadCoverageSummary");
+ $("uploadCoverage").hidden=false;
+ summary.textContent="正在对照本分类正式书架……";
+ try{
+  const report=await api("/api/ops/import/coverage","POST",pkg);
+  if(checkVersion!==novelCheckVersion||!connected())return;
+  const rate=value=>value==null?"暂无":value+"%";
+  const signed=value=>value>0?"+"+value:String(value);
+  const lines=[
+   "本书有效去重词头："+report.bookHeadwords+" · 有效标注："+report.mentions,
+   "跨书重合率："+rate(report.crossBookRate)+"（"+report.overlapWords.length+"/"+report.bookHeadwords+"）",
+   "书内重复标注率："+rate(report.withinBookRate)+"（"+(report.mentions-report.bookHeadwords)+"/"+report.mentions+"）",
+   "预计净增："+signed(report.netGain)+" 词 · 新增 "+report.addedWords.length+" · 失去覆盖 "+report.lostWords.length
+  ];
+  if(report.total!=null){
+   lines.push("分级覆盖率："+rate(report.currentCoverageRate)+" → "+rate(report.projectedCoverageRate)+
+    "（"+report.currentCovered+" → "+report.projectedCovered+" / "+report.total+"）",
+    "预计还缺："+report.remaining+" 词",
+    "词表版本："+report.wordlistVersion);
+  }else{
+   lines.push("此分类尚无项目目标词表，以上按全部有效标注词统计。");
+  }
+  if(report.incompleteMentions)lines.push("未纳入统计的缺词性或释义标注："+report.incompleteMentions);
+  if(report.outsideWords.length)lines.push("词表外词头："+report.outsideWords.length);
+  lines.push("正式书架核对时间："+new Date(report.checkedAt).toLocaleString("zh-CN"));
+  summary.textContent=lines.join("\n");
+  const words=(label,list)=>label+"（"+list.length+"）："+(list.join("、")||"无");
+  const details=[
+   words("新增",report.addedWords),words("跨书重复",report.overlapWords),
+   words("书内重复",report.repeatedWords.map(([head,count])=>head+" ×"+count)),
+   words("失去覆盖",report.lostWords),words("词表外",report.outsideWords)
+  ];
+  if(report.missingWords)details.push(words("预计剩余缺词",report.missingWords));
+  $("uploadCoverageWords").textContent=details.join("\n\n");
+  $("uploadCoverageDetails").hidden=false;
+ }catch(error){
+  if(checkVersion===novelCheckVersion)summary.textContent="词汇预审未完成。"+error.message+
+   " 请重新识别文件后再查看统计。";
+ }
 }
 $("uploadNovel").addEventListener("change",()=>{
  resetNovel();const file=$("uploadNovel").files?.[0];
@@ -1724,7 +1773,7 @@ $("bookPageNext").addEventListener("click",()=>{
 button("connect",verify);button("refresh",()=>loadBooks());
 button("publish",doPublish);button("withdraw",doWithdraw);
 button("disconnect",async()=>{
-  key="";identity=null;chosen=null;clearActions();clearSaleReceipt();customerAdmin?.reset();claimAdmin?.reset();updatesAdmin?.reset();
+  key="";identity=null;chosen=null;clearActions();resetNovel();clearSaleReceipt();customerAdmin?.reset();claimAdmin?.reset();updatesAdmin?.reset();
   catalogBooks=[];catalogPage=1;
   $("bookSearch").value="";$("bookStatus").value="";updateBookCategoryOptions();
   renderBookDirectory();

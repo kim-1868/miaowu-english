@@ -66,3 +66,51 @@ test("S122 12 chapters / 1892 anchors import transactionally with publisher auth
   assert.equal(noToken.status,401);
  }finally{db.close();}
 });
+
+test("coverage uses only visible published chapter anchors and projects same-ID replacements",async()=>{
+ const {db}=createLocalFreshSchema();
+ try{
+  const digest=await digestOpsToken(TOKEN,PEPPER);
+  db.prepare("INSERT INTO ops_operators(id,display_name,role,environment,key_digest) VALUES(?,?,?,?,?)")
+   .run("ops-importer","Content publisher","publisher","production",digest);
+  const env={APP_ENV:"production",OPS_TOKEN_PEPPER:PEPPER,DB:D1(db)};
+  db.prepare("UPDATE categories SET is_visible=1 WHERE slug='cet4'").run();
+  const makeBook=(id,heads)=>({
+   version:1,book:{id,title:id,category:"cet4"},
+   words:[...new Set(heads)].map(headword=>({id:"word-"+headword,headword,partOfSpeech:"n.",meaningZh:"释义"})),
+   chapters:[{id:id+"-1",number:1,title:"第一章",preview:false,paragraphs:[{
+    segments:heads.map(head=>({wordId:"word-"+head,surface:head,gloss:"释义"}))
+   }]}]
+  });
+  for(const [id,heads] of [["published-book",["abandon","ability","abnormal"]],["draft-book",["absence"]],["future-book",["absence"]]]){
+   const res=await handleOpsImport(makeRequest("/api/ops/import","POST",makeBook(id,heads)),env,"/api/ops/import");
+   assert.equal(res.status,201,await res.clone().text());
+  }
+  db.exec(`UPDATE books SET status='published' WHERE id IN ('published-book','future-book');
+   UPDATE chapters SET published_at='2020-01-01 00:00:00' WHERE book_id='published-book';
+   UPDATE chapters SET published_at='2099-01-01 00:00:00' WHERE book_id='future-book';
+   UPDATE chapter_words SET context_anchor='p0:s99' WHERE word_id='word-abnormal';`);
+  const path="/api/ops/import/coverage";
+  const pkg=makeBook("new-book",["abandon","abandon","absence","abnormal"]);
+  const unauthorized=await handleOpsImport(makeRequest(path,"POST",pkg,null),env,path);
+  assert.equal(unauthorized.status,401);
+  const before=db.prepare("SELECT total_changes() n").get().n;
+  const response=await handleOpsImport(makeRequest(path,"POST",pkg),env,path);
+  assert.equal(response.status,200,await response.clone().text());
+  const report=await response.json();
+  assert.equal(report.total,3849);
+  assert.equal(report.currentCovered,2);
+  assert.equal(report.projectedCovered,4);
+  assert.deepEqual(report.overlapWords,["abandon"]);
+  assert.deepEqual(report.addedWords,["abnormal","absence"]);
+  assert.equal(report.crossBookRate,33.33);
+  assert.equal(report.withinBookRate,25);
+  assert.equal(report.remaining,3845);
+  const revised=await handleOpsImport(makeRequest(path,"POST",makeBook("published-book",["abandon","absence"])),env,path);
+  const replacement=await revised.json();
+  assert.deepEqual(replacement.overlapWords,[]);
+  assert.deepEqual(replacement.lostWords,["ability"]);
+  assert.equal(replacement.netGain,0);
+  assert.equal(db.prepare("SELECT total_changes() n").get().n,before);
+ }finally{db.close();}
+});
