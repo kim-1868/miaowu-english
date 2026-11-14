@@ -2,6 +2,7 @@
 // NEVER creates entitlements or publishes any chapter. The S9 release gate
 // remains a separate explicit review + publish action with a version fingerprint.
 import {authenticateOperator,hasOpsRole} from "./ops-access.js";
+import {isNonProductionManuscript} from "./ops-publication.js";
 import {reviewNovelCoverage} from "./ops-novel-coverage.js";
 import {validatePackage} from "./editorial-content.js";
 const HEAD={"content-type":"application/json; charset=utf-8","cache-control":"private, no-store",
@@ -133,8 +134,45 @@ export async function handleOpsImport(req,env,path){
  catch(e){return err(e.message==="PACKAGE_STATEMENT_LIMIT"?"PACKAGE_STATEMENT_LIMIT":"INVALID_NOVEL_PACKAGE",400)}
  if(coverage){
   try{
-   const result=await reviewNovelCoverage(env.DB,checked.validated);
-   return result?json(result):err("INVALID_CATEGORY",400);
+   const {book,chapters,words}=checked.validated;
+   const db=env.DB;
+   const [result,bookMatches,wordConflict]=await Promise.all([
+    reviewNovelCoverage(db,checked.validated),
+    stmt(db,"SELECT id,status,category_id FROM books WHERE id=? OR (category_id=? AND title=?)",
+     book.id,book.category,book.title).all(),
+    existingWordConflicts(db,words)
+   ]);
+   if(!result)return err("INVALID_CATEGORY",400);
+   const blockers=[];
+   const existing=bookMatches.results.find(row=>row.id===book.id);
+   if(existing)blockers.push(existing.status==="published"?
+    "该书已上架，请走已发布小说修订入口。":"该书编号已存在，请走原书修订流程。");
+   if(bookMatches.results.some(row=>row.id!==book.id))blockers.push("本等级已有同名书。");
+   if(isNonProductionManuscript(book))blockers.push("书名或编号带有测试稿标记。");
+   if(env.OPS_PUBLICATION_ENABLED!=="true")blockers.push("当前环境未启用正式发布。");
+   if(!plan.summary.paid)blockers.push("至少需要一章付费正文。");
+   if(!plan.summary.anchors)blockers.push("正文没有学习标注。");
+   if(plan.summary.metadataNeedsCompletion.length)
+    blockers.push("词卡缺少音标、词性或双语例句："+plan.summary.metadataNeedsCompletion.join("、"));
+   if(wordConflict)blockers.push("正式词卡编号与上传内容冲突："+wordConflict);
+   if(chapters.some(ch=>ch.paragraphs.some(p=>!p.segments.map(seg=>seg.text??seg.surface).join("").trim())))
+    blockers.push("正文存在空白段落。");
+   if(chapters.some(ch=>ch.paragraphs.some(p=>p.segments.some(seg=>seg.wordId&&!seg.gloss.trim()))))
+    blockers.push("正文存在缺少语境释义的词卡标注。");
+   {
+    const ids=chapters.map(ch=>ch.id);
+    const conflict=await stmt(db,"SELECT id FROM chapters WHERE id IN ("+ids.map(()=>"?").join(",")+") LIMIT 1",...ids).first();
+    if(conflict)blockers.push("章节编号已存在："+conflict.id);
+   }
+   const alternatives=existing?[]:(await Promise.all(["cet4","cet6","postgrad","ielts","gk"]
+    .filter(category=>category!==book.category)
+    .map(async category=>{
+     const report=await reviewNovelCoverage(db,{...checked.validated,book:{...book,category}});
+     if(!report?.total)return null;
+     const duplicate=await stmt(db,"SELECT id FROM books WHERE category_id=? AND title=?",category,book.title).first();
+     return duplicate?null:{category,netGain:report.netGain,bookHeadwords:report.bookHeadwords,crossBookRate:report.crossBookRate};
+    }))).filter(Boolean);
+   return json({...result,blockers,alternatives});
   }catch{return err("COVERAGE_UNAVAILABLE",503);}
  }
  try{

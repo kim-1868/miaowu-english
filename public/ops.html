@@ -3,8 +3,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>妙屋英语 · 运营出版台</title>
-<link rel="stylesheet" href="/ops-console.css?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;layout=20261106-v42&amp;updates=20261108-pub1&amp;wave1=20261108&amp;coverage=2">
-<script src="/ops-console.js?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;tags=20261106-v40&amp;layout=20261106-v42&amp;updates=20261108-pub1&amp;wave1=20261108&amp;coverage=2" defer></script>
+<link rel="stylesheet" href="/ops-console.css?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;layout=20261106-v42&amp;updates=20261108-pub1&amp;wave1=20261108&amp;coverage=3">
+<script src="/ops-console.js?v=20261104-v29-live-editor&amp;customers=20261105-v32&amp;claims=20261105-v33&amp;tags=20261106-v40&amp;layout=20261106-v42&amp;updates=20261108-pub1&amp;wave1=20261108&amp;coverage=3" defer></script>
 </head><body>
 <header><div class="brand">喵 · 妙屋英语 <span>THE STORY & WORD LIBRARY</span></div>
   <div class="strap">运营出版台 <span class="pill">受控操作</span></div></header>
@@ -282,6 +282,15 @@
     <section id="uploadCoverage" hidden aria-labelledby="uploadCoverageTitle">
       <h3 id="uploadCoverageTitle">词汇预审</h3>
       <pre id="uploadCoverageSummary" class="report" aria-live="polite"></pre>
+      <section id="uploadRecommendation" hidden>
+        <h4>上架建议</h4>
+        <label for="uploadNetGoal">本书计划净增词数
+          <input id="uploadNetGoal" type="number" min="0" max="500" step="1" placeholder="按分级排产填写">
+        </label>
+        <label><input id="uploadEditorialReviewed" type="checkbox">
+          已按当前等级逐章核过故事完整性、阅读体验、英文用法、词卡义项和发音，并核对正文与封面权利及试读设置</label>
+        <pre id="uploadRecommendationResult" class="report" aria-live="polite"></pre>
+      </section>
       <details id="uploadCoverageDetails" hidden>
         <summary>查看新增词、重复词和剩余缺词</summary>
         <pre id="uploadCoverageWords" class="report"></pre>

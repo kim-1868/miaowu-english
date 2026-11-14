@@ -1283,8 +1283,14 @@ async function renderImportTagSuggestions(pkg){
 
 const uploadMsg=message=>{$("uploadStatus").textContent=message;};
 let novelCheckVersion=0;
+let uploadCoverageResult=null;
+let uploadCoverReview=null;
+let uploadCoverVersion=0;
 function resetNovel(){
  novelCheckVersion++;
+ uploadCoverageResult=null;
+ $("uploadRecommendation").hidden=true;
+ $("uploadEditorialReviewed").checked=false;
  $("uploadCoverage").hidden=true;
  $("uploadCoverageDetails").hidden=true;
  $("uploadCoverageWords").textContent="";
@@ -1457,11 +1463,51 @@ async function showNovelCoverage(pkg,checkVersion){
   if(report.missingWords)details.push(words("预计剩余缺词",report.missingWords));
   $("uploadCoverageWords").textContent=details.join("\n\n");
   $("uploadCoverageDetails").hidden=false;
+  uploadCoverageResult=report;
+  $("uploadRecommendation").hidden=false;
+  renderUploadRecommendation();
  }catch(error){
-  if(checkVersion===novelCheckVersion)summary.textContent="词汇预审未完成。"+error.message+
-   " 请重新识别文件后再查看统计。";
+  if(checkVersion!==novelCheckVersion)return;
+  summary.textContent="待完成审核。"+error.message+" 请重新识别文件后再查看上架建议。";
  }
 }
+function renderUploadRecommendation(){
+ const report=uploadCoverageResult;
+ if(!report)return;
+ const output=$("uploadRecommendationResult");
+ const goal=$("uploadNetGoal").valueAsNumber;
+ const editorial=$("uploadEditorialReviewed").checked;
+ const blockers=[...report.blockers];
+ const file=$("uploadCoverWithNovel").files?.[0];
+ if(!file)blockers.push("请选择封面并核对素材。");
+ else if(uploadCoverReview?.error)blockers.push(uploadCoverReview.error);
+ const pending=[];
+ if(file&&!uploadCoverReview)pending.push("正在核验封面文件。");
+ if(!editorial)pending.push("请完成当前等级的逐章内容审核并确认。");
+ if(!Number.isInteger(goal)||goal<0||goal>500)pending.push("请填写本书计划净增词数（0–500）。");
+ if(report.total==null)pending.push("该等级尚未设置目标词表。");
+ if(report.total!=null&&report.bookHeadwords===0)blockers.push("本书没有当前等级的有效目标词。");
+ const alternatives=report.alternatives.map(item=>({...item,label:uploadCategoryLabel(item.category)}));
+ const comparisons=alternatives.length?["其他等级覆盖对照（需按对应等级重新审核内容和目标）",
+  ...alternatives.map(item=>item.label+" · 预计净增 "+item.netGain+" 词 · 有效目标词 "+item.bookHeadwords)]:[];
+ let lines;
+ if(blockers.length)lines=["不建议上架",...blockers,...pending];
+ else if(pending.length)lines=["待完成审核",...pending];
+ else if(report.netGain<goal){
+  const candidate=alternatives.filter(item=>item.netGain>=goal&&item.bookHeadwords>=report.bookHeadwords)
+   .sort((a,b)=>b.netGain-a.netGain||b.bookHeadwords-a.bookHeadwords)[0];
+  lines=[candidate?"建议调整至"+candidate.label+"复审":"不建议上架",
+   "当前等级预计净增 "+report.netGain+" 词，低于本书目标 "+goal+" 词。",
+   candidate?candidate.label+"预计净增 "+candidate.netGain+" 词。请切换等级，重新检查并完成该等级的审核。":
+    "请优先补入本等级尚未覆盖且适合剧情的词。"];
+ }else{
+  lines=["建议上架到"+uploadCategoryLabel(report.category),
+   "预计净增 "+report.netGain+" 词，达到本书目标 "+goal+" 词。技术预检、封面检查和内容审核确认已完成。"];
+ }
+ output.textContent=[...lines,...(comparisons.length?["",...comparisons]:[])].join("\n");
+}
+$("uploadNetGoal").addEventListener("input",renderUploadRecommendation);
+$("uploadEditorialReviewed").addEventListener("change",renderUploadRecommendation);
 function uploadCategoryLabel(category){
  return [...$("uploadCategory").options].find(option=>option.value===category)?.textContent||category;
 }
@@ -1488,9 +1534,25 @@ $("uploadNovel").addEventListener("change",async()=>{
   $(id).addEventListener("change",resetNovel);
 });
 button("checkNovel",async()=>{
- resetNovel();await examineNovel();
+ resetNovel();
+ try{await examineNovel();}
+ catch(error){uploadMsg("不建议上架。"+error.message);}
 });
-$("uploadCoverWithNovel").addEventListener("change",syncButtons);
+$("uploadCoverWithNovel").addEventListener("change",async()=>{
+ const version=++uploadCoverVersion;
+ const file=$("uploadCoverWithNovel").files?.[0];
+ uploadCoverReview=null;
+ $("uploadEditorialReviewed").checked=false;
+ syncButtons();
+ renderUploadRecommendation();
+ if(!file)return;
+ let review;
+ try{await makeCoverBlob(file);review={};}
+ catch(error){review={error:error.message};}
+ if(version!==uploadCoverVersion)return;
+ uploadCoverReview=review;
+ renderUploadRecommendation();
+});
 // Updating a withdrawn book must NEVER take the new-book POST path.
 // Keep the same book/chapter identities and require the publisher's explicit
 // second approval before replacing historical content.
@@ -1582,6 +1644,7 @@ button("importNovel",async()=>{
       }
     }
     $("uploadCoverWithNovel").value="";
+    uploadCoverVersion++;uploadCoverReview=null;
     resetNovel();await loadBooks(created.bookId);
     uploadMsg("《"+title+"》已成功上架，"+created.chapters+"章、"+
       created.wordCards+"个词卡。已上传封面"+tagNotice+"，付费章节仍由会员权限保护。");
