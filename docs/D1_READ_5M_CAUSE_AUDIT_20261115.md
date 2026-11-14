@@ -6,6 +6,18 @@
 >
 > 对照分支：`feature/v11-smart-vocab-preflight-20261109`（该分支并非已验证的生产部署 SHA；必须以生产部署元数据为准）。
 
+## Cloudflare 实测补充：用户 2026-11-15 提供的 Query Insights 截图
+
+- `Rows read` 图显示所选范围累计 **12.64M**（不是固定自然日，亦不能等同当前剩余额度）。
+- 查询表显示 **85 条 SQL 模式**，当前截图第 1 页（10 条）。注意表头 `% of runtime` 的降序箭头：**当前是按运行耗时占比排序，非按 Rows read 排序**，因此后面 75 条中可能有更耗行的查询。
+- 截图第 1 条：`SELECT DISTINCT w.headword,b...`，执行 **8** 次，总 `Rows read=6.63M`，平均约 **828,750 行/次**，`Rows read/returned=1.12k`。
+- 第 2 条：`SELECT c.slug,b.id AS book_i...`，执行 **1** 次，读取 **1.33M**。
+- 第 3 条：`SELECT c.slug,b.id AS book_i...`，执行 **1** 次，读取 **1.31M**。
+- 这三条可见 SQL 合计 **9.27M，占 12.64M 约 73.3%**，按截图取整估算，并非所有 SQL 的最终排名。
+- 这三个 SQL 前缀都**不同于本审计开发分支中** `/api/books`、`/api/me/bookshelf`、`/api/me/flashcards`、`/api/me/smart-vocab` 的主列表 SELECT 前缀。高度怀疑有人为审核/统计/分析型 SQL，但 **未展开 SQL，无法定位来源或确认是不是 production deploy 使用的版本**。
+- 需要点击 **Rows read** 列按**降序**重新排序，并展开前 3 条 SQL 复制**完整 SQL**（先清理字面量、不要贴账号/用户数据）。之后用 SQL 中的表/字段和 GitHub Actions 运行时间确认是否为人工/任务脚本，不要因为代码猜测直接改生产索引。
+- GitHub 2026-11-14 的人工运行记录确有 production 只读 P0 任务，但已检查的三条工作流运行分别是 CET4-02 词卡读取、无需 D1 的工件转换与待审批工件转换；**不能据此认定它们对应截图最耗行的 SQL**。
+
 ## 一、明确事实
 
 Cloudflare D1 以 `rowsRead` 计费/免费配额，而非 API 请求数。单次 SQL 的 `rowsRead`、执行次数 `numberOfTimesRun` 以及 `totalRowsRead` 可从 Cloudflare `d1QueriesAdaptiveGroups` 的 Query Insights 查询。查询历史保留约 31 天。统计图与 Query Insights 为云端观测结果，不应使用 `COUNT(*) FROM table` 去推断生产计费行数。
