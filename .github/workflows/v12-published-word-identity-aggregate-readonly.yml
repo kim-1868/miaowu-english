@@ -7,11 +7,11 @@ on:
   workflow_dispatch:
     inputs:
       confirm_scope:
-        description: PUBLISHED_32_BOOKS_ONLY or CET4_02_144_HEADWORDS_ONLY or CET4_02_ENCRYPTED_ARTIFACT_HANDOFF_ONLY
+        description: PUBLISHED_32_BOOKS_ONLY or CET4_02_144_HEADWORDS_ONLY or CET4_02_ENCRYPTED_ARTIFACT_HANDOFF_ONLY or OPS_AUTH_SCHEMA_SELECT_ONLY
         type: string
         required: true
       confirm_intent:
-        description: PRODUCTION_WORD_IDENTITY_AGGREGATE_SELECT_ONLY or PRODUCTION_CET4_02_WORDCARD_SELECT_ONLY or REWRAP_EXISTING_CET4_02_REPORT_NO_D1_QUERY
+        description: PRODUCTION_WORD_IDENTITY_AGGREGATE_SELECT_ONLY or PRODUCTION_CET4_02_WORDCARD_SELECT_ONLY or REWRAP_EXISTING_CET4_02_REPORT_NO_D1_QUERY or DIAGNOSE_503_NO_PROD_WRITE
         type: string
         required: true
 permissions:
@@ -281,3 +281,103 @@ jobs:
         if: always()
         shell: bash
         run: rm -f "$RUNNER_TEMP/cet4-02-isolated-review.cms"
+  ops-auth-schema-readonly:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109' &&
+      github.event_name == 'workflow_dispatch' &&
+      inputs.confirm_scope == 'OPS_AUTH_SCHEMA_SELECT_ONLY' &&
+      inputs.confirm_intent == 'DIAGNOSE_503_NO_PROD_WRITE'
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify production database config and unauthenticated endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const c=JSON.parse(readFileSync('deploy/production.wrangler.jsonc','utf8'));
+          assert.equal(c.name,'miaowu-english-production');
+          assert.equal(c.vars.APP_ENV,'production');
+          assert.equal(c.d1_databases?.length,1);
+          assert.equal(c.d1_databases[0].database_name,'miaowu-english-prod');
+          assert.equal(c.d1_databases[0].database_id,'649c71b3-340c-49bf-b806-3d39256851d3');
+          console.log('PRODUCTION_DB_IDENTITY_VERIFIED');
+          NODE
+          status="$(curl -sS -o "$RUNNER_TEMP/ops-anon.json" -w '%{http_code}' --max-time 18 'https://miaowu-english-pages.pages.dev/api/ops/me')"
+          echo "OPS_ANONYMOUS_HTTP_$status"
+          test "$status" = 401
+      - name: Install Wrangler
+        run: npm install --ignore-scripts --no-save wrangler@^4
+      - name: Check ONLY table metadata and fixed auth query preparation
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PROD_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          umask 077
+          private="$RUNNER_TEMP/ops-503-private"
+          mkdir -m 700 "$private"
+          trap 'rm -rf "$private"' EXIT
+          probe() {
+            local label="$1"
+            local sql="$2"
+            if ! npx wrangler d1 execute miaowu-english-prod --remote --json \
+              --config deploy/production.wrangler.jsonc \
+              --command "$sql" > "$private/$label.json" 2> "$private/$label.stderr"; then
+              echo "OPS_DIAG_$label"": FAILED (raw errors private)"
+              return 1
+            fi
+            node --input-type=module - "$private/$label.json" "$label" <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const body=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          const b=Array.isArray(body)?body:[body];
+          assert.ok(b.length>0&&b.every(x=>x?.success===true&&Array.isArray(x.results)));
+          const rows=b.flatMap(x=>x.results);
+          const label=process.argv[3];
+          if(label==='OPS_TABLES'){
+            const got=new Set(rows.map(x=>x.name));
+            const missing=['ops_operators','ops_audit_events','books'].filter(x=>!got.has(x));
+            console.log('OPS_TABLE_MISSING='+missing.join(','));
+            assert.equal(missing.length,0);
+          }else if(label==='OPS_COLUMNS'){
+            const got=new Set(rows.map(x=>x.name));
+            const missing=['id','display_name','role','environment','key_digest','is_active','revoked_at'].filter(x=>!got.has(x));
+            console.log('OPS_COLUMNS_MISSING='+missing.join(','));
+            assert.equal(missing.length,0);
+          }else if(label==='AUDIT_COLUMNS'){
+            const got=new Set(rows.map(x=>x.name));
+            const missing=['id','actor_id','event_type','request_id'].filter(x=>!got.has(x));
+            console.log('AUDIT_COLUMNS_MISSING='+missing.join(','));
+            assert.equal(missing.length,0);
+          }else if(label==='OPS_LOGIN_SELECT'){
+            assert.equal(rows.length,0);
+            console.log('OPS_LOGIN_SQL_PREPARES_OK');
+          }else if(label==='BASELINE_SELECT'){
+            assert.ok(rows.length<=1);
+            console.log('BASELINE_SQL_OK');
+          }else throw Error('Unexpected diagnostic label');
+          NODE
+          }
+          probe BASELINE_SELECT "SELECT 1 AS probe FROM books LIMIT 1;"
+          probe OPS_TABLES "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('ops_operators','ops_audit_events','books') ORDER BY name;"
+          probe OPS_COLUMNS "PRAGMA table_info(ops_operators);"
+          probe AUDIT_COLUMNS "PRAGMA table_info(ops_audit_events);"
+          probe OPS_LOGIN_SELECT "SELECT id,display_name,role,environment FROM ops_operators WHERE key_digest='0000000000000000000000000000000000000000000000000000000000000000' AND environment='production' AND is_active=1 AND revoked_at IS NULL LIMIT 1;"
+          echo OPS_503_DIAG_ALL_READONLY_CHECKS_PASS
+
