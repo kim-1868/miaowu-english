@@ -63,12 +63,19 @@ test('fixed SQL cannot read drafts, mutate data or print dictionary contents',()
  assert.doesNotMatch(w,/wrangler deploy|d1 migrations apply|wrangler d1 export/i);
 });
 
-test('protected push creates an approval gate without manual form or default-branch D1 access',()=>{
+test('production word identity aggregate requires owner manual dispatch and approval',()=>{
  const w=readFileSync('.github/workflows/v12-published-word-identity-aggregate-readonly.yml','utf8');
- assert.ok(w.includes('  push:')); assert.ok(w.includes('branches: [feature/v11-smart-vocab-preflight-20261109]'));
- assert.ok(w.includes("(github.event_name == 'workflow_dispatch' || github.event_name == 'push')"));
- assert.ok(w.includes("if: github.event_name == 'workflow_dispatch'"));
+ assert.ok(w.includes('  push:'));
+ assert.ok(w.includes('branches: [feature/v11-smart-vocab-preflight-20261109]'));
+ assert.ok(w.includes("github.event_name == 'workflow_dispatch' &&"));
+ assert.ok(w.includes("inputs.confirm_scope == 'PUBLISHED_32_BOOKS_ONLY'"));
+ assert.ok(w.includes("inputs.confirm_intent == 'PRODUCTION_WORD_IDENTITY_AGGREGATE_SELECT_ONLY'"));
  assert.ok(w.includes('production-d1-readonly-approval'));
  assert.ok(w.includes("github.actor == 'kim-1868'"));
+ assert.ok(w.includes('cet4-02-wordcard-lookup-encrypted:'));
+ assert.ok(w.includes("inputs.confirm_scope == 'CET4_02_144_HEADWORDS_ONLY'"));
+ assert.ok(w.includes("inputs.confirm_intent == 'PRODUCTION_CET4_02_WORDCARD_SELECT_ONLY'"));
+ assert.ok(w.includes('scripts/cet4-02-production-wordcards-readonly.mjs'));
+ assert.ok(w.includes('cet4-02-production-144-wordcards-encrypted'));
  assert.doesNotMatch(w,/wrangler deploy|d1 migrations apply|UPDATE user_words/i);
 });
