@@ -59,12 +59,22 @@ export async function authenticateOperator(req,env){
   if(!(await schemaReady(env.DB)))return {response:error("OPS_SCHEMA_REQUIRED",503)};
   const digest=await digestOpsToken(token,env.OPS_TOKEN_PEPPER);
   let operator;
-  try{
-    operator=await env.DB.prepare(
+  const lookup=async()=>{
+    const {results}=await env.DB.prepare(
       "SELECT id,display_name,role,environment FROM ops_operators "+
-      "WHERE key_digest=? AND environment=? AND is_active=1 AND revoked_at IS NULL"
-    ).bind(digest,env.APP_ENV).first();
-  }catch{return {response:error("OPS_BACKEND_UNAVAILABLE",503)}}
+      "WHERE key_digest=? AND environment=? AND is_active=1 AND revoked_at IS NULL LIMIT 1"
+    ).bind(digest,env.APP_ENV).all();
+    return results[0];
+  };
+  try{operator=await lookup();}
+  catch{
+    // Retry the same read once. Authentication still requires the exact stored digest.
+    try{operator=await lookup();}
+    catch{
+      console.error("OPS_OPERATOR_LOOKUP_FAILED");
+      return {response:error("OPS_BACKEND_UNAVAILABLE",503)};
+    }
+  }
   if(!operator||!ID.test(operator.id)||!ROLES.has(operator.role))
     return {response:error("OPS_AUTH_REQUIRED",401)};
   return {operator};
