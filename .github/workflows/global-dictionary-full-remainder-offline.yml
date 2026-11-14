@@ -1,0 +1,93 @@
+name: Dictionary full remaining headword index OFFLINE rehearsal (NO D1)
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/global-dictionary-full-remainder-offline.yml
+      - scripts/prepare-full-dictionary-remainder.py
+      - tests/test_full_dictionary_remainder.py
+      - scripts/verify-staging-dictionary-remainder-cohort.py
+      - tests/test_staging_dictionary_remainder_workflow.py
+      - .github/workflows/global-dictionary-staging-remainder-cohort-manual.yml
+      - db/013_global_dictionary.sql
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  prepare-only:
+    if: github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run all offline remainder unit tests
+        run: |
+          python -m unittest discover -s tests -p 'test_full_dictionary_remainder.py' -v
+          python -m unittest discover -s tests -p 'test_staging_dictionary_remainder_workflow.py' -v
+      - name: Recover pinned audited upstream source without Cloudflare token
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          private="$RUNNER_TEMP/full-dictionary-unverified-upstream"
+          mkdir -m 700 "$private"
+          curl --fail --silent --show-error --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/13742288377/zip" \
+            -o "$RUNNER_TEMP/full-dictionary-unverified-upstream.zip"
+          unzip -t "$RUNNER_TEMP/full-dictionary-unverified-upstream.zip" >/dev/null
+          unzip -q "$RUNNER_TEMP/full-dictionary-unverified-upstream.zip" -d "$private"
+          for file in dictionary-unverified-entries.jsonl dictionary-unverified-forms.jsonl audit-summary.json LICENSE-ECDICT.txt; do
+            test -s "$private/$file" || exit 1
+          done
+          echo 'FULL_UPSTREAM_PUBLIC_SOURCE_ARCHIVE_RECOVERED_NO_CUSTOMER_DATA'
+      - name: Generate nine safe unreviewed remainder cohorts and replay locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          private="$RUNNER_TEMP/full-dictionary-unverified-upstream"
+          export_dir="$RUNNER_TEMP/full-dictionary-remainder-cohorts"
+          python scripts/prepare-full-dictionary-remainder.py \
+            --entries "$private/dictionary-unverified-entries.jsonl" \
+            --forms "$private/dictionary-unverified-forms.jsonl" \
+            --audit "$private/audit-summary.json" \
+            --out "$export_dir" --cohort-cap 50000 --sql-file-rows 500
+          cp "$private/LICENSE-ECDICT.txt" "$export_dir/LICENSE-ECDICT.txt"
+          python - "$export_dir/manifest.json" <<'PY'
+          import json,sys
+          x=json.load(open(sys.argv[1],encoding='utf-8'))
+          assert (x['source_entries'],x['source_forms'])==(400183,56898)
+          assert (x['already_imported_exam_entries'],x['already_imported_exam_forms'])==(11422,16442)
+          assert (x['candidate_remaining_entries'],x['candidate_remaining_forms'])==(388761,40456)
+          assert x['source_enabled'] is False and x['license_reviewed'] is False
+          assert x['remote_database_access'] is False and x['production_access'] is False
+          assert len(x['cohorts'])==9
+          assert all(c['rows']<=50000 and c['requires_owner_approval'] for c in x['cohorts'])
+          print('FULL_REMAINDER_388761_HEADWORDS_40456_FORMS_9_UNREVIEWED_COHORTS_PREPARED')
+          PY
+      - name: Verify each of nine pinned cohort manifests, SQL digests and prefix totals
+        shell: bash
+        run: |
+          set -euo pipefail
+          export_dir="$RUNNER_TEMP/full-dictionary-remainder-cohorts"
+          for cohort in 1 2 3 4 5 6 7 8 9; do
+            python scripts/verify-staging-dictionary-remainder-cohort.py \
+              --root "$export_dir" --cohort "$cohort" \
+              --out "$RUNNER_TEMP/cohort-validation-$cohort.json"
+          done
+          echo 'ALL_NINE_FULL_DICTIONARY_COHORT_MANIFESTS_VALIDATED_NO_D1_ACCESS'
+      - name: Upload ONLY unreviewed publicly sourced candidate SQL cohorts
+        uses: actions/upload-artifact@v4
+        with:
+          name: unverified-full-remainder-offline-9cohorts-${{ github.run_id }}
+          path: ${{ runner.temp }}/full-dictionary-remainder-cohorts/
+          retention-days: 30
+          if-no-files-found: error

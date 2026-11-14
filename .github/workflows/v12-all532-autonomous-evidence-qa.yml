@@ -1,0 +1,31 @@
+name: V1.2 all 532 published duplicate lexical evidence synthetic QA
+on:
+  pull_request:
+    paths:
+      - scripts/audit-all532-published-duplicate-lexical-evidence.mjs
+      - tests/v12-all532-autonomous-evidence-qa.test.mjs
+      - .github/workflows/v12-all532-autonomous-evidence-review.yml
+      - .github/workflows/v12-all532-autonomous-evidence-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - scripts/audit-all532-published-duplicate-lexical-evidence.mjs
+      - tests/v12-all532-autonomous-evidence-qa.test.mjs
+permissions:
+  contents: read
+jobs:
+  synthetic-532-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          set -euo pipefail
+          node --check scripts/audit-all532-published-duplicate-lexical-evidence.mjs
+          node --test tests/v12-all532-autonomous-evidence-qa.test.mjs
+      - run: echo 'SYNTHETIC_ONLY_NO_REAL_PUBLISHER_ROWS_NO_PRODUCTION_DB_ACCESS'

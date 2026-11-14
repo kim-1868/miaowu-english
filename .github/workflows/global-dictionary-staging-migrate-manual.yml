@@ -1,0 +1,119 @@
+name: Manual staging D1 dictionary schema 013-018 (never production)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_target:
+        type: string
+        required: true
+        description: Enter miaowu-english-test
+      confirm_uuid:
+        type: string
+        required: true
+        description: Enter exact test D1 UUID
+      confirmation:
+        type: string
+        required: true
+        description: Enter STAGING_013_018_ADD_ONLY
+      encrypted_backup_run_id:
+        type: string
+        required: true
+        description: Successful durable encrypted staging backup workflow run ID
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: staging-dictionary-schema-manual
+  cancel-in-progress: false
+jobs:
+  apply-on-test-only:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    environment:
+      name: staging-d1-schema-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Fail closed with clear diagnostics for all confirmation inputs
+        shell: bash
+        env:
+          CHECK_TARGET: ${{ inputs.confirm_target }}
+          CHECK_UUID: ${{ inputs.confirm_uuid }}
+          CHECK_CONFIRMATION: ${{ inputs.confirmation }}
+          BACKUP_RUN_ID: ${{ inputs.encrypted_backup_run_id }}
+        run: |
+          set -euo pipefail
+          test "$CHECK_TARGET" = 'miaowu-english-test' || { echo 'STAGING_TARGET_CONFIRMATION_MISMATCH'; exit 1; }
+          test "$CHECK_UUID" = '88a817cb-23bb-4ae4-bcb8-92286c4165d4' || { echo 'STAGING_UUID_CONFIRMATION_MISMATCH'; exit 1; }
+          test "$CHECK_CONFIRMATION" = 'STAGING_013_018_ADD_ONLY' || { echo 'STAGING_APPROVAL_TEXT_MISMATCH'; exit 1; }
+          [[ "$BACKUP_RUN_ID" =~ ^[0-9]+$ ]] || { echo 'BACKUP_RUN_ID_MUST_BE_NUMERIC'; exit 1; }
+          echo 'STAGING_INPUT_CONFIRMATIONS_VALIDATED_NO_DATABASE_WRITES'
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate offline plan and local recovery before remote changes
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite scripts/execute-staging-dictionary-schema.mjs
+          node --experimental-sqlite scripts/rehearse-dictionary-staging-rollback.mjs
+      - name: Install Wrangler for staging D1 schema
+        run: npm install --ignore-scripts --no-save wrangler@^4
+      - name: Verify full test D1 export and independent local SQLite replay before mutation
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}" && test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          umask 077
+          backup="$RUNNER_TEMP/miaowu-staging-pre-013-018.sql"
+          restored="$RUNNER_TEMP/miaowu-staging-restore-test.sqlite"
+          trap 'rm -f "$backup" "$restored" "$restored-wal" "$restored-shm"' EXIT
+          npx wrangler d1 export miaowu-english-test --remote --skip-confirmation \
+            --config wrangler.jsonc --output "$backup" >/dev/null
+          test -s "$backup"
+          sqlite3 "$restored" < "$backup" >/dev/null
+          test "$(sqlite3 "$restored" 'PRAGMA integrity_check;')" = "ok"
+          test -z "$(sqlite3 "$restored" 'PRAGMA foreign_key_check;')"
+          for t in books words user_words chapter_words; do
+            test "$(sqlite3 "$restored" "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='$t';")" = "1"
+          done
+          echo 'STAGING_REMOTE_EXPORT_AND_DISPOSABLE_SQLITE_REPLAY_OK'
+          echo 'EPHEMERAL_RUNNER_BACKUP_IS_NOT_DURABLE_RECOVERY__TIMETRAVEL_STILL_REQUIRED'
+      - name: Require successful persisted encrypted backup artifact before ANY D1 mutation
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BACKUP_RUN_ID: ${{ inputs.encrypted_backup_run_id }}
+        run: |
+          set -euo pipefail
+          [[ "$BACKUP_RUN_ID" =~ ^[0-9]+$ ]] || { echo 'INVALID_BACKUP_RUN_ID'; exit 1; }
+          run_json="$RUNNER_TEMP/staging-backup-run-metadata.json"
+          artifact_json="$RUNNER_TEMP/staging-backup-artifacts-metadata.json"
+          trap 'rm -f "$run_json" "$artifact_json"' EXIT
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID" > "$run_json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID/artifacts" > "$artifact_json"
+          jq -e '
+            .status=="completed" and
+            .conclusion=="success" and
+            .head_branch=="feature/v11-smart-vocab-preflight-20261109" and
+            (.path==".github/workflows/global-dictionary-staging-durable-encrypted-backup.yml" or (.path | endswith("/.github/workflows/global-dictionary-staging-durable-encrypted-backup.yml")))
+          ' "$run_json" >/dev/null || { echo 'BACKUP_WORKFLOW_NOT_VERIFIED'; exit 1; }
+          jq -e '
+            [.artifacts[] | select(.name=="miaowu-staging-d1-encrypted-backup" and .expired==false and .size_in_bytes>0)] | length > 0
+          ' "$artifact_json" >/dev/null || { echo 'PERSISTED_ENCRYPTED_BACKUP_ARTIFACT_MISSING'; exit 1; }
+          echo 'APPROVED_ENCRYPTED_BACKUP_ARTIFACT_EXISTS'
+          echo 'BACKUP_RETENTION_IS_FINITE_MAKE_SEPARATE_OFFLINE_COPY'
+      - name: Apply only six explicit additive schema files to test database after approval
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          MIAOWU_STAGING_SCHEMA_APPROVAL: ${{ inputs.confirmation }}
+          MIAOWU_STAGING_TARGET: ${{ inputs.confirm_target }}
+          MIAOWU_STAGING_UUID: ${{ inputs.confirm_uuid }}
+        run: node --experimental-sqlite scripts/execute-staging-dictionary-schema.mjs --execute-test-only

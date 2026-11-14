@@ -1,0 +1,90 @@
+name: V1.2 protected triage existing encrypted 772 review artifact NO D1
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-protected-772-existing-artifact-triage.yml
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: v12-existing-772-artifact-private-triage
+  cancel-in-progress: false
+jobs:
+  protected-legacy-evidence-only:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify fail-closed 772 triage with synthetic data
+        run: |
+          set -euo pipefail
+          node --check scripts/triage-private-published-772-gloss-evidence.mjs
+          node --test tests/v12-private-772-gloss-triage.test.mjs
+      - name: Retrieve existing encrypted 772 artifact, triage privately, encrypt output
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          METADATA_PASSPHRASE: ${{ secrets.PRODUCTION_D1_METADATA_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${GH_TOKEN:?MISSING_REPOSITORY_ACTIONS_READ_TOKEN}"
+          : "${METADATA_PASSPHRASE:?MISSING_ENCRYPTION_KEY}"
+          test "${#METADATA_PASSPHRASE}" -ge 32
+          umask 077
+          private="$RUNNER_TEMP/miaowu-existing-772-triage"
+          mkdir -m 700 "$private"
+          artifact="$RUNNER_TEMP/v12-published-772-prioritized-review.gpg"
+          trap 'rm -rf "$private"' EXIT
+          printf '%s' "$METADATA_PASSPHRASE" >"$private/pass"
+          unset METADATA_PASSPHRASE
+          curl --fail --location --silent --show-error --retry 2 \
+           -H "Authorization: Bearer $GH_TOKEN" \
+           -H "Accept: application/vnd.github+json" \
+           "https://api.github.com/repos/kim-1868/miaowu-english/actions/artifacts/13922285839/zip" \
+           --output "$private/source.zip"
+          test "$(unzip -Z1 "$private/source.zip" | wc -l | tr -d ' ')" = '1'
+          unzip -Z1 "$private/source.zip" |
+            grep -Fxq 'v12-published-772-context-gloss-private.gpg'
+          unzip -p "$private/source.zip" 'v12-published-772-context-gloss-private.gpg' \
+           >"$private/source.gpg"
+          test -s "$private/source.gpg"
+          gpg --batch --yes --pinentry-mode loopback \
+           --passphrase-file "$private/pass" --decrypt "$private/source.gpg" \
+           >"$private/source.json" 2>"$private/gpg.error"
+          PRIVATE_772_TRIAGE_OUTPUT="$private/triage.json" \
+           node scripts/triage-private-published-772-gloss-evidence.mjs "$private/source.json"
+          gpg --batch --yes --pinentry-mode loopback \
+           --passphrase-file "$private/pass" --symmetric --cipher-algo AES256 \
+           --output "$artifact" "$private/triage.json" \
+           >/dev/null 2>"$private/gpg.encrypt.error"
+          test -s "$artifact"
+          gpg --batch --yes --pinentry-mode loopback \
+           --passphrase-file "$private/pass" --decrypt "$artifact" \
+           >"$private/roundtrip.json" 2>"$private/gpg.roundtrip.error"
+          cmp -s "$private/triage.json" "$private/roundtrip.json"
+          rm -rf "$private"
+          echo 'EXISTING_772_ENCRYPTED_ARTIFACT_TRIAGED_AND_REENCRYPTED'
+          echo 'NO_CLOUDFLARE_TOKEN_NO_D1_SELECT_NO_WRITES_NO_AUTO_APPROVAL'
+      - name: Upload ONLY encrypted reviewer priority queue
+        uses: actions/upload-artifact@v4
+        with:
+          name: v12-published-772-priority-review-encrypted
+          path: ${{ runner.temp }}/v12-published-772-prioritized-review.gpg
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+      - name: Remove encrypted runner copy
+        if: always()
+        run: rm -f "$RUNNER_TEMP/v12-published-772-prioritized-review.gpg"

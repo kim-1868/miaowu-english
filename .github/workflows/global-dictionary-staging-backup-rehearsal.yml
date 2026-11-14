@@ -1,0 +1,76 @@
+name: Dictionary staging D1 BACKUP and local restore rehearsal (no D1 writes)
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/global-dictionary-staging-backup-rehearsal.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: staging-dictionary-backup-readonly
+  cancel-in-progress: false
+jobs:
+  export-and-replay:
+    if: github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    environment:
+      name: staging-d1-schema-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify staging database is exactly allowlisted
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const cfg=JSON.parse(fs.readFileSync('wrangler.jsonc','utf8'));
+          assert.equal(cfg.name,'miaowu-english-staging');
+          assert.equal(cfg.vars.APP_ENV,'staging');
+          assert.equal(cfg.d1_databases.length,1);
+          assert.equal(cfg.d1_databases[0].database_name,'miaowu-english-test');
+          assert.equal(cfg.d1_databases[0].database_id,'88a817cb-23bb-4ae4-bcb8-92286c4165d4');
+          console.log('STAGING_DATABASE_IDENTITY_CONFIRMED');
+          NODE
+      - name: Install Wrangler
+        run: npm install --ignore-scripts --no-save wrangler@^4
+      - name: Export test D1 full SQL and rehearse restoration entirely offline
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}" && test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          umask 077
+          export_sql="$RUNNER_TEMP/staging-d1-sensitive.sql"
+          db_copy="$RUNNER_TEMP/staging-d1-restore-rehearsal.sqlite"
+          bookmark="$RUNNER_TEMP/staging-d1-time-travel-private.txt"
+          trap 'rm -f "$export_sql" "$db_copy" "$db_copy-wal" "$db_copy-shm" "$bookmark"' EXIT
+          npx wrangler d1 export miaowu-english-test --remote --skip-confirmation \
+            --config wrangler.jsonc --output "$export_sql" >/dev/null
+          test -s "$export_sql"
+          sqlite3 "$db_copy" < "$export_sql" >/dev/null
+          test "$(sqlite3 "$db_copy" 'PRAGMA integrity_check;')" = "ok"
+          test -z "$(sqlite3 "$db_copy" 'PRAGMA foreign_key_check;')"
+          for t in books words user_words chapter_words; do
+            test "$(sqlite3 "$db_copy" "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='$t';")" = "1"
+          done
+          new_table_count="$(sqlite3 "$db_copy" "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name LIKE 'global_dictionary_%';")"
+          test "$new_table_count" = 0
+          npx wrangler d1 time-travel info miaowu-english-test \
+            --config wrangler.jsonc >"$bookmark"
+          grep -qi bookmark "$bookmark"
+          echo 'STAGING_FULL_SQL_EXPORT_CREATED_AND_RESTORED_IN_EPHEMERAL_SQLITE'
+          echo 'STAGING_RESTORE_SQLITE_INTEGRITY_OK'
+          echo 'STAGING_RESTORE_SQLITE_FOREIGN_KEYS_OK'
+          echo 'STAGING_PRE_MIGRATION_DICTIONARY_TABLES_0'
+          echo 'STAGING_TIME_TRAVEL_BOOKMARK_AVAILABLE_REDACTED'
+          echo 'NO_D1_WRITES_NO_D1_RESTORE_NO_WORKER_DEPLOYMENT'
+          echo 'BACKUP_DELETED_AFTER_JOB__NOT_DURABLE__NO_MIGRATION_APPROVAL'

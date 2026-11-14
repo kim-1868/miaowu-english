@@ -1,0 +1,110 @@
+name: V1.2 32 PUBLISHED novels private duplicate-sense editorial queue (encrypted)
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-published-private-sense-editorial-queue.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: v12-private-published-editorial-queue
+  cancel-in-progress: false
+jobs:
+  protected-published-review:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Synthetic validation before protected data access
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check scripts/build-private-published-editorial-review-queue.mjs
+          node --experimental-sqlite --test tests/v12-private-published-sense-editorial-queue.test.mjs
+          node --check scripts/verify-published-word-identity-aggregate.mjs
+          node --check scripts/classify-published-word-aggregate-error.mjs
+      - name: Install Wrangler CLI (fixed SELECT only)
+        run: npm install --ignore-scripts --no-save wrangler@^4
+      - name: Verify PRODUCTION database UUID and read-only SQL scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const x=JSON.parse(readFileSync('deploy/production.wrangler.jsonc','utf8'));
+          assert.equal(x.vars.APP_ENV,'production');
+          assert.equal(x.d1_databases?.length,1);
+          assert.equal(x.d1_databases[0].database_name,'miaowu-english-prod');
+          assert.equal(x.d1_databases[0].database_id,'649c71b3-340c-49bf-b806-3d39256851d3');
+          const raw=readFileSync('sql/published_32_private_editorial_wordcards_readonly.sql','utf8');
+          const stripped=raw.split('\n').filter(line=>!line.trim().startsWith('--')).join('\n');
+          assert.ok(/^\s*SELECT\b/i.test(stripped));
+          assert.equal((stripped.match(/;/g)||[]).length,1);
+          assert.match(stripped,/b\.status='published'/);
+          assert.match(stripped,/ch\.published_at IS NOT NULL/);
+          assert.doesNotMatch(stripped,/\b(?:content_json|context_sentence|users|orders|entitlements|UPDATE|INSERT|DELETE|DROP|ALTER)\b/i);
+          NODE
+      - name: SELECT approved scope, build HOLD queue privately, encrypt BEFORE upload
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PROD_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          METADATA_PASSPHRASE: ${{ secrets.PRODUCTION_D1_METADATA_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_PRODUCTION_READ_ONLY_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_CLOUDFLARE_ACCOUNT_ID}"
+          : "${METADATA_PASSPHRASE:?MISSING_PROTECTED_ENCRYPTION_PASSPHRASE}"
+          test "${#METADATA_PASSPHRASE}" -ge 32
+          umask 077
+          private="$RUNNER_TEMP/private-editorial-published"
+          mkdir -m 700 "$private"
+          encrypted="$RUNNER_TEMP/v12-published-32-editorial-review-queue.gpg"
+          trap 'rm -rf "$private"' EXIT
+          printf '%s' "$METADATA_PASSPHRASE" > "$private/pass"
+          unset METADATA_PASSPHRASE
+          sql="$(sed '/^[[:space:]]*--/d' sql/published_32_private_editorial_wordcards_readonly.sql)"
+          if ! npx wrangler d1 execute miaowu-english-prod --remote --json \
+            --config deploy/production.wrangler.jsonc --command "$sql" \
+            >"$private/wordcards.json" 2>"$private/wrangler.stderr"; then
+            node scripts/classify-published-word-aggregate-error.mjs "$private/wrangler.stderr"
+            echo 'PRIVATE_PUBLISHED_REVIEW_SELECT_FAILED_NO_PRODUCTION_WRITES'
+            exit 1
+          fi
+          node scripts/build-private-published-editorial-review-queue.mjs \
+            "$private/wordcards.json" "$private/reviewer-queue.json"
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$private/pass" \
+            --symmetric --cipher-algo AES256 --output "$encrypted" \
+            "$private/reviewer-queue.json" >/dev/null 2>"$private/gpg.err"
+          test -s "$encrypted"
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$private/pass" \
+            --decrypt "$encrypted" >"$private/recovered.json" 2>"$private/recover.err"
+          cmp -s "$private/reviewer-queue.json" "$private/recovered.json"
+          rm -rf "$private"
+          echo 'PRIVATE_PUBLISHED_EDITORIAL_QUEUE_ENCRYPTED_RECOVERABLE'
+          echo 'NO_SENSE_APPROVAL_NO_PRODUCTION_CHANGES_NO_NOVEL_TEXT'
+      - name: Upload encrypted editorial evidence ONLY
+        uses: actions/upload-artifact@v4
+        with:
+          name: v12-published-32-editorial-review-queue-encrypted
+          path: ${{ runner.temp }}/v12-published-32-editorial-review-queue.gpg
+          retention-days: 7
+          if-no-files-found: error
+          compression-level: 0
+      - name: Purge encrypted runner copy
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/v12-published-32-editorial-review-queue.gpg"

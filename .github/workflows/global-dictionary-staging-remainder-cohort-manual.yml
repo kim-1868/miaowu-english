@@ -1,0 +1,232 @@
+name: Manual guarded STAGING full dictionary candidate cohort (NO production)
+on:
+  workflow_dispatch:
+    inputs:
+      cohort_number:
+        description: Choose the next 50k-or-less cohort (requires separate review/approval)
+        type: choice
+        required: true
+        options: ['1','2','3','4','5','6','7','8','9']
+      confirmation:
+        type: string
+        required: true
+        description: Enter STAGING_UNREVIEWED_COHORT_ADD_ONLY
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: staging-dictionary-schema-manual
+  cancel-in-progress: false
+jobs:
+  apply-one-staging-cohort:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    runs-on: ubuntu-latest
+    environment:
+      name: staging-d1-schema-approval
+    timeout-minutes: 45
+    steps:
+      - name: Verify explicit confirmation and one selected cohort
+        shell: bash
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          NUMBER: ${{ inputs.cohort_number }}
+        run: |
+          set -euo pipefail
+          test "$CONFIRMATION" = 'STAGING_UNREVIEWED_COHORT_ADD_ONLY' || { echo 'MISSING_STAGING_COHORT_APPROVAL_TEXT'; exit 1; }
+          [[ "$NUMBER" =~ ^[1-9]$ ]] || { echo 'INVALID_COHORT_NUMBER'; exit 1; }
+          echo 'EXPLICIT_SINGLE_COHORT_CONFIRMATION_ACCEPTED'
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify literal staging target and isolated database UUID
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          import assert from 'node:assert/strict';
+          const c=JSON.parse(readFileSync('wrangler.jsonc','utf8'));
+          assert.equal(c.name,'miaowu-english-staging');
+          assert.equal(c.vars.APP_ENV,'staging');
+          assert.equal(c.d1_databases.length,1);
+          assert.equal(c.d1_databases[0].database_name,'miaowu-english-test');
+          assert.equal(c.d1_databases[0].database_id,'88a817cb-23bb-4ae4-bcb8-92286c4165d4');
+          console.log('COHORT_LITERAL_TEST_D1_ALLOWLIST_VERIFIED');
+          NODE
+      - name: Retrieve pinned public source cohort archive and re-validate exact files
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COHORT: ${{ inputs.cohort_number }}
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/full-remainder-candidate.zip"
+          root="$RUNNER_TEMP/full-remainder-candidate"
+          mkdir -m 700 "$root"
+          curl --fail --silent --show-error --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/13781435146/zip" \
+            -o "$archive"
+          unzip -t "$archive" >/dev/null
+          unzip -q "$archive" -d "$root"
+          test -s "$root/LICENSE-ECDICT.txt"
+          python scripts/verify-staging-dictionary-remainder-cohort.py \
+            --root "$root" --cohort "$COHORT" \
+            --out "$RUNNER_TEMP/validated-cohort.json"
+          echo 'PINNED_ONE_COHORT_ARTIFACT_SHA_AND_PREFIX_COUNTS_VALIDATED'
+      - name: Install Wrangler
+        run: npm install --ignore-scripts --no-save wrangler@^4
+      - name: Verify staging D1 has exactly the previous cohort's rows and no published content
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?STAGING_TOKEN_REQUIRED}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?ACCOUNT_ID_REQUIRED}"
+          query="SELECT
+            (SELECT COUNT(*) FROM global_dictionary_entries) AS entries,
+            (SELECT COUNT(*) FROM global_dictionary_forms) AS forms,
+            (SELECT COUNT(*) FROM global_dictionary_sources) AS source_rows,
+            (SELECT COUNT(*) FROM global_dictionary_sources WHERE source_key='upstream_ecdict_unverified' AND source_sha256='d1ecbdf9ee2b920afb6f430ca6b6bb9f559588cf0dff86e04bd255f9390843cc' AND enabled=0 AND license_reviewed=0 AND imported_entries=11422 AND imported_forms=16442) AS valid_source,
+            (SELECT COUNT(*) FROM global_dictionary_entries WHERE teaching_ready!=0 OR reviewed_at IS NOT NULL OR source_name!='upstream_ecdict_unverified') AS unsafe_entries,
+            (SELECT COUNT(*) FROM global_dictionary_forms WHERE reviewed!=0 OR source_name!='upstream_ecdict_unverified') AS unsafe_forms,
+            (SELECT COUNT(*) FROM global_dictionary_lessons) AS lessons,
+            (SELECT COUNT(*) FROM global_dictionary_senses) AS senses,
+            (SELECT COUNT(*) FROM books) AS books,
+            (SELECT COUNT(*) FROM words) AS words,
+            (SELECT COUNT(*) FROM user_words) AS user_words,
+            (SELECT COUNT(*) FROM chapter_words) AS chapter_words;"
+          npx wrangler d1 execute miaowu-english-test --remote --json --config wrangler.jsonc --command "$query" >"$RUNNER_TEMP/actual-cohort-pre.json"
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const plan=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/validated-cohort.json','utf8'));
+          const raw=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/actual-cohort-pre.json','utf8'));
+          const rows=(Array.isArray(raw)?raw:[raw]).flatMap(x=>x?.results||x?.result?.results||[]);
+          if(rows.length!==1)throw Error('INVALID_STAGING_COHORT_PRE_QUERY');
+          const e={entries:plan.before_entries,forms:plan.before_forms,source_rows:1,valid_source:1,
+            unsafe_entries:0,unsafe_forms:0,lessons:0,senses:0};
+          for(const [key,value] of Object.entries(e))if(Number(rows[0][key])!==value)
+            throw Error('STAGING_PARTIAL_OR_WRONG_COHORT_STATE_'+key);
+          const historical=['books','words','user_words','chapter_words'];
+          for(const key of historical)if(!Number.isSafeInteger(Number(rows[0][key]))||Number(rows[0][key])<0)
+            throw Error('STAGING_INVALID_HISTORICAL_BASELINE_'+key);
+          console.log('EXACT_PREVIOUS_COHORT_PREFIX_AND_STUDY_BASELINE_VERIFIED');
+          NODE
+      - name: Export complete D1 staging and verify encrypted recovery BEFORE mutation
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          BACKUP_PASSPHRASE: ${{ secrets.STAGING_D1_BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${BACKUP_PASSPHRASE:?STAGING_BACKUP_PASSPHRASE_REQUIRED}"
+          test "${#BACKUP_PASSPHRASE}" -ge 32 || exit 1
+          umask 077
+          private="$RUNNER_TEMP/staging-cohort-prewrite"
+          mkdir -m 700 "$private"
+          trap 'rm -rf "$private"' EXIT
+          printf '%s' "$BACKUP_PASSPHRASE" > "$private/key"
+          npx wrangler d1 export miaowu-english-test --remote --skip-confirmation \
+            --config wrangler.jsonc --output "$private/full.sql" >/dev/null
+          test -s "$private/full.sql"
+          sqlite3 "$private/replay.sqlite" < "$private/full.sql" >/dev/null
+          test "$(sqlite3 "$private/replay.sqlite" 'PRAGMA integrity_check;')" = ok
+          test -z "$(sqlite3 "$private/replay.sqlite" 'PRAGMA foreign_key_check;')"
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$private/key" \
+            --symmetric --cipher-algo AES256 \
+            --output "$RUNNER_TEMP/staging-cohort-before.gpg" "$private/full.sql"
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$private/key" \
+            --decrypt --output "$private/decrypted.sql" "$RUNNER_TEMP/staging-cohort-before.gpg" >/dev/null 2>&1
+          cmp "$private/decrypted.sql" "$private/full.sql"
+          echo 'COHORT_PREWRITE_ENCRYPTED_D1_BACKUP_FULL_RESTORE_VERIFIED'
+      - name: Persist encrypted backup artifact before any remote writes
+        uses: actions/upload-artifact@v4
+        with:
+          name: miaowu-staging-before-unverified-cohort-${{ inputs.cohort_number }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/staging-cohort-before.gpg
+          retention-days: 30
+          if-no-files-found: error
+          compression-level: 0
+      - name: Apply ONLY validated single cohort to test D1
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          COHORT: ${{ inputs.cohort_number }}
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/full-remainder-candidate"
+          python - "$RUNNER_TEMP/validated-cohort.json" <<'PY' >"$RUNNER_TEMP/cohort-sql-filelist.txt"
+          import json,sys
+          from pathlib import Path
+          plan=json.load(open(sys.argv[1],encoding='utf-8'))
+          for f in plan["files"]:
+            print("full-remainder-candidate/" + f"cohort-{plan['cohort']:02d}-{plan['kind']}/" + f)
+          PY
+          while IFS= read -r relative; do
+            sqlfile="$RUNNER_TEMP/$relative"
+            test -f "$sqlfile"
+            npx wrangler d1 execute miaowu-english-test --remote --yes \
+              --config wrangler.jsonc --file "$sqlfile" >"$RUNNER_TEMP/cohort-result-private.txt"
+          done <"$RUNNER_TEMP/cohort-sql-filelist.txt"
+          echo 'ONE_UNREVIEWED_COHORT_WRITTEN_TO_ISOLATED_TEST_D1_ONLY'
+      - name: Verify precise post-cohort count and no changes to historical records
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          query="SELECT
+            (SELECT COUNT(*) FROM global_dictionary_entries) AS entries,
+            (SELECT COUNT(*) FROM global_dictionary_forms) AS forms,
+            (SELECT COUNT(*) FROM global_dictionary_sources) AS source_rows,
+            (SELECT imported_entries FROM global_dictionary_sources WHERE source_key='upstream_ecdict_unverified' AND enabled=0 AND license_reviewed=0) AS source_entries,
+            (SELECT imported_forms FROM global_dictionary_sources WHERE source_key='upstream_ecdict_unverified' AND enabled=0 AND license_reviewed=0) AS source_forms,
+            (SELECT COUNT(*) FROM global_dictionary_entries WHERE teaching_ready!=0 OR reviewed_at IS NOT NULL) AS ready,
+            (SELECT COUNT(*) FROM global_dictionary_forms WHERE reviewed!=0) AS reviewed,
+            (SELECT COUNT(*) FROM global_dictionary_lessons) AS lessons,
+            (SELECT COUNT(*) FROM global_dictionary_senses) AS senses,
+            (SELECT COUNT(*) FROM books) AS books,
+            (SELECT COUNT(*) FROM words) AS words,
+            (SELECT COUNT(*) FROM user_words) AS user_words,
+            (SELECT COUNT(*) FROM chapter_words) AS chapter_words;"
+          npx wrangler d1 execute miaowu-english-test --remote --json --config wrangler.jsonc --command "$query" >"$RUNNER_TEMP/actual-cohort-post.json"
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const dir=process.env.RUNNER_TEMP;
+          const plan=JSON.parse(readFileSync(dir+'/validated-cohort.json','utf8'));
+          const raw=JSON.parse(readFileSync(dir+'/actual-cohort-post.json','utf8'));
+          const rows=(Array.isArray(raw)?raw:[raw]).flatMap(x=>x?.results||x?.result?.results||[]);
+          if(rows.length!==1)throw Error('INVALID_STAGING_COHORT_POST_QUERY');
+          const e={entries:plan.after_entries,forms:plan.after_forms,source_rows:1,
+            source_entries:plan.source_after_entries,source_forms:plan.source_after_forms,
+            ready:0,reviewed:0,lessons:0,senses:0};
+          for(const [key,value] of Object.entries(e))if(Number(rows[0][key])!==value)
+            throw Error('STAGING_COHORT_POSTCONDITION_FAILED_'+key);
+          const priorRaw=JSON.parse(readFileSync(dir+'/actual-cohort-pre.json','utf8'));
+          const priorRows=(Array.isArray(priorRaw)?priorRaw:[priorRaw]).flatMap(x=>x?.results||x?.result?.results||[]);
+          if(priorRows.length!==1)throw Error('STAGING_PRE_SNAPSHOT_MISSING');
+          for(const key of ['books','words','user_words','chapter_words'])
+            if(Number(rows[0][key])!==Number(priorRows[0][key]))
+              throw Error('STAGING_HISTORICAL_ROW_COUNT_CHANGED_'+key);
+          console.log('STAGING_COHORT_NO_TEACHING_APPROVAL_NO_HISTORICAL_STUDY_WRITES');
+          console.log('STAGING_COHORT_VERIFIED '+JSON.stringify({
+            number:plan.cohort,entries:plan.after_entries,forms:plan.after_forms}));
+          NODE
+      - name: Remove transient encrypted backup and candidate SQL from runner
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/staging-cohort-before.gpg"
+          rm -rf "$RUNNER_TEMP/full-remainder-candidate"

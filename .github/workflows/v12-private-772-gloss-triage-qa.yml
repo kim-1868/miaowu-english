@@ -1,0 +1,31 @@
+name: V1.2 private published 772 gloss triage synthetic QA
+on:
+  pull_request:
+    paths:
+      - scripts/triage-private-published-772-gloss-evidence.mjs
+      - tests/v12-private-772-gloss-triage.test.mjs
+      - .github/workflows/v12-private-772-gloss-triage-qa.yml
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - scripts/triage-private-published-772-gloss-evidence.mjs
+      - tests/v12-private-772-gloss-triage.test.mjs
+      - .github/workflows/v12-private-772-gloss-triage-qa.yml
+permissions:
+  contents: read
+jobs:
+  synthetic-hold-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          set -euo pipefail
+          node --check scripts/triage-private-published-772-gloss-evidence.mjs
+          node --test tests/v12-private-772-gloss-triage.test.mjs
+      - run: echo 'PRIVATE_TRIAGE_SYNTHETIC_ONLY_NO_PUBLISHER_NO_D1_NO_SENSE_APPROVAL'

@@ -1,0 +1,76 @@
+name: V1.2 existing staging 013-018 plus one-card 019 OFFLINE QA
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - scripts/rehearse-headword-019.mjs
+      - scripts/staging-019-readonly-diagnostics.mjs
+      - tests/v12-staging-019-readonly-diagnostics.test.mjs
+      - tests/v12-staging-019-readonly-supported-pragmas.test.mjs
+      - tests/v12-staging-019-anonymous-count-drift.test.mjs
+      - .github/workflows/v12-headword-staging-019-readonly.yml
+      - .github/workflows/v12-headword-staging-019-encrypted-backup.yml
+      - tests/v12-headword-staging-019-encrypted-backup.test.mjs
+      - db/020_global_dictionary_sense_study.sql
+      - scripts/rehearse-sense-020.mjs
+      - src/global-dictionary-sense-srs.js
+      - tests/v12-sense-020-srs-migration.test.mjs
+      - .github/workflows/v12-headword-staging-019-manual-migrate.yml
+      - scripts/verify-staging-019-remote-aggregate.mjs
+      - tests/v12-staging-019-guarded-manual.test.mjs
+      - tests/v12-headword-019-migration-rehearsal.test.mjs
+      - db/019_global_dictionary_headword_study.sql
+      - .github/workflows/v12-headword-019-offline-rehearsal.yml
+  pull_request:
+    paths:
+      - scripts/rehearse-headword-019.mjs
+      - scripts/staging-019-readonly-diagnostics.mjs
+      - tests/v12-staging-019-readonly-diagnostics.test.mjs
+      - tests/v12-staging-019-readonly-supported-pragmas.test.mjs
+      - tests/v12-staging-019-anonymous-count-drift.test.mjs
+      - .github/workflows/v12-headword-staging-019-readonly.yml
+      - .github/workflows/v12-headword-staging-019-encrypted-backup.yml
+      - tests/v12-headword-staging-019-encrypted-backup.test.mjs
+      - db/020_global_dictionary_sense_study.sql
+      - scripts/rehearse-sense-020.mjs
+      - src/global-dictionary-sense-srs.js
+      - tests/v12-sense-020-srs-migration.test.mjs
+      - .github/workflows/v12-headword-staging-019-manual-migrate.yml
+      - scripts/verify-staging-019-remote-aggregate.mjs
+      - tests/v12-staging-019-guarded-manual.test.mjs
+      - tests/v12-headword-019-migration-rehearsal.test.mjs
+      - db/019_global_dictionary_headword_study.sql
+      - .github/workflows/v12-headword-019-offline-rehearsal.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect-add-only-019-on-real-sql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Real repository SQL 001 + 013-019, only synthetic rows
+        run: |
+          set -euo pipefail
+          node --check scripts/rehearse-headword-019.mjs
+          node --experimental-sqlite scripts/rehearse-headword-019.mjs
+          node --check scripts/staging-019-readonly-diagnostics.mjs
+          node --test tests/v12-staging-019-readonly-diagnostics.test.mjs
+          node --test tests/v12-staging-019-readonly-supported-pragmas.test.mjs
+          node --test tests/v12-staging-019-anonymous-count-drift.test.mjs
+          node --test tests/v12-headword-staging-019-encrypted-backup.test.mjs
+          node --test tests/v12-staging-019-guarded-manual.test.mjs
+          node --experimental-sqlite --test tests/v12-headword-019-migration-rehearsal.test.mjs
+          node --experimental-sqlite scripts/rehearse-sense-020.mjs
+          node --experimental-sqlite --test tests/v12-sense-020-srs-migration.test.mjs
+          node --experimental-sqlite --test tests/v12-global-dictionary-headword-api.test.mjs tests/v12-global-dictionary-headword-srs.test.mjs
+      - name: No Cloudflare token, no remote DB, no deploy
+        run: |
+          echo 'FULL_EXISTING_DICTIONARY_SCHEMA_REHEARSED_OFFLINE_ONLY'
+          echo 'NO_REMOTE_D1_WRITES_NO_PRODUCTION_NO_USER_DATA'

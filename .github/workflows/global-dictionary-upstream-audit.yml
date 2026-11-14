@@ -1,0 +1,74 @@
+name: Global dictionary upstream audit (unverified source)
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/global-dictionary-upstream-audit.yml'
+      - 'scripts/audit-upstream-ecdict-stream.py'
+      - 'tests/test_upstream_dictionary_stream.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit-unreviewed-ecdict:
+    name: ECDICT full upstream · provenance and headword index ONLY
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test streaming CSV importer without external requests
+        run: python -m unittest discover -s tests -p 'test_upstream_dictionary_stream.py' -v
+      - name: Fetch original upstream CSV (no secrets, no Cloudflare, no deploy)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/full-ecdict"
+          curl --fail --location --silent --show-error --retry 3 --retry-all-errors \
+            --connect-timeout 20 --max-time 900 \
+            'https://raw.githubusercontent.com/skywind3000/ECDICT/master/ecdict.csv' \
+            --output "$RUNNER_TEMP/full-ecdict/ecdict.csv"
+          curl --fail --location --silent --show-error --retry 3 \
+            'https://raw.githubusercontent.com/skywind3000/ECDICT/master/LICENSE' \
+            --output "$RUNNER_TEMP/full-ecdict/LICENSE-ECDICT.txt"
+          test "$(wc -c < "$RUNNER_TEMP/full-ecdict/ecdict.csv")" -gt 1000000
+          sha256sum "$RUNNER_TEMP/full-ecdict/ecdict.csv"
+      - name: Compile full unreviewed normalized headword index
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/audit-upstream-ecdict-stream.py \
+            "$RUNNER_TEMP/full-ecdict/ecdict.csv" --out "$RUNNER_TEMP/full-ecdict/index"
+          cp "$RUNNER_TEMP/full-ecdict/LICENSE-ECDICT.txt" "$RUNNER_TEMP/full-ecdict/index/LICENSE-ECDICT.txt"
+          python - "$RUNNER_TEMP/full-ecdict/index/audit-summary.json" <<'PY'
+          import json,sys
+          x=json.load(open(sys.argv[1],encoding='utf-8'))
+          n=x['index_statistics']['retained_headwords']
+          print('normalized_lemma_count:',n)
+          print('source_sha256:',x['source_sha256'])
+          if n<10000 or x['training_cards_approved']!=0 or x['imported_into_d1']:
+              raise SystemExit('unsafe or unexpectedly small upstream source')
+          rehearsal=x['sqlite_staging_schema_rehearsal']
+          if rehearsal['entries']!=n or rehearsal['forms']!=x['index_statistics']['candidate_forms']:
+              raise SystemExit('schema dry-run row count mismatch')
+          if (rehearsal['approved_entries'] or rehearsal['reviewed_forms'] or
+              rehearsal['enabled_sources'] or rehearsal['foreign_key_violations'] or
+              rehearsal['cloudflare_d1_migrated']):
+              raise SystemExit('unsafe dictionary approvals or schema rehearsal failures')
+          print('schema_dry_run_status:',rehearsal['status'])
+          PY
+      - name: Upload candidate lexicon + independent MIT notice (no production migration)
+        uses: actions/upload-artifact@v4
+        with:
+          name: unverified-full-ecdict-global-index-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/full-ecdict/index/dictionary-unverified-entries.jsonl
+            ${{ runner.temp }}/full-ecdict/index/dictionary-unverified-forms.jsonl
+            ${{ runner.temp }}/full-ecdict/index/audit-summary.json
+            ${{ runner.temp }}/full-ecdict/index/LICENSE-ECDICT.txt
+          retention-days: 90
+          if-no-files-found: error

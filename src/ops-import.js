@@ -30,9 +30,21 @@ async function readPackage(req){
    throw Error("CHAPTERS_MUST_BE_ORDERED_FROM_ONE");
  return {source:input,validated:result};
 }
+// A dictionary V2 compatibility draft uses one gdict_ entry ID as the
+// DISPLAY card. That ID is not a verified per-sense study identity.
+// Do not let the normal V1 importer persist it as a mastery key.
+export function assertIndependentStudyIdentityBeforeImport(validated){
+ if(!validated||!Array.isArray(validated.words))
+  throw Error("INVALID_PACKAGE");
+ if(String(validated.label||"").startsWith("dictionary-v2")||
+    validated.words.some(x=>/^(?:gdict_|gds_|v2_tmp_)/.test(x?.id||"")))
+  throw Error("DICTIONARY_SENSE_BINDING_REQUIRED");
+ return true;
+}
 export function planOpsBookImport(validated){
  const {book,chapters,words,label,mentionCount}=validated;
  if(!book||!Array.isArray(chapters)||!Array.isArray(words))throw Error("INVALID_PACKAGE");
+ assertIndependentStudyIdentityBeforeImport(validated);
  const summary={bookId:book.id,title:book.title,category:book.category,
   chapters:chapters.length,wordCards:words.length,anchors:mentionCount,
   previews:chapters.filter(x=>x.preview).length,paid:chapters.filter(x=>!x.preview).length,
@@ -128,7 +140,9 @@ export async function handleOpsImport(req,env,path){
   e.message:"INVALID_NOVEL_PACKAGE",400);}
  let plan;
  try{plan=planOpsBookImport(checked.validated)}
- catch(e){return err(e.message==="PACKAGE_STATEMENT_LIMIT"?"PACKAGE_STATEMENT_LIMIT":"INVALID_NOVEL_PACKAGE",400)}
+ catch(e){return e.message==="DICTIONARY_SENSE_BINDING_REQUIRED"?
+  err(e.message,409):
+  err(e.message==="PACKAGE_STATEMENT_LIMIT"?"PACKAGE_STATEMENT_LIMIT":"INVALID_NOVEL_PACKAGE",400)}
  try{
   const exists=await stmt(env.DB,"SELECT id FROM books WHERE id=?",plan.summary.bookId).first();
   if(exists)return err("BOOK_ALREADY_EXISTS_USE_VERSIONED_REVISION",409);

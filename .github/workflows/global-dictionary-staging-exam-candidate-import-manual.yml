@@ -1,0 +1,227 @@
+name: Manual STAGING exam candidate dictionary import (never production)
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        type: string
+        required: true
+        description: Enter STAGING_EXAM_CANDIDATES_ADD_ONLY
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: staging-dictionary-schema-manual
+  cancel-in-progress: false
+jobs:
+  import-test-candidates-only:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    environment:
+      name: staging-d1-schema-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check publisher confirmation before all database access
+        shell: bash
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          set -euo pipefail
+          test "$CONFIRMATION" = 'STAGING_EXAM_CANDIDATES_ADD_ONLY' || { echo 'STAGING_EXAM_CONFIRMATION_MISMATCH'; exit 1; }
+          echo 'EXPLICIT_STAGING_EXAM_IMPORT_CONFIRMATION_ACCEPTED'
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact test database allowlist
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          import assert from 'node:assert/strict';
+          const cfg=JSON.parse(readFileSync('wrangler.jsonc','utf8'));
+          assert.equal(cfg.name,'miaowu-english-staging');
+          assert.equal(cfg.vars.APP_ENV,'staging');
+          assert.equal(cfg.d1_databases.length,1);
+          assert.equal(cfg.d1_databases[0].database_name,'miaowu-english-test');
+          assert.equal(cfg.d1_databases[0].database_id,'88a817cb-23bb-4ae4-bcb8-92286c4165d4');
+          console.log('EXAM_CANDIDATE_IMPORT_TEST_D1_ALLOWLIST_OK');
+          NODE
+      - name: Retrieve and independently validate pinned audited public SQL artifact
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          package="$RUNNER_TEMP/miaowu-exam-import-package"
+          mkdir -m 700 "$package"
+          curl --fail --silent --show-error --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/13778216547/zip" \
+            -o "$RUNNER_TEMP/miaowu-exam-import-package.zip"
+          unzip -t "$RUNNER_TEMP/miaowu-exam-import-package.zip" >/dev/null
+          unzip -q "$RUNNER_TEMP/miaowu-exam-import-package.zip" -d "$package"
+          test -s "$package/LICENSE-ECDICT.txt"
+          python - "$package" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1])
+          x=json.loads((p/'manifest.json').read_text(encoding='utf-8'))
+          assert x['status']=='CANDIDATE_ONLY_NOT_TEACHING_APPROVED'
+          assert x['upstream_source_sha256']=='d1ecbdf9ee2b920afb6f430ca6b6bb9f559588cf0dff86e04bd255f9390843cc'
+          assert x['source_key']=='upstream_ecdict_unverified'
+          assert (x['source_rows'],x['source_forms'])==(400183,56898)
+          assert (x['selected_entries'],x['selected_forms'])==(11422,16442)
+          assert (x['teaching_ready'],x['reviewed_forms'],x['license_reviewed'],x['source_enabled'])==(0,0,0,0)
+          assert len(x['files'])==37
+          assert all(z['name'].endswith('.sql') and '/' not in z['name'] and '\\' not in z['name'] for z in x['files'])
+          assert sum(z['rows'] for z in x['files'])==1+11422+16442
+          print('EXAM_CANDIDATE_PINNED_SOURCE_MANIFEST_VERIFIED')
+          PY
+          python - "$package" <<'PY'
+          import importlib.util,sys
+          from pathlib import Path
+          root=Path.cwd()
+          spec=importlib.util.spec_from_file_location('compiler',root/'scripts/build-staging-exam-candidate-import.py')
+          mod=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+          print('EXAM_CANDIDATE_SQL_LOCAL_REPLAY',mod.verify_local(sys.argv[1],root/'db/013_global_dictionary.sql'))
+          PY
+          echo 'EXAM_CANDIDATE_NO_LICENSE_OR_TEACHING_APPROVAL'
+      - name: Install Wrangler
+        run: npm install --ignore-scripts --no-save wrangler@^4
+      - name: Ensure real staging D1 empty candidate tables and intact historical baseline
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_STAGING_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_ACCOUNT_ID}"
+          query="SELECT
+          (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name LIKE 'global_dictionary_%') AS dictionary_tables,
+          (SELECT COUNT(*) FROM global_dictionary_entries) AS entries,
+          (SELECT COUNT(*) FROM global_dictionary_forms) AS forms,
+          (SELECT COUNT(*) FROM global_dictionary_sources) AS sources,
+          (SELECT COUNT(*) FROM global_dictionary_lessons) AS lessons,
+          (SELECT COUNT(*) FROM global_dictionary_senses) AS senses,
+          (SELECT COUNT(*) FROM books) AS books,
+          (SELECT COUNT(*) FROM words) AS words,
+          (SELECT COUNT(*) FROM user_words) AS user_words,
+          (SELECT COUNT(*) FROM chapter_words) AS chapter_words;"
+          npx wrangler d1 execute miaowu-english-test --remote --json --config wrangler.jsonc --command "$query" > "$RUNNER_TEMP/preimport-counts.json"
+          node --input-type=module - "$RUNNER_TEMP/preimport-counts.json" <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const raw=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          const rows=(Array.isArray(raw)?raw:[raw]).flatMap(x=>x?.results||x?.result?.results||[]);
+          if(rows.length!==1)throw Error('TEST_DB_UNEXPECTED_RESULT');
+          const row=rows[0];
+          const expected={dictionary_tables:10,entries:0,forms:0,sources:0,lessons:0,senses:0,books:4,words:59,user_words:9,chapter_words:262};
+          for(const [k,v] of Object.entries(expected)) if(Number(row[k])!==v) throw Error('STAGING_BASELINE_CHANGED_'+k);
+          console.log('STAGING_PREIMPORT_EMPTY_DICTIONARY_AND_HISTORICAL_COUNTS_OK');
+          NODE
+      - name: Export and encrypt complete pre-import test D1 backup
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          BACKUP_PASSPHRASE: ${{ secrets.STAGING_D1_BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${BACKUP_PASSPHRASE:?MISSING_BACKUP_PASSPHRASE}"
+          test "${#BACKUP_PASSPHRASE}" -ge 32 || { echo 'BACKUP_PASSPHRASE_TOO_SHORT'; exit 1; }
+          umask 077
+          private="$RUNNER_TEMP/exam-import-backup-private"
+          mkdir -m 700 "$private"
+          trap 'rm -rf "$private"' EXIT
+          printf '%s' "$BACKUP_PASSPHRASE" > "$private/password"
+          npx wrangler d1 export miaowu-english-test --remote --skip-confirmation \
+            --config wrangler.jsonc --output "$private/full-preimport.sql" >/dev/null
+          test -s "$private/full-preimport.sql"
+          sqlite3 "$private/replay.sqlite" < "$private/full-preimport.sql" >/dev/null
+          test "$(sqlite3 "$private/replay.sqlite" 'PRAGMA integrity_check;')" = ok
+          test -z "$(sqlite3 "$private/replay.sqlite" 'PRAGMA foreign_key_check;')"
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$private/password" \
+            --symmetric --cipher-algo AES256 --output "$RUNNER_TEMP/miaowu-staging-preimport-encrypted.gpg" "$private/full-preimport.sql"
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$private/password" \
+            --decrypt --output "$private/decrypted.sql" "$RUNNER_TEMP/miaowu-staging-preimport-encrypted.gpg" >/dev/null 2>&1
+          cmp "$private/decrypted.sql" "$private/full-preimport.sql"
+          echo 'STAGING_EXAM_PREIMPORT_ENCRYPTED_BACKUP_RECOVERY_VERIFIED'
+      - name: Persist ONLY encrypted preimport backup before any remote writes
+        uses: actions/upload-artifact@v4
+        with:
+          name: miaowu-staging-pre-exam-index-encrypted-backup
+          path: ${{ runner.temp }}/miaowu-staging-preimport-encrypted.gpg
+          retention-days: 30
+          if-no-files-found: error
+          compression-level: 0
+      - name: Apply ONLY pinned disabled exam candidate indexes to test D1
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          package="$RUNNER_TEMP/miaowu-exam-import-package"
+          # Only files listed in the manifest, validated by offline SQL digest
+          # and replay; never execute arbitrary files from the zip.
+          python - "$package" <<'PY' > "$RUNNER_TEMP/miaowu-sql-order.txt"
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1])
+          x=json.loads((p/'manifest.json').read_text(encoding='utf-8'))
+          for f in x['files']:
+              print(str(p/f['name']))
+          PY
+          while IFS= read -r sqlfile; do
+            npx wrangler d1 execute miaowu-english-test --remote --yes \
+              --config wrangler.jsonc --file "$sqlfile" > "$RUNNER_TEMP/miaowu-import-result.txt"
+            echo "STAGING_UNVERIFIED_INDEX_CHUNK_APPLIED_$(basename "$sqlfile")"
+          done < "$RUNNER_TEMP/miaowu-sql-order.txt"
+          echo 'STAGING_EXAM_UNVERIFIED_CANDIDATES_IMPORTED_NEVER_APPROVED'
+      - name: Verify exact imported candidate counts and unchanged historical tables
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          query="SELECT
+            (SELECT COUNT(*) FROM global_dictionary_entries) AS entries,
+            (SELECT COUNT(*) FROM global_dictionary_forms) AS forms,
+            (SELECT COUNT(*) FROM global_dictionary_sources) AS sources,
+            (SELECT COUNT(*) FROM global_dictionary_entries WHERE teaching_ready=1) AS ready,
+            (SELECT COUNT(*) FROM global_dictionary_forms WHERE reviewed=1) AS reviewed_forms,
+            (SELECT COUNT(*) FROM global_dictionary_sources WHERE enabled=1 OR license_reviewed=1) AS enabled_sources,
+            (SELECT COUNT(*) FROM global_dictionary_lessons) AS lessons,
+            (SELECT COUNT(*) FROM global_dictionary_senses) AS senses,
+            (SELECT COUNT(*) FROM books) AS books,
+            (SELECT COUNT(*) FROM words) AS words,
+            (SELECT COUNT(*) FROM user_words) AS user_words,
+            (SELECT COUNT(*) FROM chapter_words) AS chapter_words;"
+          npx wrangler d1 execute miaowu-english-test --remote --json --config wrangler.jsonc --command "$query" > "$RUNNER_TEMP/postimport-counts.json"
+          node --input-type=module - "$RUNNER_TEMP/postimport-counts.json" <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const raw=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          const rows=(Array.isArray(raw)?raw:[raw]).flatMap(x=>x?.results||x?.result?.results||[]);
+          if(rows.length!==1)throw Error('STAGING_EXAM_POSTIMPORT_RESULT_UNEXPECTED');
+          const expected={entries:11422,forms:16442,sources:1,ready:0,reviewed_forms:0,enabled_sources:0,lessons:0,senses:0,books:4,words:59,user_words:9,chapter_words:262};
+          for(const [k,v] of Object.entries(expected)) if(Number(rows[0][k])!==v) throw Error('STAGING_EXAM_POSTIMPORT_MISMATCH_'+k);
+          console.log('STAGING_EXAM_CANDIDATE_ENTRIES_11422_FORMS_16442_SOURCE_DISABLED');
+          console.log('STAGING_ORIGINAL_BOOKS_WORDS_STUDY_ROWS_UNCHANGED');
+          console.log('NO_TEACHING_CARDS_APPROVED_NO_PRODUCTION_ACCESS');
+          NODE
+      - name: Remove encrypted backup and temporary public SQL from runner
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/miaowu-staging-preimport-encrypted.gpg"
+          rm -rf "$RUNNER_TEMP/miaowu-exam-import-package"

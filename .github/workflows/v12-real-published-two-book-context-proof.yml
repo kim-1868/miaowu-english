@@ -1,0 +1,135 @@
+name: V1.2 REAL published two-book private context evidence (PROD read-only)
+on:
+  pull_request:
+    paths:
+      - .github/workflows/v12-real-published-two-book-context-proof.yml
+      - scripts/v12-real-published-two-book-context-proof.mjs
+      - tests/v12-real-published-two-book-context-proof.test.mjs
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-real-published-two-book-context-proof.yml
+      - scripts/v12-real-published-two-book-context-proof.mjs
+      - tests/v12-real-published-two-book-context-proof.test.mjs
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: v12-real-published-two-book-private-context
+  cancel-in-progress: false
+jobs:
+  proof-code-synthetic-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Private source and two-book SQLite context constraints
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite --test tests/v12-real-published-two-book-context-proof.test.mjs
+  protected-real-production-readonly:
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    needs: proof-code-synthetic-qa
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify production READ ONLY target, install CLI
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const c=JSON.parse(readFileSync('deploy/production.wrangler.jsonc','utf8'));
+          assert.equal(c.vars.APP_ENV,'production');
+          assert.equal(c.d1_databases?.length,1);
+          assert.equal(c.d1_databases[0].database_name,'miaowu-english-prod');
+          assert.equal(c.d1_databases[0].database_id,'649c71b3-340c-49bf-b806-3d39256851d3');
+          console.log('PROD_READONLY_EXISTING_32BOOK_SNAPSHOT_TARGET_VERIFIED');
+          NODE
+          npm install --no-save --ignore-scripts wrangler@^4
+      - name: Decrypt existing evidence privately, SELECT only two published paragraphs, re-encrypt
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PROD_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          METADATA_PASSPHRASE: ${{ secrets.PRODUCTION_D1_METADATA_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${GH_TOKEN:?GITHUB_ACTIONS_READ_ONLY_REQUIRED}"
+          : "${CLOUDFLARE_API_TOKEN:?PROD_D1_READ_ONLY_REQUIRED}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?ACCOUNT_REQUIRED}"
+          : "${METADATA_PASSPHRASE:?PROTECTED_SOURCE_DECRYPT_REQUIRED}"
+          test "${#METADATA_PASSPHRASE}" -ge 32
+          umask 077
+          private="$RUNNER_TEMP/private-real-published-context"
+          mkdir -m 700 "$private"
+          trap 'rm -rf "$private"' EXIT
+          printf '%s' "$METADATA_PASSPHRASE" >"$private/pass"
+          unset METADATA_PASSPHRASE
+          curl --fail --location --silent --show-error --retry 2 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/kim-1868/miaowu-english/actions/artifacts/13911979176/zip" \
+            --output "$private/source.zip"
+          test "$(unzip -Z1 "$private/source.zip" | wc -l | tr -d ' ')" = 1
+          unzip -Z1 "$private/source.zip" | grep -Fxq 'v12-published-32-editorial-review-queue.gpg'
+          unzip -p "$private/source.zip" 'v12-published-32-editorial-review-queue.gpg' \
+            >"$private/source.gpg"
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$private/pass" \
+            --decrypt "$private/source.gpg" >"$private/source.json" \
+            2>"$private/decrypt.err" || {
+              echo 'REAL_PUBLISHED_SOURCE_DECRYPT_FAILED_NO_READ_EXECUTED'
+              exit 1
+            }
+          node scripts/v12-real-published-two-book-context-proof.mjs select \
+            "$private/source.json" "$private/select.sql" "$private/selection.json"
+          if ! npx wrangler d1 execute miaowu-english-prod --remote --json \
+            --config deploy/production.wrangler.jsonc \
+            --command "$(cat "$private/select.sql")" \
+            >"$private/contexts.json" 2>"$private/wrangler.err"; then
+            echo 'REAL_PUBLISHED_CONTEXT_READ_ONLY_SELECT_FAILED'
+            exit 1
+          fi
+          node scripts/v12-real-published-two-book-context-proof.mjs verify \
+            "$private/selection.json" "$private/contexts.json" \
+            "$private/review-evidence.json"
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$private/pass" \
+            --symmetric --cipher-algo AES256 \
+            --output "$RUNNER_TEMP/v12-real-published-two-book-context-evidence.gpg" \
+            "$private/review-evidence.json" \
+            >"$private/encrypt.log" 2>&1
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$private/pass" \
+            --decrypt "$RUNNER_TEMP/v12-real-published-two-book-context-evidence.gpg" \
+            >"$private/recovered.json" 2>"$private/check.err"
+          cmp -s "$private/review-evidence.json" "$private/recovered.json"
+          rm -rf "$private"
+          echo 'REAL_PUBLISHED_TWO_BOOK_CONTEXT_ENCRYPTED_VERIFIED_NO_APPROVAL_NO_WRITES'
+      - name: Upload only AES256 protected real context evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: v12-real-published-two-book-context-evidence-encrypted
+          path: ${{ runner.temp }}/v12-real-published-two-book-context-evidence.gpg
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+      - name: Always purge encrypted runner file
+        if: always()
+        run: rm -f "$RUNNER_TEMP/v12-real-published-two-book-context-evidence.gpg"

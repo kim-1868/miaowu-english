@@ -1,0 +1,283 @@
+name: Manual V1.2 published-only word identity aggregates READ ONLY
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-published-word-identity-aggregate-readonly.yml
+  workflow_dispatch:
+    inputs:
+      confirm_scope:
+        description: PUBLISHED_32_BOOKS_ONLY or CET4_02_144_HEADWORDS_ONLY or CET4_02_ENCRYPTED_ARTIFACT_HANDOFF_ONLY
+        type: string
+        required: true
+      confirm_intent:
+        description: PRODUCTION_WORD_IDENTITY_AGGREGATE_SELECT_ONLY or PRODUCTION_CET4_02_WORDCARD_SELECT_ONLY or REWRAP_EXISTING_CET4_02_REPORT_NO_D1_QUERY
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: v12-published-word-identity-aggregate-readonly
+  cancel-in-progress: false
+jobs:
+  strictly-published-aggregate:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109' &&
+      github.event_name == 'workflow_dispatch' &&
+      inputs.confirm_scope == 'PUBLISHED_32_BOOKS_ONLY' &&
+      inputs.confirm_intent == 'PRODUCTION_WORD_IDENTITY_AGGREGATE_SELECT_ONLY'
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Owner-approved strictly published-only scope
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          SCOPE: ${{ inputs.confirm_scope }}
+          INTENT: ${{ inputs.confirm_intent }}
+        run: |
+          set -euo pipefail
+          test "$SCOPE" = 'PUBLISHED_32_BOOKS_ONLY'
+          test "$INTENT" = 'PRODUCTION_WORD_IDENTITY_AGGREGATE_SELECT_ONLY'
+          echo 'ONLY_ANONYMOUS_PUBLISHED_WORD_AGGREGATES_NO_USER_RECORDS'
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Explicit one-time protected push review or owner manual dispatch
+        run: echo 'OWNER_BRANCH_AND_PRODUCTION_D1_READONLY_APPROVAL_REQUIRED'
+      - name: Exact production database UUID, fixed SQL and synthetic QA
+        run: |
+          set -euo pipefail
+          node --test tests/v12-published-word-identity-aggregate.test.mjs
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const x=JSON.parse(readFileSync('deploy/production.wrangler.jsonc','utf8'));
+          assert.equal(x.vars.APP_ENV,'production');
+          assert.equal(x.name,'miaowu-english-production');
+          assert.equal(x.d1_databases?.length,1);
+          assert.equal(x.d1_databases[0].database_name,'miaowu-english-prod');
+          assert.equal(x.d1_databases[0].database_id,'649c71b3-340c-49bf-b806-3d39256851d3');
+          NODE
+      - name: Install Wrangler CLI for one protected SELECT
+        run: npm install --ignore-scripts --no-save wrangler@^4
+      - name: Run one fixed aggregate SELECT on published books only
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PROD_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_DEDICATED_PROD_D1_READ_ONLY_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_ACCOUNT_ID}"
+          umask 077
+          private="$RUNNER_TEMP/private-published-word-identity"
+          mkdir -m 700 "$private"
+          trap 'rm -rf "$private"' EXIT
+          # Wrangler may split command input on semicolons even in SQL comments.
+          # Strip static line comments before sending the single SELECT.
+          sql="$(sed '/^[[:space:]]*--/d' sql/published_word_identity_aggregate_readonly.sql)"
+          # Exactly one trailing terminator; reject multi-statement SQL.
+          terminators="$(printf '%s' "$sql" | tr -cd ';' | wc -c | tr -d ' ')"
+          test "$terminators" = 1
+          if ! npx wrangler d1 execute miaowu-english-prod \
+            --remote --json --config deploy/production.wrangler.jsonc \
+            --command "$sql" >"$private/aggregate.json" 2>"$private/err"; then
+            node scripts/classify-published-word-aggregate-error.mjs "$private/err"
+            echo 'PUBLISHED_WORD_READONLY_SELECT_FAILED_NO_MUTATION'
+            exit 1
+          fi
+          node scripts/verify-published-word-identity-aggregate.mjs "$private/aggregate.json"
+      - name: Confirm never changes books or study data
+        run: echo 'PUBLISHED_ONLY_ONE_SELECT_NO_PUBLISHER_MUTATION_NO_DEPLOY'
+
+  cet4-02-wordcard-lookup-encrypted:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109' &&
+      github.event_name == 'workflow_dispatch' &&
+      inputs.confirm_scope == 'CET4_02_144_HEADWORDS_ONLY' &&
+      inputs.confirm_intent == 'PRODUCTION_CET4_02_WORDCARD_SELECT_ONLY'
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm production database and query scope before credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const x=JSON.parse(readFileSync('deploy/production.wrangler.jsonc','utf8'));
+          assert.equal(x.vars.APP_ENV,'production');
+          assert.equal(x.name,'miaowu-english-production');
+          assert.equal(x.d1_databases?.length,1);
+          assert.equal(x.d1_databases[0].database_name,'miaowu-english-prod');
+          assert.equal(x.d1_databases[0].database_id,'649c71b3-340c-49bf-b806-3d39256851d3');
+          NODE
+          node scripts/cet4-02-production-wordcards-readonly.mjs sql > "$RUNNER_TEMP/cet4-02-query.sql"
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const sql=readFileSync(process.env.RUNNER_TEMP+'/cet4-02-query.sql','utf8');
+          assert.match(sql,/^SELECT\b/);
+          assert.match(sql,/\bFROM words w\b/);
+          assert.match(sql,/b\.status='published'/);
+          assert.equal((sql.match(/;/g)||[]).length,1);
+          assert.doesNotMatch(sql,/\b(?:UPDATE|INSERT|DELETE|DROP|ALTER|PRAGMA|users|orders|payments)\b/i);
+          NODE
+          echo 'CET4_02_PRODUCTION_READONLY_SCOPE_VERIFIED'
+      - name: Install Wrangler CLI
+        run: npm install --ignore-scripts --no-save wrangler@^4
+      - name: One protected SELECT and private encrypted matching evidence
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PROD_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          METADATA_PASSPHRASE: ${{ secrets.PRODUCTION_D1_METADATA_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_DEDICATED_PROD_D1_READ_ONLY_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_ACCOUNT_ID}"
+          : "${METADATA_PASSPHRASE:?MISSING_PRIVATE_ENCRYPTION_PASSPHRASE}"
+          test "${#METADATA_PASSPHRASE}" -ge 32
+          umask 077
+          private="$RUNNER_TEMP/cet4-02-wordcard-private"
+          mkdir -m 700 "$private"
+          artifact="$RUNNER_TEMP/cet4-02-wordcards-encrypted.gpg"
+          trap 'rm -rf "$private"' EXIT
+          printf '%s' "$METADATA_PASSPHRASE" > "$private/passphrase"
+          unset METADATA_PASSPHRASE
+          if ! npx wrangler d1 execute miaowu-english-prod --remote --json \
+              --config deploy/production.wrangler.jsonc \
+              --command "$(cat "$RUNNER_TEMP/cet4-02-query.sql")" \
+              > "$private/raw.json" 2> "$private/stderr"; then
+            node scripts/classify-published-word-aggregate-error.mjs "$private/stderr"
+            echo 'CET4_02_PRODUCTION_READ_ONLY_QUERY_FAILED_NO_MUTATION'
+            exit 1
+          fi
+          node scripts/cet4-02-production-wordcards-readonly.mjs verify \
+            "$private/raw.json" "$private/matches.json"
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$private/passphrase" --symmetric \
+            --cipher-algo AES256 --output "$artifact" "$private/matches.json" \
+            >/dev/null 2>"$private/encrypt-error"
+          test -s "$artifact"
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$private/passphrase" --decrypt "$artifact" \
+            > "$private/decrypted.json" 2>"$private/decrypt-error"
+          cmp -s "$private/matches.json" "$private/decrypted.json"
+          rm -rf "$private"
+          echo 'CET4_02_PRIVATE_WORDCARD_EVIDENCE_ENCRYPTED_VERIFIED_NO_D1_WRITES'
+      - name: Upload only encrypted private wordcard matches
+        uses: actions/upload-artifact@v4
+        with:
+          name: cet4-02-production-144-wordcards-encrypted
+          path: ${{ runner.temp }}/cet4-02-wordcards-encrypted.gpg
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+      - name: Purge encrypted runner copy
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/cet4-02-wordcards-encrypted.gpg"
+
+  cet4-02-private-artifact-handoff:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109' &&
+      github.event_name == 'workflow_dispatch' &&
+      inputs.confirm_scope == 'CET4_02_ENCRYPTED_ARTIFACT_HANDOFF_ONLY' &&
+      inputs.confirm_intent == 'REWRAP_EXISTING_CET4_02_REPORT_NO_D1_QUERY'
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify exact encrypted artifact and expiring reviewer certificate
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          METADATA_PASSPHRASE: ${{ secrets.PRODUCTION_D1_METADATA_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${GH_TOKEN:?MISSING_GITHUB_READ_ONLY_TOKEN}"
+          : "${METADATA_PASSPHRASE:?MISSING_PRIVATE_ENCRYPTION_PASSPHRASE}"
+          test "${#METADATA_PASSPHRASE}" -ge 32
+          umask 077
+          private="$RUNNER_TEMP/cet4-02-handoff-private"
+          mkdir -m 700 "$private"
+          trap 'rm -rf "$private"' EXIT
+          printf '%s' "$METADATA_PASSPHRASE" > "$private/passphrase"
+          unset METADATA_PASSPHRASE
+          curl --fail --location --silent --show-error --retry 2 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            'https://api.github.com/repos/kim-1868/miaowu-english/actions/artifacts/14106188552/zip' \
+            --output "$private/source.zip"
+          echo 'b72f3b40265fa0aa4f502d20feccbdc4428ecb86dd8160ae91d289c8cb230180  '"$private/source.zip" | sha256sum -c - >/dev/null
+          unzip -p "$private/source.zip" cet4-02-wordcards-encrypted.gpg > "$private/source.gpg"
+          echo 'fc139d4943883505edd18578bfd04d1c79cbb5487963fac0da1a2630107c0a17  '"$private/source.gpg" | sha256sum -c - >/dev/null
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$private/passphrase" \
+            --decrypt "$private/source.gpg" \
+            > "$private/decoded.json" 2> "$private/decrypt.stderr"
+          node --input-type=module - "$private/decoded.json" <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const j=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          assert.equal(j.review_type,'CET4-02_144_TARGET_PRODUCTION_READONLY_LEGACY_WORD_CANDIDATES');
+          assert.equal(j.total_target_heads,144);
+          assert.equal(j.matched_headwords,43);
+          assert.equal(j.card_rows,48);
+          assert.equal(j.missing_headwords.length,101);
+          assert.equal(j.ambiguous_headwords.length,4);
+          assert.equal(j.confirmed_publisher_approval,false);
+          assert.equal(j.confirmed_crossbook_study_state,false);
+          assert.equal(j.production_writes,0);
+          assert.ok(Array.isArray(j.cards)&&j.cards.length===48);
+          assert.ok(j.cards.every(x=>x&&typeof x.word_id==='string'&&typeof x.headword==='string'));
+          console.log('CET4_02_VERIFIED_FIXED_PREVIOUS_REPORT_ONLY');
+          NODE
+          artifact="$RUNNER_TEMP/cet4-02-isolated-review.cms"
+          openssl cms -encrypt -binary -aes256 -outform DER \
+            -in "$private/decoded.json" \
+            -out "$artifact" config/cet4-02-reviewer-temporary-public.crt
+          test -s "$artifact"
+          rm -rf "$private"
+          echo 'CET4_02_PREVIOUS_ARTIFACT_REENCRYPTED_PRIVATE_NO_D1_QUERY_NO_USER_DATA'
+      - name: Upload isolated reviewer encrypted CMS only
+        uses: actions/upload-artifact@v4
+        with:
+          name: cet4-02-isolated-review-cms-48-cards
+          path: ${{ runner.temp }}/cet4-02-isolated-review.cms
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: error
+      - name: Purge encrypted runner copy
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/cet4-02-isolated-review.cms"

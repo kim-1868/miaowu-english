@@ -1,0 +1,32 @@
+name: V1.2 staged QA crossbook SRS write+cleanup isolated SQLite test
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - scripts/staging-qa-crossbook-sense-write.mjs
+      - tests/v12-staging-qa-crossbook-sense-write.test.mjs
+      - .github/workflows/v12-staging-qa-crossbook-sense-write-qa.yml
+  pull_request:
+    paths:
+      - scripts/staging-qa-crossbook-sense-write.mjs
+      - tests/v12-staging-qa-crossbook-sense-write.test.mjs
+      - .github/workflows/v12-staging-qa-crossbook-sense-write-qa.yml
+permissions:
+  contents: read
+jobs:
+  no-D1-standalone:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Full-schema SQL and shared-sense write/read/cleanup roundtrip
+        run: |
+          set -euo pipefail
+          node --check scripts/staging-qa-crossbook-sense-write.mjs
+          node --experimental-sqlite --test tests/v12-staging-qa-crossbook-sense-write.test.mjs
+      - run: echo 'OFFLINE_SQLITE_ONLY_NO_CLOUDFLARE_NO_REAL_USER_WRITES'

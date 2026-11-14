@@ -1,0 +1,54 @@
+name: Dictionary exam-first private review planner QA (no D1)
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/global-dictionary-exam-first-review-qa.yml
+      - src/global-dictionary-exam-first-review.js
+      - scripts/audit-private-exam-first.mjs
+      - tests/v12-global-dictionary-exam-first-review.test.mjs
+      - src/global-dictionary-auto-discovery.js
+      - src/ops-dictionary-v2.js
+      - src/worker.js
+      - public/ops-console.js
+      - public/auto-discovery-v2-draft.js
+      - tests/v12-ops-auto-discovery-v2-draft.test.mjs
+      - tests/v12-global-dictionary-auto-discovery.test.mjs
+      - tests/v12-global-dictionary-e2e.test.mjs
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-plan-test:
+    if: github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Lint and test offline planning and review gates
+        run: |
+          node --check src/global-dictionary-exam-first-review.js
+          node --check scripts/audit-private-exam-first.mjs
+          node --check src/global-dictionary-auto-discovery.js
+          node --check src/ops-dictionary-v2.js
+          node --check src/worker.js
+          node --check public/ops-console.js
+          node --check public/auto-discovery-v2-draft.js
+          node --experimental-sqlite --test --test-concurrency=1 \
+            tests/v12-global-dictionary-exam-first-review.test.mjs \
+            tests/v12-global-dictionary-auto-discovery.test.mjs \
+            tests/v12-ops-auto-discovery-v2-draft.test.mjs \
+            tests/v12-global-dictionary-editorial-signoff-gate.test.mjs \
+            tests/v12-global-dictionary-sense-anchor.test.mjs \
+            tests/v12-dictionary-novel-v2.test.mjs \
+            tests/v12-global-dictionary-e2e.test.mjs
+      - name: Assert no private data or D1 authority in offline tool
+        run: |
+          ! grep -E 'CLOUDFLARE_API_TOKEN|D1_WRITE_TOKEN|wrangler d1|UPDATE user_words|INSERT INTO user_words' \
+            src/global-dictionary-exam-first-review.js scripts/audit-private-exam-first.mjs
+          echo 'EXAM_FIRST_REVIEW_PLANNER_PUBLIC_CODE_ONLY_NO_D1_ACCESS'

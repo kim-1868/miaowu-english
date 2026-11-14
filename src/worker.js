@@ -12,11 +12,20 @@ import {handleOpsVoucher} from "./ops-vouchers.js";
 import { handleOpsClaims } from "./ops-claims.js";
 import { handlePublicClaim } from "./self-service-claims.js";
 import { handleOpsImport } from "./ops-import.js";
+import {handleOpsImportPreflight} from "./ops-import-preflight.js";
+import {handleOpsBindingManifest} from "./ops-global-binding-manifests.js";
+import {handleOpsDictionaryAttach} from "./global-dictionary-attach.js";
+import {handleOpsDictionaryPublisherBridge} from "./ops-dictionary-publisher-bridge.js";
+import {handleOpsDictionaryNovelV2} from "./ops-dictionary-v2.js";
 import { handleOpsDraftRevision } from "./ops-draft-revision.js";
 import { handleOpsLiveEdit } from "./ops-live-edit.js";
 import { handleBookCover } from "./book-covers.js";
 import { handleBookCoverTags } from "./book-cover-tags.js";
 import { handleLearningState } from "./reading-library.js";
+import {handleHeadwordStudyApi} from "./global-dictionary-headword-api.js";
+import {handleSenseStudyApi} from "./global-dictionary-sense-study-api.js";
+import {handlePublishedLegacySensePreview} from "./global-dictionary-published-approved-legacy-overlay.js";
+import {handleSmartVocab} from "./smart-vocab-api.js";
 import {handleMyBookshelf} from "./my-bookshelf.js";
 import {handleExampleWordLookup} from "./example-word-lookup.js";
 import {onboardingSchemaReady,registrationOnboardingStatement,handleOnboarding} from "./onboarding.js";
@@ -409,7 +418,11 @@ async function chapterAccess(req, env, id, user) {
   let content;
   try { content = JSON.parse(row.content_json); }
   catch { return reject("CONTENT_UNAVAILABLE", 503); }
-  return json({ id: row.id, chapterNo: row.chapter_no, title: row.title, content });
+  return json({ id: row.id, chapterNo: row.chapter_no, title: row.title, content,
+    headwordReaderReady:env.APP_ENV==='staging'&&
+      env.GLOBAL_DICTIONARY_HEADWORD_SRS_ENABLED==='true',
+    senseReaderReady:env.APP_ENV==='staging'&&
+      env.GLOBAL_DICTIONARY_SENSE_SRS_ENABLED==='true' });
 }
 async function chapterVocabulary(req, env, id, user) {
   // Authorize by the same D1 check used for paid body. Word contexts are paid
@@ -658,6 +671,17 @@ async function api(req, env) {
     if(path==="/api/ops/customers/query")return handleOpsCustomers(req,env,path);
     if(path==="/api/ops/customers/voucher-action")return handleOpsVoucher(req,env,path);
     if(path.startsWith("/api/ops/claims/"))return handleOpsClaims(req,env,path);
+    if(path==="/api/ops/import/preflight")return handleOpsImportPreflight(req,env,path);
+    if(path==="/api/ops/import/bindings/preview"||
+       path==="/api/ops/import/bindings/confirm"||
+       path==="/api/ops/import/bindings/export")return handleOpsBindingManifest(req,env,path);
+    if(path.startsWith("/api/ops/dictionary/publisher-")) return handleOpsDictionaryPublisherBridge(req,env,path);
+    if(path==="/api/ops/import/bindings/attach")return handleOpsDictionaryAttach(req,env,path);
+    if(path==="/api/ops/import/dictionary-v2/preflight"||
+       path==="/api/ops/import/dictionary-v2/discover"||
+       path==="/api/ops/import/dictionary-v2/plan-unmarked"||
+       path==="/api/ops/import/dictionary-v2/confirm-unmarked")
+      return handleOpsDictionaryNovelV2(req,env,path);
     if(path==="/api/ops/import"||path==="/api/ops/lexicon")return handleOpsImport(req,env,path);
     if(path==="/api/ops/import/revise")return handleOpsDraftRevision(req,env,path);
     if(/^\/api\/ops\/books\/[a-z][a-z0-9_-]{2,79}\/live-editor(?:\/|$)/.test(path))
@@ -695,7 +719,23 @@ async function api(req, env) {
     return issueStagingVoucher(req, env);
   }
   const user = await atStage("api.session_lookup", () => currentUser(req, env.DB));
+  // V1.2: published legacy books can preview independently approved sense
+  // overlays without changing chapters, customer SRS, or draft-only bindings.
+  if(/^\/api\/me\/dictionary\/chapters\/[A-Za-z0-9_-]{1,80}\/published-legacy-sense-preview$/.test(path))
+    return handlePublishedLegacySensePreview(req,env,path,user);
+  // V1.2 sense-level progress: independent per sense, staging-only, off by default.
+  if(path.startsWith("/api/me/dictionary/senses/")||
+     /^\/api\/me\/dictionary\/chapters\/[A-Za-z0-9_-]{1,80}\/sense-anchors$/.test(path))
+    return handleSenseStudyApi(req,env,path,user);
+  // V1.2 one-card study API; only staging + two explicit flags can access.
+  // Current user came from the authenticated cookie session above, and the
+  // existing origin check covers all feedback POSTs before this route.
+  if(path.startsWith("/api/me/dictionary/headwords/")||
+     path.startsWith("/api/me/dictionary/chapters/"))
+    return handleHeadwordStudyApi(req,env,path,user);
   if(path==="/api/me/onboarding")return handleOnboarding(req,env,user);
+  if(path==="/api/me/smart-vocab"||path==="/api/me/smart-vocab/status"||path==="/api/me/smart-vocab/answer"||path==="/api/me/smart-vocab/bookmark")
+    return handleSmartVocab(req,env,path,user);
   if(path==="/api/lexicon/lookup")return handleExampleWordLookup(req,env,user);
   if(path==="/api/me/bookshelf"||path.startsWith("/api/me/bookshelf/"))return handleMyBookshelf(req,env,user);
   if(path==="/api/me/echo/available" || path==="/api/me/echo/answer" || path==="/api/me/echo/stats"){

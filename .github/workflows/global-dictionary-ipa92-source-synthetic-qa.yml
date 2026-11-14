@@ -1,0 +1,34 @@
+name: Dictionary 92 missing US IPA source variant synthetic QA
+on:
+  push:
+    paths:
+      - scripts/review-exam-us-ipa-source-variants.py
+      - tests/test_exam_us_ipa_source_variants.py
+      - .github/workflows/global-dictionary-ipa92-source-synthetic-qa.yml
+  pull_request:
+    paths:
+      - scripts/review-exam-us-ipa-source-variants.py
+      - tests/test_exam_us_ipa_source_variants.py
+      - .github/workflows/global-dictionary-ipa92-source-synthetic-qa.yml
+permissions:
+  contents: read
+jobs:
+  offline-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Four synthetic tests and optimized-mode guard
+        run: |
+          python -m py_compile scripts/review-exam-us-ipa-source-variants.py
+          python -m unittest discover -s tests -p 'test_exam_us_ipa_source_variants.py' -v
+          python -O -m unittest discover -s tests -p 'test_exam_us_ipa_source_variants.py' -v
+      - name: No cloud side effects
+        run: |
+          ! grep -Ei 'wrangler|CLOUDFLARE|https?://|requests\.get|urllib\.request|production_deploy' scripts/review-exam-us-ipa-source-variants.py
+          echo 'PRIVATE_MAPPING_NEVER_IN_PUBLIC_REPO_NO_IPA_AUTO_FILL'

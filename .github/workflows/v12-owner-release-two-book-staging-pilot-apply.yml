@@ -1,0 +1,224 @@
+name: V1.2 ONE-TIME owner-release two-book TEST D1 sense pilot (backup required)
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-owner-release-two-book-staging-pilot-apply.yml
+permissions:
+  contents: read
+concurrency:
+  group: v12-one-time-owner-release-test-pilot
+  cancel-in-progress: false
+jobs:
+  staged-owner-story-pilot:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    environment:
+      name: staging-d1-schema-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prove owner-release source consistency in SQLite
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite --test tests/v12-staging-owner-crossbook-pilot.test.mjs
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const c=JSON.parse(readFileSync('wrangler.jsonc','utf8'));
+          assert.equal(c.name,'miaowu-english-staging');
+          assert.equal(c.vars.APP_ENV,'staging');
+          assert.equal(c.d1_databases?.length,1);
+          assert.equal(c.d1_databases[0].database_name,'miaowu-english-test');
+          assert.equal(c.d1_databases[0].database_id,'88a817cb-23bb-4ae4-bcb8-92286c4165d4');
+          assert.notEqual(c.vars.GLOBAL_DICTIONARY_SENSE_SRS_WRITE_ENABLED,'true');
+          console.log('TEST_D1_ONLY_NO_PRODUCTION_TARGET_NO_SRS_WRITES');
+          NODE
+      - name: Install Wrangler and create deterministic preview-only pilot
+        run: |
+          set -euo pipefail
+          npm install --no-save --ignore-scripts wrangler@^4
+          umask 077
+          node scripts/compile-staging-owner-crossbook-pilot.mjs --out "$RUNNER_TEMP/owner-story-pilot.sql"
+      - name: Verify real TEST D1 candidate prerequisites and unchanged historical data
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_STAGING_ONLY_WRITE_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_ACCOUNT_ID}"
+          umask 077
+          baseline="SELECT
+            (SELECT count(*) FROM books) books,
+            (SELECT count(*) FROM chapters) chapters,
+            (SELECT count(*) FROM words) words,
+            (SELECT count(*) FROM chapter_words) chapter_words,
+            (SELECT count(*) FROM user_words) user_words,
+            (SELECT count(*) FROM review_events) review_events,
+            (SELECT count(*) FROM entitlements) entitlements,
+            (SELECT count(*) FROM activation_codes) activation_codes,
+            (SELECT count(*) FROM user_dictionary_sense_study) sense_study,
+            (SELECT count(*) FROM user_dictionary_sense_review_events) sense_events,
+            (SELECT count(*) FROM global_dictionary_senses) dictionary_senses,
+            (SELECT count(*) FROM global_dictionary_lessons) lessons,
+            (SELECT count(*) FROM global_dictionary_legacy_sense_links) links,
+            (SELECT count(*) FROM global_dictionary_sources) sources,
+            (SELECT count(*) FROM global_dictionary_entries) dictionary_entries,
+            (SELECT count(*) FROM categories WHERE slug='cet4' AND is_visible=1) cet4_visible,
+            (SELECT count(*) FROM global_dictionary_entries WHERE headword='choice' COLLATE NOCASE AND teaching_ready=0) choice_unreviewed_rows,
+            (SELECT count(*) FROM global_dictionary_lessons WHERE entry_id IN (SELECT entry_id FROM global_dictionary_entries WHERE headword='choice' COLLATE NOCASE)) choice_existing_lessons,
+            (SELECT count(*) FROM books WHERE id IN ('mw-v12-pilot-ex-20261112','mw-v12-pilot-bride-20261112')) pilot_book_conflicts,
+            (SELECT count(*) FROM words WHERE id IN ('mw-v12-pilot-choice-ex','mw-v12-pilot-choice-bride')) pilot_word_conflicts,
+            (SELECT count(*) FROM global_dictionary_sources WHERE source_key='wordletter-internal-qa-choice-v12-20261112') pilot_source_conflicts,
+            (SELECT count(*) FROM sqlite_master WHERE name='v12_internal_pilot_entry_restore') pilot_restore_conflicts;"
+          if ! npx wrangler d1 execute miaowu-english-test --remote --json \
+            --config wrangler.jsonc --command "$baseline" >"$RUNNER_TEMP/pilot-before.json" 2>"$RUNNER_TEMP/pilot-error"; then
+            echo 'STAGING_PILOT_PREFLIGHT_DB_UNAVAILABLE';exit 1
+          fi
+          node --input-type=module - "$RUNNER_TEMP/pilot-before.json" <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const a=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          const r=(Array.isArray(a)?a:[a]).flatMap(x=>x.results??[]);
+          assert.equal(r.length,1);
+          for(const [key,n] of Object.entries({
+           cet4_visible:1,choice_unreviewed_rows:1,choice_existing_lessons:0,
+           pilot_book_conflicts:0,pilot_word_conflicts:0,
+           pilot_source_conflicts:0,pilot_restore_conflicts:0
+          }))assert.equal(r[0][key],n,'PILOT_PREFLIGHT_'+key);
+          assert.equal(r[0].dictionary_senses,0,'OTHER_REVIEWED_SENSES_REQUIRE_SEPARATE_REVIEW');
+          assert.equal(r[0].links,0,'EXISTING_LINKS_REQUIRE_SEPARATE_REVIEW');
+          console.log('STAGING_OWNER_PILOT_REAL_D1_PREFLIGHT_PASS_NO_WRITES');
+          NODE
+      - name: Create and verify FULL encrypted TEST D1 backup BEFORE applying pilot
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          BACKUP_PASSPHRASE: ${{ secrets.STAGING_D1_BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${BACKUP_PASSPHRASE:?MISSING_STAGING_BACKUP_PASSPHRASE}"
+          test "${#BACKUP_PASSPHRASE}" -ge 32
+          umask 077
+          private="$RUNNER_TEMP/staging-owner-pilot-private"
+          mkdir -m 700 "$private"
+          trap 'rm -rf "$private"' EXIT
+          printf '%s' "$BACKUP_PASSPHRASE" >"$private/pass"
+          unset BACKUP_PASSPHRASE
+          npx wrangler d1 export miaowu-english-test --remote --skip-confirmation \
+            --config wrangler.jsonc --output "$private/full-before.sql" >"$private/export.log" 2>&1 || {
+            echo 'STAGING_PILOT_FULL_BACKUP_EXPORT_FAILED_NO_WRITES';exit 1;
+          }
+          test -s "$private/full-before.sql"
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$private/pass" \
+            --symmetric --cipher-algo AES256 \
+            --output "$RUNNER_TEMP/owner-pilot-staging-before.gpg" "$private/full-before.sql" \
+            >/dev/null 2>"$private/gpg.err"
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$private/pass" \
+            --decrypt "$RUNNER_TEMP/owner-pilot-staging-before.gpg" \
+            >"$private/restored.sql" 2>"$private/gpg-restore.err"
+          cmp -s "$private/full-before.sql" "$private/restored.sql"
+          sqlite3 "$private/restore.sqlite" <"$private/restored.sql" >/dev/null
+          test "$(sqlite3 "$private/restore.sqlite" 'PRAGMA integrity_check;')" = "ok"
+          test -z "$(sqlite3 "$private/restore.sqlite" 'PRAGMA foreign_key_check;')"
+          echo 'STAGING_OWNER_PILOT_ENCRYPTED_BACKUP_RESTORED_AND_INTEGRITY_OK'
+      - name: Upload encrypted independent backup before any TEST D1 write
+        uses: actions/upload-artifact@v4
+        with:
+          name: v12-owner-release-staging-pilot-full-prewrite-backup-encrypted
+          path: ${{ runner.temp }}/owner-pilot-staging-before.gpg
+          retention-days: 30
+          compression-level: 0
+          if-no-files-found: error
+      - name: Apply exactly two owner-release snippets and ONE QA sense to TEST ONLY
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_STAGING_ONLY_WRITE_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_ACCOUNT_ID}"
+          umask 077
+          if ! npx wrangler d1 execute miaowu-english-test --remote \
+             --config wrangler.jsonc --file "$RUNNER_TEMP/owner-story-pilot.sql" \
+             >"$RUNNER_TEMP/pilot-apply.log" 2>&1; then
+            echo 'STAGING_OWNER_PILOT_APPLY_FAILED_RESTORE_FROM_ENCRYPTED_BACKUP';exit 1
+          fi
+          echo 'STAGING_OWNER_PILOT_D1_WRITE_TEST_ONLY_NO_CUSTOMER_ROWS_CHANGED'
+      - name: Validate exact post-write delta and per-sense crossbook identity
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          after="SELECT
+            (SELECT count(*) FROM books) books,
+            (SELECT count(*) FROM chapters) chapters,
+            (SELECT count(*) FROM words) words,
+            (SELECT count(*) FROM chapter_words) chapter_words,
+            (SELECT count(*) FROM user_words) user_words,
+            (SELECT count(*) FROM review_events) review_events,
+            (SELECT count(*) FROM entitlements) entitlements,
+            (SELECT count(*) FROM activation_codes) activation_codes,
+            (SELECT count(*) FROM user_dictionary_sense_study) sense_study,
+            (SELECT count(*) FROM user_dictionary_sense_review_events) sense_events,
+            (SELECT count(*) FROM global_dictionary_senses) dictionary_senses,
+            (SELECT count(*) FROM global_dictionary_lessons) lessons,
+            (SELECT count(*) FROM global_dictionary_legacy_sense_links) links,
+            (SELECT count(*) FROM global_dictionary_sources) sources,
+            (SELECT count(*) FROM global_dictionary_entries) dictionary_entries,
+            (SELECT count(*) FROM global_dictionary_legacy_sense_links l JOIN words w ON w.id=l.legacy_word_id WHERE w.id IN ('mw-v12-pilot-choice-ex','mw-v12-pilot-choice-bride')) pilot_links,
+            (SELECT count(DISTINCT l.sense_id) FROM global_dictionary_legacy_sense_links l JOIN words w ON w.id=l.legacy_word_id WHERE w.id IN ('mw-v12-pilot-choice-ex','mw-v12-pilot-choice-bride')) pilot_shared_senses,
+            (SELECT count(*) FROM chapters WHERE id IN ('mw-v12-pilot-ex-20261112-ch01','mw-v12-pilot-bride-20261112-ch01') AND is_preview=1) pilot_preview_chapters,
+            (SELECT count(*) FROM chapter_words WHERE chapter_id IN ('mw-v12-pilot-ex-20261112-ch01','mw-v12-pilot-bride-20261112-ch01')) pilot_word_anchors,
+            (SELECT count(*) FROM v12_internal_pilot_entry_restore) restorable_dictionary_entries;"
+          if ! npx wrangler d1 execute miaowu-english-test --remote --json \
+            --config wrangler.jsonc --command "$after" >"$RUNNER_TEMP/pilot-after.json" 2>"$RUNNER_TEMP/pilot-error"; then
+            echo 'STAGING_PILOT_POSTCHECK_READ_FAILED';exit 1
+          fi
+          node --input-type=module - "$RUNNER_TEMP/pilot-before.json" "$RUNNER_TEMP/pilot-after.json" <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const get=file=>{
+            const x=JSON.parse(readFileSync(file,'utf8'));
+            const rows=(Array.isArray(x)?x:[x]).flatMap(v=>v.results??[]);
+            assert.equal(rows.length,1);
+            return rows[0];
+          };
+          const before=get(process.argv[2]),after=get(process.argv[3]);
+          for(const col of ['books','chapters','words','chapter_words'])
+            assert.equal(after[col]-before[col],2,'PILOT_CORE_TABLE_DELTA_'+col);
+          for(const col of ['user_words','review_events','entitlements','activation_codes',
+            'sense_study','sense_events','dictionary_entries'])
+            assert.equal(after[col],before[col],'PILOT_NO_USER_DATA_DELTA_'+col);
+          for(const col of ['dictionary_senses','lessons','sources'])
+            assert.equal(after[col]-before[col],1,'PILOT_DICTIONARY_DELTA_'+col);
+          assert.equal(after.links-before.links,2);
+          for(const col of ['pilot_links','pilot_preview_chapters','pilot_word_anchors'])
+            assert.equal(after[col],2,'PILOT_EXPECT_TWO_'+col);
+          assert.equal(after.pilot_shared_senses,1);
+          assert.equal(after.restorable_dictionary_entries,1);
+          console.log('STAGING_PILOT_REAL_D1_TWO_BOOKS_TWO_DISTINCT_LEGACY_CARDS_ONE_SENSE_CONFIRMED');
+          console.log('STAGING_PILOT_NOT_COMMERCIAL_RELEASE_NOT_CURRENT_PUBLISHER_BOOKS');
+          NODE
+      - name: Purge private runner files
+        if: always()
+        shell: bash
+        run: |
+          rm -f "$RUNNER_TEMP/owner-pilot-staging-before.gpg"
+          rm -f "$RUNNER_TEMP/owner-story-pilot.sql"
+          rm -f "$RUNNER_TEMP/pilot-before.json" "$RUNNER_TEMP/pilot-after.json" \
+            "$RUNNER_TEMP/pilot-error" "$RUNNER_TEMP/pilot-apply.log"

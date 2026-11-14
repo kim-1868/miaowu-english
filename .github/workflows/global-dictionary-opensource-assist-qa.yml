@@ -1,0 +1,85 @@
+name: Dictionary open-source content candidate PREVIEW QA (never publish)
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - scripts/build-exam-first-open-source-card-candidates.py
+      - tests/test_open_source_card_candidates.py
+      - .github/workflows/global-dictionary-opensource-assist-qa.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-only-offline-staging-preview:
+    if: github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Regression tests of translation, US IPA, rights and publisher review gates
+        run: python -m unittest discover -s tests -p 'test_open_source_card_candidates.py' -v
+      - name: Retrieve PINNED external MIT dictionary source snapshots (public only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$RUNNER_TEMP/public-dictionary-sources"
+          mkdir -m 700 "$tmp"
+          url_ecdict="https://raw.githubusercontent.com/skywind3000/ECDICT/39cfb9672c0906b63569e0453c2e6abfb9ab182a"
+          url_ipa="https://raw.githubusercontent.com/open-dict-data/ipa-dict/972cd67dd5f96bc5660e28070cde26e3928abcd7"
+          curl -fSL --retry 3 "$url_ecdict/ecdict.csv" -o "$tmp/ecdict.csv"
+          curl -fSL --retry 3 "$url_ecdict/LICENSE" -o "$tmp/ECDICT-LICENSE.txt"
+          curl -fSL --retry 3 "$url_ipa/data/en_US.txt" -o "$tmp/en_US.txt"
+          curl -fSL --retry 3 "$url_ipa/LICENSE" -o "$tmp/IPA-LICENSE.txt"
+          test -s "$tmp/ecdict.csv"
+          test -s "$tmp/en_US.txt"
+          sha256sum "$tmp/ecdict.csv" "$tmp/en_US.txt" "$tmp/ECDICT-LICENSE.txt" "$tmp/IPA-LICENSE.txt"
+          echo 'PINNED_PUBLIC_MIT_DATA_SOURCES_RETRIEVED_WITH_NOTICES'
+      - name: Run real source join on only four PUBLIC fixture words
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$RUNNER_TEMP/public-dictionary-sources"
+          python - "$tmp" <<'PY'
+          import hashlib,json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1])
+          with (p/'public-sample.jsonl').open('w',encoding='utf-8') as f:
+            for i,(word,tier) in enumerate((('abundant','四级新增'),('record','六级新增'),('apple','基础'),('mr.','基础')),1):
+              normal=word!='mr.'
+              row={
+                'headword':word,'target_tier':tier,'priority_order':i,
+                'status':'exact_unreviewed_candidate' if normal else 'missing_abbreviation_or_token',
+                'entry_id':('gdict_'+hashlib.sha256(word.encode()).hexdigest()[:24]) if normal else None,
+                'teaching_sense_approved':False,'publication_ready':False
+              }
+              f.write(json.dumps(row,ensure_ascii=False)+'\n')
+          PY
+          python scripts/build-exam-first-open-source-card-candidates.py \
+            --targets "$tmp/public-sample.jsonl" \
+            --ecdict "$tmp/ecdict.csv" \
+            --ipa-us "$tmp/en_US.txt" \
+            --ecdict-license "$tmp/ECDICT-LICENSE.txt" \
+            --ipa-license "$tmp/IPA-LICENSE.txt" \
+            --out "$tmp/private-sample-preview"
+          python - "$tmp/private-sample-preview/candidate-summary.json" <<'PY'
+          import json,sys
+          x=json.load(open(sys.argv[1],encoding='utf-8'))
+          assert x['target_headwords']==4
+          assert x['source_ipa_us_word_matches']==4
+          assert x['source_ipa_us_multiple_pronunciations']>=1
+          assert x['ecdict_chinese_candidate_matches']>=2
+          assert x['teaching_senses_approved']==x['publishable_rows']==x['production_writes']==0
+          assert x['source_references']['uk_ipa']['imported'] is False
+          print('REAL_UPSTREAM_US_IPA_AND_ECDICT_DRAFT_ONLY_SMOKE_PASS')
+          print('NO_PRIVATE_OWNER_WORDLIST_NO_OLD_WORD_IDS_NO_REMOTE_D1_WRITES')
+          PY
+      - name: Confirm no Cloudflare secrets or publishing authority was supplied
+        run: |
+          ! grep -E 'wrangler d1|wrangler deploy|CLOUDFLARE_API_TOKEN|GITHUB_TOKEN|UPDATE global_dictionary|INSERT INTO global_dictionary' \
+            scripts/build-exam-first-open-source-card-candidates.py
+          echo 'OFFLINE_SOURCES_ONLY_NO_TEACHING_PUBLISHING'

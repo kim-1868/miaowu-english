@@ -1,0 +1,88 @@
+name: V1.2 full 532 published duplicate lexical evidence review from encrypted artifact
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-all532-autonomous-evidence-review.yml
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: v12-all532-published-evidence-review
+  cancel-in-progress: false
+jobs:
+  protected-lexical-review:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Synthetic complete 532-case evidence QA
+        run: |
+          set -euo pipefail
+          node --check scripts/audit-all532-published-duplicate-lexical-evidence.mjs
+          node --test tests/v12-all532-autonomous-evidence-qa.test.mjs
+      - name: Protected in-runner decrypt existing private candidate queue, check ALL 532, encrypt results
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          METADATA_PASSPHRASE: ${{ secrets.PRODUCTION_D1_METADATA_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${GH_TOKEN:?MISSING_ACTIONS_READ_TOKEN}"
+          : "${METADATA_PASSPHRASE:?MISSING_ENCRYPTION_KEY}"
+          test "${#METADATA_PASSPHRASE}" -ge 32
+          umask 077
+          private="$RUNNER_TEMP/v12-all532-private"
+          mkdir -m 700 "$private"
+          encrypted="$RUNNER_TEMP/v12-all532-evidence-review.gpg"
+          trap 'rm -rf "$private"' EXIT
+          printf '%s' "$METADATA_PASSPHRASE" >"$private/pass"
+          unset METADATA_PASSPHRASE
+          curl --fail --location --silent --show-error --retry 2 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/kim-1868/miaowu-english/actions/artifacts/13911979176/zip" \
+            --output "$private/source.zip"
+          test "$(unzip -Z1 "$private/source.zip" | wc -l | tr -d ' ')" = '1'
+          unzip -Z1 "$private/source.zip" | grep -Fxq 'v12-published-32-editorial-review-queue.gpg'
+          unzip -p "$private/source.zip" 'v12-published-32-editorial-review-queue.gpg' >"$private/input.gpg"
+          test -s "$private/input.gpg"
+          if ! gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$private/pass" \
+            --decrypt "$private/input.gpg" >"$private/input.json" 2>"$private/gpg.stderr"; then
+            echo 'ALL532_SOURCE_DECRYPT_FAILED_NO_DATA_EXPORTED'
+            exit 1
+          fi
+          node scripts/audit-all532-published-duplicate-lexical-evidence.mjs \
+            "$private/input.json" "$private/full-review.json"
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$private/pass" \
+            --symmetric --cipher-algo AES256 --output "$encrypted" \
+            "$private/full-review.json" >/dev/null 2>"$private/encrypt.stderr"
+          test -s "$encrypted"
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$private/pass" \
+            --decrypt "$encrypted" >"$private/verified.json" 2>"$private/verify.stderr"
+          cmp -s "$private/full-review.json" "$private/verified.json"
+          rm -rf "$private"
+          echo 'ALL532_ENCRYPTED_EVIDENCE_AUDIT_VERIFIED_NO_PRODUCTION_WRITES'
+      - name: Upload encrypted per-word results only
+        uses: actions/upload-artifact@v4
+        with:
+          name: v12-all532-published-evidence-review-encrypted
+          path: ${{ runner.temp }}/v12-all532-evidence-review.gpg
+          retention-days: 7
+          if-no-files-found: error
+          compression-level: 0
+      - name: Remove remaining encrypted runner file
+        if: always()
+        run: rm -f "$RUNNER_TEMP/v12-all532-evidence-review.gpg"

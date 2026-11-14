@@ -1,0 +1,82 @@
+name: V1.2 encrypted production Publisher artifact aggregate report (NO PROD D1)
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - scripts/summarize-private-production-publisher-artifact.mjs
+      - scripts/audit-production-publisher-anchor-structure.mjs
+      - scripts/audit-published-only-novel-anchors.mjs
+      - tests/v12-published-only-novel-anchors.test.mjs
+      - tests/v12-production-publisher-anchor-structure.test.mjs
+      - tests/v12-production-publisher-artifact-summary.test.mjs
+      - .github/workflows/v12-production-publisher-artifact-summary.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: v12-production-publisher-encrypted-artifact-summary
+  cancel-in-progress: false
+jobs:
+  private-aggregate-only:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify local aggregate reporter before accessing any protected secrets
+        run: |
+          set -euo pipefail
+          node --test tests/v12-production-publisher-artifact-summary.test.mjs tests/v12-production-publisher-anchor-structure.test.mjs tests/v12-published-only-novel-anchors.test.mjs
+          node --check scripts/summarize-private-production-publisher-artifact.mjs
+          node --check scripts/audit-production-publisher-anchor-structure.mjs
+          node --check scripts/audit-published-only-novel-anchors.mjs
+      - name: Download existing verified encrypted artifact, decrypt in protected runner, print ONLY aggregates
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          METADATA_PASSPHRASE: ${{ secrets.PRODUCTION_D1_METADATA_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${GH_TOKEN:?MISSING_GITHUB_ACTIONS_READ_TOKEN}"
+          : "${METADATA_PASSPHRASE:?MISSING_PROTECTED_METADATA_PASSPHRASE}"
+          test "${#METADATA_PASSPHRASE}" -ge 32
+          umask 077
+          private="$RUNNER_TEMP/private-publisher-aggregate"
+          mkdir -m 700 "$private"
+          trap 'rm -rf "$private"' EXIT
+          printf '%s' "$METADATA_PASSPHRASE" > "$private/pass"
+          unset METADATA_PASSPHRASE
+          # Artifact must be the original successful metadata-only run 43070567563.
+          # A 7-day retention means this fails safely after expiration.
+          curl --fail --location --silent --show-error --retry 2 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/kim-1868/miaowu-english/actions/artifacts/13877832033/zip" \
+            --output "$private/archive.zip"
+          test "$(unzip -Z1 "$private/archive.zip" | wc -l | tr -d ' ')" = '1'
+          unzip -Z1 "$private/archive.zip" | grep -Fxq 'v12-publisher-production-metadata.gpg'
+          unzip -p "$private/archive.zip" 'v12-publisher-production-metadata.gpg' >"$private/input.gpg"
+          test -s "$private/input.gpg"
+          if ! gpg --batch --yes --pinentry-mode loopback \
+               --passphrase-file "$private/pass" \
+               --decrypt "$private/input.gpg" \
+               >"$private/recovered-private.json" 2>"$private/gpg.stderr"; then
+            echo 'PRODUCTION_ARTIFACT_DECRYPT_FAILED_SECRET_MISMATCH'
+            exit 1
+          fi
+          # Never print manuscript titles/IDs, private JSON, passphrase, or key.
+          node scripts/summarize-private-production-publisher-artifact.mjs "$private/recovered-private.json"
+          node scripts/audit-production-publisher-anchor-structure.mjs "$private/recovered-private.json"
+          node scripts/audit-published-only-novel-anchors.mjs "$private/recovered-private.json"
+      - name: No new D1 request, mutation or Publisher deploy
+        run: echo 'EXISTING_ENCRYPTED_ARTIFACT_ONLY_NO_CLOUDFLARE_TOKEN_NO_DB_ACCESS_NO_DEPLOY'

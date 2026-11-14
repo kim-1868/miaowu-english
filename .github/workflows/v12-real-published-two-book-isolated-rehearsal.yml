@@ -1,0 +1,90 @@
+name: V1.2 real published A/B sealed proof in-memory reader E2E, no remote DB
+on:
+  pull_request:
+    paths:
+      - .github/workflows/v12-real-published-two-book-isolated-rehearsal.yml
+      - scripts/v12-real-published-two-book-isolated-rehearsal.mjs
+      - tests/v12-real-published-two-book-isolated-rehearsal.test.mjs
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/v12-real-published-two-book-isolated-rehearsal.yml
+      - scripts/v12-real-published-two-book-isolated-rehearsal.mjs
+      - tests/v12-real-published-two-book-isolated-rehearsal.test.mjs
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: v12-real-published-two-book-isolated-rehearsal
+  cancel-in-progress: false
+jobs:
+  synthetic-source-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check isolated actual-book-shape technical reader QA and no write scope
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite --test tests/v12-real-published-two-book-isolated-rehearsal.test.mjs
+  protected-real-source-memory-only:
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.actor == 'kim-1868' &&
+      github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    needs: synthetic-source-qa
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download existing sealed two-book HOLD packet, decrypt in runner RAM workspace, replay ONLY memory DB
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRIVATE_ARTIFACT_PASSPHRASE: ${{ secrets.PRODUCTION_D1_METADATA_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          : "${GH_TOKEN:?ARTIFACT_READ_REQUIRED}"
+          : "${PRIVATE_ARTIFACT_PASSPHRASE:?PROTECTED_SECRET_REQUIRED}"
+          test "${#PRIVATE_ARTIFACT_PASSPHRASE}" -ge 32
+          umask 077
+          private="$RUNNER_TEMP/isolated-real-a-b-private"
+          mkdir -m 700 "$private"
+          trap 'rm -rf "$private"' EXIT
+          printf '%s' "$PRIVATE_ARTIFACT_PASSPHRASE" > "$private/pass"
+          unset PRIVATE_ARTIFACT_PASSPHRASE
+          curl --fail --location --silent --show-error --retry 2 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/kim-1868/miaowu-english/actions/artifacts/13964630089/zip" \
+            --output "$private/proof.zip"
+          test "$(unzip -Z1 "$private/proof.zip" | wc -l | tr -d ' ')" = 1
+          unzip -Z1 "$private/proof.zip" | grep -Fxq \
+            'v12-real-published-two-book-editorial-hold.gpg'
+          unzip -p "$private/proof.zip" 'v12-real-published-two-book-editorial-hold.gpg' \
+            > "$private/proof.gpg"
+          if ! gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "$private/pass" \
+            --decrypt "$private/proof.gpg" > "$private/proof.json" \
+            2> "$private/decrypt.err"; then
+            echo 'ISOLATED_REAL_SOURCE_DECRYPT_FAILED_NO_PRIVATE_VALUES_EXPOSED'
+            exit 1
+          fi
+          node --experimental-sqlite \
+            scripts/v12-real-published-two-book-isolated-rehearsal.mjs \
+            "$private/proof.json"
+          rm -rf "$private"
+          echo 'REAL_SOURCE_TWO_BOOK_IN_MEMORY_QA_COMPLETED_NO_DB_WRITES_NOT_APPROVED'

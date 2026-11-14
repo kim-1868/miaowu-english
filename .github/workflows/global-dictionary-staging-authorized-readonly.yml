@@ -1,0 +1,72 @@
+name: Dictionary staging D1 authorized READ ONLY baseline
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/global-dictionary-staging-authorized-readonly.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: staging-dictionary-authorized-readonly
+  cancel-in-progress: false
+jobs:
+  readonly-test-d1:
+    if: github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/feature/v11-smart-vocab-preflight-20261109'
+    environment:
+      name: staging-d1-schema-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm isolated test database by literal identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          const cfg=JSON.parse(fs.readFileSync('wrangler.jsonc','utf8'));
+          assert.equal(cfg.name,'miaowu-english-staging');
+          assert.equal(cfg.vars.APP_ENV,'staging');
+          assert.equal(cfg.d1_databases?.length,1);
+          assert.equal(cfg.d1_databases[0].database_name,'miaowu-english-test');
+          assert.equal(cfg.d1_databases[0].database_id,'88a817cb-23bb-4ae4-bcb8-92286c4165d4');
+          console.log('STAGING_D1_TARGET_VALIDATED');
+          NODE
+      - name: Install Wrangler
+        run: npm install --ignore-scripts --no-save wrangler@^4
+      - name: Run only metadata SELECT and check Time Travel capability
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_WRITE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}" && test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          umask 077
+          result="$RUNNER_TEMP/staging-dictionary-readonly.json"
+          bookmark="$RUNNER_TEMP/staging-dictionary-bookmark.txt"
+          trap 'rm -f "$result" "$bookmark"' EXIT
+          query="SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('books','words','user_words','chapter_words')) AS core_tables, (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name LIKE 'global_dictionary_%') AS dictionary_tables;"
+          npx wrangler d1 execute miaowu-english-test --remote --json \
+            --config wrangler.jsonc --command "$query" >"$result"
+          node --input-type=module - "$result" <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const obj=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          const rows=(Array.isArray(obj)?obj:[obj]).flatMap(x=>x?.results||x?.result?.results||[]);
+          if(rows.length!==1 || Number(rows[0]?.core_tables)!==4 || !Number.isInteger(Number(rows[0]?.dictionary_tables))) throw Error('TEST_DATABASE_BASELINE_UNEXPECTED');
+          console.log('STAGING_TEST_D1_CORE_TABLES_4');
+          console.log('STAGING_DICTIONARY_TABLE_COUNT_'+Number(rows[0].dictionary_tables));
+          console.log('READ_ONLY_NO_CUSTOMER_ROWS_OR_SECRETS_EXPORTED');
+          NODE
+          npx wrangler d1 time-travel info miaowu-english-test \
+            --config wrangler.jsonc >"$bookmark"
+          grep -qi bookmark "$bookmark"
+          echo 'STAGING_D1_TIMETRAVEL_INFO_AVAILABLE_VALUE_REDACTED'
+          echo 'NO_EXPORT_NO_RESTORE_NO_MIGRATION_NO_DEPLOYMENT'

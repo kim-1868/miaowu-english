@@ -1,0 +1,147 @@
+name: Global dictionary STAGING D1 read-only readiness
+on:
+  push:
+    branches: [feature/v11-smart-vocab-preflight-20261109]
+    paths:
+      - .github/workflows/global-dictionary-staging-readiness.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: global-dictionary-readonly-staging-probe
+  cancel-in-progress: false
+jobs:
+  probe-staging-only:
+    if: github.repository == 'kim-1868/miaowu-english'
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify environment is isolated STAGING, no production URL
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          const cfg=JSON.parse(fs.readFileSync('wrangler.jsonc','utf8'));
+          assert.equal(cfg.name,'miaowu-english-staging');
+          assert.equal(cfg.vars.APP_ENV,'staging');
+          assert.equal(cfg.d1_databases[0].database_name,'miaowu-english-test');
+          assert.equal(cfg.d1_databases[0].database_id,'88a817cb-23bb-4ae4-bcb8-92286c4165d4');
+          assert.notEqual(cfg.d1_databases[0].database_name,'miaowu-english-prod');
+          for(let i=13;i<=18;i++){
+           const name=fs.readdirSync('db').find(p=>p.startsWith(String(i).padStart(3,'0')+'_global_dictionary')&&p.endsWith('.sql'));
+           assert.ok(name,'required additive staging migration file '+i+' missing');
+          }
+          console.log('STAGING_CONFIG_AND_013_TO_018_SQL_FILES_SAFE__NO_DATABASE_MUTATION');
+          NODE
+      - name: Install Wrangler for metadata-only D1 SELECT
+        shell: bash
+        run: npm install --no-save --ignore-scripts wrangler@^4
+      - name: Query isolated staging D1 schema using separate least-privilege D1 Read token
+        # This workflow never uses the production Worker deployment token.
+        # Set repository Actions secret CLOUDFLARE_STAGING_D1_READ_TOKEN.
+
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo 'STAGING_D1_READONLY_BLOCKED_NO_CONFIGURED_CLOUDFLARE_SECRET'
+            exit 1
+          fi
+          SQL="SELECT name FROM sqlite_master WHERE type='table' AND name IN ('books','words','user_words','chapter_words','global_dictionary_sources','global_dictionary_entries','global_dictionary_forms','global_dictionary_lessons','global_dictionary_senses','global_dictionary_legacy_sense_links','global_dictionary_book_sense_bindings') ORDER BY name;"
+          if ! npx wrangler d1 execute miaowu-english-test --remote --config wrangler.jsonc --command "$SQL" >/tmp/global-dictionary-staging-tables 2>&1; then
+            node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const raw=fs.readFileSync('/tmp/global-dictionary-staging-tables','utf8');
+          const types=[
+           [/Authentication error|Invalid API Token|not authorized|permission|insufficient privileges|code: 10000|code 10000/i,'D1_TOKEN_PERMISSION'],
+           [/database.*not found|unknown database|no database/i,'STAGING_DATABASE_LOOKUP'],
+           [/failed to fetch|network|connect|timeout|429|503/i,'NETWORK_OR_RATE_LIMIT'],
+           [/unknown option|invalid argument|Unexpected argument|could not find config/i,'WRANGLER_CLI_ARGUMENT'],
+           [/SQLITE_ERROR|near .+ syntax error|not a valid SQL/i,'READONLY_SQL_SYNTAX']
+          ];
+          const type=types.find(([re])=>re.test(raw))?.[1]||'UNKNOWN_REDACTED_ERROR';
+          console.log('STAGING_D1_READONLY_PROBE_FAILED_'+type);
+          console.log('PRIVATE_ERROR_TEXT_NOT_EXPORTED_TO_CI');
+          NODE
+            exit 1
+          fi
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const text=fs.readFileSync('/tmp/global-dictionary-staging-tables','utf8');
+          for(const table of ['books','words','user_words','chapter_words'])
+            assert.match(text,new RegExp('\\b'+table+'\\b'),
+              'pre-existing staging table absent: '+table);
+          const optional=['global_dictionary_sources','global_dictionary_entries',
+           'global_dictionary_forms','global_dictionary_lessons',
+           'global_dictionary_senses','global_dictionary_legacy_sense_links',
+           'global_dictionary_book_sense_bindings'];
+          const ready=optional.filter(x=>text.includes(x));
+          console.log('STAGING_D1_BASELINE_TABLES_PRESENT');
+          console.log('STAGING_GLOBAL_DICTIONARY_TABLES_PRESENT_COUNT_'+ready.length+'_OF_'+optional.length);
+          console.log('STAGING_HAS_SENSE_TABLE_'+ready.includes('global_dictionary_senses'));
+          console.log('NO_STORY_NO_ACCOUNT_NO_SECRET_DATA_EXPORTED');
+          console.log('NO_CLOUDFLARE_DATABASE_WRITE_OR_DEPLOYMENT_EXECUTED');
+          NODE
+      - name: Verify all ten dictionary schema tables are absent (D1 Read only)
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          SQL="SELECT COUNT(*) AS new_tables FROM sqlite_master WHERE type='table' AND name IN ('global_dictionary_entries','global_dictionary_forms','global_dictionary_sources','global_dictionary_binding_manifests','global_dictionary_book_bindings','global_dictionary_lessons','global_dictionary_legacy_links','global_dictionary_senses','global_dictionary_legacy_sense_links','global_dictionary_book_sense_bindings');"
+          if ! npx wrangler d1 execute miaowu-english-test --config wrangler.jsonc --remote --json --command "$SQL" >/tmp/d1-staging-empty-dictionary-schema 2>&1; then
+            echo 'D1_TEN_TABLE_BASELINE_QUERY_FAILED'
+            exit 1
+          fi
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const raw=readFileSync('/tmp/d1-staging-empty-dictionary-schema','utf8').trim();
+          let parsed;
+          try{parsed=JSON.parse(raw)}catch{
+            console.error('D1_TEN_TABLE_BASELINE_UNRECOGNIZED_JSON');
+            process.exit(1);
+          }
+          const batches=Array.isArray(parsed)?parsed:[parsed];
+          const rows=batches.flatMap(x=>x?.results||x?.result?.results||[]);
+          if(rows.length!==1||Number(rows[0]?.new_tables)!==0){
+            console.error('D1_TEN_TABLE_BASELINE_NONEMPTY_OR_UNCERTAIN');
+            process.exit(1);
+          }
+          console.log('DICTIONARY_STAGING_ALL_TEN_TABLES_ABSENT');
+          console.log('NO_D1_DATA_READ_OR_WRITE');
+          NODE
+      - name: Verify D1 Time Travel bookmark is readable, never print its value
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_D1_READ_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo 'STAGING_D1_BOOKMARK_READ_BLOCKED_MISSING_SECRET'
+            exit 1
+          fi
+          # This is a metadata read, never "restore". Do not log the bookmark.
+          if ! npx wrangler d1 time-travel info miaowu-english-test --config wrangler.jsonc >/tmp/private-staging-bookmark 2>&1; then
+            echo 'STAGING_D1_BOOKMARK_READ_BLOCKED_OR_UNSUPPORTED'
+            exit 1
+          fi
+          if ! grep -qi 'bookmark' /tmp/private-staging-bookmark; then
+            echo 'STAGING_D1_BOOKMARK_NOT_REPORTED'
+            exit 1
+          fi
+          echo 'STAGING_D1_TIMETRAVEL_BOOKMARK_READ_OK'
+          echo 'NO_RESTORE_NO_MIGRATION_NO_EXPORT_NO_BOOKMARK_DISCLOSURE'
