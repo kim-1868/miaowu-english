@@ -42,8 +42,23 @@ test('script aborts when baseline not identified unambiguously',()=>{
  assert.throws(()=>preparePatch(buf,'0'.repeat(64)),/FINGERPRINT_MISMATCH/);
  assert.throws(()=>preparePatch(buf,'bad'),/EXPECTED_SHA256_REQUIRED/);
  assert.throws(()=>preparePatch(Buffer.from('export default {}'),hash('export default {}')),/DOES_NOT_CONTAIN_COVERAGE_ROUTE/);
- const double=source+'\nasync fetch(request, env) {return null}';
- assert.throws(()=>preparePatch(Buffer.from(double),hash(double)),/FETCH_ENTRY_COUNT_NOT_ONE/);
+ // Multiple fetch methods are normal in compiled Workers. Only the unique
+ // exported default fetch handler may receive the kill-switch.
+ const helper='const internal={async fetch(req, env) {return new Response("helper")}};\n';
+ const twoHandlers=helper+source;
+ const preparedWithHelper=preparePatch(Buffer.from(twoHandlers),hash(twoHandlers));
+ assert.ok(preparedWithHelper.patched.startsWith(helper));
+ assert.equal(
+   preparedWithHelper.patched.slice(0,preparedWithHelper.insertIndex)+
+   preparedWithHelper.patched.slice(preparedWithHelper.insertIndex+preparedWithHelper.insertChars),
+   twoHandlers
+ );
+ assert.match(preparedWithHelper.patched,/COVERAGE_PREVIEW_DISABLED/);
+ // Ambiguous source without a uniquely exported default fetch must stop.
+ const ambiguous='const a={async fetch(req,env){return 1}};'+
+   'const b={async fetch(req,env){return 2}};'+
+   'const url="/api/ops/import/coverage";';
+ assert.throws(()=>preparePatch(Buffer.from(ambiguous),hash(ambiguous)),/FETCH_ENTRY_COUNT_NOT_ONE/);
  const once=preparePatch(buf,hash(buf));
  assert.throws(()=>preparePatch(Buffer.from(once.patched),hash(once.patched)),/ALREADY_GUARDED/);
 });
