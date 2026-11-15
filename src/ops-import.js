@@ -97,7 +97,11 @@ async function existingWordConflicts(db,words){
  return null;
 }
 export async function handleOpsImport(req,env,path){
- const coverage=path==="/api/ops/import/coverage"&&req.method==="POST";
+ // Stop the old Publisher's full-library word coverage scan BEFORE auth,
+ // reading request bodies or touching D1. Single-book import stays available.
+ if(path==="/api/ops/import/coverage")
+  return err("COVERAGE_PREVIEW_DISABLED_BATCH_REVIEW_ONLY",410);
+ const coverage=false;
  if(!coverage&&!(path==="/api/ops/import"&&req.method==="POST")&&
     !(path==="/api/ops/lexicon"&&req.method==="GET"))return err("NOT_FOUND",404);
  if(env.APP_ENV!=="production"&&env.APP_ENV!=="staging")return err("NOT_FOUND",404);
