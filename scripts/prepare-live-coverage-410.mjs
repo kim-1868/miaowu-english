@@ -34,7 +34,7 @@ export function preparePatch(source,expectedHash){
  if(patched.slice(0,index)+patched.slice(index+guard.length)!==code)
   fail('NON_INSERTION_EDIT_DETECTED');
  return {patched,patchBytes:Buffer.byteLength(guard),originalHash:hash(source),
-   patchedHash:hash(Buffer.from(patched)),insertIndex:index};
+   patchedHash:hash(Buffer.from(patched)),insertIndex:index,insertChars:guard.length};
 }
 async function main(){
  const args=process.argv.slice(2),options={};
