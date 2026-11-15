@@ -17,7 +17,7 @@ test('SHA-pinned deployed Worker guard returns 410 before DB without modifying o
  assert.equal(prepared.originalHash,hash(buf));
  assert.notEqual(prepared.originalHash,prepared.patchedHash);
  assert.equal(prepared.patched.slice(0,prepared.insertIndex)+
-  prepared.patched.slice(prepared.insertIndex+prepared.patchBytes),source);
+  prepared.patched.slice(prepared.insertIndex+prepared.insertChars),source);
  const url='data:text/javascript;base64,'+Buffer.from(prepared.patched).toString('base64');
  const worker=(await import(url)).default;
  let touches=0;
