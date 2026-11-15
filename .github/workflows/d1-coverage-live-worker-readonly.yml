@@ -1,0 +1,83 @@
+name: D1 coverage incident LIVE Worker snapshot - READ ONLY
+on:
+  push:
+    branches: [fix/coverage-410-live-baseline-gated-20261115]
+    paths:
+      - .github/workflows/d1-coverage-live-worker-readonly.yml
+      - scripts/prepare-live-coverage-410.mjs
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: d1-coverage-incident-production-readonly
+  cancel-in-progress: false
+jobs:
+  compare-running-worker:
+    if: >-
+      github.repository == 'kim-1868/miaowu-english' &&
+      github.ref == 'refs/heads/fix/coverage-410-live-baseline-gated-20261115'
+    environment:
+      name: production-d1-readonly-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read ONLY live deployment metadata and current Worker script; never upload source
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?MISSING_WORKERS_CONTENT_READ_TOKEN}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?MISSING_CLOUDFLARE_ACCOUNT_ID}"
+          umask 077
+          private="$RUNNER_TEMP/private-d1-coverage-live"
+          mkdir -m 700 "$private"
+          trap 'rm -rf "$private"' EXIT
+          script='miaowu-english-production'
+          base="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$script"
+          curl -fsS --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$base/deployments" -o "$private/deployments.json"
+          curl -fsS --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$base" -o "$private/live-worker.mjs"
+          node --input-type=module - "$private/deployments.json" <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const doc=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          if(doc?.success!==true)throw Error('CLOUDFLARE_DEPLOYMENTS_API_UNSUCCESSFUL');
+          const list=Array.isArray(doc.result)?doc.result:doc.result?.deployments;
+          if(!Array.isArray(list)||!list.length)throw Error('LIVE_DEPLOYMENT_METADATA_NOT_AVAILABLE');
+          // Conservative: nontrivial rollout/split means an uploaded script
+          // might not match 100% of running traffic. Do not claim equivalence.
+          const newest=list[0];
+          const versions=newest?.versions||newest?.deployment?.versions;
+          if(!Array.isArray(versions)||versions.length!==1 ||
+            Number(versions[0].percentage)!==100)
+            throw Error('ACTIVE_DEPLOYMENT_NOT_PROVEN_SINGLE_100_PERCENT_VERSION');
+          console.log('ACTIVE_DEPLOYMENT_SINGLE_100_PERCENT_VERSION_METADATA_CONFIRMED');
+          NODE
+          sha="$(sha256sum "$private/live-worker.mjs" | cut -d' ' -f1)"
+          node scripts/prepare-live-coverage-410.mjs \
+            --source "$private/live-worker.mjs" \
+            --expected-sha256 "$sha" \
+            --out "$private/live-worker-coverage-410.mjs" \
+            > "$private/manifest.json"
+          # The manifest is SHA-only. NEVER upload live script or encrypted secrets.
+          node --input-type=module - "$private/manifest.json" <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const x=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          if(x.status!=='LOCAL_ARTIFACT_ONLY_NOT_DEPLOYED'||x.other_changes!==0)
+            throw Error('UNEXPECTED_RUNTIME_PATCH_RESULT');
+          console.log('LIVE_SOURCE_PINNED_SHA256_'+x.source_sha256);
+          console.log('CANDIDATE_SHA256_'+x.patched_sha256);
+          console.log('INSERTION_ONLY_NO_D1_NO_DEPLOYMENT');
+          NODE
+          echo 'COMPLETE_READ_ONLY_PRODUCTION_SNAPSHOT_LOCAL_CANDIDATE_DESTROYED'
+      - name: Confirm no production changes
+        if: always()
+        run: echo 'GET_REQUESTS_ONLY_NO_PRODUCTION_DB_QUERIES_NO_UPLOAD_NO_DEPLOY'
