@@ -22,9 +22,24 @@ export function preparePatch(source,expectedHash){
  // Refuse ambiguous or nonmatching fetch handlers instead of guessing.
  const entry=/\basync\s+fetch\s*\(\s*([A-Za-z_$][\w$]*)\s*,\s*[A-Za-z_$][\w$]*(?:\s*,\s*[A-Za-z_$][\w$]*)?\s*\)\s*\{/g;
  const found=[...code.matchAll(entry)];
- if(found.length!==1)fail('FETCH_ENTRY_COUNT_NOT_ONE:'+found.length);
- const [match,requestVariable]=found[0];
- const index=found[0].index+match.length;
+ // Deployed Wrangler bundles can include other helper objects with an async
+ // fetch() method. Such methods must NEVER be patched. With >1 handler, only
+ // accept an unambiguous export-default object whose FIRST property is fetch.
+ // All other code layouts must fail closed, preserving the live deployment.
+ let selected;
+ if(found.length===1)selected=found[0];
+ else {
+  const defaultObjectFetch=/\bexport\s+default\s*\{\s*async\s+fetch\s*\(\s*([A-Za-z_$][\w$]*)\s*,\s*[A-Za-z_$][\w$]*(?:\s*,\s*[A-Za-z_$][\w$]*)?\s*\)\s*\{/g;
+  const exported=[...code.matchAll(defaultObjectFetch)];
+  if(exported.length!==1)
+   fail('FETCH_ENTRY_COUNT_NOT_ONE:'+found.length+':EXPORTED_FETCH_CANDIDATES:'+exported.length);
+  const candidate=exported[0];
+  const matches=found.filter(f=>f.index===candidate.index+candidate[0].indexOf('async'));
+  if(matches.length!==1)fail('EXPORTED_FETCH_POSITION_NOT_UNIQUE');
+  selected=matches[0];
+ }
+ const [match,requestVariable]=selected;
+ const index=selected.index+match.length;
  const guard='\n/* BEGIN MIAOWU D1 20261115 coverage 410 hotfix */\n'+
    'if (new URL('+requestVariable+'.url).pathname.replace(/\\/+$/, "") === "/api/ops/import/coverage") {'+
    'return new Response(JSON.stringify({error:"COVERAGE_PREVIEW_DISABLED",message:"单本预览不再自动扫描全书架；整批发布后统一复核。"}),'+
