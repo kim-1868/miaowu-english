@@ -399,45 +399,53 @@ async function redeem(req, env, user) {
   await resetFailures(db, key);
   return json({ ok: true, categories: await userEntitlements(db, user.id) });
 }
-async function chapterAccess(req, env, id, user) {
-  if (!/^[a-zA-Z0-9_-]{1,80}$/.test(id)) return reject("NOT_FOUND", 404);
-  // Unpublished chapters and categories are not accessible, even to buyers.
-  const row = await dbStmt(env.DB, `SELECT ch.id,ch.title,ch.chapter_no,ch.content_json,ch.is_preview,
-    b.category_id FROM chapters ch
+// Reuse the same permission rules for chapter body and vocabulary, but only
+// fetch content_json for the endpoint that actually returns the full body.
+async function visibleChapter(env,id,user,includeContent){
+  if (!/^[a-zA-Z0-9_-]{1,80}$/.test(id)) return {error:reject("NOT_FOUND",404)};
+  const columns=includeContent
+    ?"ch.id,ch.title,ch.chapter_no,ch.content_json,ch.is_preview,b.category_id"
+    :"ch.id,ch.is_preview,b.category_id";
+  const row=await dbStmt(env.DB, `SELECT ${columns} FROM chapters ch
     JOIN books b ON b.id=ch.book_id JOIN categories c ON c.id=b.category_id
-    WHERE ch.id=? AND ch.published_at IS NOT NULL AND ch.published_at <= CURRENT_TIMESTAMP
-    AND b.status='published' AND c.is_visible=1`, id).first();
-  if (!row) return reject("NOT_FOUND", 404);
-  if (!row.is_preview) {
-    if (!user) return reject("LOGIN_REQUIRED", 401);
-    const permission = await dbStmt(env.DB, `SELECT 1 AS allowed FROM entitlements e
+    WHERE ch.id=? AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP
+    AND b.status='published' AND c.is_visible=1`,id).first();
+  if(!row)return {error:reject("NOT_FOUND",404)};
+  if(!row.is_preview){
+    if(!user)return {error:reject("LOGIN_REQUIRED",401)};
+    const permission=await dbStmt(env.DB,`SELECT 1 AS allowed FROM entitlements e
       WHERE e.user_id=? AND e.category_id=? AND e.revoked_at IS NULL
-      AND NOT EXISTS(SELECT 1 FROM activation_codes v WHERE v.id=e.source_code_id AND v.status='revoked')`, user.id, row.category_id).first();
-    if (!permission) return reject("PURCHASE_REQUIRED", 403);
+      AND NOT EXISTS(SELECT 1 FROM activation_codes v
+        WHERE v.id=e.source_code_id AND v.status='revoked')`,user.id,row.category_id).first();
+    if(!permission)return {error:reject("PURCHASE_REQUIRED",403)};
   }
+  return {row};
+}
+async function chapterAccess(req,env,id,user){
+  const access=await visibleChapter(env,id,user,true);
+  if(access.error)return access.error;
+  const row=access.row;
   let content;
-  try { content = JSON.parse(row.content_json); }
-  catch { return reject("CONTENT_UNAVAILABLE", 503); }
-  return json({ id: row.id, chapterNo: row.chapter_no, title: row.title, content,
+  try{content=JSON.parse(row.content_json);}
+  catch{return reject("CONTENT_UNAVAILABLE",503);}
+  return json({id:row.id,chapterNo:row.chapter_no,title:row.title,content,
     headwordReaderReady:env.APP_ENV==='staging'&&
       env.GLOBAL_DICTIONARY_HEADWORD_SRS_ENABLED==='true',
     senseReaderReady:env.APP_ENV==='staging'&&
-      env.GLOBAL_DICTIONARY_SENSE_SRS_ENABLED==='true' });
+      env.GLOBAL_DICTIONARY_SENSE_SRS_ENABLED==='true'});
 }
-async function chapterVocabulary(req, env, id, user) {
-  // Authorize by the same D1 check used for paid body. Word contexts are paid
-  // content too; unauthorized requests must not reveal narrative sentences.
-  const access = await chapterAccess(req, env, id, user);
-  if (!access.ok) return access;
-  const result = await dbStmt(env.DB, `SELECT cw.word_id,cw.context_sentence,cw.context_anchor,
+async function chapterVocabulary(req,env,id,user){
+  const access=await visibleChapter(env,id,user,false);
+  if(access.error)return access.error;
+  const result=await dbStmt(env.DB,`SELECT cw.word_id,cw.context_sentence,cw.context_anchor,
     w.headword,w.phonetic_uk,w.phonetic_us,w.part_of_speech,w.meaning_zh,
     w.example_en,w.example_zh,w.collocations_json
     FROM chapter_words cw JOIN words w ON w.id=cw.word_id
-    WHERE cw.chapter_id=? ORDER BY cw.context_anchor LIMIT 2000`, id).all();
-  return json({chapterId:id, words:await annotateStudyWords(env,user?.id||null,(result.results || []).map(row=>{
+    WHERE cw.chapter_id=? ORDER BY cw.context_anchor LIMIT 2000`,id).all();
+  return json({chapterId:id,words:await annotateStudyWords(env,user?.id||null,(result.results||[]).map(row=>{
     let collocations=[];
-    try { const value=JSON.parse(row.collocations_json || "[]");
-      if(Array.isArray(value)) collocations=value.slice(0,8); } catch {}
+    try{const value=JSON.parse(row.collocations_json||"[]");
+      if(Array.isArray(value))collocations=value.slice(0,8);}catch{}
     const {collocations_json,...fields}=row;
     return {...fields,collocations};
   }))});

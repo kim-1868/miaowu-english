@@ -10,24 +10,37 @@ export async function bookshelfSchemaReady(env){
   return result?.name==="user_bookmarks";
  }catch{return false}
 }
+// Reuse each user progress row once instead of six per-book correlated scans.
 async function listBooks(env,userId){
  const statement=[
+ "WITH valid_progress AS (",
+ " SELECT ch.book_id,rp.chapter_id,ch.chapter_no,rp.completed_at,rp.updated_at,",
+ " ROW_NUMBER() OVER (PARTITION BY ch.book_id ORDER BY rp.updated_at DESC,rp.chapter_id DESC) AS recency",
+ " FROM reading_progress rp JOIN chapters ch ON ch.id=rp.chapter_id",
+ " WHERE rp.user_id=? AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP",
+ "), progress_summary AS (",
+ " SELECT book_id,COUNT(*) AS started_chapters,",
+ " SUM(CASE WHEN completed_at IS NOT NULL THEN 1 ELSE 0 END) AS completed_chapters,",
+ " MAX(updated_at) AS last_read_at FROM valid_progress GROUP BY book_id",
+ "), latest_chapter AS (",
+ " SELECT book_id,chapter_id,chapter_no FROM valid_progress WHERE recency=1",
+ ")",
  "SELECT b.id AS book_id,b.title,b.description,b.cover_key,c.slug AS category_slug,",
  "CASE WHEN ub.book_id IS NULL THEN 0 ELSE 1 END AS bookmarked,",
  "(SELECT COUNT(*) FROM chapters ch WHERE ch.book_id=b.id AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP) AS chapter_count,",
- "(SELECT COUNT(*) FROM reading_progress rp JOIN chapters ch ON ch.id=rp.chapter_id WHERE rp.user_id=? AND ch.book_id=b.id AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP AND rp.completed_at IS NOT NULL) AS completed_chapters,",
- "(SELECT COUNT(*) FROM reading_progress rp JOIN chapters ch ON ch.id=rp.chapter_id WHERE rp.user_id=? AND ch.book_id=b.id AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP) AS started_chapters,",
- "(SELECT rp.chapter_id FROM reading_progress rp JOIN chapters ch ON ch.id=rp.chapter_id WHERE rp.user_id=? AND ch.book_id=b.id AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP ORDER BY rp.updated_at DESC LIMIT 1) AS last_chapter_id,",
- "(SELECT ch.chapter_no FROM reading_progress rp JOIN chapters ch ON ch.id=rp.chapter_id WHERE rp.user_id=? AND ch.book_id=b.id AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP ORDER BY rp.updated_at DESC LIMIT 1) AS last_chapter_no,",
- "(SELECT MAX(rp.updated_at) FROM reading_progress rp JOIN chapters ch ON ch.id=rp.chapter_id WHERE rp.user_id=? AND ch.book_id=b.id AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP) AS last_read_at",
+ "COALESCE(ps.completed_chapters,0) AS completed_chapters,",
+ "COALESCE(ps.started_chapters,0) AS started_chapters,",
+ "lc.chapter_id AS last_chapter_id,lc.chapter_no AS last_chapter_no,ps.last_read_at",
  "FROM books b JOIN categories c ON c.id=b.category_id",
  "LEFT JOIN user_bookmarks ub ON ub.book_id=b.id AND ub.user_id=?",
+ "LEFT JOIN progress_summary ps ON ps.book_id=b.id",
+ "LEFT JOIN latest_chapter lc ON lc.book_id=b.id",
  "WHERE b.status='published' AND c.is_visible=1",
- "AND (ub.book_id IS NOT NULL OR EXISTS(SELECT 1 FROM reading_progress rp JOIN chapters ch ON ch.id=rp.chapter_id",
- "WHERE rp.user_id=? AND ch.book_id=b.id AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP))",
- "ORDER BY CASE WHEN ub.book_id IS NOT NULL THEN 0 ELSE 1 END,COALESCE(last_read_at,ub.created_at) DESC,b.title LIMIT 200"
+ "AND (ub.book_id IS NOT NULL OR ps.book_id IS NOT NULL)",
+ "ORDER BY CASE WHEN ub.book_id IS NOT NULL THEN 0 ELSE 1 END,",
+ "COALESCE(ps.last_read_at,ub.created_at) DESC,b.title LIMIT 200"
  ].join(" ");
- const result=await sql(env,statement,userId,userId,userId,userId,userId,userId,userId).all();
+ const result=await sql(env,statement,userId,userId).all();
  return (result.results||[]).map(b=>{
   const total=Number(b.chapter_count)||0;
   const completed=Number(b.completed_chapters)||0;
