@@ -50,7 +50,8 @@ test("S150: local catalog selection retains publisher checks and never sends fil
   assert.match(script,/catalogBooks=Array\.isArray\(data\.books\)/);
   assert.match(script,/await openBook\(next\)/);
   assert.match(script,/\$\("bookClearFilters"\)\.addEventListener\("click"/);
-  assert.match(script,/clearActions\(\);renderBookDirectory\(\)/);
+  assert.match(script,/\$\("bookSearch"\)\.value="";\$\("bookCategory"\)\.value="";\$\("bookStatus"\)\.value="";/);
+ assert.match(script,/catalogPage=1;renderBookDirectory\(\)/);
   assert.match(script,/quickPublishBook\(id,readiness\)/);
   assert.match(script,/async function doWithdraw/);
   const filters=script.slice(script.indexOf("// The catalog is kept"),script.indexOf("async function openBook("));

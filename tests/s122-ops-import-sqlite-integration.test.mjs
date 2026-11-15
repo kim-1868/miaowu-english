@@ -67,7 +67,7 @@ test("S122 12 chapters / 1892 anchors import transactionally with publisher auth
  }finally{db.close();}
 });
 
-test("coverage uses only visible published chapter anchors and projects same-ID replacements",async()=>{
+test("legacy coverage endpoint is disabled before preview can scan published books",async()=>{
  const {db}=createLocalFreshSchema();
  try{
   const digest=await digestOpsToken(TOKEN,PEPPER);
@@ -92,25 +92,16 @@ test("coverage uses only visible published chapter anchors and projects same-ID 
    UPDATE chapter_words SET context_anchor='p0:s99' WHERE word_id='word-abnormal';`);
   const path="/api/ops/import/coverage";
   const pkg=makeBook("new-book",["abandon","abandon","absence","abnormal"]);
-  const unauthorized=await handleOpsImport(makeRequest(path,"POST",pkg,null),env,path);
-  assert.equal(unauthorized.status,401);
   const before=db.prepare("SELECT total_changes() n").get().n;
-  const response=await handleOpsImport(makeRequest(path,"POST",pkg),env,path);
-  assert.equal(response.status,200,await response.clone().text());
-  const report=await response.json();
-  assert.equal(report.total,3849);
-  assert.equal(report.currentCovered,2);
-  assert.equal(report.projectedCovered,4);
-  assert.deepEqual(report.overlapWords,["abandon"]);
-  assert.deepEqual(report.addedWords,["abnormal","absence"]);
-  assert.equal(report.crossBookRate,33.33);
-  assert.equal(report.withinBookRate,25);
-  assert.equal(report.remaining,3845);
-  const revised=await handleOpsImport(makeRequest(path,"POST",makeBook("published-book",["abandon","absence"])),env,path);
-  const replacement=await revised.json();
-  assert.deepEqual(replacement.overlapWords,[]);
-  assert.deepEqual(replacement.lostWords,["ability"]);
-  assert.equal(replacement.netGain,0);
+  for(const input of [
+   makeRequest(path,"POST",pkg,null),
+   makeRequest(path,"POST",pkg),
+   makeRequest(path,"POST",makeBook("published-book",["abandon","absence"]))
+  ]){
+   const response=await handleOpsImport(input,env,path);
+   assert.equal(response.status,410);
+   assert.equal((await response.json()).error,"COVERAGE_PREVIEW_DISABLED_BATCH_REVIEW_ONLY");
+  }
   assert.equal(db.prepare("SELECT total_changes() n").get().n,before);
  }finally{db.close();}
 });
