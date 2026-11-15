@@ -834,7 +834,7 @@ export default {
     // D1 incident 2026-11-15: a legacy Publisher preview auto-called this
     // full-shelf coverage scanner 8 times (6.63M rows read). Fail closed BEFORE
     // any auth / staging / D1 work. Re-enable only as a separate batch audit.
-    if (new URL(request.url).pathname.replace(/\\/+$/, "") === "/api/ops/import/coverage") {
+    if (new URL(request.url).pathname.replace(/\/+$/, "") === "/api/ops/import/coverage") {
       return new Response(JSON.stringify({
         error: "COVERAGE_PREVIEW_DISABLED",
         message: "单本预览不再自动扫描全书架；请在整批发布后统一复核覆盖率。"
