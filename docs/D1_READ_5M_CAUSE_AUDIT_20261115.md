@@ -18,6 +18,41 @@
 - 需要点击 **Rows read** 列按**降序**重新排序，并展开前 3 条 SQL 复制**完整 SQL**（先清理字面量、不要贴账号/用户数据）。之后用 SQL 中的表/字段和 GitHub Actions 运行时间确认是否为人工/任务脚本，不要因为代码猜测直接改生产索引。
 - GitHub 2026-11-14 的人工运行记录确有 production 只读 P0 任务，但已检查的三条工作流运行分别是 CET4-02 词卡读取、无需 D1 的工件转换与待审批工件转换；**不能据此认定它们对应截图最耗行的 SQL**。
 
+## 2026-11-15 10:41:31 证据升级：第一热点 SQL 完整文本
+
+Cloudflare Queries 中最耗时且读取 **6.63M** 行（8 次）的 SQL 已展开，核心逻辑为：
+
+```sql
+SELECT DISTINCT w.headword, b.id = ? AS is_replaced
+FROM books b JOIN categories c ON c.id=b.category_id
+JOIN chapters ch ON ch.book_id=b.id
+JOIN chapter_words cw ON cw.chapter_id=ch.id
+JOIN words w ON w.id=cw.word_id
+JOIN json_each(
+  CASE WHEN json_valid(ch.content_json) THEN ch.content_json ELSE '{}' END,
+  '$.paragraphs'
+) p
+JOIN json_each(p.value, '$.segments') s
+WHERE b.category_id = ?
+ AND c.is_visible=1 AND b.status='published'
+ AND ch.published_at IS NOT NULL AND ch.published_at<=CURRENT_TIMESTAMP
+ AND cw.context_anchor='p'||p.key||':s'||s.key
+ AND json_extract(s.value, '$.wordId')=w.id
+ AND trim(coalesce(w.meaning_zh,''))<>''
+ AND trim(coalesce(w.part_of_speech,''))<>'';
+```
+
+**结论：这是逐章词卡锚点完整性/当前书籍替换状态的审核型查询，不是个人快速刷词或常规分类书架的 SQL。** 两次嵌套 `json_each` 与 `chapter_words` 关联，会重复展开大量正文片段；即使 `DISTINCT` 最后返回少量词，读行计数已经累积。具体调用源（Cloudflare Console 人工执行、运营台或外部脚本）尚未由 SQL 文本证明；在当前检查的相关核心 Worker 文件和生产只读 SQL 文件中未找到 `is_replaced` 原查询。需要审查 11 月 14 日 18:30 前后的调用记录。
+
+### 审核用优化候选，**未执行到正式 D1**
+
+- `sql/d1_perf_anchor_validation_review_only.sql`：利用 `cw.context_anchor=pN:sM` 定位 JSON 中**一个**段落片段，再按 `.wordId` 核验；避免为每条锚点迭代所有 `paragraphs × segments`。
+- `tests/d1-anchor-validation-review.test.mjs`：合成 SQLite 对照原 SQL 的 `DISTINCT`、替换书籍标记、发布筛选、缺失词性、错位锚点、无效 JSON、未发布章节、隐藏分类等行为。
+- 在 **本地合成 SQLite 3×3 章节、约 3600 个锚点**的数据中，原 SQL 耗时约 623ms，候选 SQL 耗时约 14ms，结果集合一致；这只是一次合成样本运行，**绝不是生产 D1 的实时 rowsRead 或已证实的降本比例**。
+- 优化候选不用于阅读接口，未经审查不在生产中执行。后续若定位到触发这条 SQL 的实际任务，应优先禁用高频实时核验，改为导入/版本修订时离线验证，仅在审核必要时手动查询，并在 staging 上对照。
+
+特别注意：本 PR 之前提交的书架进度汇总优化不是截图中 **6.63M rows read** 的根因修复，不能据此声称 500 万行问题已解决。还需展开另两条各读取 **1.33M/1.31M** 的 `SELECT c.slug,b.id AS book_i...` 完整 SQL。
+
 ## 一、明确事实
 
 Cloudflare D1 以 `rowsRead` 计费/免费配额，而非 API 请求数。单次 SQL 的 `rowsRead`、执行次数 `numberOfTimesRun` 以及 `totalRowsRead` 可从 Cloudflare `d1QueriesAdaptiveGroups` 的 Query Insights 查询。查询历史保留约 31 天。统计图与 Query Insights 为云端观测结果，不应使用 `COUNT(*) FROM table` 去推断生产计费行数。
