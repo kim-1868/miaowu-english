@@ -1418,49 +1418,15 @@ async function examineNovel(){
   "第"+x.chapter+"章"+x.paragraph+"段 "+x.kind+" "+(x.word||"")).join("；"));
  $("uploadReport").hidden=false;$("uploadReport").textContent=lines.join("\n");
  previewNovelPackage(pkg);
- await showNovelCoverage(pkg,checkVersion);
+ showNovelCoverage(pkg,checkVersion);
 }
-async function showNovelCoverage(pkg,checkVersion){
+function showNovelCoverage(pkg,checkVersion){
+ if(checkVersion!==novelCheckVersion||!connected())return;
  const summary=$("uploadCoverageSummary");
  $("uploadCoverage").hidden=false;
- summary.textContent="正在对照本分类正式书架……";
- try{
-  const report=await api("/api/ops/import/coverage","POST",pkg);
-  if(checkVersion!==novelCheckVersion||!connected())return;
-  const rate=value=>value==null?"暂无":value+"%";
-  const signed=value=>value>0?"+"+value:String(value);
-  const lines=[
-   "预审等级："+uploadCategoryLabel(report.category||pkg.book.category),
-   "本书有效去重词头："+report.bookHeadwords+" · 有效标注："+report.mentions,
-   "跨书重合率："+rate(report.crossBookRate)+"（"+report.overlapWords.length+"/"+report.bookHeadwords+"）",
-   "书内重复标注率："+rate(report.withinBookRate)+"（"+(report.mentions-report.bookHeadwords)+"/"+report.mentions+"）",
-   "预计净增："+signed(report.netGain)+" 词 · 新增 "+report.addedWords.length+" · 失去覆盖 "+report.lostWords.length
-  ];
-  if(report.total!=null){
-   lines.push("分级覆盖率："+rate(report.currentCoverageRate)+" → "+rate(report.projectedCoverageRate)+
-    "（"+report.currentCovered+" → "+report.projectedCovered+" / "+report.total+"）",
-    "预计还缺："+report.remaining+" 词",
-    "词表版本："+report.wordlistVersion);
-  }else{
-   lines.push("此分类尚无项目目标词表，以上按全部有效标注词统计。");
-  }
-  if(report.incompleteMentions)lines.push("未纳入统计的缺词性或释义标注："+report.incompleteMentions);
-  if(report.outsideWords.length)lines.push("词表外词头："+report.outsideWords.length);
-  lines.push("正式书架核对时间："+new Date(report.checkedAt).toLocaleString("zh-CN"));
-  summary.textContent=lines.join("\n");
-  const words=(label,list)=>label+"（"+list.length+"）："+(list.join("、")||"无");
-  const details=[
-   words("新增",report.addedWords),words("跨书重复",report.overlapWords),
-   words("书内重复",report.repeatedWords.map(([head,count])=>head+" ×"+count)),
-   words("失去覆盖",report.lostWords),words("词表外",report.outsideWords)
-  ];
-  if(report.missingWords)details.push(words("预计剩余缺词",report.missingWords));
-  $("uploadCoverageWords").textContent=details.join("\n\n");
-  $("uploadCoverageDetails").hidden=false;
- }catch(error){
-  if(checkVersion!==novelCheckVersion)return;
-  summary.textContent="词汇预审未完成。"+error.message+" 请重新识别文件后再查看统计。";
- }
+ summary.textContent="已完成本书结构与词卡的本地预检。为保护网站 D1 配额，单本预览不再自动扫描整个分类书架。全书架覆盖率、跨书重复率和净增词，请在整批发布后统一复核。";
+ $("uploadCoverageWords").textContent="";
+ $("uploadCoverageDetails").hidden=true;
 }
 function uploadCategoryLabel(category){
  return [...$("uploadCategory").options].find(option=>option.value===category)?.textContent||category;
