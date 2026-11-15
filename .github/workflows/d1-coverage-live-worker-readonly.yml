@@ -10,7 +10,9 @@ permissions:
   contents: read
 concurrency:
   group: d1-coverage-incident-production-readonly
-  cancel-in-progress: false
+  # Prevent old, approval-waiting runs with outdated patch code from blocking
+  # the newest protected read-only check. No deployment step is present.
+  cancel-in-progress: true
 jobs:
   compare-running-worker:
     if: >-
