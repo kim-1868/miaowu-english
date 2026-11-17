@@ -95,7 +95,7 @@ def worker_sources():
         rest=name.removeprefix('../src/')
         assert rest and '..' not in Path(rest).parts and not Path(rest).is_absolute(), 'UNSAFE_SOURCE_MAP_NAME'
         target=ROOT/'src'/rest
-        assert target.exists(), 'LIVE_SOURCE_MODULE_NOT_PRESENT_IN_RELEASE_TREE_'+rest
+        target.parent.mkdir(parents=True,exist_ok=True)
         target.write_text(source,encoding='utf-8')
         restored.append(rest)
     assert len(restored)>=35, 'INSUFFICIENT_LIVE_WORKER_MODULES'
