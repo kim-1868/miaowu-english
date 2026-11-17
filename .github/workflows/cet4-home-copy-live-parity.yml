@@ -1,0 +1,67 @@
+name: CET4 home-copy live assets parity (READ ONLY)
+on:
+  push:
+    branches: [fix/cet4-home-label-no-core-20261117]
+    paths:
+      - .github/workflows/cet4-home-copy-live-parity.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build customer bundle with currently published notices, no Cloudflare mutation
+        run: node scripts/build-production-assets.mjs --approved-announcements > /tmp/cet4-approved-assets.json
+      - name: Compare all 50 shipped candidate assets with LIVE bytes, except the two requested labels
+        shell: bash
+        env:
+          LIVE_ORIGIN: https://miaowu-english-pages.pages.dev
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from concurrent.futures import ThreadPoolExecutor,as_completed
+          from pathlib import Path
+          import subprocess,hashlib,os,sys
+          base=Path('dist-production/public')
+          names=sorted(p.name for p in base.iterdir() if p.is_file())
+          assert len(names)==50,(len(names),names)
+          def check(name):
+              url=os.environ['LIVE_ORIGIN'].rstrip('/')+'/'+name+'?cet4_live_parity=20261117'
+              proc=subprocess.run(['curl','--fail','--silent','--show-error','--location','--retry','2','--max-time','25',url],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+              if proc.returncode: return (name,'HTTP_FETCH_FAILED '+proc.stderr.decode(errors='replace')[:130])
+              actual=proc.stdout
+              expected=(base/name).read_bytes()
+              if name=='app.js':
+                  before='sub:\'词汇学习 · 故事精选\''.encode()
+                  after='sub:\'核心词 · 故事精选\''.encode()
+                  assert expected.count(before)==1
+                  expected=expected.replace(before,after)
+              if name=='index.html':
+                  before='id="selectedCategoryTitle">四级 · 故事精选</h2>'.encode()
+                  after='id="selectedCategoryTitle">四级核心词 · 故事精选</h2>'.encode()
+                  assert expected.count(before)==1
+                  expected=expected.replace(before,after)
+              if actual!=expected:
+                  return (name,'DIFF live='+hashlib.sha256(actual).hexdigest()[:12]+' candidate_base='+hashlib.sha256(expected).hexdigest()[:12])
+              return (name,'MATCH')
+          with ThreadPoolExecutor(max_workers=8) as pool:
+              results=[f.result() for f in as_completed([pool.submit(check,name) for name in names])]
+          mismatches=sorted((n,s) for n,s in results if s!='MATCH')
+          print('ASSETS_CHECKED',len(results),'EXACT_MATCHES',len(results)-len(mismatches),'DIFFERENCES',len(mismatches))
+          for n,s in mismatches[:50]:print(n,s)
+          if mismatches:
+              print('PRODUCTION_NOT_SAFE_TO_DEPLOY_FROM_THIS_BRANCH')
+              sys.exit(1)
+          print('ASSETS_PARITY_CONFIRMED__READ_ONLY_NO_DEPLOY')
+          PY
+      - name: No deployment occurred
+        if: always()
+        run: echo 'READ_ONLY_NO_D1_NO_WORKER_UPLOAD'
