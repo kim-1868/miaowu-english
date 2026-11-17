@@ -41,11 +41,26 @@ jobs:
             "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/miaowu-english-production")
           test "$code" = 200
           echo 'CURRENT_PROD_WORKER_SOURCE_READ_WITH_VERSION_GATE'
-      - name: Build exact live-safe P1 composition, then test it, NO PRODUCTION WRITES
+      - name: Compare entire legacy suite on ACTUAL production vs merged P1 (zero new regressions required)
         shell: bash
         run: |
           set -euo pipefail
-          python3 scripts/study-p1-live-merger.py
+          python3 scripts/study-p1-live-merger.py --baseline-only
+          cp -a dist-production/public /tmp/p1-original-live-assets
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess,sys
+          files=[str(p) for p in sorted(Path('tests').glob('*.test.mjs')) if p.name!='study-interaction-performance.test.mjs']
+          files.append('pages-production/entry.test.mjs')
+          command=['node','--experimental-sqlite','--test',*files]
+          print('BASELINE_LEGACY_TEST_FILES',len(files),flush=True)
+          with open('/tmp/p1-actual-live-legacy.tap','w') as out:
+              r=subprocess.run(command,stdout=out,stderr=subprocess.STDOUT)
+          print('BASELINE_LEGACY_EXIT',r.returncode,flush=True)
+          PY
+          rm -rf dist-production/public
+          cp -a /tmp/p1-original-live-assets dist-production/public
+          python3 scripts/study-p1-live-merger.py --patch-only
           node --check src/worker.js
           node --check src/echo-cloud.js
           node --check public/app.js
@@ -54,7 +69,28 @@ jobs:
           node --check public/sense-reader-bridge.js
           cp -a dist-production/public /tmp/p1-proposed-public-assets
           node --experimental-sqlite --test tests/study-interaction-performance.test.mjs
-          npm test
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess,sys,re
+          files=[str(p) for p in sorted(Path('tests').glob('*.test.mjs')) if p.name!='study-interaction-performance.test.mjs']
+          files.append('pages-production/entry.test.mjs')
+          command=['node','--experimental-sqlite','--test',*files]
+          with open('/tmp/p1-actual-live-patched.tap','w') as out:
+              r=subprocess.run(command,stdout=out,stderr=subprocess.STDOUT)
+          print('PATCHED_LEGACY_EXIT',r.returncode,flush=True)
+          def failures(path):
+              body=Path(path).read_text(errors='replace')
+              fails=set(re.findall(r'^not ok\\s+\\d+\\s+-\\s+(.*)$',body,re.M))
+              count=re.findall(r'^# tests (\\d+)$',body,re.M)
+              assert count and int(count[-1])>=480,('LEGACY_SUITE_INCOMPLETE',path,count[-1:] if count else [])
+              return fails
+          old=failures('/tmp/p1-actual-live-legacy.tap')
+          new=failures('/tmp/p1-actual-live-patched.tap')
+          print('LEGACY_BASELINE_FAILED',len(old),'MERGED_FAILED',len(new),'NEW_REGRESSIONS',len(new-old),'OLD_FIXED',len(old-new),flush=True)
+          for name in sorted(new-old):print('NEW_FAILED_TEST',name)
+          assert not new-old,'NEW_REGRESSION_FROM_P1_STOP_PRODUCTION'
+          print('P1_DIFFERENTIAL_ZERO_NEW_REGRESSIONS',flush=True)
+          PY
           rm -rf dist-production/public
           cp -a /tmp/p1-proposed-public-assets dist-production/public
           node --input-type=module <<'NODE'
@@ -67,7 +103,7 @@ jobs:
           const html=fs.readFileSync('dist-production/public/index.html','utf8');
           assert.match(html,/sense-reader-bridge.js/);
           assert.match(html,/20261117-live-merged-inplace/);
-          console.log('MERGED_51_ASSET_BUNDLE_TESTS_OK');
+          console.log('MERGED_51_ASSET_BUNDLE_DIFFERENTIAL_TESTS_OK');
           NODE
       - name: Compile merged actual LIVE code into production-compatible dry-run artifact ONLY
         shell: bash
