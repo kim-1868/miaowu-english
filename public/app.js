@@ -133,6 +133,7 @@
     let cloudBooks=[],cloudSaved=new Map(),cloudProgress=[],cloudSessionKey=null,cloudLearningSequence=0;
     let personalBooks=[],recentBooks=[],personalBooksRequest=0,personalShelfFilter='reading',personalShelfPage=1;
     let wordbookPage=1,wordbookData=null,wordbookPending=false,wordbookRequest=0;
+    const wordbookWrites=new Set(); // independent card updates; never redraw whole vocabulary grid
     const PERSONAL_SHELF_PAGE_SIZE=9;
     let initialSessionPromise=Promise.resolve(),heroResumeBusy=false;
     function updateHeroReadLabel(){
@@ -1016,7 +1017,7 @@
       const cloudCards=user?words.map(w=>{
         const mastered=w.status==='mastered';
         const pairs=Array.isArray(w.collocations)?w.collocations:[];
-        return '<div class="vocab-card status-'+(mastered?'mastered':'learning')+'">'+
+        return '<div class="vocab-card status-'+(mastered?'mastered':'learning')+'" data-word-card="'+safe(w.word_id)+'">'+
           '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px">'+
           '<span class="eyebrow">MIAOWU · BOOKPLATE</span>'+
           '<span class="word-status">'+(mastered?'✓ 已掌握':'◷ 学习中')+'</span></div>'+
@@ -1056,18 +1057,83 @@
       document.querySelectorAll('[data-cloud-voice],[data-cloud-say]').forEach(x=>{
         x.onclick=()=>{const w=words.find(w=>w.word_id===(x.dataset.cloudVoice||x.dataset.cloudSay));if(w)speakWord(w.headword)};
       });
+      // Update only the touched card. Keep the current page, scroll position,
+      // filter and the other cards intact while the write reaches the server.
       async function update(id,bookmarked,status){
+        const account=user?.name;
+        const w=words.find(item=>item.word_id===id);
+        const card=[...$('vocabGrid').querySelectorAll('[data-word-card]')]
+          .find(el=>el.dataset.wordCard===id);
+        const key=account+'|'+id;
+        if(!account||!w||!card||wordbookWrites.has(key))return;
+        wordbookWrites.add(key);
+        const before={status:w.status,bookmarked:w.bookmarked};
+        const savedBefore=cloudSaved.get(id);
+        const removed=!bookmarked;
+        const oldTotal=wordbookData?.allTotal??cloudSaved.size;
+        const samePage=wordbookData;
+        const buttons=[...card.querySelectorAll('[data-cloud-master],[data-cloud-remove]')];
+        const statusTag=card.querySelector('.word-status');
+        function paint(nextStatus,isBookmarked){
+          const mastered=nextStatus==='mastered';
+          card.classList.toggle('status-mastered',mastered);
+          card.classList.toggle('status-learning',!mastered);
+          card.classList.toggle('wordbook-removed',!isBookmarked);
+          if(statusTag)statusTag.textContent=!isBookmarked?'已移除收藏':
+            mastered?'✓ 已掌握':'◷ 学习中';
+          const toggle=card.querySelector('[data-cloud-master]');
+          if(toggle)toggle.textContent=mastered?'↻ 改为学习中':'✓ 标记已掌握';
+          const remove=card.querySelector('[data-cloud-remove]');
+          if(remove)remove.textContent=isBookmarked?'移除收藏':'已移除收藏';
+        }
+        function counters(total){
+          if(wordbookData!==samePage||!card.isConnected)return;
+          $('bookplateCount').textContent=String(total);
+          const summary=$('vocabGrid').querySelector('.bookplate-source-summary');
+          if(summary?.firstChild?.nodeType===Node.TEXT_NODE)
+            summary.firstChild.textContent='已同步词卡 '+total+' 张';
+          renderHomeStudyStats();
+        }
+        // Immediate visible feedback; the server response determines durability.
+        w.status=status;w.bookmarked=bookmarked?1:0;
+        if(bookmarked)cloudSaved.set(id,{...savedBefore,...w,status,bookmarked:1});
+        else cloudSaved.delete(id);
+        if(samePage) samePage.allTotal=oldTotal-(removed?1:0);
+        paint(status,bookmarked);
+        counters(samePage?.allTotal??cloudSaved.size);
+        card.classList.add('wordbook-saving');
+        card.setAttribute('aria-busy','true');
+        buttons.forEach(button=>button.disabled=true);
         try{
           await serverRequest('/api/me/words/'+encodeURIComponent(id),'PUT',{bookmarked,status});
-          await refreshCloudLearning();wordbookData=null;renderWords();
-          toast('词卡状态已保存到云端');
-        }catch(error){toast(error.message)}
+          if(user?.name!==account)return;
+          // Cards that moved out of a filtered category keep their new color
+          // until the user switches filters; no full-page network refresh.
+          card.classList.remove('wordbook-saving');
+          card.removeAttribute('aria-busy');
+          if(!bookmarked)card.classList.add('wordbook-removed');
+          else buttons.forEach(button=>button.disabled=false);
+          toast(bookmarked?'词卡状态已保存到云端':'已从云端收藏移除');
+        }catch(error){
+          if(user?.name!==account)return;
+          w.status=before.status;w.bookmarked=before.bookmarked;
+          if(savedBefore)cloudSaved.set(id,savedBefore);else cloudSaved.delete(id);
+          if(samePage&&removed)samePage.allTotal=(Number(samePage.allTotal)||0)+1;
+          paint(before.status,before.bookmarked!==0&&before.bookmarked!==false);
+          counters(samePage?.allTotal??cloudSaved.size);
+          card.classList.remove('wordbook-saving');
+          card.removeAttribute('aria-busy');
+          buttons.forEach(button=>button.disabled=false);
+          toast('保存失败，已恢复原状态：'+error.message);
+        }finally{wordbookWrites.delete(key)}
       }
       document.querySelectorAll('[data-cloud-master]').forEach(x=>x.onclick=()=>{
-        const w=words.find(w=>w.word_id===x.dataset.cloudMaster);if(w)update(w.word_id,true,w.status==='mastered'?'learning':'mastered');
+        const w=words.find(item=>item.word_id===x.dataset.cloudMaster);
+        if(w)void update(w.word_id,true,w.status==='mastered'?'learning':'mastered');
       });
       document.querySelectorAll('[data-cloud-remove]').forEach(x=>x.onclick=()=>{
-        const w=words.find(w=>w.word_id===x.dataset.cloudRemove);if(w)update(w.word_id,false,w.status==='mastered'?'mastered':'learning');
+        const w=words.find(item=>item.word_id===x.dataset.cloudRemove);
+        if(w)void update(w.word_id,false,w.status==='mastered'?'mastered':'learning');
       });
     }
     function confirmEchoExit(destination='setup'){

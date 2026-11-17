@@ -110,11 +110,35 @@ async function answer(req,env,user){
   let data;try{data=JSON.parse(raw)}catch{return fail("INVALID_JSON")}
   if(!data||!validId(data.wordId)||!validId(data.chapterId)||!MODES.has(data.gameType)||
     typeof data.answer!=="string"||data.answer.length>90||!data.answer.trim()||
-    typeof data.hinted!=="boolean")return fail("INVALID_ANSWER");
+    typeof data.hinted!=="boolean"||
+    (data.requestId!==undefined&&(typeof data.requestId!=="string"||
+      !/^[0-9a-f]{8}-[0-9a-f-]{27,44}$/i.test(data.requestId))))
+    return fail("INVALID_ANSWER");
   const q=await exec(env,"SELECT w.id,w.headword,w.meaning_zh,w.phonetic_uk,w.phonetic_us,"+
     "cw.context_sentence,ch.id chapter_id "+chapterCore()+
     " AND w.id=? LIMIT 1",data.chapterId,user.id,data.wordId).first();
   if(!q)return fail("REVIEW_WORD_UNAVAILABLE",403);
+  // Replaying a timed-out answer must never create a second review event.
+  // Verify ownership and question identity before returning the prior outcome.
+  const eventId=data.requestId||crypto.randomUUID();
+  if(data.requestId){
+    const previous=await exec(env,"SELECT user_id,word_id,chapter_id,game_type,result "+
+      "FROM review_events WHERE id=?",eventId).first();
+    if(previous){
+      if(previous.user_id!==user.id||previous.word_id!==q.id||
+         previous.chapter_id!==data.chapterId||previous.game_type!==data.gameType)
+        return fail("REVIEW_REQUEST_REUSED",409);
+      const current=await exec(env,"SELECT status,due_at FROM user_words "+
+        "WHERE user_id=? AND word_id=?",user.id,q.id).first();
+      const dueMs=current?.due_at?Date.parse(current.due_at.replace(" ","T")+"Z"):NaN;
+      const days=current?.status==="mastered"?null:
+        Number.isFinite(dueMs)?Math.max(0,Math.ceil((dueMs-Date.now())/86400000)):1;
+      return reply({correct:previous.result!=="incorrect",result:previous.result,
+        expected:q.headword,meaning:q.meaning_zh,
+        phonetic:q.phonetic_uk||q.phonetic_us||"",context:q.context_sentence,
+        status:current?.status||"learning",nextReviewDays:days,saved:true});
+    }
+  }
   const last=await exec(env,"SELECT created_at FROM review_events "+
     "WHERE user_id=? AND word_id=? AND created_at>datetime('now','-5 seconds') "+
     "ORDER BY created_at DESC LIMIT 1",user.id,q.id).first();
@@ -131,7 +155,7 @@ async function answer(req,env,user){
   const days=status==="mastered"?null:right&&!data.hinted?Math.min(14,streak*3):1;
   await env.DB.batch([
     exec(env,"INSERT INTO review_events(id,user_id,word_id,chapter_id,game_type,result) "+
-      "VALUES(?,?,?,?,?,?)",crypto.randomUUID(),user.id,q.id,data.chapterId,data.gameType,result),
+      "VALUES(?,?,?,?,?,?)",eventId,user.id,q.id,data.chapterId,data.gameType,result),
     ...related.map(alias=>exec(env,
       "INSERT INTO user_words(user_id,word_id,status,bookmarked,last_seen_at,due_at) "+
       "VALUES(?,?,?,0,CURRENT_TIMESTAMP,"+

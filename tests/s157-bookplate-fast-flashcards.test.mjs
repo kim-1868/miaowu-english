@@ -199,9 +199,9 @@ test("S157: customer learning screen is reachable and original bookplate grid an
   new Script(app,{filename:"app.js"});
   assert.ok(html.includes('id="flashcardTrainer"'));
   assert.ok(html.includes('id="vocabGrid"'));
-  assert.ok(html.includes('src="/flashcards.js?v=20261105-v31-word-only"'));
-  assert.ok(html.includes('href="/flashcards.css?v=20261105-v31-word-only"'));
-  assert.ok(html.includes('src="/app.js?v=20261109-favorites-wordbook12"'));
+  assert.ok(html.includes('src="/flashcards.js?v=20261117-instant"'));
+  assert.ok(html.includes('href="/flashcards.css?v=20261117-interaction"'));
+  assert.ok(html.includes('src="/app.js?v=20261117-wordbook-inplace"'));
   assert.ok(app.includes("window.MiaowuFlashcards?.configure"));
   assert.ok(app.includes("globalThis.MiaowuFlashcards?.render"));
   assert.ok(!ui.includes("来自你的小说记忆"));
@@ -213,10 +213,10 @@ test("S157: customer learning screen is reachable and original bookplate grid an
   assert.ok(!read("../src/reading-library.js").includes("flashSource("));
   assert.ok(ui.includes('"/api/me/flashcards/answer"'));
   assert.ok(ui.includes('crypto.randomUUID()'));
-  assert.ok(ui.includes('local.queue.splice(later,0,{word:w,retry:true})'));
+  assert.ok(ui.includes('local.queue.splice(later,0,{word:w,retry:true,submitPayload:null,saveState:null})'));
   assert.ok(ui.includes("inputmode=\"text\""));
   assert.ok(ui.includes("autocomplete=\"off\""));
-  assert.ok(ui.includes("每张词卡只在提交成功后推进"));
+  assert.ok(ui.includes("答题即时反馈，云端在后台顺序保存"));
   assert.ok(ui.includes('last.scope==="due"?1:last.page+1'));
   assert.ok(ui.includes("确定结束本轮吗"));
   assert.ok(worker.includes('path === "/api/me/flashcards"'));

@@ -1,0 +1,90 @@
+name: Study P1 PROD preflight (live parity and worker identity, READ ONLY)
+on:
+  push:
+    branches: [perf/study-interaction-20261117]
+    paths: [.github/workflows/study-interaction-production-readonly-preflight.yml]
+permissions:
+  contents: read
+jobs:
+  safe-diff:
+    if: github.repository == 'kim-1868/miaowu-english'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Branch relationship and production bundle local build
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'HEAD:' "$(git rev-parse HEAD)"
+          echo 'MAIN:' "$(git rev-parse origin/main)"
+          echo 'MERGE_BASE:' "$(git merge-base origin/main HEAD)"
+          echo 'LATEST_MAIN_COMMITS:'
+          git log -4 --oneline origin/main
+          echo 'CHANGED_SINCE_MAIN:'
+          git diff --name-only origin/main...HEAD | head -60
+          node scripts/build-production-assets.mjs --approved-announcements >/tmp/study-bundle.json
+          node scripts/check-production-config.mjs deploy/production.wrangler.jsonc
+          echo LOCAL_BUILD_SUCCESS
+      - name: Compare every public production asset, print limited textual diffs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from concurrent.futures import ThreadPoolExecutor,as_completed
+          import subprocess,difflib,hashlib
+          base=Path('dist-production/public')
+          names=sorted(p.name for p in base.iterdir() if p.is_file())
+          assert len(names)==50,len(names)
+          origin='https://miaowu-english-pages.pages.dev'
+          def fetch(name):
+              url=f'{origin}/{name}?p1_prod_preflight_20261117=1'
+              proc=subprocess.run(['curl','-fsSL','--max-time','25','--retry','2',url],capture_output=True)
+              return name,proc.returncode,proc.stdout,proc.stderr[:200]
+          with ThreadPoolExecutor(max_workers=8) as pool:
+              fetched=list(pool.map(fetch,names))
+          different=[]
+          for name,rc,actual,err in fetched:
+              if rc:
+                  print('FETCH_FAILED',name,err.decode(errors='replace'))
+                  raise SystemExit(1)
+              candidate=(base/name).read_bytes()
+              if actual!=candidate:
+                  different.append(name)
+                  print('DIFF_FILE',name,'live_sha',hashlib.sha256(actual).hexdigest()[:16],
+                        'candidate_sha',hashlib.sha256(candidate).hexdigest()[:16],
+                        'live_bytes',len(actual),'candidate_bytes',len(candidate))
+                  if name in ('app.js','index.html','ops-console.css','ops-console.js','ops.html','styles.css'):
+                      a=actual.decode(errors='replace').splitlines(keepends=True)
+                      b=candidate.decode(errors='replace').splitlines(keepends=True)
+                      delta=list(difflib.unified_diff(a,b,fromfile='LIVE/'+name,tofile='CANDIDATE/'+name,n=1))
+                      print('TOTAL_DIFF_LINES',name,len(delta))
+                      print(''.join(delta[:120])[:18000])
+              else:
+                  print('MATCH_FILE',name)
+          print('PARITY_SUMMARY total',len(names),'matches',len(names)-len(different),
+                'different',len(different),'names',','.join(different))
+          PY
+      - name: Read-only production Worker version status
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_DEPLOY_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          npm install --no-save --ignore-scripts 'wrangler@^4' >/dev/null
+          npx wrangler deployments status --name miaowu-english-production --config deploy/production.wrangler.jsonc
+          curl -fsSL --max-time 20 'https://miaowu-english-pages.pages.dev/__miaowu_prod_edge_probe' -o /tmp/prod-probe.json
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';import fs from 'node:fs';
+          const j=JSON.parse(fs.readFileSync('/tmp/prod-probe.json','utf8'));
+          assert.equal(j.ok,true);assert.equal(j.productionBindingPresent,true);
+          assert.equal(j.dataAccess,false);
+          NODE
+          echo 'PRODUCTION_READONLY_CHECK_OK'

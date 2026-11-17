@@ -75,8 +75,10 @@ async function begin(mode,page=1){
       return;
     }
     round={mode,scope,page,total:data.total,hasMore:data.hasMore,
-      queue:batch.map(w=>({word:w,retry:false})),index:0,shown:false,
-      feedback:null,answers:[],queued:new Set(),startedAt:Date.now()};
+      queue:batch.map(w=>({word:w,retry:false,submitPayload:null,saveState:null})),
+      index:0,shown:false,feedback:null,answers:[],queued:new Set(),
+      pending:new Set(),failed:new Set(),writeChain:Promise.resolve(),
+      account:api.user(),synced:false,startedAt:Date.now()};
     draw();
   }catch(error){api.toast(error.message);if(state)state.textContent="词卡获取失败，请重试。";}
   finally{busy=false;}
@@ -126,8 +128,10 @@ function draw(){
     (feedback?
       '<div class="flash-feedback" role="status" aria-live="polite"><strong>'+
       (feedback.correct?'✓ 记住了，喵呜！':'↻ 没关系，这张稍后再见')+'</strong>'+
-      '<span>已同步 · '+(feedback.nextReviewDays==null?'维持已掌握状态':
-        '约 '+feedback.nextReviewDays+' 天后再复习')+'</span></div>':'')+
+      '<span data-flash-feedback-sync>'+(feedback.saving?'答案已显示 · 后台同步中':
+        feedback.error?'尚未保存，请重试':
+        '已同步 · '+(feedback.nextReviewDays==null?'维持已掌握状态':
+        '约 '+feedback.nextReviewDays+' 天后再复习'))+'</span></div>':'')+
     '<div class="flash-footer">'+
     (reading?
       (feedback?
@@ -139,9 +143,13 @@ function draw(){
         '<button class="flash-primary" id="flashKnown" type="button">✓ 记住了 →</button></div>':
         '<button class="flash-primary" id="flashFlip" type="button">翻开词卡 · 查看释义</button>'))+
     '</div>'+
-    '<p class="flash-footer-help">每张词卡只在提交成功后推进，退出时已提交的记录仍会保存。</p></div>';
+    '<div class="flash-sync-state" id="flashSyncState" role="status" aria-live="polite"></div>'+
+    '<p class="flash-footer-help">答题即时反馈，云端在后台顺序保存；离开前需完成同步。</p></div>';
   $("flashExit").onclick=()=>{
     if(busy)return;
+    if(round?.pending.size||round?.failed.size){
+      api.toast("还有词卡正在同步或保存失败，请先完成同步");return;
+    }
     if(round?.answers.length&&round.index<round.queue.length&&
        !window.confirm("确定结束本轮吗？已提交的单词复习会保留，下次可以重新开始。"))return;
     closeSession();
@@ -162,46 +170,109 @@ function draw(){
     };
   }
   if($("flashNext"))$("flashNext").onclick=advance;
+  updateSyncState();
 }
-async function vote(judgment,answer){
+// Instant feedback, with serialized cloud writes using stable idempotency keys.
+function vote(judgment,answer){
   if(busy||!round||!word())return;
   if(!api.user()){api.login();return;}
-  busy=true;
-  const local=round,w=word(),entry=cursor(),i=round.index;
-  areaBusy(true);
-  try{
-    const body={wordId:w.word_id,mode:round.mode,requestId:crypto.randomUUID()};
-    if(round.mode==="spell")body.answer=answer;
-    else body.judgment=judgment;
-    const result=await api.request("/api/me/flashcards/answer","POST",body);
-    if(local!==round||i!==round.index||!api.user())return;
-    local.feedback=result;
-    local.answers.push({wordId:w.word_id,correct:result.correct,retry:entry.retry});
-    if(!result.correct&&!entry.retry&&!local.queued.has(w.word_id)){
-      local.queued.add(w.word_id);
-      const later=Math.min(local.queue.length,local.index+4);
-      local.queue.splice(later,0,{word:w,retry:true});
-    }
-    if(result.correct&&navigator.vibrate)try{navigator.vibrate(14)}catch{}
-    draw();
-    // Flip mode keeps the satisfying single-tap rhythm; typing stays on the
-    // feedback until the learner explicitly requests another card.
-    if(local.mode==="flip"){
-      const index=i;
-      setTimeout(()=>{if(local===round&&local.index===index&&!busy)advance();},460);
-    }
-  }catch(error){api.toast("这张词卡未能保存："+error.message);}
-  finally{busy=false;areaBusy(false);}
+  const local=round,entry=cursor(),w=word(),i=local.index;
+  if(entry.submitPayload)return; // double taps must not create review duplicates
+  if(local.failed.size){api.toast("请先重试尚未保存的词卡");return;}
+  const body={wordId:w.word_id,mode:local.mode,requestId:crypto.randomUUID()};
+  if(local.mode==="spell")body.answer=answer;
+  else body.judgment=judgment;
+  entry.submitPayload=body;
+  const likelyCorrect=local.mode==="flip"?judgment==="known":
+    String(answer).trim().normalize("NFKC").toLocaleLowerCase("en-US")===
+    String(w.headword).trim().normalize("NFKC").toLocaleLowerCase("en-US");
+  entry.feedback={correct:likelyCorrect,saving:true};
+  local.feedback=entry.feedback;
+  entry.answerRecord={wordId:w.word_id,correct:likelyCorrect,retry:entry.retry};
+  local.answers.push(entry.answerRecord);
+  if(!likelyCorrect&&!entry.retry&&!local.queued.has(w.word_id)){
+    local.queued.add(w.word_id);
+    const later=Math.min(local.queue.length,local.index+4);
+    local.queue.splice(later,0,{word:w,retry:true,submitPayload:null,saveState:null});
+  }
+  draw();
+  void saveEntry(local,entry);
+  // Flip mode no longer waits for a round-trip to show the next card.
+  if(local.mode==="flip"){
+    setTimeout(()=>{if(local===round&&local.index===i)advance();},220);
+  }
 }
-function areaBusy(flag){
-  host()?.querySelectorAll("button,input").forEach(x=>{if(x.id!=="flashExit")x.disabled=flag;});
+async function saveEntry(local,entry){
+  if(entry.saveState==="saving"||entry.saveState==="saved")return;
+  entry.saveState="saving";local.failed.delete(entry);local.pending.add(entry);
+  updateSyncState();
+  // Ordered writes preserve the server's same-word review streak.
+  const task=local.writeChain.then(()=>{
+    if(api.user()!==local.account)throw new Error("登录账号已经切换");
+    return api.request("/api/me/flashcards/answer","POST",entry.submitPayload);
+  });
+  local.writeChain=task.catch(()=>{});
+  try{
+    const result=await task;
+    entry.saveState="saved";
+    entry.answerRecord.correct=result.correct;
+    entry.feedback={...entry.feedback,...result,saving:false,error:null,
+      nextReviewDays:result.nextReviewDays===undefined?1:result.nextReviewDays};
+    if(local===round&&cursor()===entry)local.feedback=entry.feedback;
+    if(result.correct&&navigator.vibrate)try{navigator.vibrate(14)}catch{}
+  }catch(error){
+    entry.saveState="error";local.failed.add(entry);
+    entry.feedback={...entry.feedback,saving:false,error:error.message||"网络错误"};
+    if(local===round&&cursor()===entry)local.feedback=entry.feedback;
+    api.toast("有词卡尚未保存，请点击重试同步");
+  }finally{
+    local.pending.delete(entry);
+    if(local===round){
+      if(local.index>=local.queue.length)finish();
+      else if(cursor()===entry&&local.feedback)draw();
+      else updateSyncState();
+    }
+  }
+}
+function retryFailed(){
+  if(!round)return;
+  for(const entry of [...round.failed]){
+    round.failed.delete(entry);
+    void saveEntry(round,entry);
+  }
+}
+function updateSyncState(){
+  const area=host()?.querySelector("#flashSyncState");
+  if(!area||!round)return;
+  const errors=round.failed.size,pending=round.pending.size;
+  area.innerHTML=errors?
+    '<span>有 '+errors+' 张词卡尚未保存。</span> '+
+    '<button type="button" id="flashRetrySync">重试同步</button>':
+    pending?'<span>后台同步中 · '+pending+' 张待确认</span>':'';
+  if($("flashRetrySync"))$("flashRetrySync").onclick=retryFailed;
+  const note=host()?.querySelector("[data-flash-feedback-sync]");
+  if(note&&round.feedback){
+    const feedback=round.feedback;
+    note.textContent=feedback.error?'尚未保存，请重试':
+      feedback.saving?'答案已显示 · 后台同步中':
+      '已同步 · '+(feedback.nextReviewDays==null?'维持已掌握状态':
+        '约 '+feedback.nextReviewDays+' 天后再复习');
+  }
 }
 function advance(){
-  if(!round||busy)return;
+  if(!round||busy||!cursor()?.submitPayload)return;
   round.index++;round.shown=false;round.feedback=null;draw();
 }
 function finish(){
   const el=host();if(!el||!round)return;
+  if(round.pending.size||round.failed.size){
+    el.innerHTML='<div class="flash-session flash-finish">'+
+      '<h2>正在整理这一轮的学习记录</h2>'+
+      '<p>答案已经完成，请确认所有学习记录同步后再结束。</p>'+
+      '<div class="flash-sync-state" id="flashSyncState" role="status" aria-live="polite"></div></div>';
+    updateSyncState();return;
+  }
+  if(!round.synced){round.synced=true;void api.refresh();}
   const summary=counts(),elapsed=Math.max(1,Math.round((Date.now()-round.startedAt)/60000));
   const last=round;
   el.innerHTML='<div class="flash-session flash-finish"><div class="flash-finish-stamp" aria-hidden="true">♧ ✦</div>'+
@@ -224,7 +295,6 @@ function finish(){
     void begin(last.mode,last.scope==="due"?1:last.page+1);
   };
   $("flashBackList").onclick=closeSession;
-  void api.refresh();
 }
 function closeSession(){
   clearRound();
@@ -232,6 +302,11 @@ function closeSession(){
   // bookmarks or resetting already submitted review events.
   renderHome(Boolean(api?.user()),api?.saved?.()||0,api?.due?.()||0);
 }
+window.addEventListener("beforeunload",event=>{
+  if(round&&(round.pending?.size||round.failed?.size)){
+    event.preventDefault();event.returnValue="";
+  }
+});
 window.MiaowuFlashcards={
   configure(adapter){api=adapter;},
   render({loggedIn=false,saved=0,due=0,sessionKey=null}={}){
