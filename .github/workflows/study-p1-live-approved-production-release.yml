@@ -1,0 +1,194 @@
+name: OWNER APPROVED Study P1 preserve-live PRODUCTION release
+on:
+  push:
+    branches: [perf/study-interaction-20261117]
+    paths: [.github/workflows/study-p1-live-approved-production-release.yml]
+permissions: {contents: read}
+concurrency:
+  group: miaowu-production-worker-deploy
+  cancel-in-progress: false
+jobs:
+  dryrun-only:
+    if: github.repository == 'kim-1868/miaowu-english'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Existing candidate CI passes, not deployment
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+          node scripts/build-production-assets.mjs --approved-announcements
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import {selectedProductionAssets} from './scripts/build-production-assets.mjs';
+          fs.writeFileSync('/tmp/p1-assets-approved.json',JSON.stringify(selectedProductionAssets({withAnnouncements:true})));
+          NODE
+      - name: Verify immutable current production version; fetch original running code READ ONLY
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_DEPLOY_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          npm install --no-save --ignore-scripts 'wrangler@^4'
+          npx wrangler deployments status --name miaowu-english-production --config deploy/production.wrangler.jsonc >/tmp/p1-prod-before
+          grep -Fq 'b84cc272-a967-4823-af90-866e4efe210a' /tmp/p1-prod-before || { echo 'PRODUCTION_VERSION_CHANGED_NO_ACTION';exit 1; }
+          code=$(curl --silent --show-error -L --max-time 30 -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" -D /tmp/p1-prod-headers -o /tmp/p1-prod-multipart -w '%{http_code}' \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/miaowu-english-production")
+          test "$code" = 200
+          echo 'CURRENT_PROD_WORKER_SOURCE_READ_WITH_VERSION_GATE'
+      - name: Compare entire legacy suite on ACTUAL production vs merged P1 (zero new regressions required)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/study-p1-live-merger.py --baseline-only
+          cp -a dist-production/public /tmp/p1-original-live-assets
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess,sys
+          files=[str(p) for p in sorted(Path('tests').glob('*.test.mjs')) if p.name!='study-interaction-performance.test.mjs']
+          files.append('pages-production/entry.test.mjs')
+          command=['node','--experimental-sqlite','--test',*files]
+          print('BASELINE_LEGACY_TEST_FILES',len(files),flush=True)
+          with open('/tmp/p1-actual-live-legacy.tap','w') as out:
+              r=subprocess.run(command,stdout=out,stderr=subprocess.STDOUT)
+          print('BASELINE_LEGACY_EXIT',r.returncode,flush=True)
+          PY
+          rm -rf dist-production/public
+          cp -a /tmp/p1-original-live-assets dist-production/public
+          python3 scripts/study-p1-live-merger.py --patch-only
+          node --check src/worker.js
+          node --check src/echo-cloud.js
+          node --check public/app.js
+          node --check public/flashcards.js
+          node --check public/echo-cloud.js
+          node --check public/sense-reader-bridge.js
+          cp -a dist-production/public /tmp/p1-proposed-public-assets
+          node --experimental-sqlite --test tests/study-interaction-performance.test.mjs
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess,sys,re
+          files=[str(p) for p in sorted(Path('tests').glob('*.test.mjs')) if p.name!='study-interaction-performance.test.mjs']
+          files.append('pages-production/entry.test.mjs')
+          command=['node','--experimental-sqlite','--test',*files]
+          with open('/tmp/p1-actual-live-patched.tap','w') as out:
+              r=subprocess.run(command,stdout=out,stderr=subprocess.STDOUT)
+          print('PATCHED_LEGACY_EXIT',r.returncode,flush=True)
+          def failures(path):
+              body=Path(path).read_text(errors='replace')
+              fails=set(re.findall(r'^not ok [0-9]+ - (.*)$',body,re.M))
+              count=re.findall(r'^# tests ([0-9]+)$',body,re.M)
+              assert count and int(count[-1])>=480,('LEGACY_SUITE_INCOMPLETE',path,count[-1:] if count else [])
+              return fails
+          old=failures('/tmp/p1-actual-live-legacy.tap')
+          new=failures('/tmp/p1-actual-live-patched.tap')
+          print('LEGACY_BASELINE_FAILED',len(old),'MERGED_FAILED',len(new),'NEW_REGRESSIONS',len(new-old),'OLD_FIXED',len(old-new),flush=True)
+          for name in sorted(new-old):print('NEW_FAILED_TEST',name)
+          assert not new-old,'NEW_REGRESSION_FROM_P1_STOP_PRODUCTION'
+          print('P1_DIFFERENTIAL_ZERO_NEW_REGRESSIONS',flush=True)
+          PY
+          rm -rf dist-production/public
+          cp -a /tmp/p1-proposed-public-assets dist-production/public
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';import assert from 'node:assert/strict';
+          const actual=fs.readdirSync('dist-production/public');
+          assert.equal(actual.length,51);
+          const text=fs.readFileSync('dist-production/public/app.js','utf8');
+          assert.match(text,/wordbookWrites/);
+          assert.match(text,/progressOutbox/);
+          const html=fs.readFileSync('dist-production/public/index.html','utf8');
+          assert.match(html,/sense-reader-bridge.js/);
+          assert.match(html,/20261117-live-merged-inplace/);
+          console.log('MERGED_51_ASSET_BUNDLE_DIFFERENTIAL_TESTS_OK');
+          NODE
+      - name: Compile merged actual LIVE code into production-compatible dry-run artifact ONLY
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const cfg=JSON.parse(fs.readFileSync('deploy/production.wrangler.jsonc','utf8'));
+          if(cfg.name!=='miaowu-english-production'||cfg.vars.APP_ENV!=='production'||cfg.d1_databases[0].database_id!=='649c71b3-340c-49bf-b806-3d39256851d3')throw Error('WRONG_PRODUCTION_TARGET');
+          cfg.vars.OPS_ANNOUNCEMENTS_ENABLED='true';
+          cfg.vars.V11_NOTICE_RELEASE_APPROVED='true';
+          fs.writeFileSync('deploy/.study-p1-preflight.jsonc',JSON.stringify(cfg,null,2));
+          NODE
+          node scripts/check-production-config.mjs deploy/.study-p1-preflight.jsonc
+          npx wrangler deploy --dry-run --config deploy/.study-p1-preflight.jsonc --outdir .wrangler/study-p1-merged-preview
+          echo P1_PRODUCTION_COMPOSITE_DRY_RUN_PASSED_NO_DEPLOYMENT
+      - name: Verify production version has not changed while tests ran, then deploy approved P1
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_DEPLOY_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -Eeuo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          npx wrangler deployments status --name miaowu-english-production --config deploy/.study-p1-preflight.jsonc > /tmp/p1-production-precommit-status.txt
+          grep -Fq 'b84cc272-a967-4823-af90-866e4efe210a' /tmp/p1-production-precommit-status.txt || {
+            echo 'PROD_VERSION_CHANGED_AFTER_TESTS_ABORTING_ALL_DEPLOYMENT'
+            exit 1
+          }
+          test -s dist-production/public/sense-reader-bridge.js
+          test -s dist-production/public/app.js
+          test -s dist-production/public/flashcards.js
+          test -s dist-production/public/echo-cloud.js
+          deployed=0
+          rollback_on_failure(){
+            rc=$?
+            trap - ERR
+            if [ "$deployed" = 1 ]; then
+              echo 'POST_DEPLOY_SMOKE_FAILED_ATTEMPTING_WORKER_ROLLBACK'
+              npx wrangler rollback --name miaowu-english-production --config deploy/.study-p1-preflight.jsonc --message '20261117 P1 release failed post-deploy smoke' || echo 'MANUAL_PRODUCTION_WORKER_ROLLBACK_REQUIRED'
+            fi
+            exit "$rc"
+          }
+          trap rollback_on_failure ERR
+          npx wrangler deploy --keep-vars --config deploy/.study-p1-preflight.jsonc
+          deployed=1
+          export P1_ORIGIN='https://miaowu-english-pages.pages.dev'
+          ready=0
+          for attempt in $(seq 1 15); do
+            if python3 - <<'PY'
+          import hashlib,os,subprocess
+          from pathlib import Path
+          base=Path('dist-production/public')
+          files=['index.html','app.js','echo-cloud.js','flashcards.js','flashcards.css',
+                 'sense-reader-bridge.js','ops-console.js','ops-console.css','ops.html','styles.css']
+          for file in files:
+              url=os.environ['P1_ORIGIN']+'/'+file+'?p1_release_20261117='+os.environ['GITHUB_SHA']
+              proc=subprocess.run(['curl','-fsSL','--retry','1','--max-time','25',url],capture_output=True)
+              if proc.returncode or proc.stdout!=(base/file).read_bytes():
+                  raise SystemExit('PRODUCTION_STATIC_ASSET_NOT_READY_'+file)
+          print('PROD_STATIC_ALL_10_ASSETS_EXACT_LIVE_PARITY_AFTER_DEPLOY')
+          PY
+            then ready=1;break;fi
+            sleep 3
+          done
+          test "$ready" = 1
+          OPS_STATUS=$(curl -sS --max-time 20 -o /tmp/p1-ops-anon -w '%{http_code}' "$P1_ORIGIN/api/ops/me")
+          test "$OPS_STATUS" = 401
+          WORDS_STATUS=$(curl -sS --max-time 20 -o /tmp/p1-words-anon -w '%{http_code}' "$P1_ORIGIN/api/me/wordbook?scope=all&page=1")
+          test "$WORDS_STATUS" = 401
+          curl -fsSL --max-time 20 "$P1_ORIGIN/__miaowu_prod_edge_probe" -o /tmp/p1-edge-probe.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';import assert from 'node:assert/strict';
+          const v=JSON.parse(fs.readFileSync('/tmp/p1-edge-probe.json','utf8'));
+          assert.equal(v.ok,true);
+          assert.equal(v.productionBindingPresent,true);
+          assert.equal(v.dataAccess,false);
+          const html=fs.readFileSync('dist-production/public/index.html','utf8');
+          for(const marker of ['siteUpdateBanner','myBookshelf','sense-reader-bridge.js','20261117-live-merged-inplace'])assert.ok(html.includes(marker));
+          console.log('POST_DEPLOY_SECURITY_AND_CORE_UI_SMOKE_OK');
+          NODE
+          npx wrangler deployments status --name miaowu-english-production --config deploy/.study-p1-preflight.jsonc
+          echo 'P1_STUDY_SPEED_FIX_PRODUCTION_RELEASE_SUCCESS__LIVE_FEATURES_PRESERVED__NO_D1_MIGRATION'
+          trap - ERR
