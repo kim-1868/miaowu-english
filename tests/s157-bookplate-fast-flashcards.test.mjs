@@ -199,9 +199,9 @@ test("S157: customer learning screen is reachable and original bookplate grid an
   new Script(app,{filename:"app.js"});
   assert.ok(html.includes('id="flashcardTrainer"'));
   assert.ok(html.includes('id="vocabGrid"'));
-  assert.ok(html.includes('src="/flashcards.js?v=20261105-v31-word-only"'));
-  assert.ok(html.includes('href="/flashcards.css?v=20261105-v31-word-only"'));
-  assert.ok(html.includes('src="/app.js?v=20261109-favorites-wordbook12"'));
+  assert.ok(html.includes('src="/flashcards.js?v=20261117-instant"'));
+  assert.ok(html.includes('href="/flashcards.css?v=20261117-interaction"'));
+  assert.ok(html.includes('src="/app.js?v=20261117-wordbook-inplace"'));
   assert.ok(app.includes("window.MiaowuFlashcards?.configure"));
   assert.ok(app.includes("globalThis.MiaowuFlashcards?.render"));
   assert.ok(!ui.includes("来自你的小说记忆"));
