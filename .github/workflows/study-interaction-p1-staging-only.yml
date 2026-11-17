@@ -1,0 +1,92 @@
+name: Study interaction P1 - protected STAGING deploy only
+on:
+  push:
+    branches:
+      - perf/study-interaction-20261117
+    paths:
+      - .github/workflows/study-interaction-p1-staging-only.yml
+permissions:
+  contents: read
+concurrency:
+  group: miaowu-v11-wave2-staging
+  cancel-in-progress: false
+jobs:
+  staging-only:
+    if: github.repository == 'kim-1868/miaowu-english' && github.ref == 'refs/heads/perf/study-interaction-20261117'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fail closed unless configuration targets protected staging and test D1 only
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          const stage=JSON.parse(fs.readFileSync('wrangler.jsonc','utf8'));
+          const prod=JSON.parse(fs.readFileSync('deploy/production.wrangler.jsonc','utf8'));
+          assert.equal(stage.name,'miaowu-english-staging');
+          assert.equal(stage.main,'src/worker.js');
+          assert.equal(stage.vars.APP_ENV,'staging');
+          assert.equal(stage.assets.directory,'./public');
+          assert.equal(stage.assets.binding,'ASSETS');
+          assert.equal(stage.assets.run_worker_first,true);
+          assert.equal(stage.d1_databases.length,1);
+          assert.equal(stage.d1_databases[0].binding,'DB');
+          assert.equal(stage.d1_databases[0].database_name,'miaowu-english-test');
+          assert.equal(stage.d1_databases[0].database_id,'88a817cb-23bb-4ae4-bcb8-92286c4165d4');
+          assert.equal(prod.d1_databases[0].database_name,'miaowu-english-prod');
+          assert.equal(prod.d1_databases[0].database_id,'649c71b3-340c-49bf-b806-3d39256851d3');
+          assert.notEqual(stage.d1_databases[0].database_id,prod.d1_databases[0].database_id);
+          assert.deepEqual(stage.secrets.required,
+            ['STAGING_PREVIEW_PASSWORD','ACTIVATION_PEPPER']);
+          const flash=fs.readFileSync('public/flashcards.js','utf8');
+          const echo=fs.readFileSync('public/echo-cloud.js','utf8');
+          const html=fs.readFileSync('public/index.html','utf8');
+          assert.match(flash,/function updateSyncState\(/);
+          assert.match(echo,/function persistAnswer\(/);
+          assert.match(html,/flashcards\.js\?v=20261117-instant/);
+          assert.match(html,/echo-cloud\.js\?v=20261117-instant/);
+          console.log('GUARD_OK_STAGING_ONLY_SEPARATE_D1_NO_PRODUCTION_ACCESS');
+          NODE
+      - name: Full checks and synthetic instant-feedback + retry regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check
+          npm test
+          node scripts/build-production-assets.mjs --approved-announcements
+          echo 'ALL_CHECKS_PASSED_ONLY_LOCAL_BUILDS'
+      - name: Deploy only staging Worker; retain existing secrets; no D1 migrations
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          npm install --no-save --ignore-scripts 'wrangler@^4'
+          npx wrangler deploy --keep-vars --config wrangler.jsonc
+          echo 'STAGING_P1_DEPLOYED_NO_PRODUCTION_D1_OR_MIGRATION'
+      - name: Verify protected staging still refuses anonymous access
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://miaowu-english-staging.kim10086a.workers.dev/'
+          for i in $(seq 1 8); do
+            status=$(curl -sS --max-time 20 -o /tmp/study-staging-gate -w '%{http_code}' "$url" || true)
+            if [ "$status" = '401' ] && grep -Fq 'Staging preview: credentials required' /tmp/study-staging-gate; then
+              echo 'STAGING_P1_DEPLOY_CHECK_OK_401_PROTECTED'
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "STAGING_GATE_VERIFY_FAILED_HTTP_${status}"
+          exit 1
