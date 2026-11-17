@@ -156,8 +156,15 @@ def verify_static():
     print('PRODUCTION_51_ASSETS_ASSERTED_46_UNCHANGED_AND_5_PATCHED',flush=True)
 
 def main():
-    worker_sources()
-    live_assets()
+    import sys
+    opts=sys.argv[1:]
+    assert opts in ([],['--baseline-only'],['--patch-only']), 'UNSUPPORTED_RELEASE_MODE'
+    if opts!=['--patch-only']:
+        worker_sources()
+        live_assets()
+    if opts==['--baseline-only']:
+        print('PRODUCTION_RUNNING_BASELINE_RESTORED_READ_ONLY',flush=True)
+        return
     for file in DELTA_FILES:patch_live_file(file)
     patch_index_html()
     verify_static()
