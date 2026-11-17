@@ -1,0 +1,40 @@
+/* Learning interaction P1: paint updates in place and suppress double-tap zoom.
+   This deliberately preserves pinch-to-zoom and browser accessibility controls. */
+#flashcardTrainer button,
+#quizContainer button,
+#vocabGrid button,
+#view-words [data-word-filter],
+#view-words [data-wordbook-page] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+#flashcardTrainer .flash-sync-state {
+  display:flex;align-items:center;justify-content:center;flex-wrap:wrap;
+  gap:9px;min-height:22px;margin-top:8px;color:var(--muted,#846d6b);
+  font-size:12px;line-height:1.5;
+}
+#flashcardTrainer .flash-sync-state:empty {display:none;}
+#flashcardTrainer .flash-sync-state button {
+  background:transparent;border:1px solid var(--line,#d8c7bb);
+  border-radius:10px;padding:5px 12px;min-height:35px;
+  color:var(--wine,#733c55);font-weight:650;cursor:pointer;
+}
+#vocabGrid .vocab-card.wordbook-saving {
+  outline:1px dashed var(--line,#d8c7bb);
+  outline-offset:2px;
+}
+#vocabGrid .vocab-card.wordbook-removed {
+  opacity:.66;filter:saturate(.7);
+}
+#vocabGrid .vocab-card.wordbook-removed .word-status {
+  color:var(--muted,#846d6b);
+}
+@media (pointer:coarse) {
+  /* iOS Safari focuses and zooms form controls whose text is below 16px. */
+  #flashcardTrainer input,
+  #quizContainer input,
+  #view-words input,
+  #view-words select {
+    font-size:16px;
+  }
+}
