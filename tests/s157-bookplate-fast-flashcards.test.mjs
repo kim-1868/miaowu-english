@@ -213,10 +213,10 @@ test("S157: customer learning screen is reachable and original bookplate grid an
   assert.ok(!read("../src/reading-library.js").includes("flashSource("));
   assert.ok(ui.includes('"/api/me/flashcards/answer"'));
   assert.ok(ui.includes('crypto.randomUUID()'));
-  assert.ok(ui.includes('local.queue.splice(later,0,{word:w,retry:true})'));
+  assert.ok(ui.includes('local.queue.splice(later,0,{word:w,retry:true,submitPayload:null,saveState:null})'));
   assert.ok(ui.includes("inputmode=\"text\""));
   assert.ok(ui.includes("autocomplete=\"off\""));
-  assert.ok(ui.includes("每张词卡只在提交成功后推进"));
+  assert.ok(ui.includes("答题即时反馈，云端在后台顺序保存"));
   assert.ok(ui.includes('last.scope==="due"?1:last.page+1'));
   assert.ok(ui.includes("确定结束本轮吗"));
   assert.ok(worker.includes('path === "/api/me/flashcards"'));
