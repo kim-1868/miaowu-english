@@ -87,9 +87,11 @@ jobs:
                   import re
                   text=live.read_text()
                   for asset,version in [('flashcards.css','20261117-interaction'),('echo-cloud.js','20261117-instant'),('flashcards.js','20261117-instant'),('app.js','20261117-live-merged-inplace')]:
-                      expression=r'(/'+re.escape(asset)+r'\\?v=)[^"]+'
-                      text,count=re.subn(expression,lambda m:m.group(1)+version,text)
-                      assert count==1,('STATIC_CACHE_BUST_MISSING_OR_AMBIGUOUS',asset,count)
+                      prefix='/'+asset+'?v='
+                      assert text.count(prefix)==1,('STATIC_CACHE_BUST_MISSING_OR_AMBIGUOUS',asset,text.count(prefix))
+                      begin=text.index(prefix)+len(prefix)
+                      end=text.index('"',begin)
+                      text=text[:begin]+version+text[end:]
                   assert 'sense-reader-bridge.js' in text,'LIVE_SENSE_BRIDGE_MUST_SURVIVE'
                   dest=Path('/tmp/p1-proposed')/file
                   dest.parent.mkdir(parents=True,exist_ok=True)
