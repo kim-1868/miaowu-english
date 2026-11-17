@@ -80,8 +80,8 @@ jobs:
           print('PATCHED_LEGACY_EXIT',r.returncode,flush=True)
           def failures(path):
               body=Path(path).read_text(errors='replace')
-              fails=set(re.findall(r'^not ok\\s+\\d+\\s+-\\s+(.*)$',body,re.M))
-              count=re.findall(r'^# tests (\\d+)$',body,re.M)
+              fails=set(re.findall(r'^not ok [0-9]+ - (.*)$',body,re.M))
+              count=re.findall(r'^# tests ([0-9]+)$',body,re.M)
               assert count and int(count[-1])>=480,('LEGACY_SUITE_INCOMPLETE',path,count[-1:] if count else [])
               return fails
           old=failures('/tmp/p1-actual-live-legacy.tap')
