@@ -1087,6 +1087,7 @@
           if(remove)remove.textContent=isBookmarked?'移除收藏':'已移除收藏';
         }
         function counters(total){
+          if(wordbookData!==samePage||!card.isConnected)return;
           $('bookplateCount').textContent=String(total);
           const summary=$('vocabGrid').querySelector('.bookplate-source-summary');
           if(summary?.firstChild?.nodeType===Node.TEXT_NODE)
@@ -1117,9 +1118,9 @@
           if(user?.name!==account)return;
           w.status=before.status;w.bookmarked=before.bookmarked;
           if(savedBefore)cloudSaved.set(id,savedBefore);else cloudSaved.delete(id);
-          if(samePage)samePage.allTotal=oldTotal;
+          if(samePage&&removed)samePage.allTotal=(Number(samePage.allTotal)||0)+1;
           paint(before.status,before.bookmarked!==0&&before.bookmarked!==false);
-          counters(oldTotal);
+          counters(samePage?.allTotal??cloudSaved.size);
           card.classList.remove('wordbook-saving');
           card.removeAttribute('aria-busy');
           buttons.forEach(button=>button.disabled=false);
