@@ -22,6 +22,7 @@ function fakeDom(hostId){
           for(const m of markup.matchAll(/<button[^>]*data-choice="([^"]+)"[^>]*data-choice-id="([^"]+)"/g)){
             const option=element("choice-"+m[2]);
             option.dataset.choice=m[1];option.dataset.choiceId=m[2];
+            option.closest=()=>({dataset:{choiceId:m[2]}});
             choices.push(option);
           }
         }
@@ -111,7 +112,8 @@ test("spelling check reveals an answer before its cloud write completes",async()
   assert.match(ui.host.innerHTML,/记住了，喵呜/);
   assert.ok(ui.elements.get("flashNext"));
   ui.elements.get("flashNext").onclick();
-  assert.match(ui.host.innerHTML,/bravo/);
+  assert.match(ui.host.innerHTML,/class="flash-meaning">b<\/h3>/);
+  assert.match(ui.host.innerHTML,/2 \/ 2/);
   await drain();
   assert.equal(requests.length,1);
   requests[0].resolve({saved:true,correct:true,nextReviewDays:1});
