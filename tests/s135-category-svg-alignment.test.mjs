@@ -37,3 +37,13 @@ test("S135: banner, live book data, and paid gating are unchanged",()=>{
  assert.ok(app.includes("has(c.id)?'✓ 已解锁'"));
  assert.ok(app.includes("renderHomeStudyStats()"));
 });
+
+
+test("CET-4 homepage category copy describes the full vocabulary collection",()=>{
+ const app=read("app.js"),html=read("index.html");
+ assert.match(app,/id:'cet4',en:'CET-4',name:'大学英语四级',sub:'词汇学习 · 故事精选'/);
+ assert.doesNotMatch(app,/核心词 · 故事精选/);
+ assert.match(html,/id="selectedCategoryTitle">四级 · 故事精选<\/h2>/);
+ assert.doesNotMatch(html,/四级核心词/);
+ assert.match(app,/\$\('selectedCategoryTitle'\)\.textContent=picked\.name\+' · 故事书架'/);
+});
