@@ -59,7 +59,7 @@ async function start(){
  st.questions=randomized.map((w,i)=>({word:w,kind:allowed[i%allowed.length],
  options:[w,...words.filter(y=>y.word_id!==w.word_id).sort(()=>Math.random()-.5).slice(0,3)]
  .sort(()=>Math.random()-.5)}));
- st.idx=0;st.correct=0;st.answer=null;st.hint=false;st.phase="playing";draw();
+ st.idx=0;st.correct=0;st.answer=null;st.hint=false;st.posting=false;st.phase="playing";draw();
  }catch(e){adapter.toast(e.message);b.disabled=false}
 }
 function blank(w){
@@ -78,7 +78,7 @@ function draw(){
  '<h3>找回了 '+st.correct+'/'+st.questions.length+' 个单词</h3>'+
  '<p class="echo-tip">已提交的答案和复习日期已保存至云端。</p>'+
  '<button class="primary" id="cloudAgain">重新选择玩法</button></div>';
- $("cloudAgain").onclick=()=>{st.phase="setup";setup()};return}
+ $("cloudAgain").onclick=()=>{st.phase="setup";setup()};void adapter.refresh();return}
  const q=st.questions[st.idx],w=q.word,answered=!!st.answer;
  const question=esc(blank(w));
  let options;
@@ -93,8 +93,9 @@ function draw(){
  options='<h3>'+(q.kind==="situation"?"根据人物情境与中文提示选择对应单词：":"从原句中选择正确单词：")+
  '</h3><p class="spelling-prompt">'+question+'</p><div class="answer-grid">'+
  q.options.map(x=>'<div class="answer-choice '+(answered?"answered ":"")+
- (answered&&x.word_id===w.word_id?"correct":"")+'">'+
- '<button class="answer-pick" data-choice="'+esc(x.headword)+'" '+(answered?"disabled":"")+'>'+
+ (answered&&x.word_id===w.word_id?"correct ":"")+
+ (answered&&st.answer?.submittedChoiceId===x.word_id&&!st.answer.correct?"v11-choice-wrong":"")+'">'+
+ '<button class="answer-pick" data-choice="'+esc(x.headword)+'" data-choice-id="'+esc(x.word_id)+'" '+(answered?"disabled":"")+'>'+
  esc(x.headword)+'</button>'+(answered?'<div class="answer-extra"><span>'+esc(x.meaning_zh)+
  '</span><button class="answer-speak" data-speak="'+esc(x.headword)+'">♫</button></div>':"")+
  '</div>').join("")+'</div>';
@@ -104,17 +105,23 @@ function draw(){
  '<div class="quiz-correct-answer">'+esc(st.answer.expected)+' <span>'+esc(st.answer.phonetic)+
  ' · '+esc(st.answer.meaning)+'</span><button id="cloudCorrectSpeak" class="answer-speak">♫</button></div>'+
  '<div class="story-reveal"><strong>故事原句</strong><br>'+esc(st.answer.context)+'</div>'+
- '<p class="score-status">复习已保存 · '+(st.answer.nextReviewDays===null?"已掌握":
- "约 "+st.answer.nextReviewDays+" 天后复习")+'</p></div>':"";
+ '<p class="score-status" role="status" aria-live="polite">'+
+ (st.answer.saving?"答案已显示 · 正在同步云端…":
+ st.answer.saveError?"保存失败，请重试（不会重复计分）":
+ "复习已保存 · "+(st.answer.nextReviewDays===null?"已掌握":
+ "约 "+st.answer.nextReviewDays+" 天后复习"))+'</p>'+
+ (st.answer.saveError?'<button class="secondary-btn" id="cloudEchoRetry" type="button">重试保存本题</button>':"")+
+ '</div>':"";
  $("quizContainer").innerHTML='<div class="quiz-card"><div class="quiz-kicker"><span>STORY ECHO · '+
  kinds.find(x=>x[0]===q.kind)[1]+'</span><span>'+(st.idx+1)+' / '+st.questions.length+'</span></div>'+
  '<div class="quiz-exit-row"><span>随时可退出，已答题目保留</span>'+
  '<button id="cloudEchoQuit" class="quiet-exit">✕ 退出／换玩法</button></div>'+
  options+feedback+'<div class="quiz-foot"><small>答题后选项释义直接显示在原选项旁边。</small>'+
- '<button class="primary" id="cloudEchoNext" '+(!answered?"disabled":"")+'>'+
+ '<button class="primary" id="cloudEchoNext" '+(!answered||st.answer.saving||st.answer.saveError?"disabled":"")+'>'+
  (st.idx===st.questions.length-1?"查看结果":"下一题 →")+'</button></div></div>';
  $("cloudEchoQuit").onclick=()=>leave("setup");
- document.querySelectorAll("[data-choice]").forEach(x=>x.onclick=()=>answer(x.dataset.choice));
+ document.querySelectorAll("[data-choice]").forEach(x=>x.onclick=()=>answer(x.dataset.choice,x.closest(".answer-choice")?.dataset.choiceId||x.dataset.choiceId));
+ if($("cloudEchoRetry"))$("cloudEchoRetry").onclick=()=>void persistAnswer(st.questions[st.idx]);
  document.querySelectorAll("[data-speak]").forEach(x=>x.onclick=()=>adapter.speak(x.dataset.speak));
  if($("cloudCorrectSpeak"))$("cloudCorrectSpeak").onclick=()=>adapter.speak(st.answer.expected);
  if($("cloudSpellSubmit")){
@@ -122,16 +129,54 @@ function draw(){
  $("cloudSpelling").onkeydown=e=>{if(e.key==="Enter")$("cloudSpellSubmit").click()};
  $("cloudSpellHint").onclick=()=>{st.hint=true;$("cloudSpellHint").textContent="首字母："+w.headword[0]};
  }
- $("cloudEchoNext").onclick=()=>{st.idx++;st.answer=null;st.hint=false;draw()};
+ $("cloudEchoNext").onclick=()=>{
+   if(st.posting||!st.answer||st.answer.saveError||st.answer.saving)return;
+   st.idx++;st.answer=null;st.hint=false;draw();
+ };
 }
-async function answer(value){
- if(st.answer||st.posting)return;
- st.posting=true;const q=st.questions[st.idx],w=q.word;
+// Show the locally determinable answer immediately; the server remains authoritative
+// for final scoring, learning state and repeat scheduling.
+function answer(value,choiceId=null){
+ if(st.answer||st.posting||st.phase!=="playing")return;
+ const q=st.questions[st.idx],w=q.word;
+ if(!q.submitPayload){
+   q.submitPayload={wordId:w.word_id,chapterId:w.chapter_id,
+     gameType:q.kind,answer:value,hinted:st.hint,requestId:crypto.randomUUID()};
+ }
+ const body=q.submitPayload;
+ const likelyCorrect=body.answer.trim().toLocaleLowerCase("en-US")===
+   w.headword.trim().toLocaleLowerCase("en-US");
+ st.answer={correct:likelyCorrect,expected:w.headword,phonetic:w.phonetic_uk||w.phonetic_us||"",
+   meaning:w.meaning_zh,context:w.context_sentence||"",nextReviewDays:null,
+   submittedAnswer:body.answer,submittedChoiceId:choiceId,saving:true};
+ st.posting=true;
+ draw();
+ void persistAnswer(q);
+}
+async function persistAnswer(q){
+ if(st.posting&&st.answer&&!st.answer.saving)return;
+ const answerFor=q.submitPayload;
+ if(!answerFor)return;
+ st.posting=true;
+ if(st.phase==="playing"&&st.questions[st.idx]===q&&st.answer){
+   st.answer.saving=true;st.answer.saveError=null;draw();
+ }
  try{
- const r=await adapter.request("/api/me/echo/answer","POST",{
- wordId:w.word_id,chapterId:w.chapter_id,gameType:q.kind,answer:value,hinted:st.hint});
- st.answer=r;if(r.correct)st.correct++;adapter.refresh();draw();
- }catch(e){adapter.toast(e.message)}finally{st.posting=false}
+   const r=await adapter.request("/api/me/echo/answer","POST",answerFor);
+   if(st.phase!=="playing"||st.questions[st.idx]!==q)return;
+   if(r.correct)st.correct++;
+   st.answer={...r,submittedAnswer:answerFor.answer,
+     submittedChoiceId:st.answer?.submittedChoiceId||null,saving:false,saveError:null};
+ }catch(e){
+   if(st.phase!=="playing"||st.questions[st.idx]!==q)return;
+   st.answer={...st.answer,saving:false,saveError:e.message||"请求失败"};
+   adapter.toast("本题尚未保存，可点击重试");
+ }finally{
+   // Never unlock a different question after the user leaves this session.
+   if(st.phase==="playing"&&st.questions[st.idx]===q){
+     st.posting=false;draw();
+   }else st.posting=false;
+ }
 }
 function leave(destination){
  if(st.phase!=="playing")return false;
@@ -142,7 +187,9 @@ function leave(destination){
  '<div class="exit-actions"><button class="secondary-btn" id="cloudKeep">继续练习</button>'+
  '<button class="primary" id="cloudLeave">结束练习</button></div>');
  $("cloudKeep").onclick=adapter.closeModal;
- $("cloudLeave").onclick=()=>{adapter.closeModal();st.phase="setup";st.questions=[];st.answer=null;
+ $("cloudLeave").onclick=()=>{
+   if(st.posting){adapter.toast("本题正在保存，请稍后退出");adapter.closeModal();return;}
+   adapter.closeModal();void adapter.refresh();st.phase="setup";st.questions=[];st.answer=null;
  if(destination==="setup")setup();else adapter.navigate(destination)};
  return true;
 }
