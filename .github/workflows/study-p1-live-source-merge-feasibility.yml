@@ -83,6 +83,19 @@ jobs:
           for file in files:
               live=Path('/tmp/p1-live-source')/file
               assert live.exists(),file
+              if file=='public/index.html':
+                  import re
+                  text=live.read_text()
+                  for asset,version in [('flashcards.css','20261117-interaction'),('echo-cloud.js','20261117-instant'),('flashcards.js','20261117-instant'),('app.js','20261117-live-merged-inplace')]:
+                      expression=r'(/'+re.escape(asset)+r'\\?v=)[^"]+'
+                      text,count=re.subn(expression,lambda m:m.group(1)+version,text)
+                      assert count==1,('STATIC_CACHE_BUST_MISSING_OR_AMBIGUOUS',asset,count)
+                  assert 'sense-reader-bridge.js' in text,'LIVE_SENSE_BRIDGE_MUST_SURVIVE'
+                  dest=Path('/tmp/p1-proposed')/file
+                  dest.parent.mkdir(parents=True,exist_ok=True)
+                  dest.write_text(text)
+                  print('MERGE_STATUS',file,'rc',0,'live_preserved',True,'cache_keys_updated',4)
+                  continue
               original=subprocess.check_output(['git','show',f'{base}:{file}'])
               candidate=subprocess.check_output(['git','show',f'{p1}:{file}'])
               b=Path('/tmp/p1b');c=Path('/tmp/p1c')
